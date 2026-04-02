@@ -1,0 +1,185 @@
+@startuml Marketplace for services
+
+!pragma ratio 0.8
+
+hide circle
+
+skinparam linetype ortho
+skinparam classSpacing 60
+skinparam classArrowFontSize 12
+skinparam classArrowThickness 1.5
+skinparam classArrowColor black
+
+skinparam class {
+    BackgroundColor #ADD8E6
+    BorderColor black
+    ArrowColor black
+}
+
+entity Account {
+    account_id : uuid <<PK>>
+    ---
+    role_id : uuid <<FK>> <<NOT NULL>>
+    name : text <<NOT NULL>>
+    email : text <<NOT NULL>> <<UNIQUE>>
+    password_hash : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Role {
+    role_id : uuid <<PK>>
+    ---
+    name : text <<NOT NULL>> <<UNIQUE>>
+    description : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Permission {
+    permission_id : uuid <<PK>>
+    ---
+    name : text <<NOT NULL>> <<UNIQUE>>
+    description : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity RolePermission {
+    role_id : uuid <<PK>> <<FK>>
+    permission_id : uuid <<PK>> <<FK>>
+    ---
+    deleted_at : timestamp
+}
+
+entity UserProfile {
+    user_profile_id : uuid <<PK>>
+    ---
+    account_id : uuid <<FK>> <<NOT NULL>>
+    name : text <<NOT NULL>>
+    email : text <<NOT NULL>>
+    bio : text
+    phone_number : text
+    fax : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Review {
+    review_id : uuid <<PK>>
+    ---
+    reviewer_id : uuid <<FK>> <<NOT NULL>>
+    reviewee_id : uuid <<FK>> <<NOT NULL>>
+    rating : int <<NOT NULL>> CHECK (rating BETWEEN 1 AND 5)
+    review_description : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Post {
+    post_id : uuid <<PK>>
+    ---
+    author_id : uuid <<FK>> <<NOT NULL>>
+    post_title : text <<NOT NULL>>
+    description : text <<NOT NULL>>
+    post_type : enum('REQUEST', 'OFFER') <<NOT NULL>>
+    price : numeric(10,2)
+    rate_type : enum('HOURLY', 'DAILY', 'FIXED')
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Message {
+    message_id : uuid <<PK>>
+    ---
+    sender_id : uuid <<FK>> <<NOT NULL>>
+    post_id : uuid <<FK>> <<NOT NULL>>
+    content : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Report {
+    report_id : uuid <<PK>>
+    ---
+    reporter_id : uuid <<FK>> <<NOT NULL>>
+    post_id : uuid <<FK>> <<NOT NULL>>
+    description : text <<NOT NULL>>
+    reason : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Category {
+    category_id : uuid <<PK>>
+    ---
+    name : text <<NOT NULL>> <<UNIQUE>>
+    description : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity PostCategory {
+    post_id : uuid <<PK>> <<FK>>
+    category_id : uuid <<PK>> <<FK>>
+    ---
+    deleted_at : timestamp
+}
+
+entity Location {
+    location_id : uuid <<PK>>
+    ---
+    country : text
+    region : text
+    city : text
+    street : text
+    house_number : text
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity PostLocation {
+    post_id : uuid <<PK>> <<FK>>
+    location_id : uuid <<PK>> <<FK>>
+    ---
+    deleted_at : timestamp
+}
+
+entity Image {
+    image_id : uuid <<PK>>
+    ---
+    user_profile_id : uuid <<FK>> <<NOT NULL>>
+    name : text <<NOT NULL>>
+    link : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity Favourites {
+    user_profile_id : uuid <<PK>> <<FK>>
+    post_id : uuid <<PK>> <<FK>>
+    ---
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+Post }o--|| UserProfile : creates
+Post ||--o{ PostCategory
+Category ||--o{ PostCategory
+Role ||--o{ RolePermission
+Permission ||--o{ RolePermission
+Review }o--|| UserProfile : reviewer
+Review }o--|| UserProfile : reviewee
+Message }o--|| UserProfile : sender
+Message }o--|| Post : belongs to
+Post ||--o{ Report : reported
+Account ||--o{ UserProfile
+Account }o--|| Role
+UserProfile ||--o{ Image
+UserProfile ||--o{ Favourites
+Post ||--o{ Favourites
+UserProfile ||--o{ Report : reports
+Post ||--o{ PostLocation
+Location ||--o{ PostLocation
+
+@enduml
