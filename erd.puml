@@ -93,7 +93,7 @@ entity Message {
     message_id : uuid <<PK>>
     ---
     sender_id : uuid <<FK>> <<NOT NULL>>
-    post_id : uuid <<FK>> <<NOT NULL>>
+    thread_id : uuid <<FK>> <<NOT NULL>>
     content : text <<NOT NULL>>
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
@@ -163,6 +163,14 @@ entity Favourites {
     deleted_at : timestamp
 }
 
+entity MessageThread {
+    thread_id : uuid <<PK>>
+    ---
+    post_id : uuid <<FK>> <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
 Post }o--|| UserProfile : creates
 Post ||--o{ PostCategory
 Category ||--o{ PostCategory
@@ -171,7 +179,8 @@ Permission ||--o{ RolePermission
 Review }o--|| UserProfile : reviewer
 Review }o--|| UserProfile : reviewee
 Message }o--|| UserProfile : sender
-Message }o--|| Post : belongs to
+Message }o--|| MessageThread : belongs to
+MessageThread }o--|| Post
 Post ||--o{ Report : reported
 Account ||--o{ UserProfile
 Account }o--|| Role
