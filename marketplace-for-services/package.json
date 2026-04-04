@@ -1,0 +1,8 @@
+{
+  "name": "marketplace-for-services",
+  "private": true,
+  "workspaces": ["web", "api"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev"
+  }
+}
