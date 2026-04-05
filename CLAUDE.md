@@ -90,11 +90,28 @@ bun run dev
 - Passwords must be hashed before storage.
 - The UI must support light and dark mode and be responsive.
 
+## API Client (Eden Treaty)
+
+The frontend communicates with the backend via [Eden Treaty](https://elysiajs.com/eden/treaty/overview.html) — a type-safe HTTP client generated from the Elysia app's type definition.
+
+- The configured client lives in `apps/web/src/api.ts` and is imported as `import { api } from '#/api'`.
+- All backend routes are still standard REST — Eden is purely a typed wrapper around `fetch`.
+- When adding a new Elysia route, it automatically becomes available and typed on the client with no extra steps.
+- CORS is configured in `apps/api/src/index.ts` to allow requests from `http://localhost:3000`.
+- The `api` package is added as a `devDependency` in `apps/web` so types can be imported without bundling server code.
+
+```ts
+// Example usage in a route or component
+import { api } from '#/api'
+
+const { data, error } = await api.posts.get()
+```
+
 ## Code Conventions
 
 - All TypeScript — no `any` unless unavoidable.
 - Soft-delete pattern: set `deleted_at` rather than deleting rows.
-- Backend routes live in `api/src/` alongside their Drizzle queries.
-- Frontend routes are file-based under `web/src/routes/` (TanStack Router convention).
+- Backend routes live in `apps/api/src/` alongside their Drizzle queries.
+- Frontend routes are file-based under `apps/web/src/routes/` (TanStack Router convention).
 - Use Shadcn/UI components for all UI elements; extend with Tailwind v4 utility classes.
 - Write unit tests with Vitest; write end-to-end tests covering critical user flows.

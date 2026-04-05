@@ -9,6 +9,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
     "drizzle-orm": "^0.45.2",
     "elysia": "latest",
     "postgres": "^3.4.8"
@@ -17,5 +18,7 @@
     "bun-types": "latest",
     "drizzle-kit": "^0.31.10"
   },
-  "module": "src/index.js"
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }
