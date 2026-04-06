@@ -6,11 +6,12 @@ A service marketplace where users post offers or requests for services (e.g. tut
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 19, TanStack Start, Tailwind CSS v4, Shadcn/UI |
+| Frontend | React 19, TanStack Start (SPA mode), Tailwind CSS v4, Shadcn/UI |
 | Backend | ElysiaJS |
 | ORM | Drizzle ORM |
 | Database | PostgreSQL 17 |
 | Runtime | Bun |
+| Data Fetching | TanStack Query v5 |
 | Testing | Vitest, Testing Library |
 
 ## Project Structure
@@ -21,8 +22,11 @@ pb138-marketplace_for_services/
 │   ├── api/                      # ElysiaJS backend (port 3001)
 │   │   ├── src/
 │   │   │   ├── db/
-│   │   │   │   └── schema.ts     # All Drizzle table + relation definitions
-│   │   │   └── index.ts          # Server entry point
+│   │   │   │   ├── index.ts      # Drizzle singleton (import `db` from here)
+│   │   │   │   ├── schema.ts     # All Drizzle table + relation definitions
+│   │   │   │   └── seed.ts       # Upsert-based seed script
+│   │   │   ├── routes/           # One file per resource (posts.ts, categories.ts, …)
+│   │   │   └── index.ts          # Server entry point — registers plugins, CORS
 │   │   ├── drizzle/              # Generated SQL migrations
 │   │   ├── drizzle.config.ts
 │   │   └── .env                  # DATABASE_URL (copy from .env.example)
@@ -30,7 +34,10 @@ pb138-marketplace_for_services/
 │       └── src/
 │           ├── routes/           # File-based routes (TanStack Router)
 │           ├── components/       # Shared UI components
-│           └── router.tsx
+│           │   └── ui/           # Shadcn/UI primitives
+│           ├── api.ts            # Eden Treaty typed client (import as `api`)
+│           ├── router.tsx        # Router factory + exported `queryClient`
+│           └── styles.css        # Global styles + Tailwind theme tokens
 ├── docs/                         # Non-code project resources
 │   ├── erd.puml                  # Entity-relationship diagram (source of truth for schema)
 │   ├── erd_image.png
@@ -59,6 +66,7 @@ Schema is defined in `apps/api/src/db/schema.ts` using Drizzle ORM. The ERD (`do
 bun run --filter api db:generate   # Generate migration after schema changes
 bun run --filter api db:migrate    # Apply pending migrations
 bun run --filter api db:studio     # Open Drizzle Studio GUI
+bun run --filter api db:seed       # Seed sample data
 ```
 
 ## Local Development Setup
@@ -76,7 +84,10 @@ docker-compose up -d
 # 4. Apply migrations
 bun run --filter api db:migrate
 
-# 5. Start both servers
+# 5. (Optional) Seed sample data
+bun run --filter api db:seed
+
+# 6. Start both servers
 bun run dev
 ```
 
@@ -107,11 +118,110 @@ import { api } from '#/api'
 const { data, error } = await api.posts.get()
 ```
 
+## Data Fetching Pattern (TanStack Query + Router)
+
+All server data is fetched via **TanStack Query** and integrated with **TanStack Router** loaders.
+
+### Query options
+
+Define query options with `queryOptions()` so the key and function are co-located and reusable:
+
+```ts
+export const categoriesQueryOptions = queryOptions({
+  queryKey: ['categories'],
+  queryFn: async () => {
+    const { data, error } = await api.categories.get()
+    if (error) throw error
+    return data as Category[]
+  },
+})
+```
+
+### Route loader — prefetch before render
+
+Use the route `loader` to prefetch data into the cache before the component renders. The `queryClient` is available via router context (already wired up in `router.tsx`):
+
+```ts
+export const Route = createFileRoute('/some-route')({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(categoriesQueryOptions)
+  },
+  pendingComponent: MySkeletonComponent,
+  component: MyPage,
+})
+```
+
+- Use `await ensureQueryData(...)` to block render until data is ready — `pendingComponent` shows in the meantime.
+- Use `void prefetchQuery(...)` (no await) when you want the component to render immediately and let Suspense handle the loading state instead.
+- Add `loaderDeps` only when filter params should re-run the loader on navigation. Omit it when filter changes should be handled by Suspense inside the component.
+
+### Component — read from cache
+
+Use `useSuspenseQuery` in components so data is guaranteed to be defined (no undefined checks):
+
+```ts
+const { data: categories } = useSuspenseQuery(categoriesQueryOptions)
+```
+
+Use plain `useQuery` when you want the component to render immediately (e.g. the filter bar must show while posts are still loading):
+
+```ts
+const { data: categories = [] } = useQuery(categoriesQueryOptions)
+```
+
+### Suspense for partial loading states
+
+Wrap only the data-dependent section in `<Suspense>` so the rest of the page (e.g. a filter bar) stays visible:
+
+```tsx
+<Suspense fallback={<PostsSkeleton />}>
+  <PostsList type={type} category={category} />
+</Suspense>
+```
+
+Extract the suspended child into its own component that calls `useSuspenseQuery`.
+
+### Cache lifetime
+
+`staleTime` defaults to **1 minute** (set in `router.tsx`). Repeated filter combinations are served instantly from cache within that window.
+
+## URL Search Params
+
+Use URL search params (not `useState`) for any state the user might want to share or bookmark — filters, search queries, sort order, pagination, active tabs, etc.
+
+### Pattern
+
+```ts
+export const Route = createFileRoute('/posts')({
+  validateSearch: (search): { q?: string; type?: PostTypeFilter } => ({
+    q: typeof search.q === 'string' ? search.q : undefined,
+    type: VALID_TYPES.includes(search.type as PostTypeFilter)
+      ? (search.type as PostTypeFilter)
+      : undefined,
+  }),
+  component: PostsPage,
+})
+
+function PostsPage() {
+  const { q = '', type = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  const setType = (value: PostTypeFilter) =>
+    navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value }) })
+}
+```
+
+Key rules:
+- **Store default values as `undefined`** so they're omitted from the URL (`/?type=offer` not `/?q=&type=offer&sort=newest`).
+- **Validate in `validateSearch`** — always sanitise raw URL strings against a known-values array at runtime (TypeScript types are erased at runtime).
+- **Navigate with a updater function** (`search: (prev) => ({ ...prev, key: value })`) to preserve other params.
+
 ## Code Conventions
 
 - All TypeScript — no `any` unless unavoidable.
 - Soft-delete pattern: set `deleted_at` rather than deleting rows.
-- Backend routes live in `apps/api/src/` alongside their Drizzle queries.
+- Backend routes live in `apps/api/src/routes/` — one file per resource, registered as Elysia plugins in `index.ts`.
 - Frontend routes are file-based under `apps/web/src/routes/` (TanStack Router convention).
 - Use Shadcn/UI components for all UI elements; extend with Tailwind v4 utility classes.
+- To add a new Shadcn component: `bunx --bun shadcn@latest add <name>`
 - Write unit tests with Vitest; write end-to-end tests covering critical user flows.

@@ -1,10 +1,10 @@
 # Marketplace for Services
 
-A full-stack monorepo with a React frontend and a REST API backend.
+A full-stack monorepo where users post offers or requests for services (e.g. tutoring, plumbing, design). Posts are organised by category and users can rate each other through reviews.
 
 | Layer | Tech |
 |-------|------|
-| Frontend | TanStack Start, React 19, Tailwind CSS v4, Shadcn |
+| Frontend | TanStack Start (SPA), React 19, Tailwind CSS v4, Shadcn/UI |
 | Backend | ElysiaJS, Drizzle ORM |
 | Database | PostgreSQL 17 |
 | Runtime | Bun |
@@ -25,10 +25,8 @@ bun install
 ### 2. Configure environment
 
 ```bash
-cp api/.env.example api/.env
+cp apps/api/.env.example apps/api/.env
 ```
-
-Edit `api/.env` if your local PostgreSQL credentials differ from the defaults.
 
 ### 3. Start the database
 
@@ -42,7 +40,13 @@ docker-compose up -d
 bun run --filter api db:migrate
 ```
 
-### 5. Start the development servers
+### 5. (Optional) Seed the database
+
+```bash
+bun run --filter api db:seed
+```
+
+### 6. Start the development servers
 
 ```bash
 bun run dev
@@ -53,40 +57,45 @@ bun run dev
 | Frontend | http://localhost:3000 |
 | Backend | http://localhost:3001 |
 
+## Project Structure
+
+```
+pb138-marketplace_for_services/
+├── apps/
+│   ├── api/                      # ElysiaJS backend (port 3001)
+│   │   ├── src/
+│   │   │   ├── db/
+│   │   │   │   ├── index.ts      # Drizzle singleton connection
+│   │   │   │   ├── schema.ts     # All table + relation definitions
+│   │   │   │   └── seed.ts       # Seed script (roles, accounts, posts, categories)
+│   │   │   ├── routes/
+│   │   │   │   ├── posts.ts      # GET /posts (search, type, category filters)
+│   │   │   │   └── categories.ts # GET /categories
+│   │   │   └── index.ts          # Server entry point + CORS
+│   │   ├── drizzle/              # Generated SQL migrations
+│   │   ├── drizzle.config.ts
+│   │   └── .env.example
+│   └── web/                      # TanStack Start frontend (port 3000)
+│       └── src/
+│           ├── routes/           # File-based routes (TanStack Router)
+│           ├── components/       # Shared UI components
+│           │   └── ui/           # Shadcn/UI components
+│           ├── api.ts            # Eden Treaty typed API client
+│           ├── router.tsx        # Router + QueryClient setup
+│           └── styles.css        # Global styles + Tailwind
+├── docs/                         # Non-code project resources
+├── docker-compose.yml
+├── tsconfig.json
+└── package.json                  # Workspace root
+```
+
 ## Database
 
 The project uses Drizzle ORM. All schema changes go through migrations.
 
 ```bash
-# After editing api/src/db/schema.ts, generate a new migration
-bun run --filter api db:generate
-
-# Apply pending migrations
-bun run --filter api db:migrate
-
-# Open Drizzle Studio (database GUI)
-bun run --filter api db:studio
-```
-
-## Project Structure
-
-```
-marketplace-for-services/
-├── api/                  # ElysiaJS backend
-│   ├── src/
-│   │   ├── db/
-│   │   │   └── schema.ts # Drizzle schema definitions
-│   │   └── index.ts      # Server entry point
-│   ├── drizzle/          # Generated migration files
-│   ├── drizzle.config.ts
-│   └── .env.example
-├── web/                  # TanStack Start frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── routes/
-│   │   └── router.tsx
-│   └── vite.config.ts
-├── docker-compose.yml
-├── tsconfig.json         # Shared base TypeScript config
-└── package.json          # Workspace root
+bun run --filter api db:generate   # Generate migration after editing schema.ts
+bun run --filter api db:migrate    # Apply pending migrations
+bun run --filter api db:studio     # Open Drizzle Studio (database GUI)
+bun run --filter api db:seed       # Seed with sample data
 ```
