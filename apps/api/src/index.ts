@@ -1,13 +1,17 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
+import { postsRoutes } from "./routes/posts";
+import { categoriesRoutes } from "./routes/categories";
 
 export const app = new Elysia()
-  .use(cors())
-  .get("/", () => "Hello Elysia")
+  .use(cors({ origin: "http://localhost:3000" }))
+  .get("/", () => "Marketplace API")
+  .use(postsRoutes)
+  .use(categoriesRoutes)
   .listen(3001);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 export type App = typeof app;

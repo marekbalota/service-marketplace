@@ -1,87 +1,398 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useMemo, Suspense } from 'react'
+import { queryOptions, useSuspenseQuery, useQuery } from '@tanstack/react-query'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import { api } from '#/api'
+import { PostCard } from '#/components/PostCard'
+import { Input } from '#/components/ui/input'
+import { buttonVariants } from '#/components/ui/button'
+import { cn } from '#/lib/utils'
+import { Skeleton } from '#/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '#/components/ui/sheet'
 
-export const Route = createFileRoute('/')({ component: App })
+type SortOption = 'newest' | 'price-low' | 'price-high' | 'name'
+type PostTypeFilter = 'all' | 'offer' | 'request'
 
-function App() {
+const VALID_TYPES: PostTypeFilter[] = ['all', 'offer', 'request']
+const VALID_SORTS: SortOption[] = ['newest', 'price-low', 'price-high', 'name']
+
+const POST_TYPE_LABELS: Record<PostTypeFilter, string> = {
+  all: 'All Types',
+  offer: 'Offers Only',
+  request: 'Requests Only',
+}
+
+const SORT_LABELS: Record<SortOption, string> = {
+  newest: 'Newest First',
+  'price-low': 'Price: Low to High',
+  'price-high': 'Price: High to Low',
+  name: 'Name: A to Z',
+}
+
+export type Category = {
+  categoryId: string
+  name: string
+  description: string | null
+}
+
+export type Post = {
+  postId: string
+  postTitle: string
+  description: string
+  postType: string
+  price: string | null
+  rateType: string | null
+  createdAt: string | Date
+  authorName: string
+  categories: { categoryId: string; name: string }[]
+}
+
+// --- Query options ---
+
+export const categoriesQueryOptions = queryOptions({
+  queryKey: ['categories'],
+  queryFn: async () => {
+    const { data, error } = await api.categories.get()
+    if (error) throw error
+    return data as Category[]
+  },
+})
+
+export function postsQueryOptions(deps: { type?: PostTypeFilter; category?: string }) {
+  const query: Record<string, string> = {}
+  if (deps.type && deps.type !== 'all') query.type = deps.type.toUpperCase()
+  if (deps.category && deps.category !== 'all') query.categoryId = deps.category
+
+  return queryOptions({
+    queryKey: ['posts', deps],
+    queryFn: async () => {
+      const { data, error } = await api.posts.get({ query })
+      if (error) throw error
+      return data as Post[]
+    },
+  })
+}
+
+// --- Route ---
+
+export const Route = createFileRoute('/')({
+  validateSearch: (search): {
+    q?: string
+    type?: PostTypeFilter
+    category?: string
+    sort?: SortOption
+  } => ({
+    q: typeof search.q === 'string' ? search.q : undefined,
+    type: VALID_TYPES.includes(search.type as PostTypeFilter)
+      ? (search.type as PostTypeFilter)
+      : undefined,
+    category: typeof search.category === 'string' ? search.category : undefined,
+    sort: VALID_SORTS.includes(search.sort as SortOption)
+      ? (search.sort as SortOption)
+      : undefined,
+  }),
+  // Blocks render until initial data is ready — pendingComponent shows in the meantime.
+  // No loaderDeps: filter changes go through Suspense inside the component.
+  loader: async ({ context: { queryClient } }) => {
+    await Promise.all([
+      queryClient.ensureQueryData(categoriesQueryOptions),
+      queryClient.ensureQueryData(postsQueryOptions({})),
+    ])
+  },
+  pendingComponent: PageSkeleton,
+  component: HomePage,
+})
+
+// --- Skeletons ---
+
+function PostSkeleton() {
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-        <p className="island-kicker mb-3">TanStack Start Base Template</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          Start simple, ship quickly.
-        </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          This base starter intentionally keeps things light: two routes, clean
-          structure, and the essentials you need to build from scratch.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="/about"
-            className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-          >
-            About This Starter
-          </a>
-          <a
-            href="https://tanstack.com/router"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)]"
-          >
-            Router Guide
-          </a>
+    <div className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
         </div>
-      </section>
+        <Skeleton className="h-6 w-14" />
+      </div>
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <div className="flex gap-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </div>
+  )
+}
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          [
-            'Type-Safe Routing',
-            'Routes and links stay in sync across every page.',
-          ],
-          [
-            'Server Functions',
-            'Call server code from your UI without creating API boilerplate.',
-          ],
-          [
-            'Streaming by Default',
-            'Ship progressively rendered responses for faster experiences.',
-          ],
-          [
-            'Tailwind Native',
-            'Design quickly with utility-first styling and reusable tokens.',
-          ],
-        ].map(([title, desc], index) => (
-          <article
-            key={title}
-            className="island-shell feature-card rise-in rounded-2xl p-5"
-            style={{ animationDelay: `${index * 90 + 80}ms` }}
-          >
-            <h2 className="mb-2 text-base font-semibold text-[var(--sea-ink)]">
-              {title}
-            </h2>
-            <p className="m-0 text-sm text-[var(--sea-ink-soft)]">{desc}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="island-shell mt-8 rounded-2xl p-6">
-        <p className="island-kicker mb-2">Quick Start</p>
-        <ul className="m-0 list-disc space-y-2 pl-5 text-sm text-[var(--sea-ink-soft)]">
-          <li>
-            Edit <code>src/routes/index.tsx</code> to customize the home page.
-          </li>
-          <li>
-            Update <code>src/components/Header.tsx</code> and{' '}
-            <code>src/components/Footer.tsx</code> for brand links.
-          </li>
-          <li>
-            Add routes in <code>src/routes</code> and tweak visual tokens in{' '}
-            <code>src/styles.css</code>.
-          </li>
-        </ul>
-      </section>
+function PostsSkeleton() {
+  return (
+    <main className="mx-auto max-w-7xl px-4 py-6">
+      <Skeleton className="mb-4 h-4 w-40" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => <PostSkeleton key={i} />)}
+      </div>
     </main>
+  )
+}
+
+// Shown by TanStack Router during initial route load (while loader is awaiting data)
+function PageSkeleton() {
+  return (
+    <>
+      <div className="border-b bg-card shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="mb-4 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search services, providers, or keywords..."
+                disabled
+                className="pl-9"
+              />
+            </div>
+            <Skeleton className="size-9 shrink-0 rounded-md md:hidden" />
+          </div>
+          <div className="hidden gap-3 md:flex">
+            <Skeleton className="h-9 w-[160px] rounded-md" />
+            <Skeleton className="h-9 w-[200px] rounded-md" />
+            <Skeleton className="h-9 w-[200px] rounded-md" />
+          </div>
+        </div>
+      </div>
+      <PostsSkeleton />
+    </>
+  )
+}
+
+// --- Posts list (suspends while its query is loading) ---
+
+function PostsList({ type, category, q, sort }: {
+  type: PostTypeFilter
+  category: string
+  q: string
+  sort: SortOption
+}) {
+  const { data: posts } = useSuspenseQuery(postsQueryOptions({ type, category }))
+
+  const filteredAndSorted = useMemo(() => {
+    let result = posts
+
+    if (q) {
+      const lower = q.toLowerCase()
+      result = result.filter(
+        (p) =>
+          p.postTitle.toLowerCase().includes(lower) ||
+          p.description.toLowerCase().includes(lower) ||
+          p.authorName.toLowerCase().includes(lower),
+      )
+    }
+
+    const sorted = [...result]
+    if (sort === 'price-low') {
+      sorted.sort((a, b) => parseFloat(a.price ?? '0') - parseFloat(b.price ?? '0'))
+    } else if (sort === 'price-high') {
+      sorted.sort((a, b) => parseFloat(b.price ?? '0') - parseFloat(a.price ?? '0'))
+    } else if (sort === 'name') {
+      sorted.sort((a, b) => a.postTitle.localeCompare(b.postTitle))
+    }
+
+    return sorted
+  }, [posts, q, sort])
+
+  return (
+    <main className="mx-auto max-w-7xl px-4 py-6">
+      <p className="mb-4 text-muted-foreground">
+        {filteredAndSorted.length} service{filteredAndSorted.length !== 1 ? 's' : ''} available
+      </p>
+
+      {filteredAndSorted.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">No services found matching your criteria.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAndSorted.map((post) => (
+            <PostCard key={post.postId} post={post} />
+          ))}
+        </div>
+      )}
+    </main>
+  )
+}
+
+// --- Page ---
+
+function HomePage() {
+  const { q = '', type = 'all', category = 'all', sort = 'newest' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  // useQuery (not suspense) so the filter bar renders immediately before categories arrive
+  const { data: categories = [] } = useQuery(categoriesQueryOptions)
+
+  const setQ = (value: string) =>
+    navigate({ search: (prev) => ({ ...prev, q: value || undefined }) })
+  const setType = (value: PostTypeFilter) =>
+    navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value }) })
+  const setCategory = (value: string) =>
+    navigate({ search: (prev) => ({ ...prev, category: value === 'all' ? undefined : value }) })
+  const setSort = (value: SortOption) =>
+    navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value }) })
+
+  const filterControls = (
+    <>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Post Type</label>
+        <Select value={type} onValueChange={(v) => setType(v as PostTypeFilter)}>
+          <SelectTrigger>
+            <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="offer">Offers Only</SelectItem>
+            <SelectItem value="request">Requests Only</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Category</label>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger>
+            <SelectValue>
+              {category === 'all'
+                ? 'All Categories'
+                : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Sort By</label>
+        <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+          <SelectTrigger>
+            <SelectValue>{SORT_LABELS[sort]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="price-low">Price: Low to High</SelectItem>
+            <SelectItem value="price-high">Price: High to Low</SelectItem>
+            <SelectItem value="name">Name: A to Z</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </>
+  )
+
+  return (
+    <>
+      {/* Search & Filters bar — always visible */}
+      <div className="border-b bg-card shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="mb-4 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search services, providers, or keywords..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Mobile filter sheet */}
+            <Sheet>
+              <SheetTrigger className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'shrink-0 md:hidden')}>
+                <SlidersHorizontal className="size-4" />
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Filters & Sort</SheetTitle>
+                  <SheetDescription>Refine your search results</SheetDescription>
+                </SheetHeader>
+                <div className="mt-6 space-y-6">{filterControls}</div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Desktop filters */}
+          <div className="hidden gap-3 md:flex">
+            <Select value={type} onValueChange={(v) => setType(v as PostTypeFilter)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="offer">Offers Only</SelectItem>
+                <SelectItem value="request">Requests Only</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue>
+                  {category === 'all'
+                    ? 'All Categories'
+                    : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue>{SORT_LABELS[sort]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="name">Name: A to Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Posts — Suspense boundary only covers this area */}
+      <Suspense fallback={<PostsSkeleton />}>
+        <PostsList type={type} category={category} q={q} sort={sort} />
+      </Suspense>
+    </>
   )
 }
