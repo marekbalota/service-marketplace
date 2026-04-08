@@ -25,7 +25,7 @@ bun install
 ### 2. Configure environment
 
 ```bash
-cp apps/api/.env.example apps/api/.env
+cp .env.example .env
 ```
 
 ### 3. Start the database
@@ -73,8 +73,7 @@ pb138-marketplace_for_services/
 │   │   │   │   └── categories.ts # GET /categories
 │   │   │   └── index.ts          # Server entry point + CORS
 │   │   ├── drizzle/              # Generated SQL migrations
-│   │   ├── drizzle.config.ts
-│   │   └── .env.example
+│   │   └── drizzle.config.ts
 │   └── web/                      # TanStack Start frontend (port 3000)
 │       └── src/
 │           ├── routes/           # File-based routes (TanStack Router)
@@ -86,8 +85,18 @@ pb138-marketplace_for_services/
 ├── docs/                         # Non-code project resources
 ├── docker-compose.yml
 ├── tsconfig.json
+├── .env.example                  # Copy to .env and fill in values
 └── package.json                  # Workspace root
 ```
+
+## Testing
+
+```bash
+bun run test          # Unit + integration tests (API via bun:test, web via Vitest)
+bun run test:e2e      # End-to-end tests via Playwright (requires both dev servers running)
+```
+
+> API integration tests hit the real database — ensure Docker is running before running tests.
 
 ## Database
 

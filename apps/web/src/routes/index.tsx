@@ -313,6 +313,7 @@ function PostTypeSelect({ triggerClassName }: { triggerClassName?: string }) {
 function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
   const { category = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
+  // useQuery (not suspense) so the filter bar renders immediately before categories arrive
   const { data: categories = [] } = useQuery(categoriesQueryOptions)
   return (
     <Select

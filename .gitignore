@@ -19,6 +19,10 @@ __unconfig*
 coverage
 *.lcov
 
+# Playwright
+test-results/
+playwright-report/
+
 # logs
 logs
 *.log
@@ -46,6 +50,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.zip
 *.tar.gz
 *.trace
+
+# Claude Code local files
+.claude/*.local.json
 
 # IntelliJ based IDEs
 .idea
