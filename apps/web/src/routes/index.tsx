@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useMemo, Suspense } from 'react'
-import { queryOptions, useSuspenseQuery, useQuery } from '@tanstack/react-query'
+import { Suspense } from 'react'
+import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
@@ -23,9 +23,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '#/components/ui/sheet'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '#/components/ui/pagination'
 
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'name'
 type PostTypeFilter = 'all' | 'offer' | 'request'
+
+const PAGE_SIZE = 12
 
 const VALID_TYPES: PostTypeFilter[] = ['all', 'offer', 'request']
 const VALID_SORTS: SortOption[] = ['newest', 'price-low', 'price-high', 'name']
@@ -61,6 +72,12 @@ export type Post = {
   categories: { categoryId: string; name: string }[]
 }
 
+export type PostsPage = {
+  items: Post[]
+  total: number
+  totalPages: number
+}
+
 // --- Query options ---
 
 export const categoriesQueryOptions = queryOptions({
@@ -72,18 +89,29 @@ export const categoriesQueryOptions = queryOptions({
   },
 })
 
-export function postsQueryOptions(deps: { type?: PostTypeFilter; category?: string }) {
+export function postsQueryOptions(deps: {
+  type?: PostTypeFilter
+  category?: string
+  q?: string
+  sort?: SortOption
+  page?: number
+}) {
   const query: Record<string, string> = {}
-  if (deps.type && deps.type !== 'all') query.type = deps.type.toUpperCase()
+  if (deps.type && deps.type !== 'all')         query.type       = deps.type.toUpperCase()
   if (deps.category && deps.category !== 'all') query.categoryId = deps.category
+  if (deps.q)                                   query.search     = deps.q
+  if (deps.sort && deps.sort !== 'newest')      query.sort       = deps.sort
+  if (deps.page && deps.page > 1)               query.page       = String(deps.page)
+  query.pageSize = String(PAGE_SIZE)
 
   return queryOptions({
     queryKey: ['posts', deps],
     queryFn: async () => {
       const { data, error } = await api.posts.get({ query })
       if (error) throw error
-      return data as Post[]
+      return data as PostsPage
     },
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -95,6 +123,7 @@ export const Route = createFileRoute('/')({
     type?: PostTypeFilter
     category?: string
     sort?: SortOption
+    page?: number
   } => ({
     q: typeof search.q === 'string' ? search.q : undefined,
     type: VALID_TYPES.includes(search.type as PostTypeFilter)
@@ -104,9 +133,10 @@ export const Route = createFileRoute('/')({
     sort: VALID_SORTS.includes(search.sort as SortOption)
       ? (search.sort as SortOption)
       : undefined,
+    page: typeof search.page === 'number' && search.page > 0
+      ? Math.floor(search.page)
+      : undefined,
   }),
-  // Blocks render until initial data is ready — pendingComponent shows in the meantime.
-  // No loaderDeps: filter changes go through Suspense inside the component.
   loader: async ({ context: { queryClient } }) => {
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions),
@@ -147,7 +177,7 @@ function PostsSkeleton() {
     <main className="mx-auto max-w-7xl px-4 py-6">
       <Skeleton className="mb-4 h-4 w-40" />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => <PostSkeleton key={i} />)}
+        {Array.from({ length: PAGE_SIZE }).map((_, i) => <PostSkeleton key={i} />)}
       </div>
     </main>
   )
@@ -183,56 +213,98 @@ function PageSkeleton() {
   )
 }
 
+// --- Page number builder ---
+
+function buildPageNumbers(current: number, total: number): (number | 'ellipsis')[] {
+  const pages = new Set<number>()
+  pages.add(1)
+  pages.add(total)
+  for (let p = Math.max(1, current - 1); p <= Math.min(total, current + 1); p++) {
+    pages.add(p)
+  }
+  const sorted = Array.from(pages).sort((a, b) => a - b)
+  const result: (number | 'ellipsis')[] = []
+  for (let i = 0; i < sorted.length; i++) {
+    const curr = sorted[i]!
+    const prev = sorted[i - 1]
+    if (i > 0 && prev !== undefined && curr - prev > 1) result.push('ellipsis')
+    result.push(curr)
+  }
+  return result
+}
+
 // --- Posts list (suspends while its query is loading) ---
 
-function PostsList({ type, category, q, sort }: {
+function PostsList({ type, category, q, sort, page }: {
   type: PostTypeFilter
   category: string
   q: string
   sort: SortOption
+  page: number
 }) {
-  const { data: posts } = useSuspenseQuery(postsQueryOptions({ type, category }))
+  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page }))
+  const navigate = Route.useNavigate()
 
-  const filteredAndSorted = useMemo(() => {
-    let result = posts
-
-    if (q) {
-      const lower = q.toLowerCase()
-      result = result.filter(
-        (p) =>
-          p.postTitle.toLowerCase().includes(lower) ||
-          p.description.toLowerCase().includes(lower) ||
-          p.authorName.toLowerCase().includes(lower),
-      )
-    }
-
-    const sorted = [...result]
-    if (sort === 'price-low') {
-      sorted.sort((a, b) => parseFloat(a.price ?? '0') - parseFloat(b.price ?? '0'))
-    } else if (sort === 'price-high') {
-      sorted.sort((a, b) => parseFloat(b.price ?? '0') - parseFloat(a.price ?? '0'))
-    } else if (sort === 'name') {
-      sorted.sort((a, b) => a.postTitle.localeCompare(b.postTitle))
-    }
-
-    return sorted
-  }, [posts, q, sort])
+  const setPage = (value: number) =>
+    navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <p className="mb-4 text-muted-foreground">
-        {filteredAndSorted.length} service{filteredAndSorted.length !== 1 ? 's' : ''} available
+        {data.total} service{data.total !== 1 ? 's' : ''} available
       </p>
 
-      {filteredAndSorted.length === 0 ? (
+      {data.items.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-muted-foreground">No services found matching your criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAndSorted.map((post) => (
+          {data.items.map((post) => (
             <PostCard key={post.postId} post={post} />
           ))}
+        </div>
+      )}
+
+      {data.totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(page - 1)}
+                  aria-disabled={page <= 1}
+                  className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+
+              {buildPageNumbers(page, data.totalPages).map((item, i) =>
+                item === 'ellipsis' ? (
+                  <PaginationItem key={`ellipsis-${i}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={item}>
+                    <PaginationLink
+                      isActive={item === page}
+                      onClick={() => setPage(item)}
+                      className="cursor-pointer"
+                    >
+                      {item}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(page + 1)}
+                  aria-disabled={page >= data.totalPages}
+                  className={page >= data.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </main>
@@ -242,20 +314,20 @@ function PostsList({ type, category, q, sort }: {
 // --- Page ---
 
 function HomePage() {
-  const { q = '', type = 'all', category = 'all', sort = 'newest' } = Route.useSearch()
+  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
   const navigate = Route.useNavigate()
 
   // useQuery (not suspense) so the filter bar renders immediately before categories arrive
   const { data: categories = [] } = useQuery(categoriesQueryOptions)
 
   const setQ = (value: string) =>
-    navigate({ search: (prev) => ({ ...prev, q: value || undefined }) })
+    navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
   const setType = (value: PostTypeFilter) =>
-    navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value }) })
+    navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value, page: undefined }) })
   const setCategory = (value: string) =>
-    navigate({ search: (prev) => ({ ...prev, category: value === 'all' ? undefined : value }) })
+    navigate({ search: (prev) => ({ ...prev, category: value === 'all' ? undefined : value, page: undefined }) })
   const setSort = (value: SortOption) =>
-    navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value }) })
+    navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value, page: undefined }) })
 
   const filterControls = (
     <>
@@ -275,7 +347,7 @@ function HomePage() {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Category</label>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={category} onValueChange={(v) => v && setCategory(v)}>
           <SelectTrigger>
             <SelectValue>
               {category === 'all'
@@ -356,7 +428,7 @@ function HomePage() {
               </SelectContent>
             </Select>
 
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={(v) => v && setCategory(v)}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue>
                   {category === 'all'
@@ -391,7 +463,7 @@ function HomePage() {
 
       {/* Posts — Suspense boundary only covers this area */}
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} />
+        <PostsList type={type} category={category} q={q} sort={sort} page={page} />
       </Suspense>
     </>
   )
