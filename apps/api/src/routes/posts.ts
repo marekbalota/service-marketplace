@@ -1,22 +1,15 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
 import { posts, userProfiles, postCategories, categories } from "../db/schema";
-import { eq, isNull, ilike, and, inArray, or, desc, asc, countDistinct } from "drizzle-orm";
+import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .get(
     "/",
     async ({ query }) => {
-      const {
-        search,
-        type,
-        categoryId,
-        sort = "newest",
-        page = 1,
-        pageSize = 12,
-      } = query;
+      const { search, type, categoryId, sort, offset, size } = query;
 
-      const offset = (page - 1) * pageSize;
+      const effectiveOffset = offset ?? 0;
 
       const orderBy =
         sort === "price-low"  ? asc(posts.price)      :
@@ -33,143 +26,70 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
               ilike(userProfiles.name, `%${search}%`),
             )
           : undefined,
-        type && (type === "OFFER" || type === "REQUEST")
-          ? eq(posts.postType, type)
+        type ? eq(posts.postType, type) : undefined,
+        categoryId
+          ? exists(
+              db.select().from(postCategories).where(
+                and(
+                  eq(postCategories.postId, posts.postId),
+                  eq(postCategories.categoryId, categoryId),
+                ),
+              ),
+            )
           : undefined,
       );
 
-      let total: number;
-      let pagedIdRows: { postId: string }[];
+      const [countRow] = await db
+        .select({ total: count() })
+        .from(posts)
+        .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+        .where(conditions);
+      const total = countRow?.total ?? 0;
 
-      if (categoryId) {
-        const [countRow] = await db
-          .select({ total: countDistinct(posts.postId) })
-          .from(posts)
-          .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-          .innerJoin(
-            postCategories,
-            and(
-              eq(posts.postId, postCategories.postId),
-              eq(postCategories.categoryId, categoryId),
-            ),
-          )
-          .where(conditions);
-        total = Number(countRow?.total ?? 0);
-
-        pagedIdRows = await db
-          .select({ postId: posts.postId })
-          .from(posts)
-          .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-          .innerJoin(
-            postCategories,
-            and(
-              eq(posts.postId, postCategories.postId),
-              eq(postCategories.categoryId, categoryId),
-            ),
-          )
-          .where(conditions)
-          .orderBy(orderBy)
-          .limit(pageSize)
-          .offset(offset);
-      } else {
-        const [countRow] = await db
-          .select({ total: countDistinct(posts.postId) })
-          .from(posts)
-          .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-          .where(conditions);
-        total = Number(countRow?.total ?? 0);
-
-        pagedIdRows = await db
-          .select({ postId: posts.postId })
-          .from(posts)
-          .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-          .where(conditions)
-          .orderBy(orderBy)
-          .limit(pageSize)
-          .offset(offset);
-      }
-
-      const ids = pagedIdRows.map((r) => r.postId);
-
-      if (ids.length === 0) {
-        return {
-          items: [],
-          total,
-          totalPages: Math.ceil(total / pageSize),
-        };
-      }
-
-      const rows = await db
+      const q = db
         .select({
-          postId:       posts.postId,
-          postTitle:    posts.postTitle,
-          description:  posts.description,
-          postType:     posts.postType,
-          price:        posts.price,
-          rateType:     posts.rateType,
-          createdAt:    posts.createdAt,
-          authorName:   userProfiles.name,
-          categoryId:   categories.categoryId,
-          categoryName: categories.name,
+          postId:      posts.postId,
+          postTitle:   posts.postTitle,
+          description: posts.description,
+          postType:    posts.postType,
+          price:       posts.price,
+          rateType:    posts.rateType,
+          createdAt:   posts.createdAt,
+          authorName:  userProfiles.name,
+          categories:  sql<{ categoryId: string; name: string }[]>`
+            coalesce(
+              json_agg(
+                json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+              ) filter (where ${categories.categoryId} is not null),
+              '[]'::json
+            )
+          `,
         })
         .from(posts)
         .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
         .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
         .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
-        .where(inArray(posts.postId, ids))
-        .orderBy(orderBy);
+        .where(conditions)
+        .groupBy(posts.postId, userProfiles.userProfileId)
+        .orderBy(orderBy)
+        .offset(effectiveOffset);
 
-      const postMap = new Map<
-        string,
-        {
-          postId: string;
-          postTitle: string;
-          description: string;
-          postType: string;
-          price: string | null;
-          rateType: string | null;
-          createdAt: Date;
-          authorName: string;
-          categories: { categoryId: string; name: string }[];
-        }
-      >();
-
-      for (const row of rows) {
-        if (!postMap.has(row.postId)) {
-          postMap.set(row.postId, {
-            postId:      row.postId,
-            postTitle:   row.postTitle,
-            description: row.description,
-            postType:    row.postType,
-            price:       row.price,
-            rateType:    row.rateType,
-            createdAt:   row.createdAt,
-            authorName:  row.authorName,
-            categories:  [],
-          });
-        }
-        if (row.categoryId && row.categoryName) {
-          postMap.get(row.postId)!.categories.push({
-            categoryId: row.categoryId,
-            name: row.categoryName,
-          });
-        }
-      }
+      const items = await (size !== undefined ? q.limit(size) : q);
 
       return {
-        items: Array.from(postMap.values()),
+        items,
         total,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: size !== undefined ? Math.ceil(total / size) : 1,
       };
     },
     {
       query: t.Object({
         search:     t.Optional(t.String()),
-        type:       t.Optional(t.String()),
+        type:       t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
         categoryId: t.Optional(t.String()),
-        sort:       t.Optional(t.String()),
-        page:       t.Optional(t.Numeric()),
-        pageSize:   t.Optional(t.Numeric()),
+        sort:   t.Optional(t.Union([t.Literal("newest"), t.Literal("price-low"), t.Literal("price-high"), t.Literal("name")])),
+        offset: t.Optional(t.Numeric()),
+        size:   t.Optional(t.Numeric()),
       }),
     },
   );
