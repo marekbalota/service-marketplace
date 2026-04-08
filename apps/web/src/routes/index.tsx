@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
+import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Search, SlidersHorizontal } from 'lucide-react'
@@ -388,8 +389,13 @@ function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
   const navigate = Route.useNavigate()
 
-  const setQ = (value: string) =>
-    navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
+  const [inputValue, setInputValue] = useState(q)
+  useEffect(() => { setInputValue(q) }, [q])
+
+  const searchDebouncer = useDebouncer(
+    (value: string) => navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
+    { wait: 400 },
+  )
 
   return (
     <>
@@ -402,8 +408,11 @@ function HomePage() {
               <Input
                 type="search"
                 placeholder="Search services, providers, or keywords..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value)
+                  searchDebouncer.maybeExecute(e.target.value)
+                }}
                 className="pl-9"
               />
             </div>
