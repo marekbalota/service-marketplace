@@ -29,9 +29,7 @@ test.describe('Marketplace index', () => {
     const totalBefore = parseInt(totalText!.match(/\d+/)![0]!)
 
     await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
-
-    // Debounce wait — 400 ms + some buffer
-    await page.waitForTimeout(600)
+    await page.waitForResponse(resp => resp.url().includes('/posts') && resp.status() === 200)
 
     const filteredText = await page.getByText(/\d+ service/).textContent()
     const totalAfter = parseInt(filteredText!.match(/\d+/)![0]!)
@@ -41,11 +39,9 @@ test.describe('Marketplace index', () => {
 
   test('shows empty state when search yields no results', async ({ page }) => {
     await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
-    await page.waitForTimeout(600)
+    await page.waitForResponse(resp => resp.url().includes('/posts') && resp.status() === 200)
 
-    const count = await page.getByText(/0 services available/).count()
-    const emptyMsg = await page.getByText('No services found matching your criteria.').count()
-    expect(count + emptyMsg).toBeGreaterThan(0)
+    await expect(page.getByText('No services found matching your criteria.')).toBeVisible()
   })
 
   test('pagination controls appear when there are multiple pages', async ({ page }) => {
