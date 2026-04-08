@@ -1,103 +1,97 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import {
-  posts,
-  userProfiles,
-  postCategories,
-  categories,
-} from "../db/schema";
-import { eq, isNull, ilike, and } from "drizzle-orm";
+import { posts, userProfiles, postCategories, categories } from "../db/schema";
+import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .get(
     "/",
     async ({ query }) => {
-      const { search, type, categoryId, authorId } = query;
+      const { search, type, categoryId, authorId, sort, offset, size } = query;
 
-      const rows = await db
+      const effectiveOffset = offset ?? 0;
+
+      const orderBy =
+        sort === "price-low"  ? asc(posts.price)     :
+        sort === "price-high" ? desc(posts.price)    :
+        sort === "name"       ? asc(posts.postTitle) :
+        desc(posts.createdAt);
+
+      const conditions = and(
+        isNull(posts.deletedAt),
+        search
+          ? or(
+              ilike(posts.postTitle, `%${search}%`),
+              ilike(posts.description, `%${search}%`),
+              ilike(userProfiles.name, `%${search}%`),
+            )
+          : undefined,
+        type ? eq(posts.postType, type) : undefined,
+        authorId ? eq(posts.authorId, authorId) : undefined,
+        categoryId
+          ? exists(
+              db.select().from(postCategories).where(
+                and(
+                  eq(postCategories.postId, posts.postId),
+                  eq(postCategories.categoryId, categoryId),
+                ),
+              ),
+            )
+          : undefined,
+      );
+
+      const [countRow] = await db
+        .select({ total: count() })
+        .from(posts)
+        .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+        .where(conditions);
+      const total = countRow?.total ?? 0;
+
+      const q = db
         .select({
-          postId: posts.postId,
-          postTitle: posts.postTitle,
+          postId:      posts.postId,
+          postTitle:   posts.postTitle,
           description: posts.description,
-          postType: posts.postType,
-          price: posts.price,
-          rateType: posts.rateType,
-          createdAt: posts.createdAt,
-          authorId: posts.authorId,
-          authorName: userProfiles.name,
-          categoryId: categories.categoryId,
-          categoryName: categories.name,
+          postType:    posts.postType,
+          price:       posts.price,
+          rateType:    posts.rateType,
+          createdAt:   posts.createdAt,
+          authorName:  userProfiles.name,
+          categories:  sql<{ categoryId: string; name: string }[]>`
+            coalesce(
+              json_agg(
+                json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+              ) filter (where ${categories.categoryId} is not null),
+              '[]'::json
+            )
+          `,
         })
         .from(posts)
         .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
         .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
         .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
-        .where(
-          and(
-            isNull(posts.deletedAt),
-            search ? ilike(posts.postTitle, `%${search}%`) : undefined,
-            type && (type === "OFFER" || type === "REQUEST")
-              ? eq(posts.postType, type)
-              : undefined,
-            authorId ? eq(posts.authorId, authorId) : undefined,
-          ),
-        );
+        .where(conditions)
+        .groupBy(posts.postId, userProfiles.userProfileId)
+        .orderBy(orderBy)
+        .offset(effectiveOffset);
 
-      const postMap = new Map<
-        string,
-        {
-          postId: string;
-          postTitle: string;
-          description: string;
-          postType: string;
-          price: string | null;
-          rateType: string | null;
-          createdAt: Date;
-          authorId: string;
-          authorName: string;
-          categories: { categoryId: string; name: string }[];
-        }
-      >();
+      const items = await (size !== undefined ? q.limit(size) : q);
 
-      for (const row of rows) {
-        if (!postMap.has(row.postId)) {
-          postMap.set(row.postId, {
-            postId: row.postId,
-            postTitle: row.postTitle,
-            description: row.description,
-            postType: row.postType,
-            price: row.price,
-            rateType: row.rateType,
-            createdAt: row.createdAt,
-            authorId: row.authorId,
-            authorName: row.authorName,
-            categories: [],
-          });
-        }
-        if (row.categoryId && row.categoryName) {
-          postMap.get(row.postId)!.categories.push({
-            categoryId: row.categoryId,
-            name: row.categoryName,
-          });
-        }
-      }
-
-      let result = Array.from(postMap.values());
-
-      if (categoryId) {
-        result = result.filter((p) =>
-          p.categories.some((c) => c.categoryId === categoryId),
-        );
-      }
-
-      return result;
+      return {
+        items,
+        total,
+        totalPages: size !== undefined ? Math.ceil(total / size) : 1,
+      };
     },
     {
       query: t.Object({
-        search: t.Optional(t.String()),
-        type: t.Optional(t.String()),
+        search:     t.Optional(t.String()),
+        type:       t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
         categoryId: t.Optional(t.String()),
-        authorId: t.Optional(t.String()),
+        authorId:   t.Optional(t.String()),
+        sort:       t.Optional(t.Union([t.Literal("newest"), t.Literal("price-low"), t.Literal("price-high"), t.Literal("name")])),
+        offset:     t.Optional(t.Numeric()),
+        size:       t.Optional(t.Numeric()),
       }),
     },
   )
@@ -106,49 +100,38 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     async ({ params, set }) => {
       const rows = await db
         .select({
-          postId: posts.postId,
-          postTitle: posts.postTitle,
+          postId:      posts.postId,
+          postTitle:   posts.postTitle,
           description: posts.description,
-          postType: posts.postType,
-          price: posts.price,
-          rateType: posts.rateType,
-          createdAt: posts.createdAt,
-          authorId: posts.authorId,
-          authorName: userProfiles.name,
-          categoryId: categories.categoryId,
-          categoryName: categories.name,
+          postType:    posts.postType,
+          price:       posts.price,
+          rateType:    posts.rateType,
+          createdAt:   posts.createdAt,
+          authorId:    posts.authorId,
+          authorName:  userProfiles.name,
+          categories:  sql<{ categoryId: string; name: string }[]>`
+            coalesce(
+              json_agg(
+                json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+              ) filter (where ${categories.categoryId} is not null),
+              '[]'::json
+            )
+          `,
         })
         .from(posts)
         .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
         .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
         .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
-        .where(and(eq(posts.postId, params.id), isNull(posts.deletedAt)));
+        .where(and(eq(posts.postId, params.id), isNull(posts.deletedAt)))
+        .groupBy(posts.postId, userProfiles.userProfileId)
+        .limit(1);
 
       if (rows.length === 0) {
         set.status = 404;
         return { message: "Post not found" };
       }
 
-      const first = rows[0]!;
-      const cats: { categoryId: string; name: string }[] = [];
-      for (const row of rows) {
-        if (row.categoryId && row.categoryName) {
-          cats.push({ categoryId: row.categoryId, name: row.categoryName });
-        }
-      }
-
-      return {
-        postId: first.postId,
-        postTitle: first.postTitle,
-        description: first.description,
-        postType: first.postType,
-        price: first.price,
-        rateType: first.rateType,
-        createdAt: first.createdAt,
-        authorId: first.authorId,
-        authorName: first.authorName,
-        categories: cats,
-      };
+      return rows[0]!;
     },
     {
       params: t.Object({ id: t.String() }),
@@ -178,19 +161,12 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     },
     {
       body: t.Object({
-        authorId: t.String({ format: "uuid" }),
-        postTitle: t.String({ minLength: 3 }),
+        authorId:    t.String(),
+        postTitle:   t.String({ minLength: 3 }),
         description: t.String({ minLength: 10 }),
-        postType: t.Union([t.Literal("OFFER"), t.Literal("REQUEST")]),
-        price: t.Optional(t.Union([t.String(), t.Null()])),
-        rateType: t.Optional(
-          t.Union([
-            t.Literal("HOURLY"),
-            t.Literal("DAILY"),
-            t.Literal("FIXED"),
-            t.Null(),
-          ]),
-        ),
+        postType:    t.Union([t.Literal("OFFER"), t.Literal("REQUEST")]),
+        price:       t.Optional(t.Union([t.String(), t.Null()])),
+        rateType:    t.Optional(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED"), t.Null()])),
         categoryIds: t.Optional(t.Array(t.String())),
       }),
     },
@@ -218,19 +194,14 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         .returning();
 
       if (categoryIds !== undefined) {
-        // Soft-delete existing category links
         await db
           .update(postCategories)
           .set({ deletedAt: new Date() })
           .where(eq(postCategories.postId, params.id));
 
-        // Insert new category links
         if (categoryIds.length > 0) {
           await db.insert(postCategories).values(
-            categoryIds.map((categoryId) => ({
-              postId: params.id,
-              categoryId,
-            })),
+            categoryIds.map((categoryId) => ({ postId: params.id, categoryId })),
           );
         }
       }
@@ -240,20 +211,11 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     {
       params: t.Object({ id: t.String() }),
       body: t.Object({
-        postTitle: t.Optional(t.String({ minLength: 3 })),
+        postTitle:   t.Optional(t.String({ minLength: 3 })),
         description: t.Optional(t.String({ minLength: 10 })),
-        postType: t.Optional(
-          t.Union([t.Literal("OFFER"), t.Literal("REQUEST")]),
-        ),
-        price: t.Optional(t.Union([t.String(), t.Null()])),
-        rateType: t.Optional(
-          t.Union([
-            t.Literal("HOURLY"),
-            t.Literal("DAILY"),
-            t.Literal("FIXED"),
-            t.Null(),
-          ]),
-        ),
+        postType:    t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
+        price:       t.Optional(t.Union([t.String(), t.Null()])),
+        rateType:    t.Optional(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED"), t.Null()])),
         categoryIds: t.Optional(t.Array(t.String())),
       }),
     },

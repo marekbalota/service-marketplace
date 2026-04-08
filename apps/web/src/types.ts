@@ -1,3 +1,5 @@
+// Shared types used across routes and components
+
 export type Category = {
   categoryId: string
   name: string
@@ -8,13 +10,18 @@ export type Post = {
   postId: string
   postTitle: string
   description: string
-  postType: 'OFFER' | 'REQUEST'
+  postType: string
   price: string | null
-  rateType: 'HOURLY' | 'DAILY' | 'FIXED' | null
+  rateType: string | null
   createdAt: string | Date
-  authorId: string
   authorName: string
   categories: { categoryId: string; name: string }[]
+}
+
+export type PostsPage = {
+  items: Post[]
+  total: number
+  totalPages: number
 }
 
 export type UserProfile = {

@@ -13,7 +13,7 @@ import ThemeToggle from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 
-export default function Header() {
+export function Header() {
   const [open, setOpen] = useState(false)
   const { activeProfile } = useActiveProfile()
 

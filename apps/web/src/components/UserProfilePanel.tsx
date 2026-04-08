@@ -14,6 +14,8 @@ import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 
+const navItemClass = 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent'
+
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, allProfiles, setActiveProfileId } = useActiveProfile()
   const [switcherOpen, setSwitcherOpen] = useState(false)
@@ -27,7 +29,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Account Management */}
       <div className="px-2 py-3">
-        <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent">
+        <button className={navItemClass}>
           <Settings className="size-5 shrink-0 text-muted-foreground" />
           <span className="font-medium">Account Management</span>
         </button>
@@ -68,7 +70,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               return (
                 <button
                   key={profile.userProfileId}
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-accent ${isActive ? 'bg-accent/50' : ''}`}
+                  className={`${navItemClass} ${isActive ? 'bg-accent/50' : ''}`}
                   onClick={() => handleProfileSwitch(profile.userProfileId)}
                 >
                   <div className="min-w-0 flex-1 text-left">
@@ -100,7 +102,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <Link
                 to="/"
                 onClick={onClose}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm !text-foreground no-underline transition-colors hover:bg-accent"
+                className={`${navItemClass} !text-foreground no-underline`}
               />
             }
           >
@@ -113,7 +115,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <Link
                 to="/my-postings"
                 onClick={onClose}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm !text-foreground no-underline transition-colors hover:bg-accent"
+                className={`${navItemClass} !text-foreground no-underline`}
               />
             }
           >
@@ -121,12 +123,12 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             <span>My Postings</span>
           </SheetClose>
 
-          <button className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent">
+          <button className={navItemClass}>
             <MessageSquare className="size-5 shrink-0 text-muted-foreground" />
             <span>Messages</span>
           </button>
 
-          <button className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent">
+          <button className={navItemClass}>
             <Shield className="size-5 shrink-0 text-muted-foreground" />
             <span>Admin</span>
           </button>
