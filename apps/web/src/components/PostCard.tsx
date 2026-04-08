@@ -1,32 +1,28 @@
-import { MapPin, User, DollarSign, Star } from 'lucide-react'
+import { MapPin, User, DollarSign, Star, Trash2 } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { useState } from 'react'
+import type { Post } from '#/types'
 
-type Category = {
-  categoryId: string
-  name: string
+const RATE_LABELS: Record<string, string> = {
+  HOURLY: '/hr',
+  DAILY: '/day',
+  FIXED: 'fixed',
 }
 
-type Post = {
-  postId: string
-  postTitle: string
-  description: string
-  postType: string
-  price: string | null
-  rateType: string | null
-  createdAt: string | Date
-  authorName: string
-  categories: Category[]
-}
-
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({
+  post,
+  onDelete,
+}: {
+  post: Post
+  onDelete?: (postId: string) => void
+}) {
   const [favorited, setFavorited] = useState(false)
   const isOffer = post.postType === 'OFFER'
   const primaryCategory = post.categories[0]?.name ?? null
   const price = post.price ? parseFloat(post.price) : null
-  const isHourly = post.rateType === 'HOURLY'
+  const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
 
   return (
     <Card className="cursor-pointer transition-shadow hover:shadow-lg">
@@ -51,6 +47,19 @@ export function PostCard({ post }: { post: Post }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(post.postId)
+                }}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -69,7 +78,7 @@ export function PostCard({ post }: { post: Post }) {
                 <DollarSign className="size-5 text-green-600" />
                 <span className="font-semibold text-green-600">
                   {price}
-                  {isHourly && <span className="text-sm">/hr</span>}
+                  {rateLabel && <span className="text-sm"> {rateLabel}</span>}
                 </span>
               </div>
             )}

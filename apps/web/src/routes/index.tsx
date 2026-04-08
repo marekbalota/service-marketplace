@@ -24,6 +24,8 @@ import {
   SheetTrigger,
 } from '#/components/ui/sheet'
 
+import type { Post, Category } from '#/types'
+
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'name'
 type PostTypeFilter = 'all' | 'offer' | 'request'
 
@@ -41,24 +43,6 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-low': 'Price: Low to High',
   'price-high': 'Price: High to Low',
   name: 'Name: A to Z',
-}
-
-export type Category = {
-  categoryId: string
-  name: string
-  description: string | null
-}
-
-export type Post = {
-  postId: string
-  postTitle: string
-  description: string
-  postType: string
-  price: string | null
-  rateType: string | null
-  createdAt: string | Date
-  authorName: string
-  categories: { categoryId: string; name: string }[]
 }
 
 // --- Query options ---
@@ -252,8 +236,8 @@ function HomePage() {
     navigate({ search: (prev) => ({ ...prev, q: value || undefined }) })
   const setType = (value: PostTypeFilter) =>
     navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value }) })
-  const setCategory = (value: string) =>
-    navigate({ search: (prev) => ({ ...prev, category: value === 'all' ? undefined : value }) })
+  const setCategory = (value: string | null) =>
+    navigate({ search: (prev) => ({ ...prev, category: !value || value === 'all' ? undefined : value }) })
   const setSort = (value: SortOption) =>
     navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value }) })
 

@@ -7,6 +7,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { queryClient } from '../router'
+import { ActiveProfileProvider } from '../contexts/ActiveProfileContext'
 
 import appCss from '../styles.css?url'
 
@@ -57,9 +58,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
-          <Header />
-          {children}
-          <Footer />
+          <ActiveProfileProvider>
+            <Header />
+            {children}
+            <Footer />
+          </ActiveProfileProvider>
           <ReactQueryDevtools buttonPosition="bottom-left" />
           <TanStackDevtools
             config={{
