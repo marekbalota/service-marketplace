@@ -1,0 +1,83 @@
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { PostCard } from './PostCard'
+
+const basePost = {
+  postId: 'post-1',
+  postTitle: 'Math Tutoring',
+  description: 'Experienced math tutor available for all levels.',
+  postType: 'OFFER',
+  price: null,
+  rateType: null,
+  createdAt: new Date('2024-01-01'),
+  authorName: 'Jane Doe',
+  categories: [],
+}
+
+describe('PostCard', () => {
+  it('renders the post title', () => {
+    render(<PostCard post={basePost} />)
+    expect(screen.getByText('Math Tutoring')).toBeInTheDocument()
+  })
+
+  it('renders the description', () => {
+    render(<PostCard post={basePost} />)
+    expect(screen.getByText('Experienced math tutor available for all levels.')).toBeInTheDocument()
+  })
+
+  it('renders the author name', () => {
+    render(<PostCard post={basePost} />)
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
+  })
+
+  it('shows "Offering" badge for OFFER type', () => {
+    render(<PostCard post={basePost} />)
+    expect(screen.getByText('Offering')).toBeInTheDocument()
+  })
+
+  it('shows "Requesting" badge for REQUEST type', () => {
+    render(<PostCard post={{ ...basePost, postType: 'REQUEST' }} />)
+    expect(screen.getByText('Requesting')).toBeInTheDocument()
+  })
+
+  it('shows price when provided', () => {
+    render(<PostCard post={{ ...basePost, price: '50.00' }} />)
+    expect(screen.getByText('50')).toBeInTheDocument()
+  })
+
+  it('shows /hr suffix for HOURLY rate', () => {
+    render(<PostCard post={{ ...basePost, price: '30.00', rateType: 'HOURLY' }} />)
+    expect(screen.getByText('/hr')).toBeInTheDocument()
+  })
+
+  it('does not show /hr suffix for FIXED rate', () => {
+    render(<PostCard post={{ ...basePost, price: '200.00', rateType: 'FIXED' }} />)
+    expect(screen.queryByText('/hr')).not.toBeInTheDocument()
+  })
+
+  it('shows the primary category badge', () => {
+    render(
+      <PostCard
+        post={{
+          ...basePost,
+          categories: [{ categoryId: 'cat-1', name: 'Education' }],
+        }}
+      />,
+    )
+    expect(screen.getByText('Education')).toBeInTheDocument()
+  })
+
+  it('toggles favourite state when star button is clicked', () => {
+    render(<PostCard post={basePost} />)
+    const starButton = screen.getByRole('button')
+    const star = starButton.querySelector('svg')!
+
+    expect(star.classList.contains('fill-yellow-400')).toBe(false)
+
+    fireEvent.click(starButton)
+    expect(star.classList.contains('fill-yellow-400')).toBe(true)
+
+    fireEvent.click(starButton)
+    expect(star.classList.contains('fill-yellow-400')).toBe(false)
+  })
+})

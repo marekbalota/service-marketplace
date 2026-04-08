@@ -101,6 +101,59 @@ function PostsPage() {
 - **Infer types from the schema** with `z.infer<typeof myEnum>` — never duplicate enum values as a separate TypeScript type.
 - **Navigate with an updater function** to preserve other params.
 
+## Testing Components and Pure Functions
+
+**Every non-trivial component and exported pure function must have a Vitest test** in a `.test.tsx` / `.test.ts` file next to the source.
+
+Setup is already in place: `vitest.config.ts`, `src/test-setup.ts` (jest-dom matchers), jsdom environment.
+
+### Component test (Testing Library)
+
+```tsx
+// apps/web/src/components/MyCard.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { MyCard } from './MyCard'
+
+describe('MyCard', () => {
+  it('renders the title', () => {
+    render(<MyCard title="Hello" />)
+    expect(screen.getByText('Hello')).toBeInTheDocument()
+  })
+
+  it('calls onClick when button is clicked', () => {
+    const onClick = vi.fn()
+    render(<MyCard title="Hello" onClick={onClick} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(onClick).toHaveBeenCalledOnce()
+  })
+})
+```
+
+- Components that use `Route.useSearch()` or `Route.useNavigate()` depend on TanStack Router — test the pure logic separately and test router-dependent behaviour in e2e.
+- Export any pure function you want to unit test (e.g. `export function buildPageNumbers`).
+
+### Pure function test
+
+```ts
+// apps/web/src/routes/index.test.ts
+import { describe, it, expect } from 'vitest'
+import { buildPageNumbers } from './index'
+
+describe('buildPageNumbers', () => {
+  it('inserts ellipsis for gaps', () => {
+    expect(buildPageNumbers(1, 10)).toEqual([1, 2, 'ellipsis', 10])
+  })
+})
+```
+
+**What to cover:**
+- Rendering: key text, badges, conditional elements
+- Interaction: clicks, toggles, input changes
+- Edge cases: empty arrays, null/undefined props, boundary values for pure functions
+
+Run: `bun run test` from workspace root, or `vitest run` inside `apps/web/`.
+
 ## Zod — When to Use It
 
 Use Zod at **trust boundaries** where the data source is external or uncontrolled:

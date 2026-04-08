@@ -207,7 +207,7 @@ function PageSkeleton() {
 
 // --- Page number builder ---
 
-function buildPageNumbers(current: number, total: number): (number | 'ellipsis')[] {
+export function buildPageNumbers(current: number, total: number): (number | 'ellipsis')[] {
   const pages = new Set<number>()
   pages.add(1)
   pages.add(total)
