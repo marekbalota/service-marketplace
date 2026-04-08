@@ -4,7 +4,7 @@
   "workspaces": ["apps/*"],
   "scripts": {
     "dev": "bun run --filter '*' dev",
-    "test": "bun run --filter '*' test",
+    "test": "bun test apps/api && bun run --filter web test",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
