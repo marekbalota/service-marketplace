@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
+import { z } from 'zod'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
@@ -33,13 +34,21 @@ import {
   PaginationPrevious,
 } from '#/components/ui/pagination'
 
-type SortOption = 'newest' | 'price-low' | 'price-high' | 'name'
-type PostTypeFilter = 'all' | 'offer' | 'request'
+const postTypeEnum = z.enum(['all', 'offer', 'request'])
+const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
+
+const searchSchema = z.object({
+  q:        z.string().optional().catch(undefined),
+  type:     postTypeEnum.optional().catch(undefined),
+  category: z.string().optional().catch(undefined),
+  sort:     sortEnum.optional().catch(undefined),
+  page:     z.number().int().positive().optional().catch(undefined),
+})
+
+type PostTypeFilter = z.infer<typeof postTypeEnum>
+type SortOption = z.infer<typeof sortEnum>
 
 const PAGE_SIZE = 12
-
-const VALID_TYPES: PostTypeFilter[] = ['all', 'offer', 'request']
-const VALID_SORTS: SortOption[] = ['newest', 'price-low', 'price-high', 'name']
 
 const POST_TYPE_LABELS: Record<PostTypeFilter, string> = {
   all: 'All Types',
@@ -93,16 +102,16 @@ export function postsQueryOptions(deps: {
   type?: PostTypeFilter
   category?: string
   q?: string
-  sort?: SortOption
-  page?: number
+  sort: SortOption
+  page: number
 }) {
   const query: Record<string, string> = {}
   if (deps.type && deps.type !== 'all')         query.type       = deps.type.toUpperCase()
   if (deps.category && deps.category !== 'all') query.categoryId = deps.category
   if (deps.q)                                   query.search     = deps.q
-  if (deps.sort && deps.sort !== 'newest')      query.sort       = deps.sort
-  if (deps.page && deps.page > 1)               query.page       = String(deps.page)
-  query.pageSize = String(PAGE_SIZE)
+  query.sort   = deps.sort
+  query.offset = String((deps.page - 1) * PAGE_SIZE)
+  query.size   = String(PAGE_SIZE)
 
   return queryOptions({
     queryKey: ['posts', deps],
@@ -118,29 +127,11 @@ export function postsQueryOptions(deps: {
 // --- Route ---
 
 export const Route = createFileRoute('/')({
-  validateSearch: (search): {
-    q?: string
-    type?: PostTypeFilter
-    category?: string
-    sort?: SortOption
-    page?: number
-  } => ({
-    q: typeof search.q === 'string' ? search.q : undefined,
-    type: VALID_TYPES.includes(search.type as PostTypeFilter)
-      ? (search.type as PostTypeFilter)
-      : undefined,
-    category: typeof search.category === 'string' ? search.category : undefined,
-    sort: VALID_SORTS.includes(search.sort as SortOption)
-      ? (search.sort as SortOption)
-      : undefined,
-    page: typeof search.page === 'number' && search.page > 0
-      ? Math.floor(search.page)
-      : undefined,
-  }),
+  validateSearch: searchSchema,
   loader: async ({ context: { queryClient } }) => {
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions),
-      queryClient.ensureQueryData(postsQueryOptions({})),
+      queryClient.ensureQueryData(postsQueryOptions({ sort: 'newest', page: 1 })),
     ])
   },
   pendingComponent: PageSkeleton,
@@ -311,77 +302,94 @@ function PostsList({ type, category, q, sort, page }: {
   )
 }
 
+// --- Filter select sub-components ---
+// Each reads its own slice of search params and navigates independently,
+// so they can be dropped into both the mobile Sheet and the desktop bar
+// without prop-drilling.
+
+function PostTypeSelect({ triggerClassName }: { triggerClassName?: string }) {
+  const { type = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  return (
+    <Select
+      value={type}
+      onValueChange={(v) =>
+        navigate({ search: (prev) => ({ ...prev, type: v === 'all' ? undefined : (v as PostTypeFilter), page: undefined }) })
+      }
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {(Object.entries(POST_TYPE_LABELS) as [PostTypeFilter, string][]).map(([value, label]) => (
+          <SelectItem key={value} value={value}>{label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
+  const { category = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  // useQuery (not suspense) so the filter bar renders immediately before categories arrive
+  const { data: categories = [] } = useQuery(categoriesQueryOptions)
+  return (
+    <Select
+      value={category}
+      onValueChange={(v) =>
+        v && navigate({ search: (prev) => ({ ...prev, category: v === 'all' ? undefined : v, page: undefined }) })
+      }
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue>
+          {category === 'all'
+            ? 'All Categories'
+            : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All Categories</SelectItem>
+        {categories.map((cat) => (
+          <SelectItem key={cat.categoryId} value={cat.categoryId}>
+            {cat.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
+  const { sort = 'newest' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  return (
+    <Select
+      value={sort}
+      onValueChange={(v) =>
+        navigate({ search: (prev) => ({ ...prev, sort: v === 'newest' ? undefined : (v as SortOption), page: undefined }) })
+      }
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue>{SORT_LABELS[sort]}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([value, label]) => (
+          <SelectItem key={value} value={value}>{label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
 // --- Page ---
 
 function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
   const navigate = Route.useNavigate()
 
-  // useQuery (not suspense) so the filter bar renders immediately before categories arrive
-  const { data: categories = [] } = useQuery(categoriesQueryOptions)
-
   const setQ = (value: string) =>
     navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
-  const setType = (value: PostTypeFilter) =>
-    navigate({ search: (prev) => ({ ...prev, type: value === 'all' ? undefined : value, page: undefined }) })
-  const setCategory = (value: string) =>
-    navigate({ search: (prev) => ({ ...prev, category: value === 'all' ? undefined : value, page: undefined }) })
-  const setSort = (value: SortOption) =>
-    navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value, page: undefined }) })
-
-  const filterControls = (
-    <>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Post Type</label>
-        <Select value={type} onValueChange={(v) => setType(v as PostTypeFilter)}>
-          <SelectTrigger>
-            <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="offer">Offers Only</SelectItem>
-            <SelectItem value="request">Requests Only</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Category</label>
-        <Select value={category} onValueChange={(v) => v && setCategory(v)}>
-          <SelectTrigger>
-            <SelectValue>
-              {category === 'all'
-                ? 'All Categories'
-                : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.categoryId} value={cat.categoryId}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Sort By</label>
-        <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-          <SelectTrigger>
-            <SelectValue>{SORT_LABELS[sort]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest First</SelectItem>
-            <SelectItem value="price-low">Price: Low to High</SelectItem>
-            <SelectItem value="price-high">Price: High to Low</SelectItem>
-            <SelectItem value="name">Name: A to Z</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </>
-  )
 
   return (
     <>
@@ -410,53 +418,29 @@ function HomePage() {
                   <SheetTitle>Filters & Sort</SheetTitle>
                   <SheetDescription>Refine your search results</SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">{filterControls}</div>
+                <div className="mt-6 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Post Type</label>
+                    <PostTypeSelect />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Category</label>
+                    <CategorySelect />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sort By</label>
+                    <SortSelect />
+                  </div>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
 
           {/* Desktop filters */}
           <div className="hidden gap-3 md:flex">
-            <Select value={type} onValueChange={(v) => setType(v as PostTypeFilter)}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="offer">Offers Only</SelectItem>
-                <SelectItem value="request">Requests Only</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={category} onValueChange={(v) => v && setCategory(v)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue>
-                  {category === 'all'
-                    ? 'All Categories'
-                    : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue>{SORT_LABELS[sort]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="name">Name: A to Z</SelectItem>
-              </SelectContent>
-            </Select>
+            <PostTypeSelect triggerClassName="w-[160px]" />
+            <CategorySelect triggerClassName="w-[200px]" />
+            <SortSelect triggerClassName="w-[200px]" />
           </div>
         </div>
       </div>

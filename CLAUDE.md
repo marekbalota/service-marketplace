@@ -12,6 +12,7 @@ A service marketplace where users post offers or requests for services (e.g. tut
 | Database | PostgreSQL 17 |
 | Runtime | Bun |
 | Data Fetching | TanStack Query v5 |
+| Validation | Zod v4 |
 | Testing | Vitest, Testing Library |
 
 ## Project Structure
