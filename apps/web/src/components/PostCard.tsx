@@ -1,4 +1,4 @@
-import { MapPin, User, DollarSign, Star } from 'lucide-react'
+import { MapPin, User, DollarSign, Star, Trash2 } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
@@ -11,7 +11,7 @@ const RATE_LABELS: Record<string, string> = {
   FIXED: 'fixed',
 }
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDelete?: () => void; deleteDisabled?: boolean }) {
   const [favorited, setFavorited] = useState(false)
   const isOffer = post.postType === 'OFFER'
   const primaryCategory = post.categories[0]?.name ?? null
@@ -41,19 +41,6 @@ export function PostCard({ post }: { post: Post }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              onClick={(e) => {
-                e.stopPropagation()
-                setFavorited((f) => !f)
-              }}
-            >
-              <Star
-                className={`size-5 ${favorited ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
-              />
-            </Button>
             {price !== null && (
               <div className="flex items-center gap-1">
                 <DollarSign className="size-5 text-green-600" />
@@ -62,6 +49,34 @@ export function PostCard({ post }: { post: Post }) {
                   {rateLabel && <span className="text-sm"> {rateLabel}</span>}
                 </span>
               </div>
+            )}
+            {onDelete ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                disabled={deleteDisabled}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+              >
+                <Trash2 className="size-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setFavorited((f) => !f)
+                }}
+              >
+                <Star
+                  className={`size-5 ${favorited ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                />
+              </Button>
             )}
           </div>
         </div>

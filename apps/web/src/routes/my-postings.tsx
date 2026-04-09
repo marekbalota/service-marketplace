@@ -1,10 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
-import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import type { Post, PostsPage } from '#/types'
 
@@ -70,18 +68,12 @@ function PostsGrid({ authorId }: { authorId: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {posts.map((post: Post) => (
-        <div key={post.postId} className="relative">
-          <PostCard post={post} />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-10 top-3 text-muted-foreground hover:text-destructive"
-            disabled={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate(post.postId)}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+        <PostCard
+          key={post.postId}
+          post={post}
+          onDelete={() => deleteMutation.mutate(post.postId)}
+          deleteDisabled={deleteMutation.isPending}
+        />
       ))}
     </div>
   )
