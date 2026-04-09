@@ -1,35 +1,54 @@
+import { Suspense } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
+import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
-import type { Post, PostsPage } from '#/types'
+import type { Post } from '#/types'
 
-export function myPostingsQueryOptions(authorId: string) {
+export function myPostingsQueryOptions(profileId: string) {
   return queryOptions({
-    queryKey: ['posts', { authorId }],
+    queryKey: ['profiles', profileId, 'posts'],
     queryFn: async () => {
-      const { data, error } = await api.posts.get({
-        query: { authorId, size: 100 },
-      })
+      const { data, error } = await api.profiles({ id: profileId }).posts.get()
       if (error) throw error
-      return data as PostsPage
+      return data
     },
-    enabled: !!authorId,
   })
 }
 
 export const Route = createFileRoute('/my-postings')({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(profilesQueryOptions)
+  },
   component: MyPostingsPage,
 })
 
-function PostsGrid({ authorId }: { authorId: string }) {
+function PostsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
+          <Skeleton className="h-5 w-3/4" />
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function PostsGrid({ profileId }: { profileId: string }) {
   const queryClient = useQueryClient()
-  const { data, isLoading } = useQuery(myPostingsQueryOptions(authorId))
-  const posts = data?.items ?? []
+  const { data } = useSuspenseQuery(myPostingsQueryOptions(profileId))
+  const posts = data ?? []
 
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -40,24 +59,6 @@ function PostsGrid({ authorId }: { authorId: string }) {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
     },
   })
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
-            <Skeleton className="h-5 w-3/4" />
-            <div className="flex gap-2">
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-          </div>
-        ))}
-      </div>
-    )
-  }
 
   if (posts.length === 0) {
     return (
@@ -88,7 +89,7 @@ function PostsGrid({ authorId }: { authorId: string }) {
 }
 
 function MyPostingsPage() {
-  const { activeProfile, isLoading: profileLoading } = useActiveProfile()
+  const { activeProfile } = useActiveProfile()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -99,12 +100,14 @@ function MyPostingsPage() {
         </div>
       </div>
 
-      {profileLoading || !activeProfile ? (
-        <div className="py-16 text-center">
-          <p className="text-muted-foreground">Loading profile...</p>
-        </div>
+      {activeProfile ? (
+        <Suspense fallback={<PostsSkeleton />}>
+          <PostsGrid profileId={activeProfile.userProfileId} />
+        </Suspense>
       ) : (
-        <PostsGrid authorId={activeProfile.userProfileId} />
+        <div className="py-16 text-center">
+          <p className="text-muted-foreground">No profile found.</p>
+        </div>
       )}
     </main>
   )

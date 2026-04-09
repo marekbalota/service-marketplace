@@ -9,10 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MyPostingsRouteImport } from './routes/my-postings'
+import { Route as MyPostingsRouteRouteImport } from './routes/my-postings/route'
 import { Route as IndexRouteImport } from './routes/index'
 
-const MyPostingsRoute = MyPostingsRouteImport.update({
+const MyPostingsRouteRoute = MyPostingsRouteRouteImport.update({
   id: '/my-postings',
   path: '/my-postings',
   getParentRoute: () => rootRouteImport,
@@ -25,16 +25,16 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRoute
+  '/my-postings': typeof MyPostingsRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRoute
+  '/my-postings': typeof MyPostingsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRoute
+  '/my-postings': typeof MyPostingsRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -46,7 +46,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  MyPostingsRoute: typeof MyPostingsRoute
+  MyPostingsRouteRoute: typeof MyPostingsRouteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -55,7 +55,7 @@ declare module '@tanstack/react-router' {
       id: '/my-postings'
       path: '/my-postings'
       fullPath: '/my-postings'
-      preLoaderRoute: typeof MyPostingsRouteImport
+      preLoaderRoute: typeof MyPostingsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,7 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  MyPostingsRoute: MyPostingsRoute,
+  MyPostingsRouteRoute: MyPostingsRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
