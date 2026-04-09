@@ -1,11 +1,9 @@
 import { Suspense } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
-import { Button } from '#/components/ui/button'
+import { useActiveProfile, userProfilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
 import type { Post } from '#/types'
 
@@ -22,7 +20,7 @@ export function myPostingsQueryOptions(profileId: string) {
 
 export const Route = createFileRoute('/my-postings')({
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(profilesQueryOptions)
+    await queryClient.ensureQueryData(userProfilesQueryOptions)
   },
   component: MyPostingsPage,
 })
@@ -71,18 +69,12 @@ function PostsGrid({ profileId }: { profileId: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {posts.map((post: Post) => (
-        <div key={post.postId} className="relative">
-          <PostCard post={post} />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-10 top-3 text-muted-foreground hover:text-destructive"
-            disabled={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate(post.postId)}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+        <PostCard
+          key={post.postId}
+          post={post}
+          onDelete={() => deleteMutation.mutate(post.postId)}
+          deleteDisabled={deleteMutation.isPending}
+        />
       ))}
     </div>
   )
