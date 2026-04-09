@@ -1,6 +1,7 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations, postLocations, reviews } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { PostsModel } from "./model";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -98,7 +99,49 @@ export abstract class PostsService {
       .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
       .limit(1);
 
-    return row ?? null;
+    if (!row) {
+      return null;
+    }
+
+    const reviewerProfile = alias(userProfiles, 'reviewer_profile');
+
+    const [locationsResult, reviewsResult] = await Promise.all([
+      db.select({
+        locationId:  locations.locationId,
+        country:     locations.country,
+        region:      locations.region,
+        city:        locations.city,
+        street:      locations.street,
+        houseNumber: locations.houseNumber,
+      })
+      .from(postLocations)
+      .innerJoin(locations, eq(postLocations.locationId, locations.locationId))
+      .where(eq(postLocations.postId, id)),
+
+      db.select({
+        reviewId:          reviews.reviewId,
+        rating:            reviews.rating,
+        reviewDescription: reviews.reviewDescription,
+        reviewerName:      reviewerProfile.name,
+        createdAt:         reviews.createdAt,
+      })
+      .from(reviews)
+      .innerJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
+      .where(and(eq(reviews.postId, id), isNull(reviews.deletedAt)))
+      .orderBy(desc(reviews.createdAt)),
+    ]);
+
+    const averageRating = reviewsResult.length > 0
+      ? reviewsResult.reduce((sum, r) => sum + r.rating, 0) / reviewsResult.length
+      : null;
+
+    return {
+      ...row,
+      locations: locationsResult,
+      reviews:   reviewsResult,
+      averageRating,
+      reviewCount: reviewsResult.length,
+    };
   }
 
   static async create(body: PostsModel['createBody']) {

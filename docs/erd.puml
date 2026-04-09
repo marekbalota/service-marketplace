@@ -69,7 +69,7 @@ entity Review {
     review_id : uuid <<PK>>
     ---
     reviewer_id : uuid <<FK>> <<NOT NULL>>
-    reviewee_id : uuid <<FK>> <<NOT NULL>>
+    post_id : uuid <<FK>> <<NOT NULL>>
     rating : int <<NOT NULL>> CHECK (rating BETWEEN 1 AND 5)
     review_description : text
     created_at : timestamp <<NOT NULL>>
@@ -175,7 +175,7 @@ Category ||--o{ PostCategory
 Role ||--o{ RolePermission
 Permission ||--o{ RolePermission
 Review }o--|| UserProfile : reviewer
-Review }o--|| UserProfile : reviewee
+Review }o--|| Post : reviewed post
 Message }o--|| UserProfile : sender
 Message }o--|| MessageThread : belongs to
 MessageThread }o--|| Post

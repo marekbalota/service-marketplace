@@ -74,26 +74,6 @@ export const userProfiles = pgTable("user_profiles", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const reviews = pgTable(
-  "reviews",
-  {
-    reviewId: uuid("review_id").primaryKey().defaultRandom(),
-    reviewerId: uuid("reviewer_id")
-      .notNull()
-      .references(() => userProfiles.userProfileId),
-    revieweeId: uuid("reviewee_id")
-      .notNull()
-      .references(() => userProfiles.userProfileId),
-    rating: integer("rating").notNull(),
-    reviewDescription: text("review_description"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at"),
-  },
-  (table) => [
-    check("rating_check", sql`${table.rating} BETWEEN 1 AND 5`),
-  ],
-);
-
 export const posts = pgTable("posts", {
   postId: uuid("post_id").primaryKey().defaultRandom(),
   authorId: uuid("author_id")
@@ -107,6 +87,26 @@ export const posts = pgTable("posts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });
+
+export const reviews = pgTable(
+  "reviews",
+  {
+    reviewId: uuid("review_id").primaryKey().defaultRandom(),
+    reviewerId: uuid("reviewer_id")
+      .notNull()
+      .references(() => userProfiles.userProfileId),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.postId),
+    rating: integer("rating").notNull(),
+    reviewDescription: text("review_description"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    check("rating_check", sql`${table.rating} BETWEEN 1 AND 5`),
+  ],
+);
 
 export const categories = pgTable("categories", {
   categoryId: uuid("category_id").primaryKey().defaultRandom(),
@@ -258,7 +258,6 @@ export const userProfilesRelations = relations(
     }),
     posts: many(posts),
     reviewsGiven: many(reviews, { relationName: "reviewer" }),
-    reviewsReceived: many(reviews, { relationName: "reviewee" }),
     messagesSent: many(messages),
     images: many(images),
     favourites: many(favourites),
@@ -272,10 +271,9 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
     references: [userProfiles.userProfileId],
     relationName: "reviewer",
   }),
-  reviewee: one(userProfiles, {
-    fields: [reviews.revieweeId],
-    references: [userProfiles.userProfileId],
-    relationName: "reviewee",
+  post: one(posts, {
+    fields: [reviews.postId],
+    references: [posts.postId],
   }),
 }));
 
@@ -289,6 +287,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   favourites: many(favourites),
   reports: many(reports),
   messageThreads: many(messageThreads),
+  reviews: many(reviews),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

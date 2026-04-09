@@ -15,6 +15,13 @@
       "when": 1775761482080,
       "tag": "0001_dear_pyro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744243200000,
+      "tag": "0002_reviews_per_post",
+      "breakpoints": true
     }
   ]
 }

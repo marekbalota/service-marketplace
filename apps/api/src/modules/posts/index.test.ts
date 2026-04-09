@@ -19,6 +19,13 @@ type PostItem = {
   categories: { categoryId: string; name: string }[]
 }
 
+type PostDetailItem = PostItem & {
+  locations: { locationId: string; country: string | null; region: string | null; city: string | null; street: string | null; houseNumber: string | null }[]
+  reviews: { reviewId: string; rating: number; reviewDescription: string | null; reviewerName: string; createdAt: string }[]
+  averageRating: number | null
+  reviewCount: number
+}
+
 type PostRow = {
   postId: string
   authorId: string
@@ -154,6 +161,45 @@ describe('GET /posts/:id', () => {
     expect(body.postId).toBe(allBody.items[0]!.postId)
     expect(typeof body.authorName).toBe('string')
     expect(Array.isArray(body.categories)).toBe(true)
+  })
+
+  it('response includes locations, reviews, reviewCount, and averageRating', async () => {
+    const allRes = await app.handle(new Request('http://localhost/posts?size=1'))
+    const allBody = await allRes.json() as PostsResponse
+    if (allBody.items.length === 0) return
+
+    const res = await app.handle(
+      new Request(`http://localhost/posts/${allBody.items[0]!.postId}`),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json() as PostDetailItem
+    expect(Array.isArray(body.locations)).toBe(true)
+    expect(Array.isArray(body.reviews)).toBe(true)
+    expect(typeof body.reviewCount).toBe('number')
+    expect(body.averageRating === null || typeof body.averageRating === 'number').toBe(true)
+  })
+
+  it('each review has reviewerName as string, and averageRating is between 1-5 when reviews exist', async () => {
+    const allRes = await app.handle(new Request('http://localhost/posts?size=1'))
+    const allBody = await allRes.json() as PostsResponse
+    if (allBody.items.length === 0) return
+
+    const res = await app.handle(
+      new Request(`http://localhost/posts/${allBody.items[0]!.postId}`),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json() as PostDetailItem
+
+    if (body.reviewCount > 0) {
+      for (const review of body.reviews) {
+        expect(typeof review.reviewerName).toBe('string')
+        expect(review.rating).toBeGreaterThanOrEqual(1)
+        expect(review.rating).toBeLessThanOrEqual(5)
+      }
+      expect(body.averageRating).not.toBeNull()
+      expect(body.averageRating!).toBeGreaterThanOrEqual(1)
+      expect(body.averageRating!).toBeLessThanOrEqual(5)
+    }
   })
 })
 
