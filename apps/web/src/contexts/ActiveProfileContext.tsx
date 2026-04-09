@@ -20,12 +20,12 @@ type ActiveProfileContextValue = {
 
 const ActiveProfileContext = createContext<ActiveProfileContextValue | null>(null)
 
-export const userProfilesQueryOptions = queryOptions({
-  queryKey: ['user-profiles'],
+export const profilesQueryOptions = queryOptions({
+  queryKey: ['profiles'],
   queryFn: async () => {
-    const { data, error } = await api['user-profiles'].get()
+    const { data, error } = await api.profiles.get()
     if (error) throw error
-    return data as UserProfile[]
+    return data
   },
 })
 
@@ -34,7 +34,7 @@ export function ActiveProfileProvider({ children }: { children: ReactNode }) {
     () => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null),
   )
 
-  const { data: profiles = [], isLoading } = useQuery(userProfilesQueryOptions)
+  const { data: profiles = [], isLoading } = useQuery(profilesQueryOptions)
 
   // Auto-select the first profile when none is stored or the stored ID is no longer valid
   useEffect(() => {
