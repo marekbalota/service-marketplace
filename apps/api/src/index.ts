@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import { postsRoutes } from "./routes/posts";
-import { categoriesRoutes } from "./routes/categories";
+import { postsRoutes } from "./modules/posts";
+import { categoriesRoutes } from "./modules/categories";
 import { userProfilesRoutes } from "./routes/user-profiles";
 
 export const app = new Elysia()

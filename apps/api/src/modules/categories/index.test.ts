@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { Elysia } from 'elysia'
-import { categoriesRoutes } from './categories'
+import { categoriesRoutes } from '.'
 
 const app = new Elysia().use(categoriesRoutes)
 
