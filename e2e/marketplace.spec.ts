@@ -1,5 +1,22 @@
 import { test, expect } from '@playwright/test'
 
+test.describe('My Postings', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/my-postings')
+  })
+
+  test('shows the page heading and subtitle', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'My Postings' })).toBeVisible()
+    await expect(page.getByText('Manage your service offerings')).toBeVisible()
+  })
+
+  test('shows posts or an empty state after data loads', async ({ page }) => {
+    await expect(
+      page.getByText("You haven't created any postings yet.").or(page.locator('main .grid').first()),
+    ).toBeVisible()
+  })
+})
+
 test.describe('Marketplace index', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
