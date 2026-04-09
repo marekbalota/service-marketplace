@@ -3,7 +3,9 @@ import { posts, userProfiles, postCategories, categories } from "../../db/schema
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
 import type { PostsModel } from "./model";
 
-const postSelect = (tx: typeof db) => tx
+type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+const postSelect = (tx: DbOrTx) => tx
   .select({
     postId:      posts.postId,
     postTitle:   posts.postTitle,
@@ -31,13 +33,13 @@ const postSelect = (tx: typeof db) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery']) {
-    const { search, type, categoryId, authorId, sort, offset, size } = query;
+    const { search, type, categoryId, sort, offset, size } = query;
     const effectiveOffset = offset ?? 0;
 
     const orderBy =
-      sort === "price-low"  ? asc(posts.price)     :
-      sort === "price-high" ? desc(posts.price)    :
-      sort === "name"       ? asc(posts.postTitle) :
+      sort === 'price-low'  ? asc(posts.price)     :
+      sort === 'price-high' ? desc(posts.price)    :
+      sort === 'name'       ? asc(posts.postTitle) :
       desc(posts.createdAt);
 
     return db.transaction(async (tx) => {
@@ -50,8 +52,7 @@ export abstract class PostsService {
               ilike(userProfiles.name, `%${search}%`),
             )
           : undefined,
-        type       ? eq(posts.postType, type)     : undefined,
-        authorId   ? eq(posts.authorId, authorId) : undefined,
+        type       ? eq(posts.postType, type)      : undefined,
         categoryId
           ? exists(
               tx.select().from(postCategories).where(
@@ -84,6 +85,12 @@ export abstract class PostsService {
         totalPages: size !== undefined ? Math.ceil(total / size) : 1,
       };
     });
+  }
+
+  static async findByProfile(profileId: string) {
+    return postSelect(db)
+      .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+      .orderBy(desc(posts.createdAt));
   }
 
   static async findById(id: string) {
@@ -120,26 +127,19 @@ export abstract class PostsService {
     const { categoryIds, ...updateValues } = body;
 
     return db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select({ postId: posts.postId })
-        .from(posts)
-        .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
-        .limit(1);
-
-      if (!existing) {
-        return null;
-      }
-
       const [updated] = await tx
         .update(posts)
         .set(updateValues)
-        .where(eq(posts.postId, id))
+        .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
         .returning();
+
+      if (!updated) {
+        return null;
+      }
 
       if (categoryIds !== undefined) {
         await tx
-          .update(postCategories)
-          .set({ deletedAt: new Date() })
+          .delete(postCategories)
           .where(eq(postCategories.postId, id));
 
         if (categoryIds.length > 0) {
@@ -149,28 +149,17 @@ export abstract class PostsService {
         }
       }
 
-      return updated!;
+      return updated;
     });
   }
 
   static async delete(id: string) {
-    return db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select({ postId: posts.postId })
-        .from(posts)
-        .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
-        .limit(1);
+    const [deleted] = await db
+      .update(posts)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
+      .returning({ postId: posts.postId });
 
-      if (!existing) {
-        return null;
-      }
-
-      await tx
-        .update(posts)
-        .set({ deletedAt: new Date() })
-        .where(eq(posts.postId, id));
-
-      return true;
-    });
+    return deleted ? true : null;
   }
 }

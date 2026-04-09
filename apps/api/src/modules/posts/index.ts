@@ -39,6 +39,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     },
     {
       body: PostsModel.createBody,
+      response: { 201: PostsModel.createResponse },
     },
   )
   .patch(
@@ -53,8 +54,11 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     },
     {
       params: PostsModel.updateParams,
-      body: PostsModel.updateBody,
-      response: { 404: notFound },
+      body:   PostsModel.updateBody,
+      response: {
+        200: PostsModel.updateResponse,
+        404: notFound,
+      },
     },
   )
   .delete(

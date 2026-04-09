@@ -1,5 +1,16 @@
 import { t, type UnwrapSchema } from 'elysia'
 
+const postRow = t.Object({
+  postId:      t.String(),
+  authorId:    t.String(),
+  postTitle:   t.String(),
+  description: t.String(),
+  postType:    t.Union([t.Literal("OFFER"), t.Literal("REQUEST")]),
+  price:       t.Nullable(t.String()),
+  rateType:    t.Nullable(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED")])),
+  createdAt:   t.Date(),
+})
+
 const postItem = t.Object({
   postId:      t.String(),
   postTitle:   t.String(),
@@ -18,7 +29,6 @@ export const PostsModel = {
     search:     t.Optional(t.String()),
     type:       t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
     categoryId: t.Optional(t.String()),
-    authorId:   t.Optional(t.String()),
     sort:       t.Optional(t.Union([t.Literal("newest"), t.Literal("price-low"), t.Literal("price-high"), t.Literal("name")])),
     offset:     t.Optional(t.Numeric()),
     size:       t.Optional(t.Numeric()),
@@ -48,7 +58,10 @@ export const PostsModel = {
     rateType:    t.Optional(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED"), t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
   }),
-  deleteParams: t.Object({ id: t.String() }),
+  createResponse: postRow,
+  updateResponse: postRow,
+  deleteParams:            t.Object({ id: t.String() }),
+  findByProfileResponse:   t.Array(postItem),
 } as const
 
 export type PostsModel = {
