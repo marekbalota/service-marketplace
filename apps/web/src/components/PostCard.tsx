@@ -1,4 +1,5 @@
 import { MapPin, User, DollarSign, Star, Trash2 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
@@ -19,7 +20,8 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
 
   return (
-    <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+    <Link to="/posts/$postId" params={{ postId: post.postId }} className="block">
+      <Card className="cursor-pointer transition-shadow hover:shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -57,6 +59,7 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
                 className="shrink-0 text-muted-foreground hover:text-destructive"
                 disabled={deleteDisabled}
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation()
                   onDelete()
                 }}
@@ -69,6 +72,7 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
                 size="icon"
                 className="shrink-0"
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation()
                   setFavorited((f) => !f)
                 }}
@@ -97,5 +101,6 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
         </div>
       </CardContent>
     </Card>
+    </Link>
   )
 }
