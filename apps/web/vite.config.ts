@@ -18,6 +18,9 @@ const config = defineConfig({
       spa: {
         enabled: true,
       },
+      router: {
+        routeFileIgnorePattern: "\\.test\\.(ts|tsx)$",
+      },
     }),
     viteReact(),
   ],
