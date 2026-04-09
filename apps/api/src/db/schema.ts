@@ -79,6 +79,7 @@ export const posts = pgTable("posts", {
   authorId: uuid("author_id")
     .notNull()
     .references(() => userProfiles.userProfileId),
+  locationId: uuid("location_id").references(() => locations.locationId),
   postTitle: text("post_title").notNull(),
   description: text("description").notNull(),
   postType: postTypeEnum("post_type").notNull(),
@@ -139,20 +140,6 @@ export const locations = pgTable("locations", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });
-
-export const postLocations = pgTable(
-  "post_locations",
-  {
-    postId: uuid("post_id")
-      .notNull()
-      .references(() => posts.postId),
-    locationId: uuid("location_id")
-      .notNull()
-      .references(() => locations.locationId),
-    deletedAt: timestamp("deleted_at"),
-  },
-  (table) => [primaryKey({ columns: [table.postId, table.locationId] })],
-);
 
 export const images = pgTable("images", {
   imageId: uuid("image_id").primaryKey().defaultRandom(),
@@ -282,8 +269,11 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.authorId],
     references: [userProfiles.userProfileId],
   }),
+  location: one(locations, {
+    fields: [posts.locationId],
+    references: [locations.locationId],
+  }),
   postCategories: many(postCategories),
-  postLocations: many(postLocations),
   favourites: many(favourites),
   reports: many(reports),
   messageThreads: many(messageThreads),
@@ -308,18 +298,10 @@ export const postCategoriesRelations = relations(
   }),
 );
 
-export const locationsRelations = relations(locations, ({ many }) => ({
-  postLocations: many(postLocations),
-}));
-
-export const postLocationsRelations = relations(postLocations, ({ one }) => ({
+export const locationsRelations = relations(locations, ({ one }) => ({
   post: one(posts, {
-    fields: [postLocations.postId],
-    references: [posts.postId],
-  }),
-  location: one(locations, {
-    fields: [postLocations.locationId],
-    references: [locations.locationId],
+    fields: [locations.locationId],
+    references: [posts.locationId],
   }),
 }));
 

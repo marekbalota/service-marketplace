@@ -1,7 +1,6 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations, postLocations, reviews } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 import type { PostsModel } from "./model";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -95,53 +94,75 @@ export abstract class PostsService {
   }
 
   static async findById(id: string) {
-    const [row] = await postSelect(db)
+    const [row] = await db
+      .select({
+        postId:              posts.postId,
+        postTitle:           posts.postTitle,
+        description:         posts.description,
+        postType:            posts.postType,
+        price:               posts.price,
+        rateType:            posts.rateType,
+        createdAt:           posts.createdAt,
+        authorId:            posts.authorId,
+        authorName:          userProfiles.name,
+        locationId:          locations.locationId,
+        locationCountry:     locations.country,
+        locationRegion:      locations.region,
+        locationCity:        locations.city,
+        locationStreet:      locations.street,
+        locationHouseNumber: locations.houseNumber,
+        categories: sql<{ categoryId: string; name: string }[]>`
+          coalesce(
+            json_agg(
+              json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+            ) filter (where ${categories.categoryId} is not null),
+            '[]'::json
+          )
+        `,
+        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerName: string; createdAt: Date }[]>`
+          coalesce(
+            (select json_agg(json_build_object(
+              'reviewId',          r.review_id,
+              'rating',            r.rating,
+              'reviewDescription', r.review_description,
+              'reviewerName',      rp.name,
+              'createdAt',         r.created_at
+            ) order by r.created_at desc)
+            from reviews r
+            join user_profiles rp on r.reviewer_id = rp.user_profile_id
+            where r.post_id = ${posts.postId} and r.deleted_at is null),
+            '[]'::json
+          )
+        `,
+      })
+      .from(posts)
+      .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+      .leftJoin(locations, eq(posts.locationId, locations.locationId))
+      .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
+      .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
       .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
+      .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId)
       .limit(1);
 
     if (!row) {
       return null;
     }
 
-    const reviewerProfile = alias(userProfiles, 'reviewer_profile');
+    const location = row.locationId ? {
+      locationId:  row.locationId,
+      country:     row.locationCountry,
+      region:      row.locationRegion,
+      city:        row.locationCity,
+      street:      row.locationStreet,
+      houseNumber: row.locationHouseNumber,
+    } : null;
 
-    const [locationsResult, reviewsResult] = await Promise.all([
-      db.select({
-        locationId:  locations.locationId,
-        country:     locations.country,
-        region:      locations.region,
-        city:        locations.city,
-        street:      locations.street,
-        houseNumber: locations.houseNumber,
-      })
-      .from(postLocations)
-      .innerJoin(locations, eq(postLocations.locationId, locations.locationId))
-      .where(eq(postLocations.postId, id)),
-
-      db.select({
-        reviewId:          reviews.reviewId,
-        rating:            reviews.rating,
-        reviewDescription: reviews.reviewDescription,
-        reviewerName:      reviewerProfile.name,
-        createdAt:         reviews.createdAt,
-      })
-      .from(reviews)
-      .innerJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
-      .where(and(eq(reviews.postId, id), isNull(reviews.deletedAt)))
-      .orderBy(desc(reviews.createdAt)),
-    ]);
-
-    const averageRating = reviewsResult.length > 0
-      ? reviewsResult.reduce((sum, r) => sum + r.rating, 0) / reviewsResult.length
+    const averageRating = row.reviews.length > 0
+      ? row.reviews.reduce((sum, r) => sum + r.rating, 0) / row.reviews.length
       : null;
 
-    return {
-      ...row,
-      locations: locationsResult,
-      reviews:   reviewsResult,
-      averageRating,
-      reviewCount: reviewsResult.length,
-    };
+    const { locationId, locationCountry, locationRegion, locationCity, locationStreet, locationHouseNumber, ...rest } = row;
+    return { ...rest, location, averageRating, reviewCount: row.reviews.length };
   }
 
   static async create(body: PostsModel['createBody']) {

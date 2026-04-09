@@ -72,10 +72,10 @@ test.describe('Marketplace index', () => {
   })
 
   test('clicking a post card navigates to post detail page', async ({ page }) => {
-    // Wait for posts to load
-    await expect(page.locator('main .grid > *').first()).toBeVisible()
+    // Wait for real post cards to load (skeletons are divs, PostCards are <a> tags)
+    await expect(page.locator('main .grid > a').first()).toBeVisible()
     // Click first post card
-    await page.locator('main .grid > *').first().click()
+    await page.locator('main .grid > a').first().click()
     // Should navigate to /posts/:id
     await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/)
     // Back link should be visible

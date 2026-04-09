@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Edit } from 'lucide-react'
+import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
-import type { PostDetail } from '#/types'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -17,7 +16,7 @@ export function postDetailQueryOptions(postId: string) {
     queryFn: async () => {
       const { data, error } = await api.posts({ id: postId }).get()
       if (error) throw error
-      return data as PostDetail
+      return data!
     },
   })
 }
@@ -82,9 +81,8 @@ function PostDetailPage() {
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
-  const firstLocation = post.locations[0]
-  const locationText = firstLocation
-    ? [firstLocation.city, firstLocation.country].filter(Boolean).join(', ')
+  const locationText = post.location
+    ? [post.location.city, post.location.country].filter(Boolean).join(', ')
     : null
 
   return (
@@ -101,11 +99,9 @@ function PostDetailPage() {
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
             {isOwner && (
-              <Button variant="outline" size="sm" className="shrink-0 gap-2" asChild>
-                <Link to="/posts/$postId/edit" params={{ postId: post.postId }}>
-                  <Edit className="size-4" />
-                  Edit
-                </Link>
+              <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
+                <Pencil className="size-4" />
+                Edit
               </Button>
             )}
           </div>

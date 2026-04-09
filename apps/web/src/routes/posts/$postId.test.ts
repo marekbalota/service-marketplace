@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { postDetailQueryOptions } from './posts.$postId'
+import { postDetailQueryOptions } from './$postId'
 
 describe('postDetailQueryOptions', () => {
   it('uses correct query key', () => {

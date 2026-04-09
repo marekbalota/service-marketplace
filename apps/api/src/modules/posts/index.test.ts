@@ -20,7 +20,7 @@ type PostItem = {
 }
 
 type PostDetailItem = PostItem & {
-  locations: { locationId: string; country: string | null; region: string | null; city: string | null; street: string | null; houseNumber: string | null }[]
+  location: { locationId: string; country: string | null; region: string | null; city: string | null; street: string | null; houseNumber: string | null } | null
   reviews: { reviewId: string; rating: number; reviewDescription: string | null; reviewerName: string; createdAt: string }[]
   averageRating: number | null
   reviewCount: number
@@ -163,7 +163,7 @@ describe('GET /posts/:id', () => {
     expect(Array.isArray(body.categories)).toBe(true)
   })
 
-  it('response includes locations, reviews, reviewCount, and averageRating', async () => {
+  it('response includes location, reviews, reviewCount, and averageRating', async () => {
     const allRes = await app.handle(new Request('http://localhost/posts?size=1'))
     const allBody = await allRes.json() as PostsResponse
     if (allBody.items.length === 0) return
@@ -173,7 +173,7 @@ describe('GET /posts/:id', () => {
     )
     expect(res.status).toBe(200)
     const body = await res.json() as PostDetailItem
-    expect(Array.isArray(body.locations)).toBe(true)
+    expect(body.location === null || typeof body.location === 'object').toBe(true)
     expect(Array.isArray(body.reviews)).toBe(true)
     expect(typeof body.reviewCount).toBe('number')
     expect(body.averageRating === null || typeof body.averageRating === 'number').toBe(true)

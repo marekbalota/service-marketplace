@@ -80,6 +80,7 @@ entity Post {
     post_id : uuid <<PK>>
     ---
     author_id : uuid <<FK>> <<NOT NULL>>
+    location_id : uuid <<FK>>
     post_title : text <<NOT NULL>>
     description : text <<NOT NULL>>
     post_type : enum('REQUEST', 'OFFER') <<NOT NULL>>
@@ -136,13 +137,6 @@ entity Location {
     deleted_at : timestamp
 }
 
-entity PostLocation {
-    post_id : uuid <<PK>> <<FK>>
-    location_id : uuid <<PK>> <<FK>>
-    ---
-    deleted_at : timestamp
-}
-
 entity Image {
     image_id : uuid <<PK>>
     ---
@@ -186,7 +180,6 @@ UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
 Post ||--o{ Favourites
 UserProfile ||--o{ Report : reports
-Post ||--o{ PostLocation
-Location ||--o{ PostLocation
+Post }o--o| Location
 
 @enduml

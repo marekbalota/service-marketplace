@@ -4,7 +4,9 @@ import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { useState } from 'react'
-import type { Post } from '#/types'
+import type { api } from '#/api'
+
+type Post = NonNullable<Awaited<ReturnType<typeof api.posts.get>>['data']>['items'][number]
 
 const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',

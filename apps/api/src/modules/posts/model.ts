@@ -50,7 +50,7 @@ export const PostsModel = {
     authorId:      t.String(),
     authorName:    t.String(),
     categories:    t.Array(t.Object({ categoryId: t.String(), name: t.String() })),
-    locations:     t.Array(t.Object({
+    location: t.Nullable(t.Object({
       locationId:  t.String(),
       country:     t.Nullable(t.String()),
       region:      t.Nullable(t.String()),
