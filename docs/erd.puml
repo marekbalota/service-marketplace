@@ -122,8 +122,6 @@ entity Category {
 entity PostCategory {
     post_id : uuid <<PK>> <<FK>>
     category_id : uuid <<PK>> <<FK>>
-    ---
-    deleted_at : timestamp
 }
 
 entity Location {

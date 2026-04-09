@@ -125,7 +125,6 @@ export const postCategories = pgTable(
     categoryId: uuid("category_id")
       .notNull()
       .references(() => categories.categoryId),
-    deletedAt: timestamp("deleted_at"),
   },
   (table) => [primaryKey({ columns: [table.postId, table.categoryId] })],
 );
