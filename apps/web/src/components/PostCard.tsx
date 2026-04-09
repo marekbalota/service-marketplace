@@ -3,22 +3,12 @@ import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { useState } from 'react'
+import type { Post } from '#/types'
 
-type Category = {
-  categoryId: string
-  name: string
-}
-
-type Post = {
-  postId: string
-  postTitle: string
-  description: string
-  postType: string
-  price: string | null
-  rateType: string | null
-  createdAt: string | Date
-  authorName: string
-  categories: Category[]
+const RATE_LABELS: Record<string, string> = {
+  HOURLY: '/hr',
+  DAILY: '/day',
+  FIXED: 'fixed',
 }
 
 export function PostCard({ post }: { post: Post }) {
@@ -26,7 +16,7 @@ export function PostCard({ post }: { post: Post }) {
   const isOffer = post.postType === 'OFFER'
   const primaryCategory = post.categories[0]?.name ?? null
   const price = post.price ? parseFloat(post.price) : null
-  const isHourly = post.rateType === 'HOURLY'
+  const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
 
   return (
     <Card className="cursor-pointer transition-shadow hover:shadow-lg">
@@ -69,7 +59,7 @@ export function PostCard({ post }: { post: Post }) {
                 <DollarSign className="size-5 text-green-600" />
                 <span className="font-semibold text-green-600">
                   {price}
-                  {isHourly && <span className="text-sm">/hr</span>}
+                  {rateLabel && <span className="text-sm"> {rateLabel}</span>}
                 </span>
               </div>
             )}

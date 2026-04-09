@@ -64,29 +64,9 @@ const SORT_LABELS: Record<SortOption, string> = {
   name: 'Name: A to Z',
 }
 
-export type Category = {
-  categoryId: string
-  name: string
-  description: string | null
-}
-
-export type Post = {
-  postId: string
-  postTitle: string
-  description: string
-  postType: string
-  price: string | null
-  rateType: string | null
-  createdAt: string | Date
-  authorName: string
-  categories: { categoryId: string; name: string }[]
-}
-
-export type PostsPage = {
-  items: Post[]
-  total: number
-  totalPages: number
-}
+import type { Category, PostsPage } from '#/types'
+// Re-exported for consumers that import from this route file
+export type { Category, Post, PostsPage } from '#/types'
 
 // --- Query options ---
 
