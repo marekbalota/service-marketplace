@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile, userProfilesQueryOptions } from '#/contexts/ActiveProfileContext'
+import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
 import type { Post } from '#/types'
 
@@ -20,7 +20,7 @@ export function myPostingsQueryOptions(profileId: string) {
 
 export const Route = createFileRoute('/my-postings')({
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(userProfilesQueryOptions)
+    await queryClient.ensureQueryData(profilesQueryOptions)
   },
   component: MyPostingsPage,
 })
