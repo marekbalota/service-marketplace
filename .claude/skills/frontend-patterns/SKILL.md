@@ -4,6 +4,31 @@ description: Frontend coding patterns for this project — Eden Treaty API clien
 user-invocable: false
 ---
 
+## UI Components
+
+Always use **Shadcn/UI components** (from `apps/web/src/components/ui/`) or project components (from `apps/web/src/components/`) instead of raw HTML elements.
+
+| Need | Use | Not |
+|------|-----|-----|
+| Clickable action | `<Button>` | `<button>` |
+| Navigation styled as button | `<Link className={buttonVariants(...)}>` | `<a>` or `<button onClick={navigate}>` |
+| Text input | `<Input>` | `<input>` |
+| Dropdown | `<Select>` / `<SelectTrigger>` etc. | `<select>` |
+| Loading placeholder | `<Skeleton>` | custom divs with pulse animation |
+
+```tsx
+// Good
+import { Button } from '#/components/ui/button'
+<Button variant="outline" onClick={handleClick}>Try again</Button>
+
+// Bad
+<button className="..." onClick={handleClick}>Try again</button>
+```
+
+`buttonVariants` is only for applying button styles to non-`<Button>` elements (e.g. a `<Link>` that looks like a button). For actual buttons, use `<Button>` directly.
+
+Before building a custom component, check if Shadcn already has one using the **shadcn MCP** (`mcp__shadcn__search_items_in_registries` or `mcp__shadcn__list_items_in_registries`). If a suitable component exists, install it with `bunx --bun shadcn@latest add <name>`. Only build a custom component when no suitable Shadcn primitive exists.
+
 ## API Client (Eden Treaty)
 
 ```ts
