@@ -39,6 +39,32 @@ const { data, error } = await api.posts.get()
 
 New Elysia routes are automatically typed — no extra steps needed.
 
+## Route File Structure
+
+Routes live in `apps/web/src/routes/` and follow TanStack Router's file-based conventions:
+
+```
+routes/
+  __root.tsx              # Root layout — always a flat file at the top level
+  index.tsx               # Route at "/" — flat file (never move to a folder)
+  index.test.ts           # Tests co-located next to the route file
+  my-postings/            # Folder for /my-postings
+    route.tsx             # ← always named route.tsx, NOT index.tsx
+  posts/                  # Folder for /posts (when it has child routes)
+    route.tsx             # Layout/route at /posts
+    $postId/
+      route.tsx           # Route at /posts/$postId
+```
+
+**Rules:**
+- A standalone route with no children: use a **folder + `route.tsx`** (e.g. `my-postings/route.tsx`) or a flat file (`my-postings.tsx`) — both map to `/my-postings`.
+- `index.tsx` inside a folder means **index child route** (e.g. `posts/index.tsx` → `/posts/` as a child of a `posts` layout). Do not use `index.tsx` for standalone routes — it requires a parent layout and breaks the route tree if none exists.
+- Never have both `my-postings.tsx` and `my-postings/` — they resolve to the same path and cause an error.
+- Prefix non-route files/folders with `-` (e.g. `-components/`) to exclude them from route generation.
+- Test files are excluded via `routeFileIgnorePattern` in `vite.config.ts` — co-locate them next to the route file.
+
+**Preferred structure for new routes:** always use the folder form so route-specific files can be co-located later.
+
 ## Data Fetching Pattern (TanStack Query + Router)
 
 ### 1. Define query options

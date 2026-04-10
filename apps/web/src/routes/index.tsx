@@ -64,10 +64,6 @@ const SORT_LABELS: Record<SortOption, string> = {
   name: 'Name: A to Z',
 }
 
-import type { Category, PostsPage } from '#/types'
-// Re-exported for consumers that import from this route file
-export type { Category, Post, PostsPage } from '#/types'
-
 // --- Query options ---
 
 export const categoriesQueryOptions = queryOptions({
@@ -75,7 +71,7 @@ export const categoriesQueryOptions = queryOptions({
   queryFn: async () => {
     const { data, error } = await api.categories.get()
     if (error) throw error
-    return data as Category[]
+    return data
   },
 })
 
@@ -86,20 +82,21 @@ export function postsQueryOptions(deps: {
   sort: SortOption
   page: number
 }) {
-  const query: Record<string, string> = {}
-  if (deps.type && deps.type !== 'all')         query.type       = deps.type.toUpperCase()
-  if (deps.category && deps.category !== 'all') query.categoryId = deps.category
-  if (deps.q)                                   query.search     = deps.q
-  query.sort   = deps.sort
-  query.offset = String((deps.page - 1) * PAGE_SIZE)
-  query.size   = String(PAGE_SIZE)
+  const query = {
+    type:       deps.type && deps.type !== 'all' ? deps.type.toUpperCase() as 'OFFER' | 'REQUEST' : undefined,
+    categoryId: deps.category !== 'all' ? deps.category : undefined,
+    search:     deps.q,
+    sort:       deps.sort,
+    offset:     (deps.page - 1) * PAGE_SIZE,
+    size:       PAGE_SIZE,
+  }
 
   return queryOptions({
     queryKey: ['posts', deps],
     queryFn: async () => {
       const { data, error } = await api.posts.get({ query })
       if (error) throw error
-      return data as PostsPage
+      return data
     },
     placeholderData: keepPreviousData,
   })

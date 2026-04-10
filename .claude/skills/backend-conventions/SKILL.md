@@ -4,28 +4,87 @@ description: Backend coding conventions for this project — Elysia route struct
 user-invocable: false
 ---
 
-## Route Structure
+## Module Structure
 
-Each route file exports a single Elysia plugin and is registered in `src/index.ts`:
+Each resource lives in `src/modules/<resource>/` with three files:
+
+```
+src/modules/posts/
+├── model.ts      # TypeBox schemas + UnwrapSchema types
+├── service.ts    # Business logic (abstract class with static methods)
+└── index.ts      # Elysia plugin — wires model + service
+```
+
+Register each module's Elysia plugin in `src/index.ts`:
 
 ```ts
-// apps/api/src/routes/posts.ts
-import { Elysia } from 'elysia'
-import { db } from '../db'
-
-export const postsPlugin = new Elysia({ prefix: '/posts' })
-  .get('/', async () => {
-    return db.query.posts.findMany({ where: isNull(posts.deletedAt) })
-  })
+import { postsRoutes } from './modules/posts'
+import { categoriesRoutes } from './modules/categories'
 ```
+
+### model.ts
+
+Use Elysia's `t` (TypeBox) for schemas. Derive TypeScript types with `UnwrapSchema` — never write types separately:
+
+```ts
+import { t, type UnwrapSchema } from 'elysia'
+
+export const PostsModel = {
+  findAllQuery: t.Object({ ... }),
+  findAllResponse: t.Object({ ... }),
+} as const
+
+export type PostsModel = {
+  [k in keyof typeof PostsModel]: UnwrapSchema<typeof PostsModel[k]>
+}
+```
+
+### service.ts
+
+Use `abstract class` with `static async` methods. Name methods after CRUD intent: `findAll`, `findById`, `create`, `update`, `delete`.
+
+```ts
+import type { PostsModel } from './model'
+
+export abstract class PostsService {
+  static async findAll(query: PostsModel['findAllQuery']) { ... }
+  static async findById(id: string) { ... }
+}
+```
+
+**Always wrap multiple DB calls in a transaction:**
+
+```ts
+return db.transaction(async (tx) => {
+  const [countRow] = await tx.select({ total: count() }).from(posts)
+  const items = await tx.select().from(posts).limit(size)
+  return { items, total }
+})
+```
+
+A single DB call does not need a transaction.
 
 Import the Drizzle singleton — never instantiate a new one:
 
 ```ts
-import { db } from '../db'
+import { db } from '../../db'
 ```
 
-CORS is configured in `src/index.ts` for `http://localhost:3000`.
+### index.ts
+
+Thin controller — only wires validation schemas and service calls. Always use `async/await` and declare response codes:
+
+```ts
+export const postsRoutes = new Elysia({ prefix: '/posts' })
+  .get(
+    '/',
+    async ({ query }) => await PostsService.findAll(query),
+    {
+      query: PostsModel.findAllQuery,
+      response: { 200: PostsModel.findAllResponse },
+    },
+  )
+```
 
 ## Database Schema Rules
 
@@ -39,15 +98,15 @@ CORS is configured in `src/index.ts` for `http://localhost:3000`.
 
 ## Testing API Routes
 
-**Every route handler must have a `bun:test` integration test** in the same `routes/` directory (e.g. `posts.test.ts` beside `posts.ts`).
+**Every route handler must have a `bun:test` integration test** in the same module directory as `index.test.ts`.
 
 Use `Elysia.handle()` — no HTTP server or network needed:
 
 ```ts
-// apps/api/src/routes/posts.test.ts
+// apps/api/src/modules/posts/index.test.ts
 import { describe, it, expect } from 'bun:test'
 import { Elysia } from 'elysia'
-import { postsRoutes } from './posts'
+import { postsRoutes } from '.'
 
 const app = new Elysia().use(postsRoutes)
 

@@ -1,0 +1,1 @@
+ALTER TABLE "post_categories" DROP COLUMN "deleted_at";
