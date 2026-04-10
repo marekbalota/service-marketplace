@@ -54,6 +54,8 @@ export abstract class PostsService {
               ilike(posts.postTitle, `%${search}%`),
               ilike(posts.description, `%${search}%`),
               ilike(userProfiles.name, `%${search}%`),
+              ilike(locations.city, `%${search}%`),
+              ilike(locations.country, `%${search}%`),
             )
           : undefined,
         type       ? eq(posts.postType, type)      : undefined,
@@ -73,6 +75,7 @@ export abstract class PostsService {
         .select({ total: count() })
         .from(posts)
         .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+        .leftJoin(locations, eq(posts.locationId, locations.locationId))
         .where(conditions);
       const total = countRow?.total ?? 0;
 
