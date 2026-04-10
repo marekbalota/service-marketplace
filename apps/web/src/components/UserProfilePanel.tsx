@@ -13,8 +13,10 @@ import {
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
+import { cn } from '#/lib/utils'
 
 const navItemClass = 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent'
+const navLinkClass = cn(navItemClass, '!text-foreground no-underline')
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -76,7 +78,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               return (
                 <button
                   key={profile.userProfileId}
-                  className={`${navItemClass} ${isActive ? 'bg-accent/50' : ''}`}
+                  className={cn(navItemClass, isActive && 'bg-accent/50')}
                   onClick={() => handleProfileSwitch(profile.userProfileId)}
                 >
                   <div className="min-w-0 flex-1 text-left">
@@ -106,7 +108,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <Link
                 to="/"
                 onClick={onClose}
-                className={`${navItemClass} !text-foreground no-underline`}
+                className={navLinkClass}
               />
             }
           >
@@ -119,7 +121,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <Link
                 to="/my-postings"
                 onClick={onClose}
-                className={`${navItemClass} !text-foreground no-underline`}
+                className={navLinkClass}
               />
             }
           >

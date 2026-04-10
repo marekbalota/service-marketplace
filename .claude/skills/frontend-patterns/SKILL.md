@@ -9,6 +9,18 @@ user-invocable: false
 - **One component per file** — exception: Shadcn/UI compound components in `components/ui/` and private unexported helpers in route files that use `Route.use*()` hooks.
 - **Named exports preferred** — `export function MyComponent`, not `export default`.
 - **Don't repeat Tailwind utility strings** — if the same `className` appears in more than one place, extract it into a reusable component.
+- **Semantic colors — no hardcoded shades** — never use `text-green-600`, `bg-blue-500`, etc. directly. Define semantic tokens in `styles.css` (`--color-price`, `--color-offer-bg`, etc.) and use those as Tailwind utilities (`text-price`, `bg-offer-bg`). This way a rebrand is a one-line change.
+- **Use `cn()` for conditional/merged classes** — import from `#/lib/utils`. Use it whenever classes are conditional or when passing `className` to a Shadcn component so consumer classes can override defaults without conflicts.
+
+```tsx
+// Good
+<Star className={cn('size-5', favorited ? 'fill-star-filled text-star-filled' : 'text-muted-foreground')} />
+<Badge className={cn(isOffer ? 'bg-offer-bg text-offer-fg' : 'border-request-border text-request-fg')} />
+
+// Bad
+<Star className={`size-5 ${favorited ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+<Badge className={isOffer ? 'bg-green-100 text-green-800' : 'border-blue-500 text-blue-700'} />
+```
 
 Always use **Shadcn/UI components** (from `apps/web/src/components/ui/`) or project components (from `apps/web/src/components/`) instead of raw HTML elements.
 
