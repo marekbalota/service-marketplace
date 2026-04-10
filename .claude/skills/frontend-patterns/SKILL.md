@@ -8,6 +8,7 @@ user-invocable: false
 
 - **One component per file** — exception: Shadcn/UI compound components in `components/ui/` and private unexported helpers in route files that use `Route.use*()` hooks.
 - **Named exports preferred** — `export function MyComponent`, not `export default`.
+- **Don't repeat Tailwind utility strings** — if the same `className` appears in more than one place, extract it into a reusable component.
 
 Always use **Shadcn/UI components** (from `apps/web/src/components/ui/`) or project components (from `apps/web/src/components/`) instead of raw HTML elements.
 
