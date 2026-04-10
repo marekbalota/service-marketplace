@@ -105,6 +105,7 @@ async function seed() {
     price: string | null;
     rateType: "HOURLY" | "DAILY" | "FIXED" | null;
     categories: (typeof tutoring)[];
+    location?: { country?: string; region?: string; city?: string; street?: string; houseNumber?: string };
   }[] = [
     // ── Tutoring ──
     {
@@ -112,12 +113,14 @@ async function seed() {
       postTitle: "Math & Physics Tutoring — High School & University",
       description: "I offer private tutoring sessions in mathematics and physics for high school and university students. I cover calculus, linear algebra, mechanics, and more. Sessions available online or in-person in Brno.",
       postType: "OFFER", price: "25.00", rateType: "HOURLY", categories: [tutoring],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: aliceProfile.userProfileId,
       postTitle: "Looking for Czech Language Tutor",
       description: "I'm an English speaker relocating to Prague and looking for a patient Czech tutor for conversational lessons. Prefer online sessions, 2x per week. Happy to do language exchange.",
       postType: "REQUEST", price: null, rateType: null, categories: [tutoring],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague" },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -136,12 +139,14 @@ async function seed() {
       postTitle: "Music Theory & Piano Lessons for Beginners",
       description: "Patient and encouraging piano teacher offering lessons for absolute beginners through to grade 5. I come to your home or teach at my studio in Brno. All ages welcome.",
       postType: "OFFER", price: "30.00", rateType: "HOURLY", categories: [tutoring],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: davidProfile.userProfileId,
       postTitle: "Maths Tutor Needed for 13-Year-Old",
       description: "My daughter is struggling with algebra and geometry at school. Looking for a patient tutor who can visit us at home in Prague 6 twice a week after school hours.",
       postType: "REQUEST", price: "20.00", rateType: "HOURLY", categories: [tutoring],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague", street: "Praha 6" },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -174,6 +179,7 @@ async function seed() {
       postTitle: "Plumbing Repairs & Installations",
       description: "Professional plumber available for leak repairs, pipe installations, bathroom fitting, and boiler servicing. Available on weekdays and weekends. Fast response and fair pricing.",
       postType: "OFFER", price: "60.00", rateType: "HOURLY", categories: [plumbing, homeRepair],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague" },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -186,6 +192,7 @@ async function seed() {
       postTitle: "Emergency Plumber — Available 24/7",
       description: "Burst pipe? Blocked drain? I offer emergency callout plumbing across Prague and surroundings. Available day and night, including weekends. Fixed callout fee, hourly rate after the first hour.",
       postType: "OFFER", price: "90.00", rateType: "HOURLY", categories: [plumbing],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague" },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -198,12 +205,14 @@ async function seed() {
       postTitle: "Kitchen Sink Keeps Leaking — Need a Plumber",
       description: "The pipe under my kitchen sink has been leaking for a week. I've tried tightening it but the problem persists. Looking for a plumber who can come to Brno centre this week.",
       postType: "REQUEST", price: null, rateType: null, categories: [plumbing],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: carolProfile.userProfileId,
       postTitle: "Radiator Installation Needed — 3 Rooms",
       description: "We've just moved into a new flat and need three new radiators installed and connected to the central heating. Flat is in Prague 2. Looking for a certified plumber with references.",
       postType: "REQUEST", price: "800.00", rateType: "FIXED", categories: [plumbing, homeRepair],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague", street: "Praha 2" },
     },
 
     // ── Design ──
@@ -262,6 +271,7 @@ async function seed() {
       postTitle: "General Handyman Services",
       description: "Need something fixed around the house? I handle furniture assembly, painting, shelving, door repairs, and small plumbing jobs. No job too small. Based in Prague, can travel.",
       postType: "OFFER", price: "40.00", rateType: "HOURLY", categories: [homeRepair],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague" },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -274,6 +284,7 @@ async function seed() {
       postTitle: "Flat Pack Furniture Assembly",
       description: "I assemble all types of flat-pack furniture — IKEA, JYSK, and others. Fast, careful, and tidy. Available evenings and weekends throughout Prague and Brno.",
       postType: "OFFER", price: "30.00", rateType: "HOURLY", categories: [homeRepair],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague" },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -330,12 +341,14 @@ async function seed() {
       postTitle: "Home Cleaning — Weekly or Fortnightly",
       description: "Reliable, trustworthy cleaner available for regular home cleaning. I bring my own eco-friendly products. References available. Currently accepting new clients in Prague 1-5.",
       postType: "OFFER", price: "20.00", rateType: "HOURLY", categories: [cleaning],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague", street: "Praha 1" },
     },
     {
       authorId: frankProfile.userProfileId,
       postTitle: "End-of-Tenancy Deep Clean",
       description: "Full end-of-tenancy cleaning to get your deposit back. Includes oven, fridge, bathroom, and all surfaces. Certificate of cleaning provided. Brno and Prague covered.",
       postType: "OFFER", price: "300.00", rateType: "FIXED", categories: [cleaning],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -348,12 +361,14 @@ async function seed() {
       postTitle: "Carpet & Upholstery Cleaning",
       description: "Professional hot-water extraction carpet cleaning and upholstery shampooing. Removes stains, odours, and allergens. Same-day drying with our equipment. Brno area.",
       postType: "OFFER", price: "120.00", rateType: "FIXED", categories: [cleaning],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: aliceProfile.userProfileId,
       postTitle: "Looking for Regular Cleaner — 3 Hours/Week",
       description: "Busy professional looking for a trustworthy cleaner to come weekly for about 3 hours. Apartment is 65 m2. Prefer someone who brings their own products. Prague 7.",
       postType: "REQUEST", price: "18.00", rateType: "HOURLY", categories: [cleaning],
+      location: { country: "Czech Republic", region: "Prague", city: "Prague", street: "Praha 7" },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -374,6 +389,7 @@ async function seed() {
       postTitle: "Computer Repair & Tech Help Needed",
       description: "My laptop won't boot after a Windows update. I need someone who can come to my home in Brno and diagnose / fix it. I have all the original discs and product keys.",
       postType: "REQUEST", price: null, rateType: null, categories: [techSupport],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -398,6 +414,7 @@ async function seed() {
       postTitle: "Old PC Making Loud Noises — Needs Looking At",
       description: "My desktop PC is making a grinding noise and running very slowly. I think it might be the fans or hard drive. Looking for someone who can come to my home in Brno and take a look.",
       postType: "REQUEST", price: null, rateType: null, categories: [techSupport],
+      location: { country: "Czech Republic", region: "South Moravian Region", city: "Brno" },
     },
     {
       authorId: carolProfile.userProfileId,
@@ -435,15 +452,47 @@ async function seed() {
       description: "Looking for someone to set up Google Analytics 4 and Search Console for my e-shop, and do a basic on-page SEO audit. I want to understand where my traffic is coming from.",
       postType: "REQUEST", price: "300.00", rateType: "FIXED", categories: [techSupport, design],
     },
+
+    // ── All categories ──
+    {
+      authorId: frankProfile.userProfileId,
+      postTitle: "Full Property Management & Support Service",
+      description: "All-in-one service for landlords and property managers: regular cleaning, minor repairs, plumbing checks, IT setup for tenants, design of rental listings, and tutoring coordination for family tenants. Ideal for busy landlords who want a single point of contact.",
+      postType: "OFFER", price: "150.00", rateType: "DAILY", categories: [cleaning, homeRepair, plumbing, techSupport, design, tutoring],
+    },
+    {
+      authorId: elenaProfile.userProfileId,
+      postTitle: "Looking for All-round Help After House Move",
+      description: "Just moved into a large house and need help across the board: deep clean of the whole property, a plumber to sort the boiler and one leaking tap, a handyman for shelving and painting, someone to set up our home network and smart TV, a designer to help style two rooms, and a tutor for our kids over summer. Happy to hire one person or a small team.",
+      postType: "REQUEST", price: null, rateType: null, categories: [cleaning, homeRepair, plumbing, techSupport, design, tutoring],
+    },
+    {
+      authorId: carolProfile.userProfileId,
+      postTitle: "Community Centre — Volunteers & Paid Help Wanted",
+      description: "Our community centre is looking for people across all skills: tutors for after-school programmes, designers for event materials, IT helpers for our computer suite, cleaners for weekly maintenance, tradespeople for minor repairs and plumbing, and handymen for ongoing upkeep. Flexible hours and fair pay for all roles.",
+      postType: "REQUEST", price: "18.00", rateType: "HOURLY", categories: [tutoring, design, techSupport, cleaning, homeRepair, plumbing],
+    },
   ];
 
   const insertedPosts: { postId: string }[] = [];
+  let locationCount = 0;
 
   for (const post of postsData) {
-    const { categories: postCategories, ...postValues } = post;
+    const { categories: postCategories, location: locationData, ...postValues } = post;
+
+    let locationId: string | undefined;
+    if (locationData) {
+      const [insertedLocation] = await db
+        .insert(schema.locations)
+        .values(locationData)
+        .returning();
+      locationId = insertedLocation!.locationId;
+      locationCount++;
+    }
+
     const [inserted] = await db
       .insert(schema.posts)
-      .values(postValues)
+      .values({ ...postValues, locationId })
       .returning();
 
     insertedPosts.push(inserted!);
@@ -494,8 +543,8 @@ async function seed() {
   console.log("✅ Seeded:");
   console.log("   2 roles");
   console.log("   6 accounts + profiles");
-  console.log("   6 categories");
-  console.log(`   ${postsData.length} posts`);
+  console.log("   6 categories (3 posts with all categories included)");
+  console.log(`   ${postsData.length} posts (${locationCount} with locations)`);
   console.log(`   ${reviewsData.length} reviews`);
 
   await client.end();
