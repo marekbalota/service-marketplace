@@ -78,7 +78,7 @@ test.describe('Marketplace index', () => {
     await page.locator('main .grid > a').first().click()
     // Should navigate to /posts/:id
     await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/)
-    // Back link should be visible
-    await expect(page.getByRole('link', { name: 'Back' })).toBeVisible()
+    // Back button should be visible
+    await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
   })
 })
