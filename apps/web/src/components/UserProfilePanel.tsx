@@ -16,6 +16,14 @@ import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 
 const navItemClass = 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent'
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      {children}
+    </p>
+  )
+}
+
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, allProfiles, setActiveProfileId } = useActiveProfile()
   const [switcherOpen, setSwitcherOpen] = useState(false)
@@ -39,9 +47,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
 
       {/* Active Profile */}
       <div className="px-2 py-3">
-        <p className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Active Profile
-        </p>
+        <SectionLabel>Active Profile</SectionLabel>
 
         <button
           className="flex w-full items-center justify-between rounded-md px-3 py-2.5 transition-colors hover:bg-accent"
@@ -93,9 +99,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
 
       {/* Menu */}
       <div className="px-2 py-3">
-        <p className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Menu
-        </p>
+        <SectionLabel>Menu</SectionLabel>
         <nav className="flex flex-col gap-0.5">
           <SheetClose
             render={

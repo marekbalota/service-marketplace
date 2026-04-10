@@ -13,11 +13,19 @@ import appCss from '../styles.css?url'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
 
+function PageEyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+      {children}
+    </p>
+  )
+}
+
 function RootErrorComponent({ error }: { error: Error }) {
   const router = useRouter()
   return (
     <main className="mx-auto max-w-7xl px-4 py-32 text-center">
-      <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">Error</p>
+      <PageEyebrow>Error</PageEyebrow>
       <h1 className="mb-4 text-3xl font-semibold text-foreground">Something went wrong</h1>
       <p className="mb-8 text-muted-foreground">
         {error.message || 'An unexpected error occurred. Please try again.'}
@@ -32,7 +40,7 @@ function RootErrorComponent({ error }: { error: Error }) {
 function NotFound() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-32 text-center">
-      <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">404</p>
+      <PageEyebrow>404</PageEyebrow>
       <h1 className="mb-4 text-3xl font-semibold text-foreground">Page not found</h1>
       <p className="mb-8 text-muted-foreground">The page you're looking for doesn't exist.</p>
       <Link to="/" className={buttonVariants({ variant: 'outline' })}>Back to main page</Link>
