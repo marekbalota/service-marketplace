@@ -1,14 +1,13 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
-import { Button, buttonVariants } from '#/components/ui/button'
+import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 import { Skeleton } from '#/components/ui/skeleton'
-import { cn } from '#/lib/utils'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -75,6 +74,7 @@ function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
+  const router = useRouter()
   const isOwner = activeProfile?.userProfileId === post.authorId
 
   const primaryCategory = post.categories[0]?.name ?? null
@@ -88,10 +88,10 @@ function PostDetailPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
       {/* Back button */}
-      <Link to="/" className={cn(buttonVariants({ variant: 'ghost' }), 'mb-4 gap-2')}>
+      <Button variant="ghost" onClick={() => router.history.back()} className="mb-4 gap-2">
         <ArrowLeft className="size-4" />
         Back
-      </Link>
+      </Button>
 
       <Card>
         <CardHeader>
