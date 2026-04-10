@@ -6,6 +6,9 @@ user-invocable: false
 
 ## UI Components
 
+- **One component per file** — exception: Shadcn/UI compound components in `components/ui/` and private unexported helpers in route files that use `Route.use*()` hooks.
+- **Named exports preferred** — `export function MyComponent`, not `export default`.
+
 Always use **Shadcn/UI components** (from `apps/web/src/components/ui/`) or project components (from `apps/web/src/components/`) instead of raw HTML elements.
 
 | Need | Use | Not |
