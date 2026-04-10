@@ -1,7 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
-import { eq } from "drizzle-orm";
 
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle(client, { schema });
@@ -438,12 +437,16 @@ async function seed() {
     },
   ];
 
+  const insertedPosts: { postId: string }[] = [];
+
   for (const post of postsData) {
     const { categories: postCategories, ...postValues } = post;
     const [inserted] = await db
       .insert(schema.posts)
       .values(postValues)
       .returning();
+
+    insertedPosts.push(inserted!);
 
     for (const cat of postCategories) {
       await db
@@ -453,11 +456,47 @@ async function seed() {
     }
   }
 
+  // Reviews — reviewers must not be the post author
+  // postsData indices: 0=Alice math tutoring, 2=Elena python, 10=Bob plumbing,
+  //   16=Carol logo design, 24=David handyman, 30=Elena tiling, 33=Frank home cleaning, 40=Elena IT support
+  const reviewsData: {
+    reviewerId: string;
+    postIndex: number;
+    rating: number;
+    reviewDescription: string | null;
+  }[] = [
+    { reviewerId: bobProfile.userProfileId,   postIndex: 0,  rating: 5, reviewDescription: "Alice is an incredible tutor — patient, clear, and really knows her stuff. My son went from failing to passing with distinction." },
+    { reviewerId: carolProfile.userProfileId, postIndex: 0,  rating: 4, reviewDescription: "Very knowledgeable and well prepared. Sessions were structured and effective. Would recommend for anyone needing maths help." },
+    { reviewerId: frankProfile.userProfileId, postIndex: 2,  rating: 5, reviewDescription: "Elena explained Python concepts better than any online course I tried. Highly practical sessions with real project work." },
+    { reviewerId: davidProfile.userProfileId, postIndex: 10, rating: 5, reviewDescription: "Bob fixed the leak quickly and left everything spotless. Fair pricing, professional attitude. Will definitely hire again." },
+    { reviewerId: aliceProfile.userProfileId, postIndex: 10, rating: 4, reviewDescription: "Good work on the pipes, came the same day I called. Slightly higher price than expected but the quality was there." },
+    { reviewerId: elenaProfile.userProfileId, postIndex: 16, rating: 5, reviewDescription: "Carol delivered a stunning brand identity. She truly understood what we were going for. The whole process was smooth and enjoyable." },
+    { reviewerId: frankProfile.userProfileId, postIndex: 16, rating: 4, reviewDescription: "Solid design work and responsive communication. Minor revisions were handled quickly. Very happy with the final logo." },
+    { reviewerId: carolProfile.userProfileId, postIndex: 24, rating: 5, reviewDescription: "David assembled all our IKEA furniture in half the time I expected. Tidy, efficient, and really friendly. Great value." },
+    { reviewerId: bobProfile.userProfileId,   postIndex: 24, rating: 3, reviewDescription: "Did a decent job overall but was about an hour late and didn't bring the right screwdriver. Had to pop out to get one." },
+    { reviewerId: elenaProfile.userProfileId, postIndex: 33, rating: 5, reviewDescription: "Frank cleaned our flat to an absolutely immaculate standard. Even areas we'd forgotten about were spotless. Highly recommended." },
+    { reviewerId: davidProfile.userProfileId, postIndex: 40, rating: 4, reviewDescription: "Elena set up our office network quickly and explained everything clearly. Very knowledgeable. Will use again for future IT needs." },
+  ];
+
+  for (const review of reviewsData) {
+    const postId = insertedPosts[review.postIndex]?.postId;
+    if (!postId) {
+      continue;
+    }
+    await db.insert(schema.reviews).values({
+      reviewerId: review.reviewerId,
+      postId,
+      rating: review.rating,
+      reviewDescription: review.reviewDescription,
+    });
+  }
+
   console.log("✅ Seeded:");
   console.log("   2 roles");
   console.log("   6 accounts + profiles");
   console.log("   6 categories");
   console.log(`   ${postsData.length} posts`);
+  console.log(`   ${reviewsData.length} reviews`);
 
   await client.end();
 }
