@@ -22,6 +22,11 @@ const postItem = t.Object({
   authorId:    t.String(),
   authorName:  t.String(),
   categories:  t.Array(t.Object({ categoryId: t.String(), name: t.String() })),
+  location:    t.Nullable(t.Object({
+    locationId: t.String(),
+    city:       t.Nullable(t.String()),
+    country:    t.Nullable(t.String()),
+  })),
 })
 
 export const PostsModel = {

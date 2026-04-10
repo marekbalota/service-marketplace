@@ -404,18 +404,18 @@ function HomePage() {
                   <SheetTitle>Filters & Sort</SheetTitle>
                   <SheetDescription>Refine your search results</SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">
-                  <div className="space-y-2">
+                <div className="mt-4 space-y-4 px-4">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium">Post Type</label>
-                    <PostTypeSelect />
+                    <PostTypeSelect triggerClassName="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium">Category</label>
-                    <CategorySelect />
+                    <CategorySelect triggerClassName="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium">Sort By</label>
-                    <SortSelect />
+                    <SortSelect triggerClassName="w-full" />
                   </div>
                 </div>
               </SheetContent>

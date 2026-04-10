@@ -24,12 +24,16 @@ const postSelect = (tx: DbOrTx) => tx
         '[]'::json
       )
     `,
+    locationId:      locations.locationId,
+    locationCity:    locations.city,
+    locationCountry: locations.country,
   })
   .from(posts)
   .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+  .leftJoin(locations, eq(posts.locationId, locations.locationId))
   .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
   .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
-  .groupBy(posts.postId, userProfiles.userProfileId);
+  .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId);
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery']) {
@@ -77,7 +81,12 @@ export abstract class PostsService {
         .orderBy(orderBy)
         .offset(effectiveOffset);
 
-      const items = await (size !== undefined ? q.limit(size) : q);
+      const rows = await (size !== undefined ? q.limit(size) : q);
+
+      const items = rows.map(({ locationId, locationCity, locationCountry, ...rest }) => ({
+        ...rest,
+        location: locationId ? { locationId, city: locationCity, country: locationCountry } : null,
+      }));
 
       return {
         items,
@@ -88,9 +97,14 @@ export abstract class PostsService {
   }
 
   static async findByProfile(profileId: string) {
-    return postSelect(db)
+    const rows = await postSelect(db)
       .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
       .orderBy(desc(posts.createdAt));
+
+    return rows.map(({ locationId, locationCity, locationCountry, ...rest }) => ({
+      ...rest,
+      location: locationId ? { locationId, city: locationCity, country: locationCountry } : null,
+    }));
   }
 
   static async findById(id: string) {

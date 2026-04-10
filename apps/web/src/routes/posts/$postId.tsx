@@ -93,7 +93,7 @@ function PostDetailPage() {
         Back
       </Button>
 
-      <Card>
+      <Card className='gap-2'>
         <CardHeader>
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
@@ -108,7 +108,6 @@ function PostDetailPage() {
 
           {/* Badges */}
           <div className="flex items-center gap-2">
-            {primaryCategory && <Badge variant="secondary">{primaryCategory}</Badge>}
             <Badge
               variant={isOffer ? 'default' : 'outline'}
               className={isOffer
@@ -117,11 +116,12 @@ function PostDetailPage() {
             >
               {isOffer ? 'Offering' : 'Requesting'}
             </Badge>
+            {primaryCategory && <Badge variant="secondary">{primaryCategory}</Badge>}
           </div>
 
           {/* Price */}
           {price !== null && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center pt-2 gap-1">
               <DollarSign className="size-6 text-green-600" />
               <span className="text-2xl font-semibold text-green-600">
                 {price}
