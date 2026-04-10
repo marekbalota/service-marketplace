@@ -5,7 +5,6 @@ import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
-import type { Post } from '#/types'
 
 export function myPostingsQueryOptions(profileId: string) {
   return queryOptions({
@@ -68,7 +67,7 @@ function PostsGrid({ profileId }: { profileId: string }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {posts.map((post: Post) => (
+      {posts.map((post) => (
         <PostCard
           key={post.postId}
           post={post}

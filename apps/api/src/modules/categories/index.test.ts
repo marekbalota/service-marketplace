@@ -1,39 +1,30 @@
 import { describe, it, expect } from 'bun:test'
 import { Elysia } from 'elysia'
+import { treaty } from '@elysiajs/eden'
 import { categoriesRoutes } from '.'
 
 const app = new Elysia().use(categoriesRoutes)
+const client = treaty(app)
 
 describe('GET /categories', () => {
-  it('returns 200', async () => {
-    const res = await app.handle(new Request('http://localhost/categories'))
-    expect(res.status).toBe(200)
-  })
-
-  it('returns an array', async () => {
-    const res = await app.handle(new Request('http://localhost/categories'))
-    const body = await res.json()
-    expect(Array.isArray(body)).toBe(true)
+  it('returns 200 with an array', async () => {
+    const { data, error } = await client.categories.get()
+    expect(error).toBeNull()
+    expect(Array.isArray(data)).toBe(true)
   })
 
   it('each item has categoryId, name, and description fields', async () => {
-    const res = await app.handle(new Request('http://localhost/categories'))
-    const body = await res.json() as Record<string, unknown>[]
-    for (const item of body) {
-      expect(item).toHaveProperty('categoryId')
-      expect(item).toHaveProperty('name')
-      expect(item).toHaveProperty('description')
+    const { data } = await client.categories.get()
+    for (const item of data!) {
       expect(typeof item.categoryId).toBe('string')
       expect(typeof item.name).toBe('string')
+      expect('description' in item).toBe(true)
     }
   })
 
   it('does not return soft-deleted categories', async () => {
-    // All returned categories should have no deletedAt in the response
-    // (the query filters them out at DB level — this confirms the shape)
-    const res = await app.handle(new Request('http://localhost/categories'))
-    const body = await res.json() as Record<string, unknown>[]
-    for (const item of body) {
+    const { data } = await client.categories.get()
+    for (const item of data!) {
       expect(item).not.toHaveProperty('deletedAt')
     }
   })

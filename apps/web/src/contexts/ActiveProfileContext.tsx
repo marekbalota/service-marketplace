@@ -7,7 +7,8 @@ import {
 } from 'react'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { api } from '#/api'
-import type { UserProfile } from '#/types'
+
+type UserProfile = NonNullable<Awaited<ReturnType<typeof api.profiles.get>>['data']>[number]
 
 const STORAGE_KEY = 'activeProfileId'
 

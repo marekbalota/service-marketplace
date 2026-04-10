@@ -22,6 +22,11 @@ const postItem = t.Object({
   authorId:    t.String(),
   authorName:  t.String(),
   categories:  t.Array(t.Object({ categoryId: t.String(), name: t.String() })),
+  location:    t.Nullable(t.Object({
+    locationId: t.String(),
+    city:       t.Nullable(t.String()),
+    country:    t.Nullable(t.String()),
+  })),
 })
 
 export const PostsModel = {
@@ -38,8 +43,36 @@ export const PostsModel = {
     total:      t.Number(),
     totalPages: t.Number(),
   }),
-  findByIdParams:   t.Object({ id: t.String() }),
-  findByIdResponse: postItem,
+  findByIdParams: t.Object({ id: t.String() }),
+  findByIdResponse: t.Object({
+    postId:        t.String(),
+    postTitle:     t.String(),
+    description:   t.String(),
+    postType:      t.Union([t.Literal("OFFER"), t.Literal("REQUEST")]),
+    price:         t.Nullable(t.String()),
+    rateType:      t.Nullable(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED")])),
+    createdAt:     t.Date(),
+    authorId:      t.String(),
+    authorName:    t.String(),
+    categories:    t.Array(t.Object({ categoryId: t.String(), name: t.String() })),
+    location: t.Nullable(t.Object({
+      locationId:  t.String(),
+      country:     t.Nullable(t.String()),
+      region:      t.Nullable(t.String()),
+      city:        t.Nullable(t.String()),
+      street:      t.Nullable(t.String()),
+      houseNumber: t.Nullable(t.String()),
+    })),
+    reviews:       t.Array(t.Object({
+      reviewId:          t.String(),
+      rating:            t.Number(),
+      reviewDescription: t.Nullable(t.String()),
+      reviewerName:      t.String(),
+      createdAt:         t.Date(),
+    })),
+    averageRating: t.Nullable(t.Number()),
+    reviewCount:   t.Number(),
+  }),
   createBody: t.Object({
     authorId:    t.String(),
     postTitle:   t.String({ minLength: 3 }),

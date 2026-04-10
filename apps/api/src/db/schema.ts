@@ -74,6 +74,21 @@ export const userProfiles = pgTable("user_profiles", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const posts = pgTable("posts", {
+  postId: uuid("post_id").primaryKey().defaultRandom(),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => userProfiles.userProfileId),
+  locationId: uuid("location_id").references(() => locations.locationId),
+  postTitle: text("post_title").notNull(),
+  description: text("description").notNull(),
+  postType: postTypeEnum("post_type").notNull(),
+  price: numeric("price", { precision: 10, scale: 2 }),
+  rateType: rateTypeEnum("rate_type"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 export const reviews = pgTable(
   "reviews",
   {
@@ -81,9 +96,9 @@ export const reviews = pgTable(
     reviewerId: uuid("reviewer_id")
       .notNull()
       .references(() => userProfiles.userProfileId),
-    revieweeId: uuid("reviewee_id")
+    postId: uuid("post_id")
       .notNull()
-      .references(() => userProfiles.userProfileId),
+      .references(() => posts.postId),
     rating: integer("rating").notNull(),
     reviewDescription: text("review_description"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -93,20 +108,6 @@ export const reviews = pgTable(
     check("rating_check", sql`${table.rating} BETWEEN 1 AND 5`),
   ],
 );
-
-export const posts = pgTable("posts", {
-  postId: uuid("post_id").primaryKey().defaultRandom(),
-  authorId: uuid("author_id")
-    .notNull()
-    .references(() => userProfiles.userProfileId),
-  postTitle: text("post_title").notNull(),
-  description: text("description").notNull(),
-  postType: postTypeEnum("post_type").notNull(),
-  price: numeric("price", { precision: 10, scale: 2 }),
-  rateType: rateTypeEnum("rate_type"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
 
 export const categories = pgTable("categories", {
   categoryId: uuid("category_id").primaryKey().defaultRandom(),
@@ -139,20 +140,6 @@ export const locations = pgTable("locations", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });
-
-export const postLocations = pgTable(
-  "post_locations",
-  {
-    postId: uuid("post_id")
-      .notNull()
-      .references(() => posts.postId),
-    locationId: uuid("location_id")
-      .notNull()
-      .references(() => locations.locationId),
-    deletedAt: timestamp("deleted_at"),
-  },
-  (table) => [primaryKey({ columns: [table.postId, table.locationId] })],
-);
 
 export const images = pgTable("images", {
   imageId: uuid("image_id").primaryKey().defaultRandom(),
@@ -258,7 +245,6 @@ export const userProfilesRelations = relations(
     }),
     posts: many(posts),
     reviewsGiven: many(reviews, { relationName: "reviewer" }),
-    reviewsReceived: many(reviews, { relationName: "reviewee" }),
     messagesSent: many(messages),
     images: many(images),
     favourites: many(favourites),
@@ -272,10 +258,9 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
     references: [userProfiles.userProfileId],
     relationName: "reviewer",
   }),
-  reviewee: one(userProfiles, {
-    fields: [reviews.revieweeId],
-    references: [userProfiles.userProfileId],
-    relationName: "reviewee",
+  post: one(posts, {
+    fields: [reviews.postId],
+    references: [posts.postId],
   }),
 }));
 
@@ -284,11 +269,15 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.authorId],
     references: [userProfiles.userProfileId],
   }),
+  location: one(locations, {
+    fields: [posts.locationId],
+    references: [locations.locationId],
+  }),
   postCategories: many(postCategories),
-  postLocations: many(postLocations),
   favourites: many(favourites),
   reports: many(reports),
   messageThreads: many(messageThreads),
+  reviews: many(reviews),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -309,18 +298,10 @@ export const postCategoriesRelations = relations(
   }),
 );
 
-export const locationsRelations = relations(locations, ({ many }) => ({
-  postLocations: many(postLocations),
-}));
-
-export const postLocationsRelations = relations(postLocations, ({ one }) => ({
+export const locationsRelations = relations(locations, ({ one }) => ({
   post: one(posts, {
-    fields: [postLocations.postId],
-    references: [posts.postId],
-  }),
-  location: one(locations, {
-    fields: [postLocations.locationId],
-    references: [locations.locationId],
+    fields: [locations.locationId],
+    references: [posts.locationId],
   }),
 }));
 
