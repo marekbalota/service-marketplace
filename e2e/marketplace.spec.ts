@@ -2,6 +2,11 @@ import { test, expect } from '@playwright/test'
 
 test.describe('My Postings', () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
     await page.goto('/my-postings')
   })
 
@@ -80,5 +85,75 @@ test.describe('Marketplace index', () => {
     await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/)
     // Back button should be visible
     await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
+  })
+
+  test('post detail page shows the post title, description section and author', async ({ page }) => {
+    await expect(page.locator('main .grid > a').first()).toBeVisible()
+    const titleText = await page.locator('main .grid > a').first().locator('h3').textContent()
+    await page.locator('main .grid > a').first().click()
+    await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/)
+    await expect(page.locator('main h1')).toContainText(titleText!)
+    await expect(page.locator('main h2', { hasText: 'Description' })).toBeVisible()
+    await expect(page.locator('main p', { hasText: 'Posted by' })).toBeVisible()
+  })
+
+  test('post type filter updates the URL and filters the results', async ({ page }) => {
+    await expect(page.getByText(/\d+ service/)).toBeVisible()
+
+    // Open the post-type combobox and choose "Offers Only"
+    await page.getByRole('combobox').first().click()
+    await page.getByRole('option', { name: 'Offers Only' }).click()
+
+    // URL should reflect the active filter
+    await expect(page).toHaveURL(/[?&]type=offer/)
+    // No "Requesting" type badges should appear in the post grid
+    await expect(page.locator('main .grid').getByText('Requesting')).toHaveCount(0)
+  })
+})
+
+test.describe('Authentication', () => {
+  const testEmail = `e2e-${Date.now()}@example.com`
+  const testPassword = 'password123'
+  const testName = 'E2E Test User'
+
+  test('register — fills form, submits, lands on home page logged in', async ({ page }) => {
+    await page.goto('/register')
+    await page.getByLabel(/name/i).fill(testName)
+    await page.getByLabel(/email/i).fill(testEmail)
+    await page.getByLabel(/password/i).fill(testPassword)
+    await page.getByRole('button', { name: /register/i }).click()
+
+    await page.waitForURL('/posts')
+    // Profile menu trigger is present — the user is authenticated
+    await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
+  })
+
+  test('login — fills form, submits, lands on home page logged in', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+
+    await page.waitForURL('/posts')
+    await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
+  })
+
+  test('my-postings — redirects to /login when not authenticated', async ({ page }) => {
+    await page.goto('/my-postings')
+    await page.waitForURL('/login')
+    // CardTitle renders as a <div>, not a heading — use text matcher
+    await expect(page.getByText('Welcome Back')).toBeVisible()
+  })
+
+  test('logout — clears session, shows login link in header', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+
+    await page.getByTestId('profile-menu-trigger').click()
+    await page.getByRole('button', { name: /log out/i }).click()
+    await expect(page.getByRole('link', { name: /log in/i })).toBeVisible()
   })
 })
