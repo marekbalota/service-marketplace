@@ -1,10 +1,6 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
 import * as schema from "./schema";
+import { db, client } from "./index";
 import { auth } from "../modules/auth/service";
-
-const client = postgres(process.env.DATABASE_URL!);
-const db = drizzle(client, { schema });
 
 async function upsertRole(name: string, description: string) {
   const existing = await db.query.roles.findFirst({
