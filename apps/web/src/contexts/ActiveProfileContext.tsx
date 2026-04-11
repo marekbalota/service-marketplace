@@ -36,9 +36,14 @@ export const profilesQueryOptions = queryOptions({
 export function ActiveProfileProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending: isSessionPending } = authClient.useSession();
 
-  const [activeProfileId, setActiveProfileIdState] = useState<string | null>(
-    () => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null),
-  );
+  const [activeProfileId, setActiveProfileIdState] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      setActiveProfileIdState(stored);
+    }
+  }, []);
 
   const { data: profiles = [], isPending: isProfilesPending } = useQuery({
     ...profilesQueryOptions,

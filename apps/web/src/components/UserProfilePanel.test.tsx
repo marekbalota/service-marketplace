@@ -60,7 +60,9 @@ describe('UserProfilePanel', () => {
   it('calls authClient.signOut and onClose when Log out is clicked', async () => {
     const onClose = vi.fn()
     await renderPanel(onClose)
-    fireEvent.click(screen.getByRole('button', { name: /log out/i }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /log out/i }))
+    })
     expect(mockSignOut).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
   })

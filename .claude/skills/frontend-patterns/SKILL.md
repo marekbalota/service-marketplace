@@ -45,6 +45,51 @@ import { Button } from '#/components/ui/button'
 
 Before building a custom component, check if Shadcn already has one using the **shadcn MCP** (`mcp__shadcn__search_items_in_registries` or `mcp__shadcn__list_items_in_registries`). If a suitable component exists, install it with `bunx --bun shadcn@latest add <name>`. Only build a custom component when no suitable Shadcn primitive exists.
 
+## SSR / Hydration Pitfalls (TanStack Start)
+
+TanStack Start renders a server HTML shell before hydrating on the client. Two patterns consistently cause React 19 warnings here.
+
+### Never read `localStorage` (or `window`) in a `useState` initializer
+
+```tsx
+// Bad — produces null on server, stored value on client → React 19 warns
+//   "Can't perform a React state update on a component that hasn't mounted yet"
+const [id, setId] = useState<string | null>(
+  () => (typeof window !== 'undefined' ? localStorage.getItem('key') : null),
+)
+
+// Good — consistent initial value; read localStorage after mount
+const [id, setId] = useState<string | null>(null)
+useEffect(() => {
+  const stored = localStorage.getItem('key')
+  if (stored) setId(stored)
+}, [])
+```
+
+The safe pattern is the one used in `ThemeToggle.tsx`: start with a universal default, hydrate from storage in `useEffect`.
+
+### Add `suppressHydrationWarning` to `<html>` when an inline script sets theme attributes
+
+The theme init script in `__root.tsx` sets `className`, `data-theme`, and `style.colorScheme` on `<html>` before React hydrates, so server HTML and client HTML always differ for that element. Suppress the warning at the source:
+
+```tsx
+<html lang="en" suppressHydrationWarning>
+```
+
+This is safe because the mismatch is intentional (the script runs before React and is correct by design).
+
+### Use `nativeButton={false}` on Base UI `Close`/`Trigger` when the render prop is not a `<button>`
+
+Base UI's `Dialog.Close` (and `SheetClose`) defaults to `nativeButton={true}`, which expects the rendered element to be a `<button>`. When using a `<Link>` as the render prop, add `nativeButton={false}` to suppress the accessibility warning:
+
+```tsx
+// Bad — Link is not a <button>
+<SheetClose render={<Link to="/posts" />}>…</SheetClose>
+
+// Good
+<SheetClose nativeButton={false} render={<Link to="/posts" />}>…</SheetClose>
+```
+
 ## API Client (Eden Treaty)
 
 ```ts

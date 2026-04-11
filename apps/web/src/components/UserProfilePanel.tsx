@@ -77,6 +77,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
           </p>
           <nav className="flex flex-col gap-0.5">
             <SheetClose
+              nativeButton={false}
               render={
                 <Link
                   to="/posts"
@@ -92,6 +93,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             </SheetClose>
 
             <SheetClose
+              nativeButton={false}
               render={
                 <Link
                   to="/my-postings"
