@@ -16,15 +16,55 @@ skinparam class {
     ArrowColor black
 }
 
-entity Account {
-    account_id : uuid <<PK>>
+entity User {
+    id : uuid <<PK>>
     ---
-    role_id : uuid <<FK>> <<NOT NULL>>
+    role_id : uuid <<FK>>
     name : text <<NOT NULL>>
     email : text <<NOT NULL>> <<UNIQUE>>
-    password_hash : text <<NOT NULL>>
+    email_verified : boolean <<NOT NULL>>
+    image : text
     created_at : timestamp <<NOT NULL>>
-    deleted_at : timestamp
+    updated_at : timestamp <<NOT NULL>>
+}
+
+entity Session {
+    id : uuid <<PK>>
+    ---
+    user_id : uuid <<FK>> <<NOT NULL>>
+    expires_at : timestamp <<NOT NULL>>
+    token : text <<NOT NULL>> <<UNIQUE>>
+    ip_address : text
+    user_agent : text
+    created_at : timestamp <<NOT NULL>>
+    updated_at : timestamp <<NOT NULL>>
+}
+
+entity OAuthAccount {
+    id : uuid <<PK>>
+    ---
+    user_id : uuid <<FK>> <<NOT NULL>>
+    account_id : text <<NOT NULL>>
+    provider_id : text <<NOT NULL>>
+    access_token : text
+    refresh_token : text
+    id_token : text
+    access_token_expires_at : timestamp
+    refresh_token_expires_at : timestamp
+    scope : text
+    password : text
+    created_at : timestamp <<NOT NULL>>
+    updated_at : timestamp <<NOT NULL>>
+}
+
+entity Verification {
+    id : uuid <<PK>>
+    ---
+    identifier : text <<NOT NULL>>
+    value : text <<NOT NULL>>
+    expires_at : timestamp <<NOT NULL>>
+    created_at : timestamp
+    updated_at : timestamp
 }
 
 entity Role {
@@ -174,8 +214,10 @@ Message }o--|| UserProfile : sender
 Message }o--|| MessageThread : belongs to
 MessageThread }o--|| Post
 Post ||--o{ Report : reported
-Account ||--o{ UserProfile
-Account }o--|| Role
+User ||--o{ UserProfile
+User }o--|| Role
+User ||--o{ Session
+User ||--o{ OAuthAccount
 UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
 Post ||--o{ Favourites

@@ -3,6 +3,7 @@ import {
   pgEnum,
   uuid,
   text,
+  boolean,
   timestamp,
   integer,
   numeric,
@@ -48,23 +49,64 @@ export const rolePermissions = pgTable(
   (table) => [primaryKey({ columns: [table.roleId, table.permissionId] })],
 );
 
-export const accounts = pgTable("accounts", {
-  accountId: uuid("account_id").primaryKey().defaultRandom(),
-  roleId: uuid("role_id")
-    .notNull()
-    .references(() => roles.roleId),
+// BetterAuth tables
+
+export const users = pgTable("user", {
+  id: uuid("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull().$onUpdate(() => new Date()),
+  roleId: uuid("role_id").references(() => roles.roleId),
+});
+
+export const sessions = pgTable("session", {
+  id: uuid("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull().$onUpdate(() => new Date()),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+});
+
+export const oauthAccounts = pgTable("account", {
+  id: uuid("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull().$onUpdate(() => new Date()),
+});
+
+export const verifications = pgTable("verification", {
+  id: uuid("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
 });
 
 export const userProfiles = pgTable("user_profiles", {
   userProfileId: uuid("user_profile_id").primaryKey().defaultRandom(),
   accountId: uuid("account_id")
     .notNull()
-    .references(() => accounts.accountId),
+    .references(() => users.id),
   name: text("name").notNull(),
   email: text("email").notNull(),
   bio: text("bio"),
@@ -206,8 +248,17 @@ export const reports = pgTable("reports", {
 // Relations
 
 export const rolesRelations = relations(roles, ({ many }) => ({
-  accounts: many(accounts),
+  users: many(users),
   rolePermissions: many(rolePermissions),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  role: one(roles, {
+    fields: [users.roleId],
+    references: [roles.roleId],
+  }),
+  userProfiles: many(userProfiles),
+  sessions: many(sessions),
 }));
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({
@@ -228,20 +279,12 @@ export const rolePermissionsRelations = relations(
   }),
 );
 
-export const accountsRelations = relations(accounts, ({ one, many }) => ({
-  role: one(roles, {
-    fields: [accounts.roleId],
-    references: [roles.roleId],
-  }),
-  userProfiles: many(userProfiles),
-}));
-
 export const userProfilesRelations = relations(
   userProfiles,
   ({ one, many }) => ({
-    account: one(accounts, {
+    user: one(users, {
       fields: [userProfiles.accountId],
-      references: [accounts.accountId],
+      references: [users.id],
     }),
     posts: many(posts),
     reviewsGiven: many(reviews, { relationName: "reviewer" }),
