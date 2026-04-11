@@ -1,7 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
-import { PostCard } from './PostCard'
+import { PostCard, type Post } from './PostCard'
 
 async function renderWithRouter(ui: React.ReactElement) {
   const rootRoute = createRootRoute({ component: () => ui })
@@ -14,7 +14,7 @@ async function renderWithRouter(ui: React.ReactElement) {
   })
 }
 
-const basePost = {
+const basePost: Post = {
   postId: 'post-1',
   postTitle: 'Math Tutoring',
   description: 'Experienced math tutor available for all levels.',
@@ -22,8 +22,10 @@ const basePost = {
   price: null,
   rateType: null,
   createdAt: new Date('2024-01-01'),
+  authorId: 'author-1',
   authorName: 'Jane Doe',
   categories: [],
+  location: null,
 }
 
 describe('PostCard', () => {
@@ -97,5 +99,26 @@ describe('PostCard', () => {
     await renderWithRouter(<PostCard post={basePost} />)
     const link = document.querySelector('a[href="/posts/post-1"]')
     expect(link).toBeInTheDocument()
+  })
+
+  it('shows the city when a location is provided', async () => {
+    await renderWithRouter(
+      <PostCard
+        post={{ ...basePost, location: { locationId: 'loc-1', city: 'Prague', country: 'CZ' } }}
+      />,
+    )
+    expect(screen.getByText('Prague')).toBeInTheDocument()
+  })
+
+  it('calls onDelete when the delete button is clicked', async () => {
+    const onDelete = vi.fn()
+    await renderWithRouter(<PostCard post={basePost} onDelete={onDelete} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(onDelete).toHaveBeenCalledOnce()
+  })
+
+  it('disables the delete button when deleteDisabled is true', async () => {
+    await renderWithRouter(<PostCard post={basePost} onDelete={vi.fn()} deleteDisabled={true} />)
+    expect(screen.getByRole('button')).toBeDisabled()
   })
 })

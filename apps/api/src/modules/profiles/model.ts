@@ -14,7 +14,6 @@ const profileItem = t.Object({
 })
 
 export const ProfilesModel = {
-  findAllResponse:  t.Array(profileItem),
   findByIdParams:   t.Object({ id: t.String() }),
   findByIdResponse: profileItem,
   updateParams:     t.Object({ id: t.String() }),
@@ -26,6 +25,7 @@ export const ProfilesModel = {
     fax:         t.Optional(t.Union([t.String(), t.Null()])),
   }),
   profilePostsParams: t.Object({ id: t.String() }),
+  meResponse: t.Array(profileItem),
 } as const
 
 export type ProfilesModel = {

@@ -92,7 +92,6 @@ export const PostsModel = {
     categoryIds: t.Optional(t.Array(t.String())),
   }),
   createResponse: postRow,
-  updateResponse: postRow,
   deleteParams:            t.Object({ id: t.String() }),
   findByProfileResponse:   t.Array(postItem),
 } as const

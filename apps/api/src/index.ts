@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
+import { authRoutes } from "./modules/auth";
 import { swagger } from "@elysiajs/swagger";
 import { logger } from "./logger";
 import { postsRoutes } from "./modules/posts";
@@ -7,7 +8,11 @@ import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 
 export const app = new Elysia()
-  .use(cors({ origin: "http://localhost:3000" }))
+  .use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }))
   .use(swagger({
     documentation: {
       info: {
@@ -27,6 +32,7 @@ export const app = new Elysia()
   }))
   .use(logger)
   .get("/", () => "Marketplace API")
+  .use(authRoutes)
   .use(postsRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)

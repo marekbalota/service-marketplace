@@ -4,75 +4,90 @@ import {
   useState,
   useEffect,
   type ReactNode,
-} from 'react'
-import { queryOptions, useQuery } from '@tanstack/react-query'
-import { api } from '#/api'
+} from "react";
+import { queryOptions, useQuery } from "@tanstack/react-query";
+import { api } from "#/api";
+import { authClient } from "#/auth";
 
-type UserProfile = NonNullable<Awaited<ReturnType<typeof api.profiles.get>>['data']>[number]
+type UserProfile = NonNullable<
+  Awaited<ReturnType<typeof api.profiles.me.get>>["data"]
+>[number];
 
-const STORAGE_KEY = 'activeProfileId'
+const STORAGE_KEY = "activeProfileId";
 
 type ActiveProfileContextValue = {
-  activeProfile: UserProfile | null
-  allProfiles: UserProfile[]
-  setActiveProfileId: (id: string) => void
-  isLoading: boolean
-}
+  activeProfile: UserProfile | null;
+  allProfiles: UserProfile[];
+  setActiveProfileId: (id: string) => void;
+  isLoading: boolean;
+};
 
-const ActiveProfileContext = createContext<ActiveProfileContextValue | null>(null)
+const ActiveProfileContext = createContext<ActiveProfileContextValue | null>(null);
 
 export const profilesQueryOptions = queryOptions({
-  queryKey: ['profiles'],
+  queryKey: ["profiles", "me"],
   queryFn: async () => {
-    const { data, error } = await api.profiles.get()
-    if (error) throw error
-    return data
+    const { data, error } = await api.profiles.me.get();
+    if (error) throw error;
+    return data;
   },
-})
+});
 
 export function ActiveProfileProvider({ children }: { children: ReactNode }) {
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+
   const [activeProfileId, setActiveProfileIdState] = useState<string | null>(
-    () => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null),
-  )
+    () => (typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null),
+  );
 
-  const { data: profiles = [], isLoading } = useQuery(profilesQueryOptions)
-
-  // Auto-select the first profile when none is stored or the stored ID is no longer valid
-  useEffect(() => {
-    if (isLoading || profiles.length === 0) return
-    const isValid = profiles.some((p) => p.userProfileId === activeProfileId)
-    if (!isValid) {
-      const firstId = profiles[0]!.userProfileId
-      setActiveProfileIdState(firstId)
-      localStorage.setItem(STORAGE_KEY, firstId)
-    }
-  }, [isLoading, profiles, activeProfileId])
-
-  const setActiveProfileId = (id: string) => {
-    setActiveProfileIdState(id)
-    localStorage.setItem(STORAGE_KEY, id)
-  }
+  const { data: profiles = [], isPending: isProfilesPending } = useQuery({
+    ...profilesQueryOptions,
+    enabled: !isSessionPending && !!session,
+  });
 
   const activeProfile =
     profiles.find((p) => p.userProfileId === activeProfileId) ??
     profiles[0] ??
-    null
+    null;
 
-  const accountProfiles = activeProfile
-    ? profiles.filter((p) => p.accountId === activeProfile.accountId)
-    : []
+  const isLoading = isSessionPending || (!!session && isProfilesPending);
+
+  // Clear stored profile when user logs out
+  useEffect(() => {
+    if (!isSessionPending && !session) {
+      setActiveProfileIdState(null);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [isSessionPending, session]);
+
+  // Keep localStorage in sync with the resolved active profile.
+  // Handles the case where the stored ID is stale (e.g. profile deleted,
+  // different user) — activeProfile falls back to profiles[0] in that case.
+  useEffect(() => {
+    if (activeProfile) {
+      localStorage.setItem(STORAGE_KEY, activeProfile.userProfileId);
+      setActiveProfileIdState(activeProfile.userProfileId);
+    }
+  }, [activeProfile?.userProfileId]);
+
+  const setActiveProfileId = (id: string) => {
+    setActiveProfileIdState(id);
+    localStorage.setItem(STORAGE_KEY, id);
+  };
 
   return (
     <ActiveProfileContext.Provider
-      value={{ activeProfile, allProfiles: accountProfiles, setActiveProfileId, isLoading }}
+      value={{ activeProfile, allProfiles: profiles, setActiveProfileId, isLoading }}
     >
       {children}
     </ActiveProfileContext.Provider>
-  )
+  );
 }
 
 export function useActiveProfile() {
-  const ctx = useContext(ActiveProfileContext)
-  if (!ctx) throw new Error('useActiveProfile must be used inside ActiveProfileProvider')
-  return ctx
+  const ctx = useContext(ActiveProfileContext);
+  if (!ctx) {
+    throw new Error("useActiveProfile must be used inside ActiveProfileProvider");
+  }
+  return ctx;
 }
