@@ -9,104 +9,185 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MyPostingsRouteRouteImport } from './routes/my-postings/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PostsIndexRouteImport } from './routes/posts/index'
-import { Route as PostsPostIdRouteImport } from './routes/posts/$postId'
+import { Route as RegisterRouteRouteImport } from './routes/register/route'
+import { Route as LoginRouteRouteImport } from './routes/login/route'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
+import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
+import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts/$postId'
 
-const MyPostingsRouteRoute = MyPostingsRouteRouteImport.update({
-  id: '/my-postings',
-  path: '/my-postings',
+const RegisterRouteRoute = RegisterRouteRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const LoginRouteRoute = LoginRouteRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const PostsIndexRoute = PostsIndexRouteImport.update({
+const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
+  id: '/my-postings',
+  path: '/my-postings',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const PostsPostIdRoute = PostsPostIdRouteImport.update({
+const AppPostsPostIdRoute = AppPostsPostIdRouteImport.update({
   id: '/posts/$postId',
   path: '/posts/$postId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRouteRoute
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts/': typeof PostsIndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRouteRoute
+  '/register': typeof RegisterRouteRoute
+  '/my-postings': typeof AppMyPostingsRouteRoute
+  '/posts/$postId': typeof AppPostsPostIdRoute
+  '/posts/': typeof AppPostsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRouteRoute
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts': typeof PostsIndexRoute
+  '/login': typeof LoginRouteRoute
+  '/register': typeof RegisterRouteRoute
+  '/my-postings': typeof AppMyPostingsRouteRoute
+  '/': typeof AppIndexRoute
+  '/posts/$postId': typeof AppPostsPostIdRoute
+  '/posts': typeof AppPostsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/my-postings': typeof MyPostingsRouteRoute
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts/': typeof PostsIndexRoute
+  '/_app': typeof AppRouteRouteWithChildren
+  '/login': typeof LoginRouteRoute
+  '/register': typeof RegisterRouteRoute
+  '/_app/my-postings': typeof AppMyPostingsRouteRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/posts/$postId': typeof AppPostsPostIdRoute
+  '/_app/posts/': typeof AppPostsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/my-postings' | '/posts/$postId' | '/posts/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/my-postings'
+    | '/posts/$postId'
+    | '/posts/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/my-postings' | '/posts/$postId' | '/posts'
-  id: '__root__' | '/' | '/my-postings' | '/posts/$postId' | '/posts/'
+  to:
+    | '/login'
+    | '/register'
+    | '/my-postings'
+    | '/'
+    | '/posts/$postId'
+    | '/posts'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/register'
+    | '/_app/my-postings'
+    | '/_app/'
+    | '/_app/posts/$postId'
+    | '/_app/posts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  MyPostingsRouteRoute: typeof MyPostingsRouteRoute
-  PostsPostIdRoute: typeof PostsPostIdRoute
-  PostsIndexRoute: typeof PostsIndexRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
+  LoginRouteRoute: typeof LoginRouteRoute
+  RegisterRouteRoute: typeof RegisterRouteRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/my-postings': {
-      id: '/my-postings'
-      path: '/my-postings'
-      fullPath: '/my-postings'
-      preLoaderRoute: typeof MyPostingsRouteRouteImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/posts/': {
-      id: '/posts/'
+    '/_app/my-postings': {
+      id: '/_app/my-postings'
+      path: '/my-postings'
+      fullPath: '/my-postings'
+      preLoaderRoute: typeof AppMyPostingsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/posts/': {
+      id: '/_app/posts/'
       path: '/posts'
       fullPath: '/posts/'
-      preLoaderRoute: typeof PostsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppPostsIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/posts/$postId': {
-      id: '/posts/$postId'
+    '/_app/posts/$postId': {
+      id: '/_app/posts/$postId'
       path: '/posts/$postId'
       fullPath: '/posts/$postId'
-      preLoaderRoute: typeof PostsPostIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppPostsPostIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
   }
 }
 
+interface AppRouteRouteChildren {
+  AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppPostsPostIdRoute: typeof AppPostsPostIdRoute
+  AppPostsIndexRoute: typeof AppPostsIndexRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppPostsPostIdRoute: AppPostsPostIdRoute,
+  AppPostsIndexRoute: AppPostsIndexRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  MyPostingsRouteRoute: MyPostingsRouteRoute,
-  PostsPostIdRoute: PostsPostIdRoute,
-  PostsIndexRoute: PostsIndexRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
+  LoginRouteRoute: LoginRouteRoute,
+  RegisterRouteRoute: RegisterRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

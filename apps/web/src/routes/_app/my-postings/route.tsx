@@ -1,10 +1,11 @@
 import { Suspense } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
+import { authClient } from '#/auth'
 
 export function myPostingsQueryOptions(profileId: string) {
   return queryOptions({
@@ -17,7 +18,13 @@ export function myPostingsQueryOptions(profileId: string) {
   })
 }
 
-export const Route = createFileRoute('/my-postings')({
+export const Route = createFileRoute('/_app/my-postings')({
+  beforeLoad: async () => {
+    const session = await authClient.getSession()
+    if (!session.data) {
+      throw redirect({ to: '/login' })
+    }
+  },
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(profilesQueryOptions)
   },
@@ -54,6 +61,7 @@ function PostsGrid({ profileId }: { profileId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
     },
   })
 

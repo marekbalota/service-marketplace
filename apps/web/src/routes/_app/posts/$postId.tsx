@@ -20,7 +20,7 @@ export function postDetailQueryOptions(postId: string) {
   })
 }
 
-export const Route = createFileRoute('/posts/$postId')({
+export const Route = createFileRoute('/_app/posts/$postId')({
   loader: async ({ context: { queryClient }, params: { postId } }) => {
     await queryClient.ensureQueryData(postDetailQueryOptions(postId))
   },

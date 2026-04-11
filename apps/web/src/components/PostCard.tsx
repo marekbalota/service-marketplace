@@ -6,7 +6,7 @@ import { Button } from '#/components/ui/button'
 import { useState } from 'react'
 import type { api } from '#/api'
 
-type Post = NonNullable<Awaited<ReturnType<typeof api.posts.get>>['data']>['items'][number]
+export type Post = NonNullable<Awaited<ReturnType<typeof api.posts.get>>['data']>['items'][number]
 
 const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',

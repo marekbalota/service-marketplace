@@ -104,7 +104,7 @@ export function postsQueryOptions(deps: {
 
 // --- Route ---
 
-export const Route = createFileRoute('/posts/')({
+export const Route = createFileRoute('/_app/posts/')({
   validateSearch: searchSchema,
   loader: async ({ context: { queryClient } }) => {
     await Promise.all([

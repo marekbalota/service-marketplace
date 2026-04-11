@@ -1,19 +1,14 @@
-import { HeadContent, Link, Scripts, createRootRouteWithContext, useRouter } from '@tanstack/react-router'
+import { HeadContent, Link, Outlet, Scripts, createRootRouteWithContext, useRouter, type ErrorComponentProps } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Button, buttonVariants } from '../components/ui/button'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '../components/Footer'
-import { Header } from '../components/Header'
 import { queryClient } from '../router'
 import { ActiveProfileProvider } from '../contexts/ActiveProfileContext'
-
 import appCss from '../styles.css?url'
 
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
-
-function RootErrorComponent({ error }: { error: Error }) {
+function RootErrorComponent({ error }: ErrorComponentProps) {
   const router = useRouter()
   return (
     <main className="mx-auto max-w-7xl px-4 py-32 text-center">
@@ -64,21 +59,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootDocument,
+  component: Outlet,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
           <ActiveProfileProvider>
-            <Header />
             {children}
-            <Footer />
           </ActiveProfileProvider>
           <ReactQueryDevtools buttonPosition="bottom-left" />
           <TanStackDevtools
