@@ -28,7 +28,7 @@ pb138-marketplace_for_services/
 │   │   │   │   └── seed.ts       # Upsert-based seed script
 │   │   │   ├── routes/           # One file per resource (posts.ts, categories.ts, …)
 │   │   │   ├── logger.ts         # Elysia logger plugin — request + error logging
-│   │   │   └── index.ts          # Server entry point — registers plugins, CORS
+│   │   │   └── index.ts          # Server entry point — registers plugins, CORS, Swagger
 │   │   └── drizzle/              # Generated SQL migrations
 │   └── web/                      # TanStack Start frontend (port 3000)
 │       └── src/

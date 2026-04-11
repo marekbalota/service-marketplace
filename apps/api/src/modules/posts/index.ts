@@ -14,6 +14,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     {
       query: PostsModel.findAllQuery,
       response: { 200: PostsModel.findAllResponse },
+      detail: { summary: "List posts", operationId: "listPosts", tags: ["Posts"] },
     },
   )
   .get(
@@ -32,6 +33,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         200: PostsModel.findByIdResponse,
         404: errorResponse,
       },
+      detail: { summary: "Get post by ID", operationId: "getPost", tags: ["Posts"] },
     },
   )
   .post(
@@ -54,6 +56,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         401: AuthModel.unauthorizedResponse,
         403: AuthModel.forbiddenResponse,
       },
+      detail: { summary: "Create a post", operationId: "createPost", tags: ["Posts"] },
     },
   )
   .patch(
@@ -86,6 +89,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         403: AuthModel.forbiddenResponse,
         404: errorResponse,
       },
+      detail: { summary: "Update a post", operationId: "updatePost", tags: ["Posts"] },
     },
   )
   .delete(
@@ -117,5 +121,6 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         403: AuthModel.forbiddenResponse,
         404: errorResponse,
       },
+      detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
     },
   );

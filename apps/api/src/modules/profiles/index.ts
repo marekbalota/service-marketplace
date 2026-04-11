@@ -20,6 +20,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         200: ProfilesModel.meResponse,
         401: AuthModel.unauthorizedResponse,
       },
+      detail: { summary: 'List profiles', operationId: 'listProfiles', tags: ['Profiles'] },
     },
   )
   .get(
@@ -38,6 +39,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         200: ProfilesModel.findByIdResponse,
         404: errorResponse,
       },
+      detail: { summary: 'Get profile by ID', operationId: 'getProfile', tags: ['Profiles'] },
     },
   )
   .patch(
@@ -65,6 +67,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         403: errorResponse,
         404: errorResponse,
       },
+      detail: { summary: 'Update a profile', operationId: 'updateProfile', tags: ['Profiles'] },
     },
   )
   .get(
@@ -74,5 +77,6 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     {
       params: ProfilesModel.profilePostsParams,
       response: { 200: PostsModel.findByProfileResponse },
+      detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
     },
   )
