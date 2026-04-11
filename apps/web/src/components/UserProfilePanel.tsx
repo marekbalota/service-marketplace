@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import {
   Settings,
   FileText,
@@ -38,6 +38,7 @@ function ProfileOption({ name, role }: { name: string; role?: string }) {
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, allProfiles, setActiveProfileId } = useActiveProfile()
+  const router = useRouter()
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -141,7 +142,11 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
           <Button
             variant="ghost"
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
-            onClick={() => { authClient.signOut(); onClose() }}
+            onClick={async () => {
+              await authClient.signOut()
+              onClose()
+              void router.navigate({ to: '/' })
+            }}
           >
             <LogOut className="size-5" />
             <span>Log out</span>
