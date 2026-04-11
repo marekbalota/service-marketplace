@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { auth } from "../modules/auth/service";
 
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle(client, { schema });
@@ -19,41 +20,26 @@ async function upsertRole(name: string, description: string) {
   return created!;
 }
 
-async function upsertAccount(
-  roleId: string,
-  name: string,
-  email: string,
-) {
-  const existing = await db.query.accounts.findFirst({
-    where: (a, { eq }) => eq(a.email, email),
+async function upsertUser(name: string, email: string) {
+  const existing = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.email, email),
   });
   if (existing) {
-    return existing;
+    const profile = await db.query.userProfiles.findFirst({
+      where: (p, { eq }) => eq(p.accountId, existing.id),
+    });
+    return { user: existing, profile: profile! };
   }
-  const [created] = await db
-    .insert(schema.accounts)
-    .values({ roleId, name, email, passwordHash: "$2b$10$placeholder_hash" })
-    .returning();
-  return created!;
-}
 
-async function upsertProfile(
-  accountId: string,
-  name: string,
-  email: string,
-  bio: string,
-) {
-  const existing = await db.query.userProfiles.findFirst({
-    where: (p, { eq }) => eq(p.accountId, accountId),
+  const result = await auth.api.signUpEmail({
+    body: { name, email, password: "password123" },
+    headers: new Headers(),
   });
-  if (existing) {
-    return existing;
-  }
-  const [created] = await db
-    .insert(schema.userProfiles)
-    .values({ accountId, name, email, bio })
-    .returning();
-  return created!;
+
+  const profile = await db.query.userProfiles.findFirst({
+    where: (p, { eq }) => eq(p.accountId, result.user.id),
+  });
+  return { user: result.user, profile: profile! };
 }
 
 async function upsertCategory(name: string, description: string) {
@@ -73,22 +59,15 @@ async function upsertCategory(name: string, description: string) {
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  const userRole = await upsertRole("user", "Regular user");
+  await upsertRole("user", "Regular user");
   await upsertRole("admin", "Administrator");
 
-  const alice = await upsertAccount(userRole.roleId, "Alice Johnson", "alice@example.com");
-  const bob = await upsertAccount(userRole.roleId, "Bob Smith", "bob@example.com");
-  const carol = await upsertAccount(userRole.roleId, "Carol White", "carol@example.com");
-  const david = await upsertAccount(userRole.roleId, "David Brown", "david@example.com");
-  const elena = await upsertAccount(userRole.roleId, "Elena Novak", "elena@example.com");
-  const frank = await upsertAccount(userRole.roleId, "Frank Müller", "frank@example.com");
-
-  const aliceProfile = await upsertProfile(alice.accountId, alice.name, alice.email, "Experienced math tutor with 5 years of teaching.");
-  const bobProfile = await upsertProfile(bob.accountId, bob.name, bob.email, "Licensed plumber available for residential jobs.");
-  const carolProfile = await upsertProfile(carol.accountId, carol.name, carol.email, "Freelance graphic designer and illustrator.");
-  const davidProfile = await upsertProfile(david.accountId, david.name, david.email, "Handyman — no job too small.");
-  const elenaProfile = await upsertProfile(elena.accountId, elena.name, elena.email, "Full-stack developer and IT consultant based in Brno.");
-  const frankProfile = await upsertProfile(frank.accountId, frank.name, frank.email, "Professional cleaner and home organiser with 8 years of experience.");
+  const { profile: aliceProfile } = await upsertUser("Alice Johnson", "alice@example.com");
+  const { profile: bobProfile }   = await upsertUser("Bob Smith",     "bob@example.com");
+  const { profile: carolProfile } = await upsertUser("Carol White",   "carol@example.com");
+  const { profile: davidProfile } = await upsertUser("David Brown",   "david@example.com");
+  const { profile: elenaProfile } = await upsertUser("Elena Novak",   "elena@example.com");
+  const { profile: frankProfile } = await upsertUser("Frank Müller",  "frank@example.com");
 
   const tutoring = await upsertCategory("Tutoring", "Academic tutoring and coaching");
   const plumbing = await upsertCategory("Plumbing", "Plumbing installation and repairs");
@@ -542,7 +521,7 @@ async function seed() {
 
   console.log("✅ Seeded:");
   console.log("   2 roles");
-  console.log("   6 accounts + profiles");
+  console.log("   6 users + profiles (password: password123)");
   console.log("   6 categories (3 posts with all categories included)");
   console.log(`   ${postsData.length} posts (${locationCount} with locations)`);
   console.log(`   ${reviewsData.length} reviews`);

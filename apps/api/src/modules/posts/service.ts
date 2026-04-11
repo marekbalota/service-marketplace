@@ -212,7 +212,7 @@ export abstract class PostsService {
         .update(posts)
         .set(updateValues)
         .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
-        .returning();
+        .returning({ postId: posts.postId });
 
       if (!updated) {
         return null;
@@ -242,5 +242,18 @@ export abstract class PostsService {
       .returning({ postId: posts.postId });
 
     return deleted ? true : null;
+  }
+
+  static async checkPostOwnership(postId: string, accountId: string): Promise<'not_found' | 'forbidden' | 'ok'> {
+    const [row] = await db
+      .select({ accountId: userProfiles.accountId })
+      .from(posts)
+      .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
+      .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
+      .limit(1)
+
+    if (!row) return 'not_found'
+    if (row.accountId !== accountId) return 'forbidden'
+    return 'ok'
   }
 }
