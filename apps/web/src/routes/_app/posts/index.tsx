@@ -4,6 +4,22 @@ import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Search, SlidersHorizontal } from 'lucide-react'
+
+function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
+  return (
+    <div className="relative flex-1">
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder="Search services, providers, or keywords..."
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        className="pl-9"
+      />
+    </div>
+  )
+}
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { Input } from '#/components/ui/input'
@@ -159,15 +175,7 @@ function PageSkeleton() {
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="mb-4 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search services, providers, or keywords..."
-                disabled
-                className="pl-9"
-              />
-            </div>
+            <SearchInput disabled />
             <Skeleton className="size-9 shrink-0 rounded-md md:hidden" />
           </div>
           <div className="hidden gap-3 md:flex">
@@ -380,19 +388,13 @@ function HomePage() {
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="mb-4 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search services, providers, or keywords..."
-                value={inputValue}
-                onChange={(e) => {
-                  setInputValue(e.target.value)
-                  searchDebouncer.maybeExecute(e.target.value)
-                }}
-                className="pl-9"
-              />
-            </div>
+            <SearchInput
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value)
+                searchDebouncer.maybeExecute(e.target.value)
+              }}
+            />
 
             {/* Mobile filter sheet */}
             <Sheet>

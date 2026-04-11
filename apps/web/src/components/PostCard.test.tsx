@@ -86,13 +86,13 @@ describe('PostCard', () => {
     const starButton = screen.getByRole('button')
     const star = starButton.querySelector('svg')!
 
-    expect(star.classList.contains('fill-yellow-400')).toBe(false)
+    expect(star.classList.contains('fill-star-filled')).toBe(false)
 
     fireEvent.click(starButton)
-    expect(star.classList.contains('fill-yellow-400')).toBe(true)
+    expect(star.classList.contains('fill-star-filled')).toBe(true)
 
     fireEvent.click(starButton)
-    expect(star.classList.contains('fill-yellow-400')).toBe(false)
+    expect(star.classList.contains('fill-star-filled')).toBe(false)
   })
 
   it('wraps card in a link to the post detail page', async () => {

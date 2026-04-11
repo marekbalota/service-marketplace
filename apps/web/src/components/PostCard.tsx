@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
+import { cn } from '#/lib/utils'
 import { useState } from 'react'
 import type { api } from '#/api'
 
@@ -52,7 +53,7 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
                   }}
                 >
                   <Star
-                    className={`size-5 ${favorited ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                    className={cn('size-5', favorited ? 'fill-star-filled text-star-filled' : 'text-muted-foreground')}
                   />
                 </Button>
               )}
@@ -62,11 +63,11 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
           <div className="mt-2 flex max-h-14 flex-wrap items-center gap-2 overflow-hidden">
             <Badge
               variant={isOffer ? 'default' : 'outline'}
-              className={
+              className={cn(
                 isOffer
-                  ? 'bg-green-100 text-green-800 hover:bg-green-100'
-                  : 'border-blue-500 text-blue-700'
-              }
+                  ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
+                  : 'border-request-border text-request-fg'
+              )}
             >
               {isOffer ? 'Offering' : 'Requesting'}
             </Badge>
@@ -93,8 +94,8 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
             </div>
             {price !== null && (
               <div className="flex items-center gap-1">
-                <DollarSign className="size-4 text-green-600" />
-                <span className="font-semibold text-green-600">
+                <DollarSign className="size-4 text-price" />
+                <span className="font-semibold text-price">
                   {price}
                   {rateLabel && <span className="font-normal"> {rateLabel}</span>}
                 </span>

@@ -8,6 +8,7 @@ import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 import { Skeleton } from '#/components/ui/skeleton'
+import { cn } from '#/lib/utils'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -110,9 +111,11 @@ function PostDetailPage() {
           <div className="flex items-center gap-2">
             <Badge
               variant={isOffer ? 'default' : 'outline'}
-              className={isOffer
-                ? 'bg-green-100 text-green-800 hover:bg-green-100'
-                : 'border-blue-500 text-blue-700'}
+              className={cn(
+                isOffer
+                  ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
+                  : 'border-request-border text-request-fg'
+              )}
             >
               {isOffer ? 'Offering' : 'Requesting'}
             </Badge>
@@ -122,8 +125,8 @@ function PostDetailPage() {
           {/* Price */}
           {price !== null && (
             <div className="flex items-center pt-2 gap-1">
-              <DollarSign className="size-6 text-green-600" />
-              <span className="text-2xl font-semibold text-green-600">
+              <DollarSign className="size-6 text-price" />
+              <span className="text-2xl font-semibold text-price">
                 {price}
                 {rateLabel && <span className="text-base"> {rateLabel}</span>}
               </span>
@@ -169,7 +172,7 @@ function PostDetailPage() {
             )}
             {post.reviewCount > 0 && (
               <div className="flex items-center gap-2">
-                <Star className="size-5 fill-yellow-400 text-yellow-400" />
+                <Star className="size-5 fill-star-filled text-star-filled" />
                 <div>
                   <p className="text-sm text-muted-foreground">Rating</p>
                   <p className="font-medium">
@@ -220,7 +223,7 @@ function PostDetailPage() {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
-                              className={`size-4 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                              className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
                             />
                           ))}
                         </div>

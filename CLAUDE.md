@@ -39,6 +39,7 @@ pb138-marketplace_for_services/
 │           └── styles.css        # Global styles + Tailwind theme tokens
 ├── docs/                         # Non-code project resources
 │   ├── erd.puml                  # Entity-relationship diagram (source of truth for schema)
+│   ├── screen-flow.puml          # Screen navigation flow diagram
 │   └── requirements.md           # Full functional and non-functional requirements
 ├── docker-compose.yml            # PostgreSQL 17 container
 └── package.json                  # Workspace root

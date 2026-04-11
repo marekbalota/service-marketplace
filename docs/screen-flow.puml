@@ -1,0 +1,87 @@
+@startuml Screen Flow
+
+[*] -right-> MainPage
+
+state "Main Page" as MainPage {
+  MainPage : - browse posts
+  MainPage : - filter posts
+  MainPage : - sort posts
+  MainPage : - favorites
+  MainPage : - messages
+}
+
+MainPage -right-> SidePanel
+
+state "User (Side Panel)" as SidePanel
+
+SidePanel -up-> AccountInfo
+SidePanel -right-> UserInfo
+SidePanel -right-> MyPosts
+SidePanel -right-> SwitchUserProfile
+SidePanel -right-> Messages
+
+state "Account Info" as AccountInfo {
+  AccountInfo : - edit
+}
+
+AccountInfo -right-> ViewUserProfiles
+
+state "View User Profiles" as ViewUserProfiles {
+  ViewUserProfiles : - delete profile
+}
+
+ViewUserProfiles -right-> CreateProfile : Create a profile
+
+state "User Info" as UserInfo {
+  UserInfo : - edit (settings)
+  UserInfo : - choose
+}
+
+state "My Posts" as MyPosts {
+  MyPosts : - list of posts
+}
+
+MyPosts -up-> CreatePost
+MyPosts -right-> ViewPostCreator
+
+state "View Post (creator)" as ViewPostCreator {
+  ViewPostCreator : - delete post
+  ViewPostCreator : - view reviews
+}
+
+ViewPostCreator -right-> EditPost
+DMPostChat -up-> ViewPostCreator
+
+state "Messages" as Messages {
+  Messages : - list of chats
+}
+
+Messages -right-> DMPostChat
+
+MainPage -down-> ViewPostVisitor
+
+state "View Post (not creator)" as ViewPostVisitor {
+  ViewPostVisitor : - leave a review
+  ViewPostVisitor : - report
+  ViewPostVisitor : - message
+}
+
+DMPostChat -down-> ViewPostVisitor
+
+MainPage -down-> AdminMenu : if > 0 rights
+
+state "Admin Menu" as AdminMenu
+
+AdminMenu -down-> ManageRoles
+AdminMenu -right-> ManageAccounts
+AdminMenu -right-> ManageReports
+
+state "Manage Accounts" as ManageAccounts {
+  ManageAccounts : (accesses)
+}
+
+state "Manage Reports" as ManageReports {
+  ManageReports : (bans)
+}
+
+@enduml

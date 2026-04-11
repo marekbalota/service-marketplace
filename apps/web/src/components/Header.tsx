@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "#/components/ui/sheet";
+import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from "./UserProfilePanel";
 import { useActiveProfile } from "#/contexts/ActiveProfileContext";
 import { authClient } from "#/auth";
@@ -29,6 +30,7 @@ export function Header() {
             </h1>
           </Link>
           <div className="flex items-center gap-2">
+            <ThemeToggle/>
           {!isPending && !session && (
               <>
                 <Link to="/login" className={cn(buttonVariants({ variant: "outline" }))}>
