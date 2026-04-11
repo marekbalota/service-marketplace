@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { authRoutes } from "./modules/auth";
+import { logger } from "./logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
@@ -11,6 +12,7 @@ export const app = new Elysia()
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   }))
+  .use(logger)
   .get("/", () => "Marketplace API")
   .use(authRoutes)
   .use(postsRoutes)
@@ -23,3 +25,7 @@ console.log(
 );
 
 export type App = typeof app;
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason)
+})

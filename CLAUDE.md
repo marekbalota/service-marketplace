@@ -27,6 +27,7 @@ pb138-marketplace_for_services/
 │   │   │   │   ├── schema.ts     # All Drizzle table + relation definitions
 │   │   │   │   └── seed.ts       # Upsert-based seed script
 │   │   │   ├── routes/           # One file per resource (posts.ts, categories.ts, …)
+│   │   │   ├── logger.ts         # Elysia logger plugin — request + error logging
 │   │   │   └── index.ts          # Server entry point — registers plugins, CORS
 │   │   └── drizzle/              # Generated SQL migrations
 │   └── web/                      # TanStack Start frontend (port 3000)
@@ -69,3 +70,4 @@ Schema is defined in `apps/api/src/db/schema.ts`. The ERD (`docs/erd.puml`) is t
   - React component or pure function → Vitest unit test next to the source file (see `frontend-patterns` skill).
   - New user-facing feature → add or extend an e2e scenario in `e2e/marketplace.spec.ts`.
 - Run tests: `bun run test` (unit, all workspaces) · `bun run test:e2e` (Playwright, requires DB + both dev servers).
+- Logging: log to stdout/stderr only — never to files. Works universally across all deployment targets (Kubernetes, Docker, PaaS). The logger plugin (`apps/api/src/logger.ts`) logs all requests (stdout) and errors (stderr) via Elysia lifecycle hooks; `process.on('unhandledRejection')` in `index.ts` catches anything outside the request lifecycle.
