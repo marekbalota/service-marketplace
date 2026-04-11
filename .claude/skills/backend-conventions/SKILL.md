@@ -86,6 +86,12 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
   )
 ```
 
+## HTTP Status Codes & Error Responses
+
+- Return the appropriate status code for each outcome — never use `200` for everything.
+- All error responses must use a consistent shape `{ message: string }`.
+- Validation errors return `422` automatically via Elysia — no manual handling needed.
+
 ## Database Schema Rules
 
 - All PKs are UUIDs with `defaultRandom()`.
