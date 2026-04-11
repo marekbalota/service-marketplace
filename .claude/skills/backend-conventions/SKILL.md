@@ -82,9 +82,18 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
     {
       query: PostsModel.findAllQuery,
       response: { 200: PostsModel.findAllResponse },
+      detail: { summary: 'List posts', operationId: 'listPosts', tags: ['Posts'] },
     },
   )
 ```
+
+## OpenAPI / Swagger
+
+Every route must include a `detail` object with `summary`, `operationId`, and `tags`. Swagger UI is served at `/swagger`. The OpenAPI JSON spec is at `/swagger/json`.
+
+- `operationId` uses camelCase matching the service method (e.g. `listPosts`, `getPost`, `createPost`).
+- `tags` group routes by resource (e.g. `["Posts"]`, `["Profiles"]`).
+- API metadata (title, version, server URLs) is configured in `src/index.ts`.
 
 ## HTTP Status Codes & Error Responses
 

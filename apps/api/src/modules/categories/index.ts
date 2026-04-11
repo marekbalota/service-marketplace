@@ -10,5 +10,6 @@ export const categoriesRoutes = new Elysia({ prefix: "/categories" })
       response: {
         200: CategoriesModel.findAllResponse,
       },
+      detail: { summary: "List categories", operationId: "listCategories", tags: ["Categories"] },
     },
   );

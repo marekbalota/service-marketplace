@@ -11,6 +11,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     {
       query: PostsModel.findAllQuery,
       response: { 200: PostsModel.findAllResponse },
+      detail: { summary: "List posts", operationId: "listPosts", tags: ["Posts"] },
     },
   )
   .get(
@@ -29,6 +30,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         200: PostsModel.findByIdResponse,
         404: notFound,
       },
+      detail: { summary: "Get post by ID", operationId: "getPost", tags: ["Posts"] },
     },
   )
   .post(
@@ -40,6 +42,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     {
       body: PostsModel.createBody,
       response: { 201: PostsModel.createResponse },
+      detail: { summary: "Create a post", operationId: "createPost", tags: ["Posts"] },
     },
   )
   .patch(
@@ -59,6 +62,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         200: PostsModel.updateResponse,
         404: notFound,
       },
+      detail: { summary: "Update a post", operationId: "updatePost", tags: ["Posts"] },
     },
   )
   .delete(
@@ -77,5 +81,6 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         200: t.Object({ message: t.String() }),
         404: notFound,
       },
+      detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
     },
   );

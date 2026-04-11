@@ -12,6 +12,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     async () => await ProfilesService.findAll(),
     {
       response: { 200: ProfilesModel.findAllResponse },
+      detail: { summary: 'List profiles', operationId: 'listProfiles', tags: ['Profiles'] },
     },
   )
   .get(
@@ -30,6 +31,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         200: ProfilesModel.findByIdResponse,
         404: notFound,
       },
+      detail: { summary: 'Get profile by ID', operationId: 'getProfile', tags: ['Profiles'] },
     },
   )
   .patch(
@@ -46,6 +48,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       params: ProfilesModel.updateParams,
       body:   ProfilesModel.updateBody,
       response: { 404: notFound },
+      detail: { summary: 'Update a profile', operationId: 'updateProfile', tags: ['Profiles'] },
     },
   )
   .get(
@@ -55,5 +58,6 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     {
       params: ProfilesModel.profilePostsParams,
       response: { 200: PostsModel.findByProfileResponse },
+      detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
     },
   )
