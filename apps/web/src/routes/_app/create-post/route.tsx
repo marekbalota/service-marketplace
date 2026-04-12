@@ -9,6 +9,7 @@ import { api } from '#/api'
 import { authClient } from '#/auth'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { categoriesQueryOptions } from '#/routes/_app/posts/index'
+import { formatLocation } from '#/routes/_app/posts/$postId'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
@@ -356,16 +357,9 @@ function CreatePostPage() {
                             <SelectTrigger className="!h-11 w-full">
                               <SelectValue placeholder="Select from your previous locations">
                                 {field.value
-                                  ? (() => {
-                                      const loc = previousLocations.find(
-                                        (l) => l.locationId === field.value,
-                                      )
-                                      return loc
-                                        ? [loc.street, loc.city, loc.country]
-                                            .filter(Boolean)
-                                            .join(', ')
-                                        : undefined
-                                    })()
+                                  ? formatLocation(
+                                      previousLocations.find((l) => l.locationId === field.value) ?? {},
+                                    ) || undefined
                                   : undefined}
                               </SelectValue>
                             </SelectTrigger>
@@ -373,7 +367,7 @@ function CreatePostPage() {
                           <SelectContent className="max-h-60 overflow-y-auto">
                             {previousLocations.map((loc) => (
                               <SelectItem key={loc.locationId} value={loc.locationId}>
-                                {[loc.street, loc.city, loc.country].filter(Boolean).join(', ')}
+                                {formatLocation(loc)}
                               </SelectItem>
                             ))}
                           </SelectContent>
