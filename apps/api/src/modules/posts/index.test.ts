@@ -187,6 +187,60 @@ describe("POST /posts", () => {
     expect(error?.status).toBe(422);
   });
 
+  it("creates a post with a new location object", async () => {
+    const { data, error } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Post with new location",
+        description: "Test description with enough length",
+        postType: "REQUEST",
+        location: {
+          country: "CZ",
+          region: "South Moravian Region",
+          city: "Brno",
+          street: "Botanická",
+          houseNumber: "68a",
+        },
+      },
+      { headers: { Cookie: sessionCookie } },
+    )
+    expect(error).toBeNull()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(typeof (data as any)?.postId).toBe("string")
+  })
+
+  it("creates a post with an existing locationId", async () => {
+    const { data: created } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Seed post for location reuse",
+        description: "Test description with enough length",
+        postType: "OFFER",
+        location: { country: "CZ", region: "South Moravian", city: "Brno" },
+      },
+      { headers: { Cookie: sessionCookie } },
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seedPostId = (created as any)?.postId as string
+    const { data: fetchedPost } = await client.posts({ id: seedPostId }).get()
+    const existingLocationId = fetchedPost?.location?.locationId
+    expect(existingLocationId).toBeDefined()
+
+    const { data, error } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Post reusing location",
+        description: "Test description with enough length",
+        postType: "OFFER",
+        locationId: existingLocationId,
+      },
+      { headers: { Cookie: sessionCookie } },
+    )
+    expect(error).toBeNull()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(typeof (data as any)?.postId).toBe("string")
+  })
+
   it("returns 403 when authorId does not belong to session user", async () => {
     const { error } = await client.posts.post(
       {

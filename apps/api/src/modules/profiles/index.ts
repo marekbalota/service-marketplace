@@ -4,6 +4,7 @@ import { AuthModel } from '../auth/model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
+import { LocationsModel, LocationsService } from '../locations'
 import { authRoutes } from '../auth'
 import { ErrorMessages, errorResponse } from '../../errors'
 
@@ -78,5 +79,14 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       params: ProfilesModel.profilePostsParams,
       response: { 200: PostsModel.findByProfileResponse },
       detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
+    },
+  )
+  .get(
+    '/:id/locations',
+    async ({ params }) => LocationsService.findByProfileId(params.id),
+    {
+      params: LocationsModel.profileLocationsParams,
+      response: { 200: LocationsModel.profileLocationsResponse },
+      detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
     },
   )

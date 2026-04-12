@@ -1,9 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { authClient } from '#/auth'
 import { Suspense, useState, useEffect } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal } from 'lucide-react'
 
 function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
   return (
@@ -373,6 +374,8 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
 function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
   const navigate = Route.useNavigate()
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
 
   const [inputValue, setInputValue] = useState(q)
   useEffect(() => { setInputValue(q) }, [q])
@@ -395,6 +398,13 @@ function HomePage() {
                 searchDebouncer.maybeExecute(e.target.value)
               }}
             />
+
+            {isAuthenticated && (
+              <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
+                <Plus className="size-4" />
+                <span className="hidden sm:inline">New Post</span>
+              </Link>
+            )}
 
             {/* Mobile filter sheet */}
             <Sheet>
