@@ -65,6 +65,7 @@ Schema is defined in `apps/api/src/db/schema.ts`. The ERD (`docs/erd.puml`) is t
 - Frontend routes are file-based under `apps/web/src/routes/` (TanStack Router convention).
 - Use Shadcn/UI components for all UI elements; extend with Tailwind v4 utility classes.
 - To add a new Shadcn component: `bunx --bun shadcn@latest add <name>`
+- **Forms use React Hook Form + Zod**: `useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), mode: 'onChange' })`. Wrap fields with shadcn `Form / FormField / FormItem / FormLabel / FormControl / FormMessage`. Use `FormField`'s `render={({ field }) => ...}` (Controller pattern) for all inputs — required for custom controls like `Select` that don't support `register`. Type the submit handler as `SubmitHandler<FormValues>` from `react-hook-form`. The `form.tsx` primitive lives in `components/ui/` alongside other Shadcn primitives.
 - **Always write tests alongside new code** — no route handler, component, or non-trivial pure function ships without a test.
   - API route handler → `bun:test` integration test in the same `routes/` directory (see `backend-conventions` skill).
   - React component or pure function → Vitest unit test next to the source file (see `frontend-patterns` skill).
