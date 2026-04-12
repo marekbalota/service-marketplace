@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Controller, useForm } from 'react-hook-form'
+import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, MapPin, User, FileText, AlignLeft, Tag, DollarSign } from 'lucide-react'
@@ -12,7 +12,6 @@ import { categoriesQueryOptions } from '#/routes/_app/posts/index'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
-import { Label } from '#/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -27,6 +26,14 @@ import {
   CardTitle,
   CardDescription,
 } from '#/components/ui/card'
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '#/components/ui/form'
 
 // --- Query options ---
 
@@ -116,11 +123,14 @@ function CreatePostPage() {
     }
   }, [priceValue, form])
 
+  const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
+
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!activeProfile) throw new Error('No active profile')
 
-      const hasManualLocation = isManualLocation &&
+      const hasManualLocation =
+        isManualLocation &&
         (values.country || values.region || values.city || values.street || values.houseNumber)
 
       const body = {
@@ -153,10 +163,6 @@ function CreatePostPage() {
       queryClient.invalidateQueries({ queryKey: ['locations', 'profile', activeProfile?.userProfileId] })
       navigate({ to: '/my-postings' })
     },
-  })
-
-  const onSubmit = form.handleSubmit((values) => {
-    mutation.mutate(values)
   })
 
   const handleToggleLocation = () => {
@@ -199,115 +205,112 @@ function CreatePostPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-6">
-
-            {/* Post Type */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Type *</Label>
-              <Controller
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              {/* Post Type */}
+              <FormField
+                control={form.control}
                 name="postType"
-                control={form.control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-2 gap-0 rounded-lg border overflow-hidden">
-                    {(['OFFER', 'REQUEST'] as const).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => field.onChange(type)}
-                        className={[
-                          'px-4 py-3 text-sm font-medium transition-colors',
-                          field.value === type
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-background text-foreground hover:bg-muted',
-                          type === 'OFFER' ? 'border-r' : '',
-                        ].join(' ')}
-                      >
-                        {type === 'OFFER' ? 'Offering Service' : 'Requesting Service'}
-                      </button>
-                    ))}
-                  </div>
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Type *</FormLabel>
+                    <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border">
+                      {(['OFFER', 'REQUEST'] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => field.onChange(type)}
+                          className={[
+                            'px-4 py-3 text-sm font-medium transition-colors',
+                            field.value === type
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-background text-foreground hover:bg-muted',
+                            type === 'OFFER' ? 'border-r' : '',
+                          ].join(' ')}
+                        >
+                          {type === 'OFFER' ? 'Offering Service' : 'Requesting Service'}
+                        </button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-            </div>
 
-            {/* Title */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
-                  <FileText className="size-5 text-blue-600" />
-                </div>
-                <Label htmlFor="postTitle" className="text-base font-semibold">Title *</Label>
-              </div>
-              <Controller
+              {/* Title */}
+              <FormField
+                control={form.control}
                 name="postTitle"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <>
-                    <Input
-                      {...field}
-                      id="postTitle"
-                      placeholder="e.g., Professional Lawn Care Service"
-                      className="h-11"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.error && (
-                      <p className="text-sm text-destructive">{fieldState.error.message}</p>
-                    )}
-                  </>
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
+                        <FileText className="size-5 text-blue-600" />
+                      </div>
+                      <FormLabel className="text-base font-semibold">Title *</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g., Professional Lawn Care Service"
+                        className="h-11"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-            </div>
 
-            {/* Description */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950">
-                  <AlignLeft className="size-5 text-purple-600" />
-                </div>
-                <Label htmlFor="description" className="text-base font-semibold">Description *</Label>
-              </div>
-              <Controller
+              {/* Description */}
+              <FormField
+                control={form.control}
                 name="description"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <>
-                    <Textarea
-                      {...field}
-                      id="description"
-                      placeholder="Describe your service offering or request in detail..."
-                      rows={5}
-                      className="resize-none"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.error && (
-                      <p className="text-sm text-destructive">{fieldState.error.message}</p>
-                    )}
-                  </>
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950">
+                        <AlignLeft className="size-5 text-purple-600" />
+                      </div>
+                      <FormLabel className="text-base font-semibold">Description *</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Describe your service offering or request in detail..."
+                        rows={5}
+                        className="resize-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-            </div>
 
-            {/* Category */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
-                  <Tag className="size-5 text-green-600" />
-                </div>
-                <Label htmlFor="categoryId" className="text-base font-semibold">Category *</Label>
-              </div>
-              <Controller
-                name="categoryId"
+              {/* Category */}
+              <FormField
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <>
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
+                        <Tag className="size-5 text-green-600" />
+                      </div>
+                      <FormLabel className="text-base font-semibold">Category *</FormLabel>
+                    </div>
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="categoryId" className="!h-11 w-full">
-                        <SelectValue placeholder="Select a category">
-                          {field.value
-                            ? (categories.find((c) => c.categoryId === field.value)?.name ?? 'Select a category')
-                            : undefined}
-                        </SelectValue>
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger className="!h-11 w-full">
+                          <SelectValue placeholder="Select a category">
+                            {field.value
+                              ? (categories.find((c) => c.categoryId === field.value)?.name ?? undefined)
+                              : undefined}
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {categories.map((cat) => (
                           <SelectItem key={cat.categoryId} value={cat.categoryId}>
@@ -316,213 +319,239 @@ function CreatePostPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {fieldState.error && (
-                      <p className="text-sm text-destructive">{fieldState.error.message}</p>
-                    )}
-                  </>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-            </div>
 
-            {/* Location */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950">
-                    <MapPin className="size-5 text-orange-600" />
+              {/* Location */}
+              <FormItem className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950">
+                      <MapPin className="size-5 text-orange-600" />
+                    </div>
+                    <span className="text-base font-semibold">Location (Optional)</span>
                   </div>
-                  <Label className="text-base font-semibold">Location (Optional)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-2"
+                    onClick={handleToggleLocation}
+                  >
+                    <MapPin className="size-4" />
+                    {isManualLocation ? 'Use Previous Location' : 'Enter New Location'}
+                  </Button>
                 </div>
+
+                {!isManualLocation ? (
+                  <FormField
+                    control={form.control}
+                    name="locationId"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="!h-11 w-full">
+                              <SelectValue placeholder="Select from your previous locations">
+                                {field.value
+                                  ? (() => {
+                                      const loc = previousLocations.find(
+                                        (l) => l.locationId === field.value,
+                                      )
+                                      return loc
+                                        ? [loc.street, loc.city, loc.country]
+                                            .filter(Boolean)
+                                            .join(', ')
+                                        : undefined
+                                    })()
+                                  : undefined}
+                              </SelectValue>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {previousLocations.map((loc) => (
+                              <SelectItem key={loc.locationId} value={loc.locationId}>
+                                {[loc.street, loc.city, loc.country].filter(Boolean).join(', ')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {previousLocations.length === 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            No previous locations. Click 'Enter New Location' to add one.
+                          </p>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <Card className="border-2 border-dashed bg-muted/50">
+                    <CardContent className="space-y-4 pt-6">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Country</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="e.g., Czech Republic" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="region"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Region/State</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="e.g., South Moravian Region" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="e.g., Brno" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <FormField
+                          control={form.control}
+                          name="street"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Street</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="e.g., Botanická" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="houseNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>House No.</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="e.g., 68a" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </FormItem>
+
+              {/* Pricing */}
+              <FormItem className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
+                    <DollarSign className="size-5 text-emerald-600" />
+                  </div>
+                  <span className="text-base font-semibold">Pricing (Optional)</span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price ($)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            className="h-11"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="rateType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rate Type</FormLabel>
+                        <Select
+                          value={field.value ?? ''}
+                          onValueChange={field.onChange}
+                          disabled={!priceValue}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="!h-11 w-full">
+                              <SelectValue placeholder="Select rate type">
+                                {field.value === 'HOURLY'
+                                  ? 'Hourly Rate'
+                                  : field.value === 'DAILY'
+                                    ? 'Daily Rate'
+                                    : field.value === 'FIXED'
+                                      ? 'Fixed Price'
+                                      : undefined}
+                              </SelectValue>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="HOURLY">Hourly Rate</SelectItem>
+                            <SelectItem value="DAILY">Daily Rate</SelectItem>
+                            <SelectItem value="FIXED">Fixed Price</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">Leave price empty if negotiable</p>
+              </FormItem>
+
+              {mutation.isError && (
+                <p className="text-sm text-destructive">
+                  Failed to create post. Please try again.
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-6">
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="h-9 gap-2"
-                  onClick={handleToggleLocation}
+                  onClick={() => navigate({ to: '/posts' })}
+                  className="h-11 flex-1"
                 >
-                  <MapPin className="size-4" />
-                  {isManualLocation ? 'Use Previous Location' : 'Enter New Location'}
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={mutation.isPending || !isValid}
+                  className="h-11 flex-1"
+                >
+                  {mutation.isPending ? 'Creating…' : 'Create Posting'}
                 </Button>
               </div>
-
-              {!isManualLocation ? (
-                <div className="space-y-2">
-                  <Controller
-                    name="locationId"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className="!h-11 w-full">
-                          <SelectValue placeholder="Select from your previous locations">
-                            {field.value
-                              ? (() => {
-                                  const loc = previousLocations.find((l) => l.locationId === field.value)
-                                  return loc
-                                    ? [loc.street, loc.city, loc.country].filter(Boolean).join(', ')
-                                    : undefined
-                                })()
-                              : undefined}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60 overflow-y-auto">
-                          {previousLocations.map((loc) => (
-                            <SelectItem key={loc.locationId} value={loc.locationId}>
-                              {[loc.street, loc.city, loc.country].filter(Boolean).join(', ')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {previousLocations.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      No previous locations. Click 'Enter New Location' to add one.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <Card className="border-2 border-dashed bg-muted/50">
-                  <CardContent className="space-y-4 pt-6">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Controller
-                          name="country"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Input {...field} id="country" placeholder="e.g., Czech Republic" />
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="region">Region/State</Label>
-                        <Controller
-                          name="region"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Input {...field} id="region" placeholder="e.g., South Moravian Region" />
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Controller
-                        name="city"
-                        control={form.control}
-                        render={({ field }) => (
-                          <Input {...field} id="city" placeholder="e.g., Brno" />
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="street">Street</Label>
-                        <Controller
-                          name="street"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Input {...field} id="street" placeholder="e.g., Botanická" />
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="houseNumber">House No.</Label>
-                        <Controller
-                          name="houseNumber"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Input {...field} id="houseNumber" placeholder="e.g., 68a" />
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Pricing */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
-                  <DollarSign className="size-5 text-emerald-600" />
-                </div>
-                <Label className="text-base font-semibold">Pricing (Optional)</Label>
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-sm font-medium">Price ($)</Label>
-                  <Controller
-                    name="price"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        id="price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        className="h-11"
-                      />
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rateType" className="text-sm font-medium">Rate Type</Label>
-                  <Controller
-                    name="rateType"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value ?? ''}
-                        onValueChange={field.onChange}
-                        disabled={!priceValue}
-                      >
-                        <SelectTrigger id="rateType" className="!h-11 w-full">
-                          <SelectValue placeholder="Select rate type">
-                            {field.value === 'HOURLY' ? 'Hourly Rate'
-                              : field.value === 'DAILY' ? 'Daily Rate'
-                              : field.value === 'FIXED' ? 'Fixed Price'
-                              : undefined}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="HOURLY">Hourly Rate</SelectItem>
-                          <SelectItem value="DAILY">Daily Rate</SelectItem>
-                          <SelectItem value="FIXED">Fixed Price</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">Leave price empty if negotiable</p>
-            </div>
-
-            {mutation.isError && (
-              <p className="text-sm text-destructive">Failed to create post. Please try again.</p>
-            )}
-
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate({ to: '/posts' })}
-                className="h-11 flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={mutation.isPending || !isValid}
-                className="h-11 flex-1"
-              >
-                {mutation.isPending ? 'Creating…' : 'Create Posting'}
-              </Button>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </main>
