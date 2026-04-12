@@ -351,7 +351,7 @@ function CreatePostPage() {
                     name="locationId"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select value={field.value} onValueChange={field.onChange} disabled={previousLocations.length === 0}>
                           <FormControl>
                             <SelectTrigger className="!h-11 w-full">
                               <SelectValue placeholder="Select from your previous locations">
