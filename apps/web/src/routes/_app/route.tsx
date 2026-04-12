@@ -8,10 +8,12 @@ export const Route = createFileRoute('/_app')({
 
 function AppLayout() {
   return (
-    <>
+    <div className="flex min-h-svh flex-col">
       <Header />
-      <Outlet />
+      <div className="flex-1">
+        <Outlet />
+      </div>
       <Footer />
-    </>
+    </div>
   )
 }
