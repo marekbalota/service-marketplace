@@ -36,7 +36,14 @@ type LocationFields = {
   rateType?: 'HOURLY' | 'DAILY' | 'FIXED' | undefined
 }
 
-function buildMutationBody(fields: LocationFields) {
+type MutationBody = {
+  price: string | undefined
+  rateType: 'HOURLY' | 'DAILY' | 'FIXED' | undefined
+  location?: { country?: string; region?: string; city?: string; street?: string; houseNumber?: string }
+  locationId?: string
+}
+
+function buildMutationBody(fields: LocationFields): MutationBody {
   const {
     isManualLocation = false,
     locationId = '',
