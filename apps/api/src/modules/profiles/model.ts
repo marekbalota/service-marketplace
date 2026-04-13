@@ -10,7 +10,6 @@ const profileItem = t.Object({
   fax:           t.Nullable(t.String()),
   createdAt:     t.Date(),
   accountName:   t.String(),
-  roleName:      t.String(),
 })
 
 export const ProfilesModel = {
@@ -25,7 +24,6 @@ export const ProfilesModel = {
     fax:         t.Optional(t.Union([t.String(), t.Null()])),
   }),
   profilePostsParams: t.Object({ id: t.String() }),
-  meResponse: t.Array(profileItem),
 } as const
 
 export type ProfilesModel = {

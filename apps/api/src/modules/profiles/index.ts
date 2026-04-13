@@ -1,28 +1,14 @@
 import { Elysia, t } from 'elysia'
 import { ProfilesModel } from './model'
-import { AuthModel } from '../auth/model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
 import { authRoutes } from '../auth'
-import { ErrorMessages, errorResponse } from '../../errors'
+import { ErrorMessages, errorResponse, AuthErrorMessages } from '../../lib/errors'
+import { authErrorResponses } from '../auth/model'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
-  .get(
-    '/me',
-    async ({ user }) => {
-      return ProfilesService.findByAccountId(user.id)
-    },
-    {
-      auth: true,
-      response: {
-        200: ProfilesModel.meResponse,
-        401: AuthModel.unauthorizedResponse,
-      },
-      detail: { summary: 'List profiles', operationId: 'listProfiles', tags: ['Profiles'] },
-    },
-  )
   .get(
     '/:id',
     async ({ params, set }) => {
@@ -48,7 +34,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
       if (!isOwner) {
         set.status = 403
-        return { message: AuthModel.messages.forbidden }
+        return { message: AuthErrorMessages.forbidden }
       }
       const updated = await ProfilesService.update(params.id, body)
       if (!updated) {
@@ -63,9 +49,8 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       body:   ProfilesModel.updateBody,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        403: errorResponse,
         404: errorResponse,
+        ...authErrorResponses,
       },
       detail: { summary: 'Update a profile', operationId: 'updateProfile', tags: ['Profiles'] },
     },

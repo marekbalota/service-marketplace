@@ -13,7 +13,6 @@ const profileSelect = {
   fax:           userProfiles.fax,
   createdAt:     userProfiles.createdAt,
   accountName:   users.name,
-  roleName:      roles.name,
 }
 
 export abstract class ProfilesService {
@@ -22,7 +21,6 @@ export abstract class ProfilesService {
       .select(profileSelect)
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .innerJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
@@ -46,6 +44,17 @@ export abstract class ProfilesService {
       .limit(1)
 
     return row !== undefined
+  }
+
+  static async getProfileIdsByAccount(accountId: string): Promise<string[]> {
+    const profiles = await db
+      .select({ userProfileId: userProfiles.userProfileId })
+      .from(userProfiles)
+      .where(and(
+        eq(userProfiles.accountId, accountId),
+        isNull(userProfiles.deletedAt)
+      ));
+    return profiles.map(p => p.userProfileId);
   }
 
   static async update(id: string, body: ProfilesModel['updateBody']) {

@@ -1,10 +1,11 @@
 import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
-import { AuthModel } from "../auth/model";
 import { authRoutes } from "../auth";
 import { ProfilesService } from "../profiles/service";
-import { ErrorMessages, errorResponse } from "../../errors";
+import { ErrorMessages, errorResponse, AuthErrorMessages } from "../../lib/errors";
+import { Permissions } from "../../lib/rbac/permissions";
+import { authErrorResponses } from "../auth/model";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
@@ -42,7 +43,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       const owned = await ProfilesService.isProfileOwnedByAccount(body.authorId, user.id);
       if (!owned) {
         set.status = 403;
-        return { message: AuthModel.messages.forbidden };
+        return { message: AuthErrorMessages.forbidden };
       }
 
       set.status = 201;
@@ -53,23 +54,28 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       body: PostsModel.createBody,
       response: {
         201: PostsModel.createResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
+        ...authErrorResponses,
       },
       detail: { summary: "Create a post", operationId: "createPost", tags: ["Posts"] },
     },
   )
   .patch(
     "/:id",
-    async ({ params, body, user, set }) => {
-      const check = await PostsService.checkPostOwnership(params.id, user.id);
-      if (check === 'not_found') {
+    async ({ params, body, user, permissions, set }) => {
+      const post = await PostsService.findById(params.id);
+      if (!post) {
         set.status = 404;
         return { message: ErrorMessages.postNotFound };
       }
-      if (check === 'forbidden') {
+
+      const canEditAny = permissions.includes(Permissions.PostsEditAny);
+      const canEditOwn = permissions.includes(Permissions.PostsEditOwn);
+      const profileIds = await ProfilesService.getProfileIdsByAccount(user.id);
+      const isOwner = profileIds.includes(post.authorId);
+
+      if (!canEditAny && !(canEditOwn && isOwner)) {
         set.status = 403;
-        return { message: AuthModel.messages.forbidden };
+        return { message: AuthErrorMessages.forbidden };
       }
 
       const updated = await PostsService.update(params.id, body);
@@ -85,24 +91,30 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       body: PostsModel.updateBody,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
         404: errorResponse,
+        ...authErrorResponses,
       },
       detail: { summary: "Update a post", operationId: "updatePost", tags: ["Posts"] },
     },
   )
   .delete(
     "/:id",
-    async ({ params, user, set }) => {
-      const check = await PostsService.checkPostOwnership(params.id, user.id);
-      if (check === 'not_found') {
+    async ({ params, user , permissions, set }) => {
+      const post = await PostsService.findById(params.id);
+      if (!post) {
         set.status = 404;
         return { message: ErrorMessages.postNotFound };
       }
-      if (check === 'forbidden') {
+
+      // Permission check: delete any OR (delete own AND is owner)
+      const canDeleteAny = permissions.includes(Permissions.PostsDeleteAny);
+      const canDeleteOwn = permissions.includes(Permissions.PostsDeleteOwn);
+      const profileIds = await ProfilesService.getProfileIdsByAccount(user.id);
+      const isOwner = profileIds.includes(post.authorId);
+
+      if (!canDeleteAny && !(canDeleteOwn && isOwner)) {
         set.status = 403;
-        return { message: AuthModel.messages.forbidden };
+        return { message: AuthErrorMessages.forbidden };
       }
 
       const deleted = await PostsService.delete(params.id);
@@ -117,9 +129,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       params: PostsModel.deleteParams,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
         404: errorResponse,
+        ...authErrorResponses,
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
     },
