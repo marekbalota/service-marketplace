@@ -5,14 +5,14 @@ import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } fr
 import { UserProfilePanel } from './UserProfilePanel'
 
 const mockSignOut = vi.hoisted(() => vi.fn())
-const mockUseActiveProfile = vi.hoisted(() => vi.fn())
+const mockUseActiveUser = vi.hoisted(() => vi.fn())
 
 vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
 }))
 
-vi.mock('#/contexts/ActiveProfileContext', () => ({
-  useActiveProfile: mockUseActiveProfile,
+vi.mock('#/contexts/ActiveUserContext', () => ({
+  useActiveUser: mockUseActiveUser,
 }))
 
 // SheetClose requires a Sheet (Dialog) context that isn't present in unit tests;
@@ -44,7 +44,7 @@ async function renderPanel(onClose = vi.fn()) {
 describe('UserProfilePanel', () => {
   beforeEach(() => {
     mockSignOut.mockResolvedValue(undefined)
-    mockUseActiveProfile.mockReturnValue({
+    mockUseActiveUser.mockReturnValue({
       activeProfile: baseProfile,
       allProfiles: [baseProfile],
       setActiveProfileId: vi.fn(),
@@ -73,7 +73,7 @@ describe('UserProfilePanel', () => {
   })
 
   it('hides the profile switcher when there are no profiles', async () => {
-    mockUseActiveProfile.mockReturnValue({
+    mockUseActiveUser.mockReturnValue({
       activeProfile: null,
       allProfiles: [],
       setActiveProfileId: vi.fn(),

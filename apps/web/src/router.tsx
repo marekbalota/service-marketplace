@@ -13,7 +13,7 @@ export const queryClient = new QueryClient({
 export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, permissions: [] as string[] },
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
@@ -25,5 +25,8 @@ export function getRouter() {
 declare module '@tanstack/react-router' {
   interface Register {
     router: ReturnType<typeof getRouter>
+  }
+  interface StaticDataRouteOption {
+    permissions?: string[]
   }
 }

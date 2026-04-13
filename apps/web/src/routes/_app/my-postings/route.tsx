@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
+import { useActiveUser, currentUserQueryOptions } from '#/contexts/ActiveUserContext'
 import { Skeleton } from '#/components/ui/skeleton'
 import { authClient } from '#/auth'
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_app/my-postings')({
     }
   },
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(profilesQueryOptions)
+    await queryClient.ensureQueryData(currentUserQueryOptions)
   },
   component: MyPostingsPage,
 })
@@ -88,7 +88,7 @@ function PostsGrid({ profileId }: { profileId: string }) {
 }
 
 function MyPostingsPage() {
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">

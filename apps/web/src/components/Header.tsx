@@ -12,12 +12,12 @@ import {
 } from "#/components/ui/sheet";
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from "./UserProfilePanel";
-import { useActiveProfile } from "#/contexts/ActiveProfileContext";
+import { useActiveUser } from "#/contexts/ActiveUserContext";
 import { authClient } from "#/auth";
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const { activeProfile } = useActiveProfile();
+  const { activeProfile, user } = useActiveUser();
   const { data: session, isPending } = authClient.useSession();
 
   return (
@@ -63,7 +63,7 @@ export function Header() {
                           {session?.user.name ?? activeProfile?.name ?? '—'}
                         </SheetTitle>
                         <p className="truncate text-sm text-muted-foreground capitalize">
-                          {activeProfile?.roleName ?? ''}
+                          {user?.role?.name ?? ''}
                         </p>
                       </div>
                     </SheetHeader>

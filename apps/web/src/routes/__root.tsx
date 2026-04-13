@@ -5,8 +5,8 @@ import { Button, buttonVariants } from '../components/ui/button'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
-import { ActiveProfileProvider } from '../contexts/ActiveProfileContext'
 import appCss from '../styles.css?url'
+import { ActiveUserProvider } from '#/contexts/ActiveUserContext'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
 
@@ -45,7 +45,7 @@ function NotFound() {
   )
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; permissions: string[] }>()({
   notFoundComponent: NotFound,
   errorComponent: RootErrorComponent,
   head: () => ({
@@ -68,9 +68,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
   }),
-  shellComponent: RootDocument,
-  component: Outlet,
+  component: RootComponent,
 })
+
+function RootComponent() {
+    return (
+      <RootDocument>
+        <Outlet />
+      </RootDocument>
+    )
+  }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -81,9 +88,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
-          <ActiveProfileProvider>
+          <ActiveUserProvider>
             {children}
-          </ActiveProfileProvider>
+          </ActiveUserProvider>
           <ReactQueryDevtools buttonPosition="bottom-left" />
           <TanStackDevtools
             config={{

@@ -17,12 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
 
-function ProfileOption({ name, role }: { name: string; role?: string }) {
+function ProfileOption({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
@@ -30,15 +30,15 @@ function ProfileOption({ name, role }: { name: string; role?: string }) {
       </div>
       <div className="flex flex-col items-start">
         <span className="font-medium">{name}</span>
-        {role && <span className="text-xs text-muted-foreground capitalize">{role}</span>}
       </div>
     </div>
   )
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { activeProfile, allProfiles, setActiveProfileId } = useActiveProfile()
+  const { activeProfile, user, setActiveProfileId } = useActiveUser()
   const router = useRouter()
+  const allProfiles = user?.profiles ?? []
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -56,13 +56,13 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             >
               <SelectTrigger className="!h-auto w-full px-3 py-3 [&_[data-slot=select-value]]:line-clamp-none">
                 <SelectValue>
-                  {activeProfile && <ProfileOption name={activeProfile.name} role={activeProfile.roleName} />}
+                  {activeProfile && <ProfileOption name={activeProfile.name}/>}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {allProfiles.map((profile) => (
                   <SelectItem key={profile.userProfileId} value={profile.userProfileId} className="py-3 pl-3 pr-10">
-                    <ProfileOption name={profile.name} role={profile.roleName} />
+                    <ProfileOption name={profile.name}/>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -118,15 +118,21 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <span>Messages</span>
             </Button>
 
-            <Button
-              variant="ghost"
-              className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-foreground hover:text-foreground"
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/admin"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <Shield className="size-5 text-orange-600" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
+                <Shield className="size-5 text-green-600" />
               </div>
               <span>Admin</span>
-            </Button>
+            </SheetClose>
           </nav>
         </div>
 

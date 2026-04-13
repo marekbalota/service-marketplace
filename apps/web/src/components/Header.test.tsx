@@ -4,14 +4,14 @@ import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } fr
 import { Header } from './Header'
 
 const mockUseSession = vi.hoisted(() => vi.fn())
-const mockUseActiveProfile = vi.hoisted(() => vi.fn())
+const mockUseActiveUser = vi.hoisted(() => vi.fn())
 
 vi.mock('#/auth', () => ({
   authClient: { useSession: mockUseSession },
 }))
 
-vi.mock('#/contexts/ActiveProfileContext', () => ({
-  useActiveProfile: mockUseActiveProfile,
+vi.mock('#/contexts/ActiveUserContext', () => ({
+  useActiveUser: mockUseActiveUser,
 }))
 
 async function renderHeader() {
@@ -24,7 +24,7 @@ async function renderHeader() {
 
 describe('Header', () => {
   beforeEach(() => {
-    mockUseActiveProfile.mockReturnValue({ activeProfile: null })
+    mockUseActiveUser.mockReturnValue({ activeProfile: null })
   })
 
   it('shows Log in and Register links when logged out', async () => {
@@ -43,7 +43,7 @@ describe('Header', () => {
 
   it('shows profile button and hides auth links when logged in', async () => {
     mockUseSession.mockReturnValue({ data: { user: { name: 'Alice' } }, isPending: false })
-    mockUseActiveProfile.mockReturnValue({
+    mockUseActiveUser.mockReturnValue({
       activeProfile: { name: 'Alice', userProfileId: 'profile-1', roleName: 'user' },
     })
     await renderHeader()

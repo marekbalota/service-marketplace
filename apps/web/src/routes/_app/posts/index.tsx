@@ -4,22 +4,6 @@ import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Search, SlidersHorizontal } from 'lucide-react'
-
-function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
-  return (
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        type="search"
-        placeholder="Search services, providers, or keywords..."
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className="pl-9"
-      />
-    </div>
-  )
-}
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { Input } from '#/components/ui/input'
@@ -50,6 +34,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
+
+function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
+  return (
+    <div className="relative flex-1">
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder="Search services, providers, or keywords..."
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        className="pl-9"
+      />
+    </div>
+  )
+}
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
