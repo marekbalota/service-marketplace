@@ -2,10 +2,13 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { authRoutes } from "./modules/auth";
 import { swagger } from "@elysiajs/swagger";
-import { logger } from "./logger";
+import { logger } from "./lib/logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
+import { usersRoutes } from "./modules/users";
+import { adminRolesRoutes } from "./modules/admin/roles";
+import { adminUsersRoutes } from "./modules/admin/users";
 
 export const app = new Elysia()
   .use(cors({
@@ -27,15 +30,19 @@ export const app = new Elysia()
         { name: "Posts",      description: "Service post listings (offers and requests)" },
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
+        { name: "Admin",      description: "Admin operations" },
       ],
     },
   }))
   .use(logger)
   .get("/", () => "Marketplace API")
   .use(authRoutes)
+  .use(usersRoutes)
   .use(postsRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
+  .use(adminRolesRoutes)
+  .use(adminUsersRoutes)
   .listen(3001);
 
 console.log(
