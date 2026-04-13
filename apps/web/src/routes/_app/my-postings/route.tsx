@@ -1,11 +1,14 @@
 import { Suspense } from 'react'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
 import { authClient } from '#/auth'
+import { buttonVariants } from '#/components/ui/button'
+import { cn } from '#/lib/utils'
 
 export function myPostingsQueryOptions(profileId: string) {
   return queryOptions({
@@ -68,7 +71,11 @@ function PostsGrid({ profileId }: { profileId: string }) {
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="text-muted-foreground">You haven't created any postings yet.</p>
+        <p className="mb-4 text-muted-foreground">You haven't created any postings yet.</p>
+        <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
+          <Plus className="size-4" />
+          Create your first posting
+        </Link>
       </div>
     )
   }
@@ -97,6 +104,10 @@ function MyPostingsPage() {
           <h1 className="text-3xl font-semibold text-foreground">My Postings</h1>
           <p className="mt-1 text-muted-foreground">Manage your service offerings</p>
         </div>
+        <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
+          <Plus className="size-4" />
+          Create Posting
+        </Link>
       </div>
 
       {activeProfile ? (

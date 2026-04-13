@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
+import { formatLocation } from '#/lib/format'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -82,9 +83,7 @@ function PostDetailPage() {
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
-  const locationText = post.location
-    ? [post.location.city, post.location.country].filter(Boolean).join(', ')
-    : null
+  const locationText = post.location ? formatLocation(post.location) : null
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">

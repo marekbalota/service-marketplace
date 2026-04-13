@@ -183,13 +183,27 @@ export abstract class PostsService {
   }
 
   static async create(body: PostsModel['createBody']) {
-    const { categoryIds, ...postValues } = body;
+    const { categoryIds, location, locationId, ...postValues } = body
 
     return db.transaction(async (tx) => {
+      // locationId takes precedence; location creates a new row only when it has at least one field
+      let resolvedLocationId: string | undefined = locationId
+
+      const hasLocationData = location &&
+        Object.values(location).some((v) => v !== undefined && v !== null && v !== '')
+
+      if (hasLocationData) {
+        const [insertedLocation] = await tx
+          .insert(locations)
+          .values(location!)
+          .returning({ locationId: locations.locationId })
+        resolvedLocationId = insertedLocation!.locationId
+      }
+
       const [inserted] = await tx
         .insert(posts)
-        .values(postValues)
-        .returning();
+        .values({ ...postValues, locationId: resolvedLocationId })
+        .returning()
 
       if (categoryIds && categoryIds.length > 0) {
         await tx.insert(postCategories).values(
@@ -197,11 +211,11 @@ export abstract class PostsService {
             postId: inserted!.postId,
             categoryId,
           })),
-        );
+        )
       }
 
-      return inserted!;
-    });
+      return inserted!
+    })
   }
 
   static async update(id: string, body: PostsModel['updateBody']) {
