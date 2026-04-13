@@ -81,6 +81,14 @@ export const PostsModel = {
     price:       t.Optional(t.Union([t.String(), t.Null()])),
     rateType:    t.Optional(t.Union([t.Literal("HOURLY"), t.Literal("DAILY"), t.Literal("FIXED"), t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
+    locationId:  t.Optional(t.String()),
+    location: t.Optional(t.Object({
+      country:     t.Optional(t.String()),
+      region:      t.Optional(t.String()),
+      city:        t.Optional(t.String()),
+      street:      t.Optional(t.String()),
+      houseNumber: t.Optional(t.String()),
+    })),
   }),
   updateParams: t.Object({ id: t.String() }),
   updateBody: t.Object({

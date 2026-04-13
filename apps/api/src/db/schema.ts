@@ -346,11 +346,8 @@ export const postCategoriesRelations = relations(
   }),
 );
 
-export const locationsRelations = relations(locations, ({ one }) => ({
-  post: one(posts, {
-    fields: [locations.locationId],
-    references: [posts.locationId],
-  }),
+export const locationsRelations = relations(locations, ({ many }) => ({
+  posts: many(posts),
 }));
 
 export const imagesRelations = relations(images, ({ one }) => ({
