@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
 import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,7 +7,6 @@ import { ArrowLeft, MapPin, User, FileText, AlignLeft, Tag, DollarSign } from 'l
 import { useState, useEffect } from 'react'
 import { api } from '#/api'
 import { authClient } from '#/auth'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { categoriesQueryOptions } from '#/routes/_app/posts/index'
 import { formatLocation } from '#/lib/format'
 import { Button } from '#/components/ui/button'
@@ -35,6 +34,7 @@ import {
   FormControl,
   FormMessage,
 } from '#/components/ui/form'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 // --- Query options ---
 
@@ -86,8 +86,9 @@ export const Route = createFileRoute('/_app/create-post')({
 
 function CreatePostPage() {
   const navigate = useNavigate()
+  const router = useRouter()
   const queryClient = useQueryClient()
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
   const [isManualLocation, setIsManualLocation] = useState(false)
 
   const { data: categories = [] } = useQuery(categoriesQueryOptions)
@@ -179,7 +180,7 @@ function CreatePostPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <Button variant="ghost" className="mb-4 gap-2" onClick={() => navigate({ to: '/posts' })}>
+      <Button variant="ghost" className="mb-4 gap-2" onClick={() => router.history.back()}>
         <ArrowLeft className="size-4" />
         Back
       </Button>
