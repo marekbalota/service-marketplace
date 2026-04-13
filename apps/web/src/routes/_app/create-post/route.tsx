@@ -9,7 +9,7 @@ import { api } from '#/api'
 import { authClient } from '#/auth'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { categoriesQueryOptions } from '#/routes/_app/posts/index'
-import { formatLocation } from '#/routes/_app/posts/$postId'
+import { formatLocation } from '#/lib/format'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
@@ -124,8 +124,6 @@ function CreatePostPage() {
     }
   }, [priceValue, form])
 
-  const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
-
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!activeProfile) throw new Error('No active profile')
@@ -165,6 +163,8 @@ function CreatePostPage() {
       navigate({ to: '/my-postings' })
     },
   })
+
+  const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
 
   const handleToggleLocation = () => {
     setIsManualLocation((prev) => !prev)
@@ -227,7 +227,7 @@ function CreatePostPage() {
                           className={[
                             'px-4 py-3 text-sm font-medium transition-colors',
                             field.value === type
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-primary text-primary-foreground'
                               : 'bg-background text-foreground hover:bg-muted',
                             type === 'OFFER' ? 'border-r' : '',
                           ].join(' ')}
@@ -302,6 +302,7 @@ function CreatePostPage() {
                       </div>
                       <FormLabel className="text-base font-semibold">Category *</FormLabel>
                     </div>
+                    {/* !h-11: override Base UI's data-[size=default]:h-8 which has higher CSS specificity */}
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="!h-11 w-full">

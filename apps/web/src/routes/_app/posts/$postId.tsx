@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
+import { formatLocation } from '#/lib/format'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -69,18 +70,6 @@ const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',
   DAILY: '/day',
   FIXED: 'fixed',
-}
-
-export function formatLocation(loc: {
-  country?: string | null
-  region?: string | null
-  city?: string | null
-  street?: string | null
-  houseNumber?: string | null
-}): string {
-  return [loc.country, loc.region, loc.city, loc.street, loc.houseNumber]
-    .filter(Boolean)
-    .join(', ')
 }
 
 function PostDetailPage() {

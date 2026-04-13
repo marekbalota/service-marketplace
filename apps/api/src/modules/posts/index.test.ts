@@ -8,6 +8,11 @@ import { authRoutes } from "../auth";
 const app = new Elysia().use(authRoutes).use(postsRoutes).use(profilesRoutes);
 const client = treaty(app);
 
+/** Extract postId from an Eden create-post response whose union type is hard to narrow. */
+function getPostId(data: unknown): string {
+  return (data as { postId: string }).postId
+}
+
 let sessionCookie = "";
 let authorId = "";
 
@@ -205,8 +210,7 @@ describe("POST /posts", () => {
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(typeof (data as any)?.postId).toBe("string")
+    expect(typeof getPostId(data)).toBe("string")
   })
 
   it("creates a post with an existing locationId", async () => {
@@ -220,8 +224,7 @@ describe("POST /posts", () => {
       },
       { headers: { Cookie: sessionCookie } },
     )
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const seedPostId = (created as any)?.postId as string
+    const seedPostId = getPostId(created)
     const { data: fetchedPost } = await client.posts({ id: seedPostId }).get()
     const existingLocationId = fetchedPost?.location?.locationId
     expect(existingLocationId).toBeDefined()
@@ -237,8 +240,7 @@ describe("POST /posts", () => {
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(typeof (data as any)?.postId).toBe("string")
+    expect(typeof getPostId(data)).toBe("string")
   })
 
   it("returns 403 when authorId does not belong to session user", async () => {
