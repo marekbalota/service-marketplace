@@ -73,10 +73,11 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   )
   .get(
     '/:id/posts',
-    async ({ params }) =>
-      await PostsService.findByProfile(params.id),
+    async ({ params, query }) =>
+      await PostsService.findByProfile(params.id, query),
     {
-      params: ProfilesModel.profilePostsParams,
+      params:   ProfilesModel.profilePostsParams,
+      query:    PostsModel.findByProfileQuery,
       response: { 200: PostsModel.findByProfileResponse },
       detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
     },

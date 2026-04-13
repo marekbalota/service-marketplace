@@ -99,15 +99,36 @@ export abstract class PostsService {
     });
   }
 
-  static async findByProfile(profileId: string) {
-    const rows = await postSelect(db)
-      .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
-      .orderBy(desc(posts.createdAt));
+  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
+    const { offset, size } = query
+    const effectiveOffset = offset ?? 0
 
-    return rows.map(({ locationId, locationCity, locationCountry, ...rest }) => ({
-      ...rest,
-      location: locationId ? { locationId, city: locationCity, country: locationCountry } : null,
-    }));
+    return db.transaction(async (tx) => {
+      const [countRow] = await tx
+        .select({ total: count() })
+        .from(posts)
+        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+
+      const total = countRow?.total ?? 0
+
+      const q = postSelect(tx)
+        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .orderBy(desc(posts.createdAt))
+        .offset(effectiveOffset)
+
+      const rows = await (size !== undefined ? q.limit(size) : q)
+
+      const items = rows.map(({ locationId, locationCity, locationCountry, ...rest }) => ({
+        ...rest,
+        location: locationId ? { locationId, city: locationCity, country: locationCountry } : null,
+      }))
+
+      return {
+        items,
+        total,
+        totalPages: size !== undefined ? Math.ceil(total / size) : 1,
+      }
+    })
   }
 
   static async findById(id: string) {
