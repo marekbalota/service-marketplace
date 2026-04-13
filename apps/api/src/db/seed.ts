@@ -1,8 +1,25 @@
 import * as schema from "./schema";
 import { db, client } from "./index";
 import { auth } from "../modules/auth/service";
+import { Permissions } from "../lib/rbac/permissions";
+import { eq, and } from "drizzle-orm";
 
-async function upsertRole(name: string, description: string) {
+const permissionDefinitions = [
+  { name: Permissions.PostsCreate, description: "Create new posts" },
+  { name: Permissions.PostsEditOwn, description: "Edit own posts" },
+  { name: Permissions.PostsEditAny, description: "Edit any post" },
+  { name: Permissions.PostsDeleteOwn, description: "Delete own posts" },
+  { name: Permissions.PostsDeleteAny, description: "Delete any post" },
+  { name: Permissions.AdminUsersBan, description: "Ban and unban users" },
+  { name: Permissions.AdminUsersView, description: "View user list" },
+  { name: Permissions.AdminUsersAssignRole, description: "Assign roles to users" },
+  { name: Permissions.AdminRolesManage, description: "Create, edit, delete roles" },
+  { name: Permissions.AdminRolesReorder, description: "Reorder role priorities" },
+  { name: Permissions.AdminRolesSetDefault, description: "Set default role" },
+  { name: Permissions.AdminCategoriesManage, description: "Manage categories" },
+];
+
+async function upsertRole(name: string, description: string, priority: number = 0, isDefault: boolean = false) {
   const existing = await db.query.roles.findFirst({
     where: (r, { eq }) => eq(r.name, name),
   });
@@ -11,12 +28,54 @@ async function upsertRole(name: string, description: string) {
   }
   const [created] = await db
     .insert(schema.roles)
-    .values({ name, description })
+    .values({ name, description, priority, isDefault })
     .returning();
   return created!;
 }
 
-async function upsertUser(name: string, email: string) {
+async function seedPermissions() {
+  console.log("  Seeding permissions...");
+  for (const perm of permissionDefinitions) {
+    const existing = await db.query.permissions.findFirst({
+      where: eq(schema.permissions.name, perm.name),
+    });
+    if (!existing) {
+      await db.insert(schema.permissions).values(perm);
+      console.log(`    Created: ${perm.name}`);
+    }
+  }
+}
+
+async function assignPermissionsToRole(roleId: string, permissionNames: string[]) {
+  const allPermissions = await db.query.permissions.findMany();
+  const permissionMap = new Map(allPermissions.map(p => [p.name, p.permissionId]));
+
+  for (const permName of permissionNames) {
+    const permId = permissionMap.get(permName);
+    if (!permId) continue;
+
+    const existing = await db.query.rolePermissions.findFirst({
+      where: and(
+        eq(schema.rolePermissions.roleId, roleId),
+        eq(schema.rolePermissions.permissionId, permId)
+      ),
+    });
+
+    if (!existing) {
+      await db.insert(schema.rolePermissions).values({
+        roleId,
+        permissionId: permId,
+      });
+    }
+  }
+}
+
+interface UpsertUserResult {
+  user: { id: string; email: string };
+  profile: { userProfileId: string };
+}
+
+async function upsertUser(name: string, email: string): Promise<UpsertUserResult> {
   const existing = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.email, email),
   });
@@ -24,7 +83,7 @@ async function upsertUser(name: string, email: string) {
     const profile = await db.query.userProfiles.findFirst({
       where: (p, { eq }) => eq(p.accountId, existing.id),
     });
-    return { user: existing, profile: profile! };
+    return { user: { id: existing.id, email: existing.email }, profile: profile! };
   }
 
   const result = await auth.api.signUpEmail({
@@ -36,6 +95,44 @@ async function upsertUser(name: string, email: string) {
     where: (p, { eq }) => eq(p.accountId, result.user.id),
   });
   return { user: result.user, profile: profile! };
+}
+
+async function upsertAdminUser(name: string, email: string, password: string, roleName: string) {
+  const existing = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.email, email),
+  });
+
+  const role = await db.query.roles.findFirst({
+    where: (r, { eq }) => eq(r.name, roleName),
+  });
+
+  if (!role) {
+    throw new Error(`Role ${roleName} not found`);
+  }
+
+  if (existing) {
+    // Update role to ensure it's correct
+    await db
+      .update(schema.users)
+      .set({ roleId: role.roleId })
+      .where(eq(schema.users.id, existing.id));
+    console.log(`  ${name} already exists, role updated to ${roleName}`);
+    return;
+  }
+
+  // Create user via BetterAuth
+  const result = await auth.api.signUpEmail({
+    body: { name, email, password },
+    headers: new Headers(),
+  });
+
+  // BetterAuth creates user with default role, update to admin role
+  await db
+    .update(schema.users)
+    .set({ roleId: role.roleId })
+    .where(eq(schema.users.id, result.user.id));
+
+  console.log(`  Created admin user: ${email} (${roleName})`);
 }
 
 async function upsertCategory(name: string, description: string) {
@@ -55,8 +152,13 @@ async function upsertCategory(name: string, description: string) {
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  await upsertRole("user", "Regular user");
-  await upsertRole("admin", "Administrator");
+  // Seed permissions
+  await seedPermissions();
+
+  // Create roles with priorities
+  const userRole = await upsertRole("User", "Regular user with basic permissions", 0, true);
+  const adminRole = await upsertRole("Admin", "Administrator with full access", 1, false);
+  const superAdminRole = await upsertRole("SuperAdmin", "Super administrator with access to all features", 2, false);
 
   const { profile: aliceProfile } = await upsertUser("Alice Johnson", "alice@example.com");
   const { profile: bobProfile }   = await upsertUser("Bob Smith",     "bob@example.com");
@@ -64,6 +166,10 @@ async function seed() {
   const { profile: davidProfile } = await upsertUser("David Brown",   "david@example.com");
   const { profile: elenaProfile } = await upsertUser("Elena Novak",   "elena@example.com");
   const { profile: frankProfile } = await upsertUser("Frank Müller",  "frank@example.com");
+
+  // Create admin SuperAdmin account
+  console.log("\n  Creating admin accounts...");
+  await upsertAdminUser("Super Admin", "admin@example.com", "admin123", "SuperAdmin");
 
   const tutoring = await upsertCategory("Tutoring", "Academic tutoring and coaching");
   const plumbing = await upsertCategory("Plumbing", "Plumbing installation and repairs");
@@ -515,8 +621,29 @@ async function seed() {
     });
   }
 
+  // Assign permissions to roles
+  console.log("  Assigning permissions to roles...");
+
+  // User role: basic post permissions
+  await assignPermissionsToRole(userRole.roleId, [
+    Permissions.PostsCreate,
+    Permissions.PostsEditOwn,
+    Permissions.PostsDeleteOwn,
+  ]);
+  console.log("    User role: basic post permissions");
+
+  // Admin role: all permissions except can manage SuperAdmin
+  const adminPermissionNames = permissionDefinitions.map(p => p.name);
+  await assignPermissionsToRole(adminRole.roleId, adminPermissionNames);
+  console.log("    Admin role: all permissions");
+
+  // SuperAdmin role: all permissions
+  await assignPermissionsToRole(superAdminRole.roleId, adminPermissionNames);
+  console.log("    SuperAdmin role: all permissions");
+
   console.log("✅ Seeded:");
-  console.log("   2 roles");
+  console.log(`   ${permissionDefinitions.length} permissions`);
+  console.log("   3 roles (User, Admin, SuperAdmin)");
   console.log("   6 users + profiles (password: password123)");
   console.log("   6 categories (3 posts with all categories included)");
   console.log(`   ${postsData.length} posts (${locationCount} with locations)`);
