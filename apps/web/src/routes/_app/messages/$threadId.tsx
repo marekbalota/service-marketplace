@@ -86,14 +86,17 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
   const router = useRouter()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: thread } = useSuspenseQuery(threadDetailQueryOptions(threadId, profileId))
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom within the messages container (not the whole page)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
   }, [thread.messages.length])
 
   const isProvider = thread.label === 'provider'
@@ -183,7 +186,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
       )}
 
       {/* Messages */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto p-4">
         {thread.messages.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No messages yet. Say hello!
@@ -192,7 +195,6 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
         {thread.messages.map((msg) => (
           <MessageBubble key={msg.messageId} message={msg} otherPartyName={thread.otherPartyName} />
         ))}
-        <div ref={bottomRef} />
       </div>
 
       {/* Input */}

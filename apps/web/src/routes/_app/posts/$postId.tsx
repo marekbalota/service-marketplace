@@ -123,13 +123,15 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
 
   return (
     <div className="space-y-2">
-      <Button
-        className="w-full gap-2"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <MessageSquare className="size-4" />
-        Send Message
-      </Button>
+      {!open && (
+        <Button
+          className="w-full gap-2"
+          onClick={() => setOpen(true)}
+        >
+          <MessageSquare className="size-4" />
+          Send Message
+        </Button>
+      )}
       {open && (
         <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
           <Textarea
