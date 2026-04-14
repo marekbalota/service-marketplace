@@ -5,11 +5,11 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { MessagesModel } from './model'
 
 type Role = 'initiator' | 'post_owner'
-type Label = 'offer' | 'request'
+type Label = 'provider' | 'client'
 type PostType = 'OFFER' | 'REQUEST'
 
 function deriveLabel(myRole: Role, postType: PostType): Label {
-  return (myRole === 'post_owner') === (postType === 'OFFER') ? 'offer' : 'request'
+  return (myRole === 'post_owner') === (postType === 'OFFER') ? 'provider' : 'client'
 }
 
 export abstract class MessagesService {

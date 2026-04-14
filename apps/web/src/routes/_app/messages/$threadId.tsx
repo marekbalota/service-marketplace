@@ -96,7 +96,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [thread.messages.length])
 
-  const isOffer = thread.label === 'offer'
+  const isProvider = thread.label === 'provider'
 
   const send = useMutation({
     mutationFn: async (content: string) => {
@@ -147,10 +147,10 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
             </Badge>
           ) : (
             <Badge
-              variant={isOffer ? 'default' : 'outline'}
+              variant={isProvider ? 'default' : 'outline'}
               className={cn(
                 'mt-0.5 text-xs',
-                isOffer
+                isProvider
                   ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
                   : 'border-request-border text-request-fg',
               )}

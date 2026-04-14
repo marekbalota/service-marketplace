@@ -39,12 +39,12 @@ type Thread = {
   lastMessage: { content: string; createdAt: Date | string; sentByMe: boolean } | null
   unreadCount: number
   myRole: 'initiator' | 'post_owner'
-  label: 'offer' | 'request'
+  label: 'provider' | 'client'
   postDeleted: boolean
 }
 
 function ThreadRow({ thread }: { thread: Thread }) {
-  const isOffer = thread.label === 'offer'
+  const isProvider = thread.label === 'provider'
   return (
     <Link
       to="/messages/$threadId"
@@ -80,10 +80,10 @@ function ThreadRow({ thread }: { thread: Thread }) {
                 </Badge>
               ) : (
                 <Badge
-                  variant={isOffer ? 'default' : 'outline'}
+                  variant={isProvider ? 'default' : 'outline'}
                   className={cn(
                     'text-xs',
-                    isOffer
+                    isProvider
                       ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
                       : 'border-request-border text-request-fg',
                   )}

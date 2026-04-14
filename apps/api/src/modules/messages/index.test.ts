@@ -144,7 +144,7 @@ describe('GET /threads', () => {
     expect(typeof thread.threadId).toBe('string')
     expect(typeof thread.postTitle).toBe('string')
     expect(['OFFER', 'REQUEST']).toContain(thread.postType)
-    expect(['offer', 'request']).toContain(thread.label)
+    expect(['provider', 'client']).toContain(thread.label)
     expect(thread.myRole).toBe('initiator')
   })
 
