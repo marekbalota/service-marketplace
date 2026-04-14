@@ -46,7 +46,6 @@ export const rolePermissions = pgTable(
     permissionId: uuid("permission_id")
       .notNull()
       .references(() => permissions.permissionId),
-    deletedAt: timestamp("deleted_at"),
   },
   (table) => [primaryKey({ columns: [table.roleId, table.permissionId] })],
 );

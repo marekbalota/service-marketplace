@@ -1,0 +1,1 @@
+ALTER TABLE "role_permissions" DROP COLUMN "deleted_at";
