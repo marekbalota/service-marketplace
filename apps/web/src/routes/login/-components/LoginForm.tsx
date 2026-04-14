@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
 import { authClient } from "#/auth"
+import { queryClient } from "#/router"
+import { profilesQueryOptions } from "#/contexts/ActiveProfileContext"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
@@ -23,7 +25,10 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     await authClient.signIn.email(values, {
-      onSuccess: () => navigate({ to: "/" }),
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+        navigate({ to: "/" })
+      },
       onError: (ctx) => {
         form.setError("root", { message: ctx.error.message })
       },
