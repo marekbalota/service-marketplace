@@ -13,8 +13,6 @@ export const Permissions = {
 
   // Admin - Role Management
   AdminRolesManage: 'admin:roles:manage',
-  AdminRolesReorder: 'admin:roles:reorder',
-  AdminRolesSetDefault: 'admin:roles:set-default',
 
   // Admin - Category Management
   AdminCategoriesManage: 'admin:categories:manage',

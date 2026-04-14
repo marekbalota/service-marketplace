@@ -42,4 +42,17 @@ export abstract class RBACService {
     });
     return role?.priority ?? null;
   }
+
+  static async getRolePermissions(roleId: string): Promise<string[]> {
+    const result = await db
+      .select({ permissionId: rolePermissions.permissionId })
+      .from(rolePermissions)
+      .innerJoin(roles, eq(rolePermissions.roleId, roles.roleId))
+      .where(and(
+        eq(rolePermissions.roleId, roleId),
+        isNull(roles.deletedAt)
+      ));
+
+    return result.map(r => r.permissionId);
+  }
 }
