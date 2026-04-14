@@ -34,7 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/com
 import type { AdminRolesModel } from 'api';
 import { useActiveUser } from '#/contexts/ActiveUserContext';
 
-export type Role = AdminRolesModel['listResponse'][number];
+export type Role = AdminRolesModel['rolesResponse'][number];
 export type Permission = AdminRolesModel['permissionResponse'][number];
 
 export const rolesQueryOptions = queryOptions({
@@ -60,7 +60,7 @@ export const Route = createFileRoute('/_app/admin/roles')({
 function ManageRoles() {
   const navigate = useNavigate();
   const { user } = useActiveUser();
-  const userPriority = user?.role?.priority ?? Number.MAX_SAFE_INTEGER;
+  const userPriority = user?.role?.priority ?? 0;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);

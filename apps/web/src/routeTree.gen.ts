@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as BannedRouteImport } from './routes/banned'
 import { Route as RegisterRouteRouteImport } from './routes/register/route'
 import { Route as LoginRouteRouteImport } from './routes/login/route'
+import { Route as BannedRouteRouteImport } from './routes/banned/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
@@ -20,14 +20,9 @@ import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts/$postId'
-import { Route as AppAdminRolesRouteImport } from './routes/_app/admin/roles'
-import { Route as AppAdminAccountsRouteImport } from './routes/_app/admin/accounts'
+import { Route as AppAdminRolesRouteRouteImport } from './routes/_app/admin/roles/route'
+import { Route as AppAdminAccountsRouteRouteImport } from './routes/_app/admin/accounts/route'
 
-const BannedRoute = BannedRouteImport.update({
-  id: '/banned',
-  path: '/banned',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRouteRoute = RegisterRouteRouteImport.update({
   id: '/register',
   path: '/register',
@@ -36,6 +31,11 @@ const RegisterRouteRoute = RegisterRouteRouteImport.update({
 const LoginRouteRoute = LoginRouteRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BannedRouteRoute = BannedRouteRouteImport.update({
+  id: '/banned',
+  path: '/banned',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -77,12 +77,12 @@ const AppPostsPostIdRoute = AppPostsPostIdRouteImport.update({
   path: '/posts/$postId',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
+const AppAdminRolesRouteRoute = AppAdminRolesRouteRouteImport.update({
   id: '/roles',
   path: '/roles',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
-const AppAdminAccountsRoute = AppAdminAccountsRouteImport.update({
+const AppAdminAccountsRouteRoute = AppAdminAccountsRouteRouteImport.update({
   id: '/accounts',
   path: '/accounts',
   getParentRoute: () => AppAdminRouteRoute,
@@ -90,27 +90,27 @@ const AppAdminAccountsRoute = AppAdminAccountsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/banned': typeof BannedRouteRoute
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
-  '/banned': typeof BannedRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
-  '/admin/accounts': typeof AppAdminAccountsRoute
-  '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/accounts': typeof AppAdminAccountsRouteRoute
+  '/admin/roles': typeof AppAdminRolesRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/admin/': typeof AppAdminIndexRoute
   '/posts/': typeof AppPostsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/banned': typeof BannedRouteRoute
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
-  '/banned': typeof BannedRoute
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/': typeof AppIndexRoute
-  '/admin/accounts': typeof AppAdminAccountsRoute
-  '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/accounts': typeof AppAdminAccountsRouteRoute
+  '/admin/roles': typeof AppAdminRolesRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/admin': typeof AppAdminIndexRoute
   '/posts': typeof AppPostsIndexRoute
@@ -118,15 +118,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
+  '/banned': typeof BannedRouteRoute
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
-  '/banned': typeof BannedRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/create-post': typeof AppCreatePostRouteRoute
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/admin/accounts': typeof AppAdminAccountsRoute
-  '/_app/admin/roles': typeof AppAdminRolesRoute
+  '/_app/admin/accounts': typeof AppAdminAccountsRouteRoute
+  '/_app/admin/roles': typeof AppAdminRolesRouteRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/posts/': typeof AppPostsIndexRoute
@@ -135,9 +135,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/banned'
     | '/login'
     | '/register'
-    | '/banned'
     | '/admin'
     | '/create-post'
     | '/my-postings'
@@ -148,9 +148,9 @@ export interface FileRouteTypes {
     | '/posts/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/banned'
     | '/login'
     | '/register'
-    | '/banned'
     | '/create-post'
     | '/my-postings'
     | '/'
@@ -162,9 +162,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/banned'
     | '/login'
     | '/register'
-    | '/banned'
     | '/_app/admin'
     | '/_app/create-post'
     | '/_app/my-postings'
@@ -178,20 +178,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  BannedRouteRoute: typeof BannedRouteRoute
   LoginRouteRoute: typeof LoginRouteRoute
   RegisterRouteRoute: typeof RegisterRouteRoute
-  BannedRoute: typeof BannedRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/banned': {
-      id: '/banned'
-      path: '/banned'
-      fullPath: '/banned'
-      preLoaderRoute: typeof BannedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -204,6 +197,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/banned': {
+      id: '/banned'
+      path: '/banned'
+      fullPath: '/banned'
+      preLoaderRoute: typeof BannedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -266,28 +266,28 @@ declare module '@tanstack/react-router' {
       id: '/_app/admin/roles'
       path: '/roles'
       fullPath: '/admin/roles'
-      preLoaderRoute: typeof AppAdminRolesRouteImport
+      preLoaderRoute: typeof AppAdminRolesRouteRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/accounts': {
       id: '/_app/admin/accounts'
       path: '/accounts'
       fullPath: '/admin/accounts'
-      preLoaderRoute: typeof AppAdminAccountsRouteImport
+      preLoaderRoute: typeof AppAdminAccountsRouteRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
   }
 }
 
 interface AppAdminRouteRouteChildren {
-  AppAdminAccountsRoute: typeof AppAdminAccountsRoute
-  AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminAccountsRouteRoute: typeof AppAdminAccountsRouteRoute
+  AppAdminRolesRouteRoute: typeof AppAdminRolesRouteRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
-  AppAdminAccountsRoute: AppAdminAccountsRoute,
-  AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminAccountsRouteRoute: AppAdminAccountsRouteRoute,
+  AppAdminRolesRouteRoute: AppAdminRolesRouteRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
 }
 
@@ -319,9 +319,9 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
+  BannedRouteRoute: BannedRouteRoute,
   LoginRouteRoute: LoginRouteRoute,
   RegisterRouteRoute: RegisterRouteRoute,
-  BannedRoute: BannedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

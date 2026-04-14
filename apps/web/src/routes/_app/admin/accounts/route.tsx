@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
 
-export type User = AdminUsersModel['listResponse']['items'][number];
+export type User = AdminUsersModel['usersResponse']['items'][number];
 
 import type { AdminUsersModel } from 'api';
 

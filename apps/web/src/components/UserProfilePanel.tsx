@@ -21,6 +21,7 @@ import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
+import { queryClient } from '#/router'
 
 function ProfileOption({ name }: { name: string }) {
   return (
@@ -39,6 +40,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, user, setActiveProfileId } = useActiveUser()
   const router = useRouter()
   const allProfiles = user?.profiles ?? []
+  const isAdmin = (user?.role?.permissions ?? []).some((p: string) => p.startsWith('admin:'))
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -118,21 +120,23 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <span>Messages</span>
             </Button>
 
-            <SheetClose
-              nativeButton={false}
-              render={
-                <Link
-                  to="/admin"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
-                />
-              }
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
-                <Shield className="size-5 text-green-600" />
-              </div>
-              <span>Admin</span>
-            </SheetClose>
+            {isAdmin && (
+              <SheetClose
+                nativeButton={false}
+                render={
+                  <Link
+                    to="/admin"
+                    onClick={onClose}
+                    className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                  />
+                }
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
+                  <Shield className="size-5 text-green-600" />
+                </div>
+                <span>Admin</span>
+              </SheetClose>
+            )}
           </nav>
         </div>
 
@@ -152,6 +156,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
+              queryClient.clear()
               onClose()
               void router.navigate({ to: '/' })
             }}
