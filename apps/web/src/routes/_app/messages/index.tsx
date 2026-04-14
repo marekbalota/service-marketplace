@@ -40,6 +40,7 @@ type Thread = {
   unreadCount: number
   myRole: 'initiator' | 'post_owner'
   label: 'offer' | 'request'
+  postDeleted: boolean
 }
 
 function ThreadRow({ thread }: { thread: Thread }) {
@@ -50,7 +51,11 @@ function ThreadRow({ thread }: { thread: Thread }) {
       params={{ threadId: thread.threadId }}
       className="block no-underline"
     >
-      <Card className={cn('transition-colors hover:bg-accent/50', thread.unreadCount > 0 && 'border-primary/40')}>
+      <Card className={cn(
+        'transition-colors hover:bg-accent/50',
+        thread.unreadCount > 0 && 'border-primary/40',
+        thread.postDeleted && 'opacity-60',
+      )}>
         <CardContent className="flex items-start gap-4 p-4">
           {/* Avatar placeholder */}
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
@@ -69,17 +74,23 @@ function ThreadRow({ thread }: { thread: Thread }) {
               )}
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <Badge
-                variant={isOffer ? 'default' : 'outline'}
-                className={cn(
-                  'text-xs',
-                  isOffer
-                    ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
-                    : 'border-request-border text-request-fg',
-                )}
-              >
-                {thread.label}
-              </Badge>
+              {thread.postDeleted ? (
+                <Badge variant="outline" className="text-xs text-muted-foreground">
+                  Post deleted
+                </Badge>
+              ) : (
+                <Badge
+                  variant={isOffer ? 'default' : 'outline'}
+                  className={cn(
+                    'text-xs',
+                    isOffer
+                      ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
+                      : 'border-request-border text-request-fg',
+                  )}
+                >
+                  {thread.label}
+                </Badge>
+              )}
               {thread.lastMessage ? (
                 <p className="truncate text-sm text-muted-foreground">
                   {thread.lastMessage.sentByMe ? 'You: ' : ''}

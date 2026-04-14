@@ -13,12 +13,13 @@ function deriveLabel(myRole: Role, postType: PostType): Label {
 }
 
 export abstract class MessagesService {
-  /** Returns 'initiator' | 'post_owner' | null if not a participant */
-  static async getRole(threadId: string, profileId: string): Promise<Role | null> {
+  /** Returns the participant's role and whether the post has been deleted, or null if not a participant */
+  static async getRole(threadId: string, profileId: string): Promise<{ role: Role; postDeleted: boolean } | null> {
     const [row] = await db
       .select({
-        initiatorId: messageThreads.initiatorId,
-        authorId:    posts.authorId,
+        initiatorId:   messageThreads.initiatorId,
+        authorId:      posts.authorId,
+        postDeletedAt: posts.deletedAt,
       })
       .from(messageThreads)
       .innerJoin(posts, eq(messageThreads.postId, posts.postId))
@@ -26,9 +27,12 @@ export abstract class MessagesService {
       .limit(1)
 
     if (!row) return null
-    if (row.initiatorId === profileId) return 'initiator'
-    if (row.authorId === profileId) return 'post_owner'
-    return null
+    const role: Role | null =
+      row.initiatorId === profileId ? 'initiator' :
+      row.authorId    === profileId ? 'post_owner' :
+      null
+    if (!role) return null
+    return { role, postDeleted: row.postDeletedAt !== null }
   }
 
   static async findAllThreads(
@@ -44,6 +48,7 @@ export abstract class MessagesService {
         postId:        messageThreads.postId,
         postTitle:     posts.postTitle,
         postType:      posts.postType,
+        postDeletedAt: posts.deletedAt,
         authorId:      posts.authorId,
         initiatorId:   messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
@@ -69,7 +74,7 @@ export abstract class MessagesService {
         `,
       })
       .from(messageThreads)
-      .innerJoin(posts, and(eq(messageThreads.postId, posts.postId), isNull(posts.deletedAt)))
+      .innerJoin(posts, eq(messageThreads.postId, posts.postId))
       .innerJoin(initiatorProfile, eq(messageThreads.initiatorId, initiatorProfile.userProfileId))
       .innerJoin(authorProfile, eq(posts.authorId, authorProfile.userProfileId))
       .where(and(
@@ -111,6 +116,7 @@ export abstract class MessagesService {
         unreadCount: row.unreadCount,
         myRole,
         label,
+        postDeleted: row.postDeletedAt !== null,
       }
     })
   }
@@ -128,13 +134,14 @@ export abstract class MessagesService {
         postId:        messageThreads.postId,
         postTitle:     posts.postTitle,
         postType:      posts.postType,
+        postDeletedAt: posts.deletedAt,
         authorId:      posts.authorId,
         initiatorId:   messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
         authorName:    authorProfile.name,
       })
       .from(messageThreads)
-      .innerJoin(posts, and(eq(messageThreads.postId, posts.postId), isNull(posts.deletedAt)))
+      .innerJoin(posts, eq(messageThreads.postId, posts.postId))
       .innerJoin(initiatorProfile, eq(messageThreads.initiatorId, initiatorProfile.userProfileId))
       .innerJoin(authorProfile, eq(posts.authorId, authorProfile.userProfileId))
       .where(and(eq(messageThreads.threadId, threadId), isNull(messageThreads.deletedAt)))
@@ -182,7 +189,8 @@ export abstract class MessagesService {
       postType:       threadRow.postType,
       otherPartyName,
       myRole,
-      label: deriveLabel(myRole, threadRow.postType),
+      label:       deriveLabel(myRole, threadRow.postType),
+      postDeleted: threadRow.postDeletedAt !== null,
       messages: msgRows.map((m) => ({
         messageId: m.messageId,
         content:   m.content,

@@ -22,6 +22,7 @@ const threadItem = t.Object({
   unreadCount: t.Number(),
   myRole:      t.Union([t.Literal('initiator'), t.Literal('post_owner')]),
   label:       t.Union([t.Literal('offer'), t.Literal('request')]),
+  postDeleted: t.Boolean(),
 })
 
 export const MessagesModel = {
@@ -48,6 +49,7 @@ export const MessagesModel = {
     otherPartyName: t.String(),
     myRole:         t.Union([t.Literal('initiator'), t.Literal('post_owner')]),
     label:          t.Union([t.Literal('offer'), t.Literal('request')]),
+    postDeleted:    t.Boolean(),
     messages:       t.Array(messageItem),
   }),
 

@@ -132,10 +132,14 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
         return { message: AuthModel.messages.forbidden }
       }
 
-      const role = await MessagesService.getRole(params.threadId, body.profileId)
-      if (!role) {
+      const roleResult = await MessagesService.getRole(params.threadId, body.profileId)
+      if (!roleResult) {
         set.status = 403
         return { message: AuthModel.messages.forbidden }
+      }
+      if (roleResult.postDeleted) {
+        set.status = 403
+        return { message: 'This thread is archived because the post has been deleted' }
       }
 
       set.status = 201
