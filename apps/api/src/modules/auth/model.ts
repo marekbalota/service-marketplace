@@ -1,4 +1,5 @@
 import { t, type UnwrapSchema } from "elysia";
+import { errorResponse } from "../../lib/errors";
 
 export const AuthModel = {
   unauthorizedResponse: t.Object({ message: t.String() }),
@@ -18,6 +19,10 @@ export const AuthModel = {
 export const authErrorResponses = {
   401: AuthModel.unauthorizedResponse,
   403: AuthModel.forbiddenResponse,
+};
+
+export const notFoundResponse = {
+  404: errorResponse,
 };
 
 export type AuthModel = {

@@ -1,36 +1,51 @@
 import { db } from '../../../db';
-import { roles, rolePermissions, permissions } from '../../../db/schema';
+import { roles, rolePermissions, permissions, users } from '../../../db/schema';
 import { eq, and, isNull, sql, desc } from 'drizzle-orm';
 import type { AdminRolesModel } from './model';
+import { RBACService } from '../../../lib/rbac/rbac-helper';
+import { ForbiddenError, NotFoundError } from '../../../lib/errors';
 
 export abstract class AdminRolesService {
-  static async list() {
-    const rows = await db
-      .select({
-        roleId: roles.roleId,
-        name: roles.name,
-        description: roles.description,
-        priority: roles.priority,
-        isDefault: roles.isDefault,
-        createdAt: roles.createdAt,
-        permissions: sql<string[]>`
-          coalesce(
-            array_agg(${permissions.name}),
-            array[]::text[]
-          )
-        `,
-      })
-      .from(roles)
-      .leftJoin(rolePermissions, eq(roles.roleId, rolePermissions.roleId))
-      .leftJoin(permissions, eq(rolePermissions.permissionId, permissions.permissionId))
-      .where(isNull(roles.deletedAt))
-      .groupBy(roles.roleId)
-      .orderBy(desc(roles.priority));
+  static async getAllRoles() {
+    return await db.transaction(async (tx) => {
+      const roleRows = await tx
+        .select({
+          roleId: roles.roleId,
+          name: roles.name,
+          description: roles.description,
+          priority: roles.priority,
+          isDefault: roles.isDefault,
+          createdAt: roles.createdAt,
+          userCount: sql<number>`count(${users.id})::int`,
+        })
+        .from(roles)
+        .leftJoin(users, eq(roles.roleId, users.roleId))
+        .where(isNull(roles.deletedAt))
+        .groupBy(roles.roleId)
+        .orderBy(desc(roles.priority));
 
-    return rows;
+      const permissionRows = await tx
+        .select({
+          roleId: rolePermissions.roleId,
+          permissionId: rolePermissions.permissionId,
+        })
+        .from(rolePermissions);
+
+      const permissionsByRole = new Map<string, string[]>();
+      for (const row of permissionRows) {
+        const list = permissionsByRole.get(row.roleId) ?? [];
+        list.push(row.permissionId);
+        permissionsByRole.set(row.roleId, list);
+      }
+
+      return roleRows.map(role => ({
+        ...role,
+        permissions: permissionsByRole.get(role.roleId) ?? [],
+      }));
+    });
   }
 
-  static async listPermissions() {
+  static async getAllPermissions() {
     return db
       .select({
         permissionId: permissions.permissionId,
@@ -43,7 +58,13 @@ export abstract class AdminRolesService {
 
   static async create(body: AdminRolesModel['createBody']) {
     return db.transaction(async (tx) => {
-      // Insert role at priority 0
+      // Increment all existing roles' priority by 1
+      await tx
+        .update(roles)
+        .set({ priority: sql`${roles.priority} + 1` })
+        .where(isNull(roles.deletedAt));
+
+      // Create new role with priority 0 (lowest priority)
       const [role] = await tx
         .insert(roles)
         .values({
@@ -61,7 +82,6 @@ export abstract class AdminRolesService {
           createdAt: roles.createdAt,
         });
 
-      // Assign permissions
       if (body.permissionIds.length > 0) {
         await tx.insert(rolePermissions).values(
           body.permissionIds.map(permissionId => ({
@@ -75,15 +95,20 @@ export abstract class AdminRolesService {
     });
   }
 
-  static async update(id: string, body: AdminRolesModel['updateBody']) {
+  static async update(requesterRoleId: string, roleId: string, body: AdminRolesModel['updateBody']) {
+    const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
+    if (!canManage) {
+      throw new ForbiddenError('Cannot modify roles with equal or higher priority');
+    }
+
     return db.transaction(async (tx) => {
       const [role] = await tx
         .update(roles)
         .set({
           ...(body.name && { name: body.name }),
-          ...(body.description !== undefined && { description: body.description }),
+          ...(body.description && { description: body.description }),
         })
-        .where(and(eq(roles.roleId, id), isNull(roles.deletedAt)))
+        .where(and(eq(roles.roleId, roleId), isNull(roles.deletedAt)))
         .returning({
           roleId: roles.roleId,
           name: roles.name,
@@ -94,19 +119,19 @@ export abstract class AdminRolesService {
         });
 
       if (!role) {
-        return null;
+        throw new NotFoundError('Role not found');
       }
 
       // Update permissions if provided
       if (body.permissionIds !== undefined) {
         await tx
           .delete(rolePermissions)
-          .where(eq(rolePermissions.roleId, id));
+          .where(eq(rolePermissions.roleId, roleId));
 
         if (body.permissionIds.length > 0) {
           await tx.insert(rolePermissions).values(
             body.permissionIds.map(permissionId => ({
-              roleId: id,
+              roleId,
               permissionId,
             }))
           );
@@ -117,19 +142,77 @@ export abstract class AdminRolesService {
     });
   }
 
-  static async delete(id: string) {
-    const [role] = await db
-      .update(roles)
-      .set({ deletedAt: new Date() })
-      .where(and(eq(roles.roleId, id), isNull(roles.deletedAt)))
-      .returning({ roleId: roles.roleId });
+  static async delete(requesterRoleId: string, roleId: string) {
+    // Priority check
+    const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
+    if (!canManage) {
+      throw new ForbiddenError('Cannot delete roles with equal or higher priority');
+    }
 
-    return role ? true : null;
+    return db.transaction(async (tx) => {
+      // Check if role is default
+      const role = await tx.query.roles.findFirst({
+        where: eq(roles.roleId, roleId),
+      });
+
+      if (!role) {
+        throw new NotFoundError('Role not found');
+      }
+
+      if (role.isDefault) {
+        throw new ForbiddenError('Cannot delete the default role');
+      }
+
+      const deletedPriority = role.priority;
+
+      // Get the default role to assign to affected users
+      const defaultRole = await tx.query.roles.findFirst({
+        where: eq(roles.isDefault, true),
+      });
+
+      if (!defaultRole) {
+        throw new ForbiddenError('No default role found');
+      }
+
+      // Update all users with this role to the default role
+      await tx
+        .update(users)
+        .set({ roleId: defaultRole.roleId })
+        .where(eq(users.roleId, roleId));
+
+      // Soft delete the role
+      const [updated] = await tx
+        .update(roles)
+        .set({ deletedAt: new Date() })
+        .where(and(eq(roles.roleId, roleId), isNull(roles.deletedAt)))
+        .returning({ roleId: roles.roleId });
+
+      if (!updated) {
+        throw new NotFoundError('Role not found');
+      }
+
+      // Decrement priority of all roles that were below the deleted one
+      await tx
+        .update(roles)
+        .set({ priority: sql`${roles.priority} - 1` })
+        .where(and(
+          isNull(roles.deletedAt),
+          sql`${roles.priority} > ${deletedPriority}`
+        ));
+
+      return true;
+    });
   }
 
-  static async reorder(roleId: string, newPriority: number, maxEditablePriority: number) {
+  static async reorder(requesterRoleId: string, roleId: string, newPriority: number) {
+    const requesterPriority = await RBACService.getRolePriority(requesterRoleId);
+    if (requesterPriority === null) {
+      throw new ForbiddenError('Forbidden');
+    }
+
+    const maxEditablePriority = requesterPriority - 1;
+
     return db.transaction(async (tx) => {
-      // Get current priority
       const [role] = await tx
         .select({ priority: roles.priority })
         .from(roles)
@@ -137,14 +220,12 @@ export abstract class AdminRolesService {
         .limit(1);
 
       if (!role || role.priority > maxEditablePriority || newPriority > maxEditablePriority) {
-        return false;
+        throw new ForbiddenError('Invalid reorder operation');
       }
 
       const oldPriority = role.priority;
 
-      // Adjust priorities of affected roles
       if (newPriority > oldPriority) {
-        // Moving UP: decrement roles between old+1 and new
         await tx
           .update(roles)
           .set({ priority: sql`${roles.priority} - 1` })
@@ -154,7 +235,6 @@ export abstract class AdminRolesService {
             isNull(roles.deletedAt)
           ));
       } else {
-        // Moving DOWN: increment roles between new and old-1
         await tx
           .update(roles)
           .set({ priority: sql`${roles.priority} + 1` })
@@ -165,7 +245,6 @@ export abstract class AdminRolesService {
           ));
       }
 
-      // Set moved role to new priority
       await tx
         .update(roles)
         .set({ priority: newPriority })
@@ -175,7 +254,14 @@ export abstract class AdminRolesService {
     });
   }
 
-  static async setDefault(roleId: string) {
+  static async setDefault(requesterRoleId: string, roleId: string) {
+    // Priority check - can only set roles below own priority as default
+    const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
+
+    if (!canManage) {
+      throw new ForbiddenError('Cannot set roles with equal or higher priority as default');
+    }
+
     return db.transaction(async (tx) => {
       // Unset current default
       await tx
@@ -190,7 +276,11 @@ export abstract class AdminRolesService {
         .where(and(eq(roles.roleId, roleId), isNull(roles.deletedAt)))
         .returning({ roleId: roles.roleId });
 
-      return role ? true : null;
+      if (!role) {
+        throw new NotFoundError('Role not found');
+      }
+
+      return true;
     });
   }
 }

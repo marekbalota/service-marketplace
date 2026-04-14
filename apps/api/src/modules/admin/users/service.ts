@@ -2,6 +2,8 @@ import { db } from '../../../db';
 import { users, roles, sessions } from '../../../db/schema';
 import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm';
 import type { AdminUsersModel } from './model';
+import { RBACService } from '../../../lib/rbac/rbac-helper';
+import { ForbiddenError, NotFoundError, AuthErrorMessages } from '../../../lib/errors';
 
 export abstract class AdminUsersService {
   static async list(query: AdminUsersModel['listQuery']) {
@@ -54,7 +56,31 @@ export abstract class AdminUsersService {
     };
   }
 
-  static async ban(userId: string, reason: string, expiresAt?: Date) {
+  static async ban(requesterRoleId: string, targetUserId: string, reason: string, expiresAt?: Date) {
+    // Verify not trying to ban self
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, targetUserId),
+      with: { role: true },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (!targetUser.role) {
+      throw new NotFoundError('User role not found');
+    }
+
+    // Priority check - can only ban users with lower priority
+    const canManage = await RBACService.canManageRole(
+      requesterRoleId,
+      targetUser.role.roleId
+    );
+
+    if (!canManage) {
+      throw new ForbiddenError(AuthErrorMessages.cannotManageRole);
+    }
+
     return await db.transaction(async (tx) => {
       // Set ban status
       const [user] = await tx
@@ -64,7 +90,7 @@ export abstract class AdminUsersService {
           banReason: reason,
           banExpiration: expiresAt ?? null,
         })
-        .where(eq(users.id, userId))
+        .where(eq(users.id, targetUserId))
         .returning({ userId: users.id });
 
       if (!user) {
@@ -72,13 +98,32 @@ export abstract class AdminUsersService {
       }
 
       // Delete all sessions to immediately kick out the user
-      await tx.delete(sessions).where(eq(sessions.userId, userId));
+      await tx.delete(sessions).where(eq(sessions.userId, targetUserId));
 
       return true;
     });
   }
 
-  static async unban(userId: string) {
+  static async unban(requesterRoleId: string, targetUserId: string) {
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, targetUserId),
+      with: { role: true },
+    });
+
+    if (!targetUser || !targetUser.role) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Priority check
+    const canManage = await RBACService.canManageRole(
+      requesterRoleId,
+      targetUser.role.roleId
+    );
+
+    if (!canManage) {
+      throw new ForbiddenError(AuthErrorMessages.cannotManageRole);
+    }
+
     const [user] = await db
       .update(users)
       .set({
@@ -86,17 +131,38 @@ export abstract class AdminUsersService {
         banReason: null,
         banExpiration: null,
       })
-      .where(eq(users.id, userId))
+      .where(eq(users.id, targetUserId))
       .returning({ userId: users.id });
 
     return user ? true : null;
   }
 
-  static async assignRole(userId: string, roleId: string) {
+  static async assignRole(requesterRoleId: string, targetUserId: string, newRoleId: string) {
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, targetUserId),
+      with: { role: true },
+    });
+
+    if (!targetUser || !targetUser.role) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Cannot modify users with equal or higher priority
+    const canManageTarget = await RBACService.canManageRole(requesterRoleId, targetUser.role.roleId);
+    if (!canManageTarget) {
+      throw new ForbiddenError('Cannot modify users with equal or higher role');
+    }
+
+    // Cannot assign roles with equal or higher priority
+    const canManageNewRole = await RBACService.canManageRole(requesterRoleId, newRoleId);
+    if (!canManageNewRole) {
+      throw new ForbiddenError('Cannot assign roles with equal or higher priority');
+    }
+
     const [user] = await db
       .update(users)
-      .set({ roleId })
-      .where(eq(users.id, userId))
+      .set({ roleId: newRoleId })
+      .where(eq(users.id, targetUserId))
       .returning({ userId: users.id });
 
     return user ? true : null;

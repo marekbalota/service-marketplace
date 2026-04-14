@@ -1,7 +1,11 @@
+// Export admin model types for frontend consumption
+export type { AdminRolesModel } from './modules/admin/roles/model';
+export type { AdminUsersModel } from './modules/admin/users/model';
+
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import { authRoutes } from "./modules/auth";
 import { swagger } from "@elysiajs/swagger";
+import { authRoutes } from "./modules/auth";
 import { logger } from "./lib/logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
@@ -9,8 +13,18 @@ import { profilesRoutes } from "./modules/profiles";
 import { usersRoutes } from "./modules/users";
 import { adminRolesRoutes } from "./modules/admin/roles";
 import { adminUsersRoutes } from "./modules/admin/users";
+import { ForbiddenError, NotFoundError } from "./lib/errors";
 
 export const app = new Elysia()
+  .error({ ForbiddenError, NotFoundError })
+  .onError(({ code, error, status }) => {
+    if (code === 'ForbiddenError') {
+      return status(403, { message: error.message });
+    }
+    if (code === 'NotFoundError') {
+      return status(404, { message: error.message });
+    }
+  })
   .use(cors({
     origin: "http://localhost:3000",
     credentials: true,

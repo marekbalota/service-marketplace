@@ -54,6 +54,7 @@ describe('GET /admin/roles', () => {
     expect(typeof role.name).toBe('string');
     expect(typeof role.priority).toBe('number');
     expect(typeof role.isDefault).toBe('boolean');
+    expect(typeof role.userCount).toBe('number');
     expect(Array.isArray(role.permissions)).toBe(true);
   });
 });

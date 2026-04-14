@@ -16,6 +16,7 @@ const roleWithPermissions = t.Object({
   priority: t.Number(),
   isDefault: t.Boolean(),
   permissions: t.Array(t.String()),
+  userCount: t.Number(),
   createdAt: t.Date(),
 });
 
