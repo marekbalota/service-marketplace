@@ -62,6 +62,17 @@ describe('PATCH /profiles/:id', () => {
     )
     expect(error?.status).toBe(422)
   })
+
+  it('updates own profile and returns 204, changes are persisted', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).patch(
+      { bio: 'Updated bio from test' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data } = await client.profiles({ id: aliceProfileId }).get()
+    expect(data!.bio).toBe('Updated bio from test')
+  })
 })
 
 describe('GET /profiles/:profileId/posts', () => {

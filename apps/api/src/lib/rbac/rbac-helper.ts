@@ -22,18 +22,16 @@ export abstract class RBACService {
     requesterRoleId: string,
     targetRoleId: string
   ): Promise<boolean> {
-    return await db.transaction( async (tx) => {
-      const [requesterRole, targetRole] = await Promise.all([
-        tx.query.roles.findFirst({ where: eq(roles.roleId, requesterRoleId) }),
-        tx.query.roles.findFirst({ where: eq(roles.roleId, targetRoleId) }),
-      ]);
+    const [requesterRole, targetRole] = await Promise.all([
+      db.query.roles.findFirst({ where: eq(roles.roleId, requesterRoleId) }),
+      db.query.roles.findFirst({ where: eq(roles.roleId, targetRoleId) }),
+    ]);
 
-      if (!requesterRole || !targetRole) {
-        return false;
-      }
+    if (!requesterRole || !targetRole) {
+      return false;
+    }
 
-      return targetRole.priority < requesterRole.priority;
-    })
+    return targetRole.priority < requesterRole.priority;
   }
 
   static async getRolePriority(roleId: string): Promise<number | null> {

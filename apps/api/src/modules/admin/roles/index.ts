@@ -16,7 +16,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         200: AdminRolesModel.rolesResponse,
         ...authErrorResponses,
       },
-      detail: { summary: 'List all roles', tags: ['Admin'] },
+      detail: { summary: 'List all roles', operationId: 'listRoles', tags: ['Admin'] },
     }
   )
   .get(
@@ -28,7 +28,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         200: AdminRolesModel.permissionResponse,
         ...authErrorResponses,
       },
-      detail: { summary: 'List all permissions', tags: ['Admin'] },
+      detail: { summary: 'List all permissions', operationId: 'listPermissions', tags: ['Admin'] },
     }
   )
   .post(
@@ -45,7 +45,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         201: AdminRolesModel.createResponse,
         ...authErrorResponses,
       },
-      detail: { summary: 'Create role', tags: ['Admin'] },
+      detail: { summary: 'Create role', operationId: 'createRole', tags: ['Admin'] },
     }
   )
   .patch(
@@ -62,7 +62,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         ...authErrorResponses,
         ...notFoundResponse,
       },
-      detail: { summary: 'Update role', tags: ['Admin'] },
+      detail: { summary: 'Update role', operationId: 'updateRole', tags: ['Admin'] },
     }
   )
   .delete(
@@ -79,7 +79,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         ...authErrorResponses,
         ...notFoundResponse,
       },
-      detail: { summary: 'Delete role', tags: ['Admin'] },
+      detail: { summary: 'Delete role', operationId: 'deleteRole', tags: ['Admin'] },
     }
   )
   .patch(
@@ -95,7 +95,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         204: t.Void(),
         ...authErrorResponses,
       },
-      detail: { summary: 'Reorder roles', tags: ['Admin'] },
+      detail: { summary: 'Reorder roles', operationId: 'reorderRoles', tags: ['Admin'] },
     }
   )
   .patch(
@@ -112,6 +112,6 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
         ...authErrorResponses,
         ...notFoundResponse,
       },
-      detail: { summary: 'Set default role', tags: ['Admin'] },
+      detail: { summary: 'Set default role', operationId: 'setDefaultRole', tags: ['Admin'] },
     }
   );

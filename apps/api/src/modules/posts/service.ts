@@ -267,7 +267,6 @@ export abstract class PostsService {
 
   static async createWithPermissionCheck(
     accountId: string,
-    permissions: string[],
     body: PostsModel['createBody']
   ) {
     // Verify the account owns the profile they're posting as

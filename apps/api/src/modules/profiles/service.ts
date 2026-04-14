@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { userProfiles, users, roles } from '../../db/schema'
+import { userProfiles, users } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
@@ -37,7 +37,6 @@ export abstract class ProfilesService {
       .select(profileSelect)
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .innerJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
   }
 

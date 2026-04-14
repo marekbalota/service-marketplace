@@ -23,45 +23,47 @@ export abstract class AdminUsersService {
         : undefined,
     );
 
-    const [countRow] = await db
-      .select({ total: count() })
-      .from(users)
-      .where(conditions);
+    return db.transaction(async (tx) => {
+      const [countRow] = await tx
+        .select({ total: count() })
+        .from(users)
+        .where(conditions);
 
-    const total = countRow?.total ?? 0;
+      const total = countRow?.total ?? 0;
 
-    const rows = await db
-      .select({
-        userId: users.id,
-        name: users.name,
-        email: users.email,
-        roleId: users.roleId,
-        roleName: roles.name,
-        rolePriority: roles.priority,
-        isBanned: users.isBanned,
-        banReason: users.banReason,
-        banExpiration: users.banExpiration,
-        createdAt: users.createdAt,
-      })
-      .from(users)
-      .leftJoin(roles, eq(users.roleId, roles.roleId))
-      .where(conditions)
-      .orderBy(desc(sortColumn))
-      .offset(offset)
-      .limit(size ?? 20);
+      const rows = await tx
+        .select({
+          userId: users.id,
+          name: users.name,
+          email: users.email,
+          roleId: users.roleId,
+          roleName: roles.name,
+          rolePriority: roles.priority,
+          isBanned: users.isBanned,
+          banReason: users.banReason,
+          banExpiration: users.banExpiration,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .leftJoin(roles, eq(users.roleId, roles.roleId))
+        .where(conditions)
+        .orderBy(desc(sortColumn))
+        .offset(offset)
+        .limit(size ?? 20);
 
-    const items = rows.map(({ roleId, roleName, rolePriority, ...rest }) => ({
-      ...rest,
-      role: roleId && roleName && rolePriority !== null
-        ? { roleId, name: roleName, priority: rolePriority }
-        : null,
-    }));
+      const items = rows.map(({ roleId, roleName, rolePriority, ...rest }) => ({
+        ...rest,
+        role: roleId && roleName && rolePriority !== null
+          ? { roleId, name: roleName, priority: rolePriority }
+          : null,
+      }));
 
-    return {
-      items,
-      total,
-      totalPages: size ? Math.ceil(total / size) : 1,
-    };
+      return {
+        items,
+        total,
+        totalPages: size ? Math.ceil(total / size) : 1,
+      };
+    });
   }
 
   static async ban(requesterRoleId: string, targetUserId: string, reason: string, expiresAt?: Date) {

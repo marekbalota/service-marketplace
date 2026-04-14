@@ -4,6 +4,7 @@ import { treaty } from '@elysiajs/eden'
 import { profilesRoutes } from '../profiles'
 import { usersRoutes } from '../users'
 import { authRoutes } from '../auth'
+import { auth } from '../auth/service'
 
 const app = new Elysia().use(authRoutes).use(usersRoutes).use(profilesRoutes)
 const client = treaty(app)
@@ -12,21 +13,14 @@ let sessionCookie = ''
 let profileId = ''
 
 beforeAll(async () => {
-  const signInRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'alice@example.com', password: 'password123' }),
-    }),
-  )
+  const signInRes = await auth.api.signInEmail({
+    body: { email: 'alice@example.com', password: 'password123' },
+    asResponse: true,
+  })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  // Get profile ID from /users/me which includes profiles
-  const meRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: sessionCookie },
-  }))
-  const meData = await meRes.json() as { profiles: { userProfileId: string }[] }
-  profileId = meData.profiles[0]?.userProfileId ?? ''
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: sessionCookie } })
+  profileId = meData!.profiles[0]?.userProfileId ?? ''
 })
 
 describe('GET /profiles/:id/locations', () => {

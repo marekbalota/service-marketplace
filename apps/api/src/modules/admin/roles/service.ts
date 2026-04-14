@@ -15,10 +15,10 @@ export abstract class AdminRolesService {
         priority: roles.priority,
         isDefault: roles.isDefault,
         createdAt: roles.createdAt,
-        userCount: sql<number>`count(${users.id})::int`,
+        userCount: sql<number>`count(distinct ${users.id})::int`,
         permissions: sql<string[]>`
           coalesce(
-            json_agg(${rolePermissions.permissionId})
+            json_agg(distinct ${rolePermissions.permissionId})
               filter (where ${rolePermissions.permissionId} is not null),
             '[]'::json
           )
@@ -40,6 +40,7 @@ export abstract class AdminRolesService {
         description: permissions.description,
       })
       .from(permissions)
+      .where(isNull(permissions.deletedAt))
       .orderBy(permissions.name);
   }
 
@@ -123,8 +124,8 @@ export abstract class AdminRolesService {
       const [role] = await tx
         .update(roles)
         .set({
-          ...(body.name && { name: body.name }),
-          ...(body.description && { description: body.description }),
+          ...(body.name !== undefined && { name: body.name }),
+          ...(body.description !== undefined && { description: body.description }),
         })
         .where(and(eq(roles.roleId, roleId), isNull(roles.deletedAt)))
         .returning({

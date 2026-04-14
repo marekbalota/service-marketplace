@@ -31,8 +31,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .post(
     "/",
-    async ({ body, user, set, permissions }) => {
-      const role = await PostsService.createWithPermissionCheck(user.id, permissions, body);
+    async ({ body, user, set }) => {
+      const role = await PostsService.createWithPermissionCheck(user.id, body);
       set.status = 201;
       return role;
     },
@@ -48,8 +48,9 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .patch(
     "/:id",
-    async ({ params, body, user, permissions }) => {
+    async ({ params, body, user, permissions, set }) => {
       await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
+      set.status = 204;
     },
     {
       authWithPermissions: [Permissions.PostsEditOwn, Permissions.PostsEditAny],

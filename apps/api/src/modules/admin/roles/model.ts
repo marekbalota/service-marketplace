@@ -47,7 +47,7 @@ export const AdminRolesModel = {
   // Reorder roles
   reorderBody: t.Object({
     roleId: t.String(),
-    newPriority: t.Number(),
+    newPriority: t.Integer({ minimum: 0 }),
   }),
 
   // Set default role
