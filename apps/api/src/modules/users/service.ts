@@ -2,9 +2,10 @@ import { db } from "../../db";
 import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 import type { UsersModel } from "./model";
+import { NotFoundError, ErrorMessages } from "../../lib/errors";
 
 export abstract class UsersService {
-  static async getCurrentUser(userId: string): Promise<UsersModel['meResponse'] | null> {
+  static async getCurrentUser(userId: string): Promise<UsersModel['meResponse']> {
     const [row] = await db
       .select({
         userId: users.id,
@@ -13,6 +14,7 @@ export abstract class UsersService {
         role: sql<{
           roleId: string;
           name: string;
+          priority: number;
           permissions: string[];
         } | null>`
           case
@@ -20,6 +22,7 @@ export abstract class UsersService {
             else json_build_object(
               'roleId', ${roles.roleId},
               'name', ${roles.name},
+              'priority', ${roles.priority},
               'permissions', coalesce(
                 (select json_agg(${permissions.name})
                  from ${rolePermissions}
@@ -52,6 +55,10 @@ export abstract class UsersService {
       .where(eq(users.id, userId))
       .limit(1);
 
-    return row ?? null;
+    if (!row) {
+      throw new NotFoundError(ErrorMessages.userNotFound);
+    }
+
+    return row;
   }
 }

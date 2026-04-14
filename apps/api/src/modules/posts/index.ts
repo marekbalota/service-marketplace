@@ -2,10 +2,9 @@ import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
-import { ProfilesService } from "../profiles/service";
-import { ErrorMessages, errorResponse, AuthErrorMessages } from "../../lib/errors";
 import { Permissions } from "../../lib/rbac/permissions";
-import { authErrorResponses } from "../auth/model";
+import { authErrorResponses, notFoundResponse } from "../auth/model";
+import { errorResponse } from "../../lib/errors";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
@@ -20,37 +19,25 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .get(
     "/:id",
-    async ({ params, set }) => {
-      const post = await PostsService.findById(params.id);
-      if (!post) {
-        set.status = 404;
-        return { message: ErrorMessages.postNotFound };
-      }
-      return post;
-    },
+    async ({ params }) => await PostsService.findById(params.id),
     {
       params: PostsModel.findByIdParams,
       response: {
         200: PostsModel.findByIdResponse,
-        404: errorResponse,
+        ...notFoundResponse,
       },
       detail: { summary: "Get post by ID", operationId: "getPost", tags: ["Posts"] },
     },
   )
   .post(
     "/",
-    async ({ body, user, set }) => {
-      const owned = await ProfilesService.isProfileOwnedByAccount(body.authorId, user.id);
-      if (!owned) {
-        set.status = 403;
-        return { message: AuthErrorMessages.forbidden };
-      }
-
+    async ({ body, user, set, permissions }) => {
+      const role = await PostsService.createWithPermissionCheck(user.id, permissions, body);
       set.status = 201;
-      return PostsService.create(body);
+      return role;
     },
     {
-      auth: true,
+      authWithPermissions: Permissions.PostsCreate,
       body: PostsModel.createBody,
       response: {
         201: PostsModel.createResponse,
@@ -61,32 +48,11 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .patch(
     "/:id",
-    async ({ params, body, user, permissions, set }) => {
-      const post = await PostsService.findById(params.id);
-      if (!post) {
-        set.status = 404;
-        return { message: ErrorMessages.postNotFound };
-      }
-
-      const canEditAny = permissions.includes(Permissions.PostsEditAny);
-      const canEditOwn = permissions.includes(Permissions.PostsEditOwn);
-      const profileIds = await ProfilesService.getProfileIdsByAccount(user.id);
-      const isOwner = profileIds.includes(post.authorId);
-
-      if (!canEditAny && !(canEditOwn && isOwner)) {
-        set.status = 403;
-        return { message: AuthErrorMessages.forbidden };
-      }
-
-      const updated = await PostsService.update(params.id, body);
-      if (!updated) {
-        set.status = 404;
-        return { message: ErrorMessages.postNotFound };
-      }
-      set.status = 204;
+    async ({ params, body, user, permissions }) => {
+      await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
     },
     {
-      auth: true,
+      authWithPermissions: [Permissions.PostsEditOwn, Permissions.PostsEditAny],
       params: PostsModel.updateParams,
       body: PostsModel.updateBody,
       response: {
@@ -99,33 +65,12 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .delete(
     "/:id",
-    async ({ params, user , permissions, set }) => {
-      const post = await PostsService.findById(params.id);
-      if (!post) {
-        set.status = 404;
-        return { message: ErrorMessages.postNotFound };
-      }
-
-      // Permission check: delete any OR (delete own AND is owner)
-      const canDeleteAny = permissions.includes(Permissions.PostsDeleteAny);
-      const canDeleteOwn = permissions.includes(Permissions.PostsDeleteOwn);
-      const profileIds = await ProfilesService.getProfileIdsByAccount(user.id);
-      const isOwner = profileIds.includes(post.authorId);
-
-      if (!canDeleteAny && !(canDeleteOwn && isOwner)) {
-        set.status = 403;
-        return { message: AuthErrorMessages.forbidden };
-      }
-
-      const deleted = await PostsService.delete(params.id);
-      if (!deleted) {
-        set.status = 404;
-        return { message: ErrorMessages.postNotFound };
-      }
+    async ({ params, user, permissions, set }) => {
+      await PostsService.deleteWithPermissionCheck(user.id, permissions, params.id);
       set.status = 204;
     },
     {
-      auth: true,
+      authWithPermissions: [Permissions.PostsDeleteOwn, Permissions.PostsDeleteAny],
       params: PostsModel.deleteParams,
       response: {
         204: t.Void(),

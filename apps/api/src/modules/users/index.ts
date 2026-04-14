@@ -9,13 +9,8 @@ export const usersRoutes = new Elysia({ prefix: "/users" })
   .use(authRoutes)
   .get(
     "/me",
-    async ({ user, set }) => {
-      const currentUser = await UsersService.getCurrentUser(user.id);
-      if (!currentUser) {
-        set.status = 404
-        return { message: ErrorMessages.userNotFound }
-      }
-      return currentUser;
+    async ({ user }) => {
+      return await UsersService.getCurrentUser(user.id);
     },
     {
       auth: true,

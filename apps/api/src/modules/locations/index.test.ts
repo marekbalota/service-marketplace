@@ -2,9 +2,10 @@ import { describe, it, expect, beforeAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { profilesRoutes } from '../profiles'
+import { usersRoutes } from '../users'
 import { authRoutes } from '../auth'
 
-const app = new Elysia().use(authRoutes).use(profilesRoutes)
+const app = new Elysia().use(authRoutes).use(usersRoutes).use(profilesRoutes)
 const client = treaty(app)
 
 let sessionCookie = ''
@@ -20,26 +21,41 @@ beforeAll(async () => {
   )
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  const { data } = await client.profiles.me.get({ headers: { Cookie: sessionCookie } })
-  profileId = data?.[0]?.userProfileId ?? ''
+  // Get profile ID from /users/me which includes profiles
+  const meRes = await app.handle(new Request('http://localhost/users/me', {
+    headers: { Cookie: sessionCookie },
+  }))
+  const meData = await meRes.json() as { profiles: { userProfileId: string }[] }
+  profileId = meData.profiles[0]?.userProfileId ?? ''
 })
 
 describe('GET /profiles/:id/locations', () => {
-  it('returns 200 with an array', async () => {
-    const { data, error } = await client.profiles({ id: profileId }).locations.get()
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: profileId }).locations.get()
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 200 with an array when authenticated', async () => {
+    const { data, error } = await client.profiles({ id: profileId }).locations.get({
+      headers: { Cookie: sessionCookie }
+    })
     expect(error).toBeNull()
     expect(Array.isArray(data)).toBe(true)
   })
 
   it('each location has locationId as string', async () => {
-    const { data } = await client.profiles({ id: profileId }).locations.get()
+    const { data } = await client.profiles({ id: profileId }).locations.get({
+      headers: { Cookie: sessionCookie }
+    })
     for (const loc of data ?? []) {
       expect(typeof loc.locationId).toBe('string')
     }
   })
 
   it('returns empty array for a profile with no posts at that id', async () => {
-    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get()
+    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get({
+      headers: { Cookie: sessionCookie }
+    })
     expect(error).toBeNull()
     expect(data).toEqual([])
   })

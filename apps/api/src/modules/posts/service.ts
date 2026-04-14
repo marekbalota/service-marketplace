@@ -2,6 +2,9 @@ import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
 import type { PostsModel } from "./model";
+import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
+import { Permissions } from "../../lib/rbac/permissions";
+import { ProfilesService } from "../profiles/service";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -162,7 +165,7 @@ export abstract class PostsService {
       .limit(1);
 
     if (!row) {
-      return null;
+      throw new NotFoundError(ErrorMessages.postNotFound);
     }
 
     const location = row.locationId ? {
@@ -229,7 +232,7 @@ export abstract class PostsService {
         .returning({ postId: posts.postId });
 
       if (!updated) {
-        return null;
+        throw new NotFoundError(ErrorMessages.postNotFound);
       }
 
       if (categoryIds !== undefined) {
@@ -255,19 +258,78 @@ export abstract class PostsService {
       .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
       .returning({ postId: posts.postId });
 
-    return deleted ? true : null;
+    if (!deleted) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    return true;
   }
 
-  static async checkPostOwnership(postId: string, accountId: string): Promise<'not_found' | 'forbidden' | 'ok'> {
-    const [row] = await db
-      .select({ accountId: userProfiles.accountId })
-      .from(posts)
-      .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-      .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
-      .limit(1)
+  static async createWithPermissionCheck(
+    accountId: string,
+    permissions: string[],
+    body: PostsModel['createBody']
+  ) {
+    // Verify the account owns the profile they're posting as
+    const owned = await ProfilesService.isProfileOwnedByAccount(body.authorId, accountId);
+    if (!owned) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
 
-    if (!row) return 'not_found'
-    if (row.accountId !== accountId) return 'forbidden'
-    return 'ok'
+    return this.create(body);
+  }
+
+  static async updateWithPermissionCheck(
+    accountId: string,
+    permissions: string[],
+    id: string,
+    body: PostsModel['updateBody']
+  ) {
+    const post = await db.query.posts.findFirst({
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      columns: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    const canEditAny = permissions.includes(Permissions.PostsEditAny);
+    const canEditOwn = permissions.includes(Permissions.PostsEditOwn);
+    const profileIds = await ProfilesService.getProfileIdsByAccount(accountId);
+    const isOwner = profileIds.includes(post.authorId);
+
+    if (!canEditAny && !(canEditOwn && isOwner)) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    await this.update(id, body);
+  }
+
+  static async deleteWithPermissionCheck(
+    accountId: string,
+    permissions: string[],
+    id: string
+  ) {
+    const post = await db.query.posts.findFirst({
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      columns: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    // Permission check: delete any OR (delete own AND is owner)
+    const canDeleteAny = permissions.includes(Permissions.PostsDeleteAny);
+    const canDeleteOwn = permissions.includes(Permissions.PostsDeleteOwn);
+    const profileIds = await ProfilesService.getProfileIdsByAccount(accountId);
+    const isOwner = profileIds.includes(post.authorId);
+
+    if (!canDeleteAny && !(canDeleteOwn && isOwner)) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    await this.delete(id);
   }
 }

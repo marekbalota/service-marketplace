@@ -8,6 +8,7 @@ export const UsersModel = {
     role: t.Nullable(t.Object({
       roleId: t.String(),
       name: t.String(),
+      priority: t.Number(),
       permissions: t.Array(t.String()),
     })),
     profiles: t.Array(

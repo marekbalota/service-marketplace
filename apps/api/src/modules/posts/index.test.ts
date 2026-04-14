@@ -3,9 +3,10 @@ import { Elysia } from "elysia";
 import { treaty } from "@elysiajs/eden";
 import { postsRoutes } from ".";
 import { profilesRoutes } from "../profiles";
+import { usersRoutes } from "../users";
 import { authRoutes } from "../auth";
 
-const app = new Elysia().use(authRoutes).use(postsRoutes).use(profilesRoutes);
+const app = new Elysia().use(authRoutes).use(usersRoutes).use(postsRoutes).use(profilesRoutes);
 const client = treaty(app);
 
 /** Extract postId from an Eden create-post response whose union type is hard to narrow. */
@@ -26,8 +27,12 @@ beforeAll(async () => {
   );
   sessionCookie = signInRes.headers.get("set-cookie") ?? "";
 
-  const { data: profiles } = await client.profiles.me.get({ headers: { Cookie: sessionCookie } });
-  authorId = profiles?.[0]?.userProfileId ?? "";
+  // Get profile ID from /users/me which includes profiles
+  const meRes = await app.handle(new Request("http://localhost/users/me", {
+    headers: { Cookie: sessionCookie },
+  }));
+  const meData = await meRes.json() as { profiles: { userProfileId: string }[] };
+  authorId = meData.profiles[0]?.userProfileId ?? "";
 });
 
 describe("GET /posts", () => {

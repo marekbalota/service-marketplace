@@ -5,49 +5,33 @@ import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
 import { LocationsModel, LocationsService } from '../locations'
 import { authRoutes } from '../auth'
-import { ErrorMessages, errorResponse, AuthErrorMessages } from '../../lib/errors'
-import { authErrorResponses } from '../auth/model'
+import { errorResponse } from '../../lib/errors'
+import { authErrorResponses, notFoundResponse } from '../auth/model'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
   .get(
     '/:id',
-    async ({ params, set }) => {
-      const profile = await ProfilesService.findById(params.id)
-      if (!profile) {
-        set.status = 404
-        return { message: ErrorMessages.profileNotFound }
-      }
-      return profile
-    },
+    async ({ params }) => await ProfilesService.findById(params.id),
     {
       params: ProfilesModel.findByIdParams,
       response: {
         200: ProfilesModel.findByIdResponse,
-        404: errorResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Get profile by ID', operationId: 'getProfile', tags: ['Profiles'] },
     },
   )
   .patch(
     '/:id',
-    async ({ params, body, set, user }) => {
-      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
-      if (!isOwner) {
-        set.status = 403
-        return { message: AuthErrorMessages.forbidden }
-      }
-      const updated = await ProfilesService.update(params.id, body)
-      if (!updated) {
-        set.status = 404
-        return { message: ErrorMessages.profileNotFound }
-      }
-      set.status = 204
+    async ({ params, body, user, set }) => {
+      await ProfilesService.updateWithOwnershipCheck(user.id, params.id, body);
+      set.status = 204;
     },
     {
       auth: true,
       params: ProfilesModel.updateParams,
-      body:   ProfilesModel.updateBody,
+      body: ProfilesModel.updateBody,
       response: {
         204: t.Void(),
         404: errorResponse,
@@ -58,9 +42,9 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   )
   .get(
     '/:id/posts',
-    async ({ params }) =>
-      await PostsService.findByProfile(params.id),
+    async ({ params }) => await PostsService.findByProfile(params.id),
     {
+      auth:true,
       params: ProfilesModel.profilePostsParams,
       response: { 200: PostsModel.findByProfileResponse },
       detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
@@ -70,8 +54,9 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     '/:id/locations',
     async ({ params }) => LocationsService.findByProfileId(params.id),
     {
+      auth: true,
       params: LocationsModel.profileLocationsParams,
       response: { 200: LocationsModel.profileLocationsResponse },
       detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
     },
-  )
+  );

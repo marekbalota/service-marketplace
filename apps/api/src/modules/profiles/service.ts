@@ -2,6 +2,7 @@ import { db } from '../../db'
 import { userProfiles, users, roles } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
+import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
@@ -24,7 +25,11 @@ export abstract class ProfilesService {
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
-    return row ?? null
+    if (!row) {
+      throw new NotFoundError(ErrorMessages.profileNotFound);
+    }
+
+    return row;
   }
 
   static async findByAccountId(accountId: string) {
@@ -64,6 +69,24 @@ export abstract class ProfilesService {
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .returning({ userProfileId: userProfiles.userProfileId })
 
-    return updated ?? null
+    if (!updated) {
+      throw new NotFoundError(ErrorMessages.profileNotFound);
+    }
+
+    return updated;
+  }
+
+  static async updateWithOwnershipCheck(
+    accountId: string,
+    id: string,
+    body: ProfilesModel['updateBody']
+  ) {
+    // Verify ownership
+    const isOwner = await this.isProfileOwnedByAccount(id, accountId);
+    if (!isOwner) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    return this.update(id, body);
   }
 }
