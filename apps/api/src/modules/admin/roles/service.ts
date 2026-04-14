@@ -3,46 +3,33 @@ import { roles, rolePermissions, permissions, users } from '../../../db/schema';
 import { eq, and, isNull, sql, desc } from 'drizzle-orm';
 import type { AdminRolesModel } from './model';
 import { RBACService } from '../../../lib/rbac/rbac-helper';
-import { ForbiddenError, NotFoundError } from '../../../lib/errors';
+import { ForbiddenError, NotFoundError, AuthErrorMessages, ErrorMessages } from '../../../lib/errors';
 
 export abstract class AdminRolesService {
   static async getAllRoles() {
-    return await db.transaction(async (tx) => {
-      const roleRows = await tx
-        .select({
-          roleId: roles.roleId,
-          name: roles.name,
-          description: roles.description,
-          priority: roles.priority,
-          isDefault: roles.isDefault,
-          createdAt: roles.createdAt,
-          userCount: sql<number>`count(${users.id})::int`,
-        })
-        .from(roles)
-        .leftJoin(users, eq(roles.roleId, users.roleId))
-        .where(isNull(roles.deletedAt))
-        .groupBy(roles.roleId)
-        .orderBy(desc(roles.priority));
-
-      const permissionRows = await tx
-        .select({
-          roleId: rolePermissions.roleId,
-          permissionId: rolePermissions.permissionId,
-        })
-        .from(rolePermissions);
-
-      const permissionsByRole = new Map<string, string[]>();
-      for (const row of permissionRows) {
-        const list = permissionsByRole.get(row.roleId) ?? [];
-        list.push(row.permissionId);
-        permissionsByRole.set(row.roleId, list);
-      }
-
-      return roleRows.map(role => ({
-        ...role,
-        permissions: permissionsByRole.get(role.roleId) ?? [],
-      }));
-    });
+    return db
+      .select({
+        roleId: roles.roleId,
+        name: roles.name,
+        description: roles.description,
+        priority: roles.priority,
+        isDefault: roles.isDefault,
+        createdAt: roles.createdAt,
+        userCount: sql<number>`count(${users.id})::int`,
+        permissions: sql<string[]>`
+          coalesce(
+            json_agg(${rolePermissions.permissionId})
+              filter (where ${rolePermissions.permissionId} is not null),
+            '[]'::json
+          )
+        `,
+      })
+      .from(roles)
+      .leftJoin(users, eq(roles.roleId, users.roleId))
+      .leftJoin(rolePermissions, eq(roles.roleId, rolePermissions.roleId))
+      .where(isNull(roles.deletedAt))
+      .groupBy(roles.roleId)
+      .orderBy(desc(roles.priority));
   }
 
   static async getAllPermissions() {
@@ -56,7 +43,18 @@ export abstract class AdminRolesService {
       .orderBy(permissions.name);
   }
 
-  static async create(body: AdminRolesModel['createBody']) {
+  static async create(requesterRoleId: string, body: AdminRolesModel['createBody']) {
+    // Check that requester has all permissions they're trying to assign
+    if (body.permissionIds.length > 0) {
+      const requesterPermissions = await RBACService.getRolePermissions(requesterRoleId);
+      const unavailablePermissions = body.permissionIds.filter(
+        p => !requesterPermissions.includes(p)
+      );
+      if (unavailablePermissions.length > 0) {
+        throw new ForbiddenError(AuthErrorMessages.cannotAssignPermissions);
+      }
+    }
+
     return db.transaction(async (tx) => {
       // Increment all existing roles' priority by 1
       await tx
@@ -96,9 +94,29 @@ export abstract class AdminRolesService {
   }
 
   static async update(requesterRoleId: string, roleId: string, body: AdminRolesModel['updateBody']) {
+    // First check if role exists
+    const targetRole = await db.query.roles.findFirst({
+      where: and(eq(roles.roleId, roleId), isNull(roles.deletedAt)),
+    });
+
+    if (!targetRole) {
+      throw new NotFoundError(ErrorMessages.roleNotFound);
+    }
+
     const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
     if (!canManage) {
-      throw new ForbiddenError('Cannot modify roles with equal or higher priority');
+      throw new ForbiddenError(AuthErrorMessages.cannotModifySameOrHigherPriorityRole);
+    }
+
+    // Check that requester has all permissions they're trying to assign
+    if (body.permissionIds !== undefined && body.permissionIds.length > 0) {
+      const requesterPermissions = await RBACService.getRolePermissions(requesterRoleId);
+      const unavailablePermissions = body.permissionIds.filter(
+        p => !requesterPermissions.includes(p)
+      );
+      if (unavailablePermissions.length > 0) {
+        throw new ForbiddenError(AuthErrorMessages.cannotAssignPermissions);
+      }
     }
 
     return db.transaction(async (tx) => {
@@ -119,7 +137,7 @@ export abstract class AdminRolesService {
         });
 
       if (!role) {
-        throw new NotFoundError('Role not found');
+        throw new NotFoundError(ErrorMessages.roleNotFound);
       }
 
       // Update permissions if provided
@@ -143,10 +161,18 @@ export abstract class AdminRolesService {
   }
 
   static async delete(requesterRoleId: string, roleId: string) {
-    // Priority check
+    // First check if role exists
+    const targetRole = await db.query.roles.findFirst({
+      where: and(eq(roles.roleId, roleId), isNull(roles.deletedAt)),
+    });
+
+    if (!targetRole) {
+      throw new NotFoundError(ErrorMessages.roleNotFound);
+    }
+
     const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
     if (!canManage) {
-      throw new ForbiddenError('Cannot delete roles with equal or higher priority');
+      throw new ForbiddenError(AuthErrorMessages.cannotDeleteSameOrHigherPriorityRole);
     }
 
     return db.transaction(async (tx) => {
@@ -156,11 +182,11 @@ export abstract class AdminRolesService {
       });
 
       if (!role) {
-        throw new NotFoundError('Role not found');
+        throw new NotFoundError(ErrorMessages.roleNotFound);
       }
 
       if (role.isDefault) {
-        throw new ForbiddenError('Cannot delete the default role');
+        throw new ForbiddenError(ErrorMessages.cannotDeleteDefaultRole);
       }
 
       const deletedPriority = role.priority;
@@ -171,7 +197,7 @@ export abstract class AdminRolesService {
       });
 
       if (!defaultRole) {
-        throw new ForbiddenError('No default role found');
+        throw new ForbiddenError(ErrorMessages.noDefaultRoleFound);
       }
 
       // Update all users with this role to the default role
@@ -188,10 +214,10 @@ export abstract class AdminRolesService {
         .returning({ roleId: roles.roleId });
 
       if (!updated) {
-        throw new NotFoundError('Role not found');
+        throw new NotFoundError(ErrorMessages.roleNotFound);
       }
 
-      // Decrement priority of all roles that were below the deleted one
+      // Decrement priority of all roles that were above the deleted one
       await tx
         .update(roles)
         .set({ priority: sql`${roles.priority} - 1` })
@@ -207,7 +233,7 @@ export abstract class AdminRolesService {
   static async reorder(requesterRoleId: string, roleId: string, newPriority: number) {
     const requesterPriority = await RBACService.getRolePriority(requesterRoleId);
     if (requesterPriority === null) {
-      throw new ForbiddenError('Forbidden');
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
     }
 
     const maxEditablePriority = requesterPriority - 1;
@@ -220,7 +246,7 @@ export abstract class AdminRolesService {
         .limit(1);
 
       if (!role || role.priority > maxEditablePriority || newPriority > maxEditablePriority) {
-        throw new ForbiddenError('Invalid reorder operation');
+        throw new ForbiddenError(AuthErrorMessages.invalidReorderOperation);
       }
 
       const oldPriority = role.priority;
@@ -255,11 +281,9 @@ export abstract class AdminRolesService {
   }
 
   static async setDefault(requesterRoleId: string, roleId: string) {
-    // Priority check - can only set roles below own priority as default
     const canManage = await RBACService.canManageRole(requesterRoleId, roleId);
-
     if (!canManage) {
-      throw new ForbiddenError('Cannot set roles with equal or higher priority as default');
+      throw new ForbiddenError(AuthErrorMessages.cannotSetSameOrHigherAsDefault);
     }
 
     return db.transaction(async (tx) => {
@@ -277,7 +301,7 @@ export abstract class AdminRolesService {
         .returning({ roleId: roles.roleId });
 
       if (!role) {
-        throw new NotFoundError('Role not found');
+        throw new NotFoundError(ErrorMessages.roleNotFound);
       }
 
       return true;

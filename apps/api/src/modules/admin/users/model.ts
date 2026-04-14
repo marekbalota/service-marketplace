@@ -1,11 +1,16 @@
 import { t, type UnwrapSchema } from 'elysia';
 
+const roleInfo = t.Object({
+  roleId: t.String(),
+  name: t.String(),
+  priority: t.Number(),
+});
+
 const userRow = t.Object({
   userId: t.String(),
   name: t.String(),
   email: t.String(),
-  roleId: t.Nullable(t.String()),
-  roleName: t.String(),
+  role: t.Nullable(roleInfo),
   isBanned: t.Boolean(),
   banReason: t.Nullable(t.String()),
   banExpiration: t.Nullable(t.Date()),
@@ -14,7 +19,7 @@ const userRow = t.Object({
 
 export const AdminUsersModel = {
   // List users
-  listQuery: t.Object({
+  usersQuery: t.Object({
     search: t.Optional(t.String()),
     sort: t.Optional(t.Union([
       t.Literal('name'),
@@ -24,7 +29,7 @@ export const AdminUsersModel = {
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
   }),
-  listResponse: t.Object({
+  usersResponse: t.Object({
     items: t.Array(userRow),
     total: t.Number(),
     totalPages: t.Number(),

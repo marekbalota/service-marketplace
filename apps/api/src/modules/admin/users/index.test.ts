@@ -3,9 +3,10 @@ import { Elysia } from 'elysia';
 import { treaty } from '@elysiajs/eden';
 import { adminUsersRoutes } from '.';
 import { authRoutes } from '../../auth';
+import { usersRoutes } from '../../users';
 import { auth } from '../../auth/service';
 
-const app = new Elysia().use(authRoutes).use(adminUsersRoutes);
+const app = new Elysia().use(authRoutes).use(usersRoutes).use(adminUsersRoutes);
 const client = treaty(app);
 
 let adminCookie: string;
@@ -31,8 +32,8 @@ beforeAll(async () => {
   const meRes = await app.handle(new Request('http://localhost/users/me', {
     headers: { Cookie: userCookie },
   }));
-  const meData = await meRes.json() as { user: { id: string } };
-  regularUserId = meData.user.id;
+  const meData = await meRes.json() as { userId: string };
+  regularUserId = meData.userId;
 });
 
 describe('GET /admin/users', () => {
@@ -53,18 +54,26 @@ describe('GET /admin/users', () => {
       headers: { Cookie: adminCookie },
     });
     expect(error).toBeNull();
+    expect(data).toBeTruthy();
     expect(Array.isArray(data!.items)).toBe(true);
     expect(typeof data!.total).toBe('number');
     expect(typeof data!.totalPages).toBe('number');
 
     // Check user structure
-    if (data!.items.length > 0) {
-      const user = data!.items[0];
-      expect(typeof user.userId).toBe('string');
-      expect(typeof user.name).toBe('string');
-      expect(typeof user.email).toBe('string');
-      expect(typeof user.isBanned).toBe('boolean');
-      expect(typeof user.roleName).toBe('string');
+    if (data && data.items.length > 0) {
+      const user = data.items[0];
+      expect(user).toBeTruthy();
+      expect(typeof user!.userId).toBe('string');
+      expect(typeof user!.name).toBe('string');
+      expect(typeof user!.email).toBe('string');
+      expect(typeof user!.isBanned).toBe('boolean');
+      // role is an object with roleId, name, priority or null
+      expect(user!.role === null || typeof user!.role === 'object').toBe(true);
+      if (user!.role) {
+        expect(typeof user!.role.roleId).toBe('string');
+        expect(typeof user!.role.name).toBe('string');
+        expect(typeof user!.role.priority).toBe('number');
+      }
     }
   });
 
@@ -182,5 +191,14 @@ describe('PATCH /admin/users/:id/role', () => {
       { headers: { Cookie: adminCookie } },
     );
     expect(error?.status).toBe(422);
+  });
+
+  it('returns 404 for unknown user id', async () => {
+    const { error } = await client['admin'].users({ id: '00000000-0000-0000-0000-000000000000' }).role.patch(
+      { roleId: '00000000-0000-0000-0000-000000000000' },
+      { headers: { Cookie: adminCookie } },
+    );
+    expect(error).toBeTruthy();
+    expect(error!.status).toBe(404);
   });
 });

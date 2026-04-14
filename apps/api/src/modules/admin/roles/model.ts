@@ -22,7 +22,7 @@ const roleWithPermissions = t.Object({
 
 export const AdminRolesModel = {
   // List roles
-  listResponse: t.Array(roleWithPermissions),
+  rolesResponse: t.Array(roleWithPermissions),
 
   // Create role
   createBody: t.Object({

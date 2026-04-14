@@ -45,17 +45,19 @@ describe('GET /admin/roles', () => {
       headers: { Cookie: adminCookie },
     });
     expect(error).toBeNull();
+    expect(data).toBeTruthy();
     expect(Array.isArray(data)).toBe(true);
     expect(data!.length).toBeGreaterThan(0);
 
     // Check role structure
     const role = data![0];
-    expect(typeof role.roleId).toBe('string');
-    expect(typeof role.name).toBe('string');
-    expect(typeof role.priority).toBe('number');
-    expect(typeof role.isDefault).toBe('boolean');
-    expect(typeof role.userCount).toBe('number');
-    expect(Array.isArray(role.permissions)).toBe(true);
+    expect(role).toBeTruthy();
+    expect(typeof role!.roleId).toBe('string');
+    expect(typeof role!.name).toBe('string');
+    expect(typeof role!.priority).toBe('number');
+    expect(typeof role!.isDefault).toBe('boolean');
+    expect(typeof role!.userCount).toBe('number');
+    expect(Array.isArray(role!.permissions)).toBe(true);
   });
 });
 
@@ -77,14 +79,16 @@ describe('GET /admin/roles/permissions', () => {
       headers: { Cookie: adminCookie },
     });
     expect(error).toBeNull();
+    expect(data).toBeTruthy();
     expect(Array.isArray(data)).toBe(true);
     expect(data!.length).toBeGreaterThan(0);
 
     // Check permission structure
     const perm = data![0];
-    expect(typeof perm.permissionId).toBe('string');
-    expect(typeof perm.name).toBe('string');
-    expect('description' in perm).toBe(true);
+    expect(perm).toBeTruthy();
+    expect(typeof perm!.permissionId).toBe('string');
+    expect(typeof perm!.name).toBe('string');
+    expect(perm && 'description' in perm).toBe(true);
   });
 });
 
@@ -149,6 +153,26 @@ describe('PATCH /admin/roles/:id', () => {
     );
     expect(error?.status).toBe(404);
   });
+
+  it('returns 200 and updates a lower priority role', async () => {
+    // Create a new role first (will have priority 0)
+    const testRoleName = `TestRole-Update-${Date.now()}`;
+    const { data: created } = await client['admin'].roles.post(
+      { name: testRoleName, description: 'Test role to update', permissionIds: [] },
+      { headers: { Cookie: adminCookie } },
+    );
+
+    // Update the created role (SuperAdmin has higher priority, so this should work)
+    const newName = `Updated-${Date.now()}`;
+    const { data, error } = await client['admin'].roles({ id: created!.roleId }).patch(
+      { name: newName, description: 'Updated description' },
+      { headers: { Cookie: adminCookie } },
+    );
+
+    expect(error).toBeNull();
+    expect(data!.name).toBe(newName);
+    expect(data!.description).toBe('Updated description');
+  });
 });
 
 describe('DELETE /admin/roles/:id', () => {
@@ -163,11 +187,41 @@ describe('DELETE /admin/roles/:id', () => {
     });
     expect(error?.status).toBe(403);
   });
+
+  it('returns 404 for unknown role id', async () => {
+    const { error } = await client['admin'].roles({ id: '00000000-0000-0000-0000-000000000000' }).delete(undefined, {
+      headers: { Cookie: adminCookie },
+    });
+    expect(error?.status).toBe(404);
+  });
+
+  it('returns 204 and deletes a lower priority role', async () => {
+    // Create a new role first (will have priority 0, lower than SuperAdmin)
+    const testRoleName = `TestRole-Delete-${Date.now()}`;
+    const { data: created } = await client['admin'].roles.post(
+      { name: testRoleName, description: 'Test role to delete', permissionIds: [] },
+      { headers: { Cookie: adminCookie } },
+    );
+
+    // Delete the created role (SuperAdmin has higher priority, so this should work)
+    const { error } = await client['admin'].roles({ id: created!.roleId }).delete(undefined, {
+      headers: { Cookie: adminCookie },
+    });
+
+    expect(error).toBeNull();
+
+    // Verify the role is gone
+    const { error: getError } = await client['admin'].roles({ id: created!.roleId }).patch(
+      { name: 'ShouldNotWork' },
+      { headers: { Cookie: adminCookie } },
+    );
+    expect(getError?.status).toBe(404);
+  });
 });
 
-describe('POST /admin/roles/reorder', () => {
+describe('PATCH /admin/roles/reorder', () => {
   it('returns 401 without a session', async () => {
-    const { error } = await client['admin'].roles.reorder.post({
+    const { error } = await client['admin'].roles.reorder.patch({
       roleId: '00000000-0000-0000-0000-000000000000',
       newPriority: 1,
     });
@@ -175,7 +229,7 @@ describe('POST /admin/roles/reorder', () => {
   });
 
   it('returns 403 for non-admin user without reorder permission', async () => {
-    const { error } = await client['admin'].roles.reorder.post(
+    const { error } = await client['admin'].roles.reorder.patch(
       { roleId: '00000000-0000-0000-0000-000000000000', newPriority: 1 },
       { headers: { Cookie: userCookie } },
     );
@@ -183,14 +237,14 @@ describe('POST /admin/roles/reorder', () => {
   });
 });
 
-describe('POST /admin/roles/:id/default', () => {
+describe('PATCH /admin/roles/:id/default', () => {
   it('returns 401 without a session', async () => {
-    const { error } = await client['admin'].roles({ id: '00000000-0000-0000-0000-000000000000' }).default.post();
+    const { error } = await client['admin'].roles({ id: '00000000-0000-0000-0000-000000000000' }).default.patch();
     expect(error?.status).toBe(401);
   });
 
   it('returns 403 for non-admin user', async () => {
-    const { error } = await client['admin'].roles({ id: '00000000-0000-0000-0000-000000000000' }).default.post(undefined, {
+    const { error } = await client['admin'].roles({ id: '00000000-0000-0000-0000-000000000000' }).default.patch(undefined, {
       headers: { Cookie: userCookie },
     });
     expect(error?.status).toBe(403);

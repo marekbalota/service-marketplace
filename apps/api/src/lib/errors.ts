@@ -6,6 +6,10 @@ export const ErrorMessages = {
   postNotFound:    'Post not found',
   profileNotFound: 'Profile not found',
   userNotFound: 'User not found',
+  userRoleNotFound: 'User role not found',
+  roleNotFound: 'Role not found',
+  cannotDeleteDefaultRole: 'Cannot delete the default role',
+  noDefaultRoleFound: 'No default role found',
 } as const
 
 export const AuthErrorMessages = {
@@ -14,6 +18,13 @@ export const AuthErrorMessages = {
   banned:       'Account banned',
   missingPermissions: 'Missing permissions',
   cannotManageRole: 'Cannot manage users with equal or higher role',
+  cannotModifySameOrHigherRole: 'Cannot modify users with equal or higher role',
+  cannotAssignSameOrHigherRole: 'Cannot assign roles with equal or higher priority',
+  cannotAssignPermissions: 'Cannot assign permissions you do not have',
+  cannotModifySameOrHigherPriorityRole: 'Cannot modify roles with equal or higher priority',
+  cannotDeleteSameOrHigherPriorityRole: 'Cannot delete roles with equal or higher priority',
+  invalidReorderOperation: 'Invalid reorder operation',
+  cannotSetSameOrHigherAsDefault: 'Cannot set roles with equal or higher priority as default',
 } as const
 
 // Custom error classes for service layer

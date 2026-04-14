@@ -3,10 +3,10 @@ import { users, roles, sessions } from '../../../db/schema';
 import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm';
 import type { AdminUsersModel } from './model';
 import { RBACService } from '../../../lib/rbac/rbac-helper';
-import { ForbiddenError, NotFoundError, AuthErrorMessages } from '../../../lib/errors';
+import { ForbiddenError, NotFoundError, AuthErrorMessages, ErrorMessages } from '../../../lib/errors';
 
 export abstract class AdminUsersService {
-  static async list(query: AdminUsersModel['listQuery']) {
+  static async findAll(query: AdminUsersModel['usersQuery']) {
     const { search, sort, offset = 0, size } = query;
 
     const sortColumn =
@@ -36,7 +36,8 @@ export abstract class AdminUsersService {
         name: users.name,
         email: users.email,
         roleId: users.roleId,
-        roleName: sql<string>`coalesce(${roles.name}, 'No Role')`,
+        roleName: roles.name,
+        rolePriority: roles.priority,
         isBanned: users.isBanned,
         banReason: users.banReason,
         banExpiration: users.banExpiration,
@@ -49,8 +50,15 @@ export abstract class AdminUsersService {
       .offset(offset)
       .limit(size ?? 20);
 
+    const items = rows.map(({ roleId, roleName, rolePriority, ...rest }) => ({
+      ...rest,
+      role: roleId && roleName && rolePriority !== null
+        ? { roleId, name: roleName, priority: rolePriority }
+        : null,
+    }));
+
     return {
-      items: rows,
+      items,
       total,
       totalPages: size ? Math.ceil(total / size) : 1,
     };
@@ -64,11 +72,11 @@ export abstract class AdminUsersService {
     });
 
     if (!targetUser) {
-      throw new NotFoundError('User not found');
+      throw new NotFoundError(ErrorMessages.userNotFound);
     }
 
     if (!targetUser.role) {
-      throw new NotFoundError('User role not found');
+      throw new NotFoundError(ErrorMessages.userRoleNotFound);
     }
 
     // Priority check - can only ban users with lower priority
@@ -82,13 +90,23 @@ export abstract class AdminUsersService {
     }
 
     return await db.transaction(async (tx) => {
-      // Set ban status
+      // Get the default role to assign to banned user
+      const defaultRole = await tx.query.roles.findFirst({
+        where: eq(roles.isDefault, true),
+      });
+
+      if (!defaultRole) {
+        throw new ForbiddenError(ErrorMessages.noDefaultRoleFound);
+      }
+
+      // Set ban status and assign default role in one query
       const [user] = await tx
         .update(users)
         .set({
           isBanned: true,
           banReason: reason,
           banExpiration: expiresAt ?? null,
+          roleId: defaultRole.roleId,
         })
         .where(eq(users.id, targetUserId))
         .returning({ userId: users.id });
@@ -110,16 +128,16 @@ export abstract class AdminUsersService {
       with: { role: true },
     });
 
-    if (!targetUser || !targetUser.role) {
-      throw new NotFoundError('User not found');
+    if (!targetUser) {
+      throw new NotFoundError(ErrorMessages.userNotFound);
+    }
+
+    if (!targetUser.role) {
+      throw new NotFoundError(ErrorMessages.userRoleNotFound);
     }
 
     // Priority check
-    const canManage = await RBACService.canManageRole(
-      requesterRoleId,
-      targetUser.role.roleId
-    );
-
+    const canManage = await RBACService.canManageRole(requesterRoleId, targetUser.role.roleId);
     if (!canManage) {
       throw new ForbiddenError(AuthErrorMessages.cannotManageRole);
     }
@@ -143,20 +161,24 @@ export abstract class AdminUsersService {
       with: { role: true },
     });
 
-    if (!targetUser || !targetUser.role) {
-      throw new NotFoundError('User not found');
+    if (!targetUser) {
+      throw new NotFoundError(ErrorMessages.userNotFound);
+    }
+
+    if (!targetUser.role) {
+      throw new NotFoundError(ErrorMessages.userRoleNotFound);
     }
 
     // Cannot modify users with equal or higher priority
     const canManageTarget = await RBACService.canManageRole(requesterRoleId, targetUser.role.roleId);
     if (!canManageTarget) {
-      throw new ForbiddenError('Cannot modify users with equal or higher role');
+      throw new ForbiddenError(AuthErrorMessages.cannotModifySameOrHigherRole);
     }
 
     // Cannot assign roles with equal or higher priority
     const canManageNewRole = await RBACService.canManageRole(requesterRoleId, newRoleId);
     if (!canManageNewRole) {
-      throw new ForbiddenError('Cannot assign roles with equal or higher priority');
+      throw new ForbiddenError(AuthErrorMessages.cannotAssignSameOrHigherRole);
     }
 
     const [user] = await db
@@ -168,7 +190,12 @@ export abstract class AdminUsersService {
     return user ? true : null;
   }
 
-  static async listAssignableRoles(maxPriority: number) {
+  static async listAssignableRoles(requesterRoleId: string) {
+    const requesterPriority = await RBACService.getRolePriority(requesterRoleId);
+    if (requesterPriority === null) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
     return db
       .select({
         roleId: roles.roleId,
@@ -176,7 +203,7 @@ export abstract class AdminUsersService {
       })
       .from(roles)
       .where(and(
-        sql`${roles.priority} < ${maxPriority}`,
+        sql`${roles.priority} < ${requesterPriority}`,
         isNull(roles.deletedAt)
       ))
       .orderBy(desc(roles.priority));

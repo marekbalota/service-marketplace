@@ -9,12 +9,12 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ query }) => await AdminUsersService.list(query),
+    async ({ query }) => await AdminUsersService.findAll(query),
     {
       authWithPermissions: Permissions.AdminUsersView,
-      query: AdminUsersModel.listQuery,
+      query: AdminUsersModel.usersQuery,
       response: {
-        200: AdminUsersModel.listResponse,
+        200: AdminUsersModel.usersResponse,
         ...authErrorResponses,
       },
       detail: { summary: 'List users', tags: ['Admin'] },
@@ -64,19 +64,14 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       response: {
         204: t.Void(),
         ...authErrorResponses,
+        ...notFoundResponse,
       },
       detail: { summary: 'Assign role to user', tags: ['Admin'] },
     }
   )
   .get(
     '/roles/assignable',
-    async ({ user }) => {
-      const requesterPriority = await RBACService.getRolePriority(user.roleId);
-      if (requesterPriority === null) {
-        throw new Error('Forbidden');
-      }
-      return await AdminUsersService.listAssignableRoles(requesterPriority);
-    },
+    async ({ user }) => await AdminUsersService.listAssignableRoles(user.roleId),
     {
       authWithPermissions: Permissions.AdminUsersAssignRole,
       response: {

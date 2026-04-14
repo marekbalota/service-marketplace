@@ -13,7 +13,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
     {
       authWithPermissions: Permissions.AdminRolesManage,
       response: {
-        200: AdminRolesModel.listResponse,
+        200: AdminRolesModel.rolesResponse,
         ...authErrorResponses,
       },
       detail: { summary: 'List all roles', tags: ['Admin'] },
@@ -33,8 +33,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
   )
   .post(
     '/',
-    async ({ body, set }) => {
-      const role = await AdminRolesService.create(body);
+    async ({ body, set, user }) => {
+      const role = await AdminRolesService.create(user.roleId, body);
       set.status = 201;
       return role;
     },
@@ -89,7 +89,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       set.status = 204;
     },
     {
-      authWithPermissions: Permissions.AdminRolesReorder,
+      authWithPermissions: Permissions.AdminRolesManage,
       body: AdminRolesModel.reorderBody,
       response: {
         204: t.Void(),
@@ -105,7 +105,7 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       set.status = 204;
     },
     {
-      authWithPermissions: Permissions.AdminRolesSetDefault,
+      authWithPermissions: Permissions.AdminRolesManage,
       params: AdminRolesModel.setDefaultParams,
       response: {
         204: t.Void(),

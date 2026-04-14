@@ -14,8 +14,6 @@ const permissionDefinitions = [
   { name: Permissions.AdminUsersView, description: "View user list" },
   { name: Permissions.AdminUsersAssignRole, description: "Assign roles to users" },
   { name: Permissions.AdminRolesManage, description: "Create, edit, delete roles" },
-  { name: Permissions.AdminRolesReorder, description: "Reorder role priorities" },
-  { name: Permissions.AdminRolesSetDefault, description: "Set default role" },
   { name: Permissions.AdminCategoriesManage, description: "Manage categories" },
 ];
 
