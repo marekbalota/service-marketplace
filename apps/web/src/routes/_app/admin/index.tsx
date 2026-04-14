@@ -4,7 +4,6 @@ import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { Users, Shield, Flag, ChevronRight } from 'lucide-react';
 import { api } from '#/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Button } from '#/components/ui/button';
 import type { UsersMeGet } from '#/types/api';
 
 type AdminUserResponse = NonNullable<Awaited<ReturnType<UsersMeGet>>['data']>;
@@ -64,7 +63,7 @@ function AdminDashboard() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
       <div className="mb-8">
-        <h1 className="mb-2">Admin Dashboard</h1>
+        <h1 className="text-3xl mb-2">Admin Dashboard</h1>
         <p className="text-muted-foreground">
           Manage platform settings, users, and content moderation
         </p>

@@ -20,9 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
-import type { AdminUsersModel } from 'api';
 
 export type User = AdminUsersModel['listResponse']['items'][number];
+
+import type { AdminUsersModel } from 'api';
 
 export const usersQueryOptions = (search: string) => queryOptions({
   queryKey: ['admin', 'users', search],
@@ -34,9 +35,23 @@ export const usersQueryOptions = (search: string) => queryOptions({
   },
 });
 
+export const assignableRolesQueryOptions = queryOptions({
+  queryKey: ['admin', 'users', 'assignable-roles'],
+  queryFn: async () => {
+    const response = await api.admin.users['roles'].assignable.get();
+    return response.data ?? [];
+  },
+});
+
 export const Route = createFileRoute('/_app/admin/accounts')({
   component: ManageAccounts,
 });
+
+const STATUS_LABELS: Record<string, string> = {
+    all: 'All Statuses',
+    active: 'Active',
+    banned: 'Banned',
+  };
 
 function ManageAccounts() {
   const navigate = useNavigate();
@@ -56,7 +71,7 @@ function ManageAccounts() {
       </Button>
 
       <div className="mb-6">
-        <h1 className="mb-2">Manage Accounts</h1>
+        <h1 className="text-2xl mb-2">Manage Accounts</h1>
         <p className="text-muted-foreground">
           View and manage user accounts, roles, and permissions
         </p>
@@ -134,8 +149,14 @@ function AccountsContent({
   setStatusFilter,
 }: AccountsContentProps) {
   const { data: usersData } = useSuspenseQuery(usersQueryOptions(searchQuery));
+  const { data: assignableRoles = [] } = useSuspenseQuery(assignableRolesQueryOptions);
   const users = usersData?.items ?? [];
   const queryClient = useQueryClient();
+
+  const roleLabels: Record<string, string> = {
+    all: 'All Roles',
+    ...Object.fromEntries(assignableRoles.map(r => [r.name.toLowerCase(), r.name])),
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -172,7 +193,7 @@ function AccountsContent({
   return (
     <>
       <Card className="mb-6">
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -183,40 +204,42 @@ function AccountsContent({
                 className="pl-10"
               />
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by role" />
+            <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value ?? 'all')}>
+              <SelectTrigger className="w-full">
+                <SelectValue>{roleLabels[roleFilter] ?? 'All Roles'}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--anchor-width)]">
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                {assignableRoles.map((role) => (
+                  <SelectItem key={role.roleId} value={role.name.toLowerCase()}>
+                    {role.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? 'all')}>
+              <SelectTrigger className="w-full">
+                <SelectValue>{STATUS_LABELS[statusFilter]}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="banned">Banned</SelectItem>
+              <SelectContent className="w-[var(--anchor-width)]">
+                {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-2 pb-2">
             <p className="text-2xl font-bold">{users.length}</p>
             <p className="text-sm text-muted-foreground">Total Users</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-2 pb-2">
             <p className="text-2xl font-bold">
               {users.filter(u => !u.isBanned).length}
             </p>
@@ -224,13 +247,7 @@ function AccountsContent({
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">0</p>
-            <p className="text-sm text-muted-foreground">Suspended</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-2 pb-2">
             <p className="text-2xl font-bold">
               {users.filter(u => u.isBanned).length}
             </p>
@@ -247,7 +264,7 @@ function AccountsContent({
           <div className="space-y-4">
             {filteredUsers.map((user) => (
               <Card key={user.userId} className="border">
-                <CardContent className="pt-6">
+                <CardContent className="pt-2 pb-2">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -272,7 +289,7 @@ function AccountsContent({
                         View
                       </Button>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger>
                           <Button variant="outline" size="sm">
                             <MoreVertical className="size-4" />
                           </Button>
