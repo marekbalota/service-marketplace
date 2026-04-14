@@ -32,6 +32,7 @@ import { Checkbox } from '#/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card';
 
 import type { AdminRolesModel } from 'api';
+import { useActiveUser } from '#/contexts/ActiveUserContext';
 
 export type Role = AdminRolesModel['listResponse'][number];
 export type Permission = AdminRolesModel['permissionResponse'][number];
@@ -58,6 +59,9 @@ export const Route = createFileRoute('/_app/admin/roles')({
 
 function ManageRoles() {
   const navigate = useNavigate();
+  const { user } = useActiveUser();
+  const userPriority = user?.role?.priority ?? Number.MAX_SAFE_INTEGER;
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [newRole, setNewRole] = useState<NewRoleState>({
@@ -100,6 +104,7 @@ function ManageRoles() {
           setEditingRole={setEditingRole}
           newRole={newRole}
           setNewRole={setNewRole}
+          userPriority={userPriority}
         />
       </Suspense>
     </main>
@@ -261,14 +266,18 @@ interface RolesContentProps {
   setEditingRole: (role: Role | null) => void;
   newRole: NewRoleState;
   setNewRole: React.Dispatch<React.SetStateAction<NewRoleState>>;
+  userPriority: number;
 }
 
-function RolesContent({ editingRole, setEditingRole, newRole, setNewRole }: RolesContentProps) {
+function RolesContent({ editingRole, setEditingRole, newRole, setNewRole, userPriority }: RolesContentProps) {
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions);
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions);
   const queryClient = useQueryClient();
 
   const [roles, setRoles] = useState<Role[]>(rolesData);
+
+  // Sortable roles: those with lower priority than current user
+  const sortableRoles = roles.filter(r => r.priority < userPriority);
 
   // Sync local state when query data changes
   useEffect(() => {
@@ -290,22 +299,25 @@ function RolesContent({ editingRole, setEditingRole, newRole, setNewRole }: Role
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = roles.findIndex(r => r.roleId === active.id);
-      const newIndex = roles.findIndex(r => r.roleId === over.id);
+      const oldIndex = sortableRoles.findIndex(r => r.roleId === active.id);
+      const newIndex = sortableRoles.findIndex(r => r.roleId === over.id);
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const newRoles = arrayMove(roles, oldIndex, newIndex);
-      setRoles(newRoles);
+      const newSortableRoles = arrayMove(sortableRoles, oldIndex, newIndex);
 
-      // Calculate new priority (higher index = higher priority)
-      const targetRole = roles[oldIndex]!;
-      const newPriority = newRoles.length - 1 - newIndex;
+      // Update the full roles array with the new sortable order at the bottom
+      const nonSortableRoles = roles.filter(r => r.priority >= userPriority);
+      setRoles([...nonSortableRoles, ...newSortableRoles]);
+
+      // Calculate new priority (higher index = higher priority in full list)
+      const targetRole = sortableRoles[oldIndex]!;
+      const newPriorityInFullList = roles.length - 1 - (nonSortableRoles.length + newIndex);
 
       try {
-        await api.admin.roles.reorder.post({
+        await api.admin.roles.reorder.patch({
           roleId: targetRole.roleId,
-          newPriority,
+          newPriority: newPriorityInFullList,
         });
         queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });
       } catch (error) {
@@ -314,7 +326,7 @@ function RolesContent({ editingRole, setEditingRole, newRole, setNewRole }: Role
         console.error('Failed to reorder role:', error);
       }
     }
-  }, [roles, queryClient]);
+  }, [sortableRoles, roles, queryClient, userPriority]);
 
   const togglePermission = (permissionId: string) => {
     setNewRole((prev) => ({
@@ -381,17 +393,38 @@ function RolesContent({ editingRole, setEditingRole, newRole, setNewRole }: Role
         </Card>
       </div>
 
+      {/* Non-sortable roles (equal or higher priority than current user) */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        {roles.filter(r => r.priority >= userPriority).map((role) => (
+          <SortableRoleCard
+            key={role.roleId}
+            role={role}
+            permissions={permissions}
+            editingRole={editingRole}
+            setEditingRole={setEditingRole}
+            newRole={newRole}
+            setNewRole={setNewRole}
+            onEdit={handleEditRole}
+            onDelete={handleDeleteRole}
+            onUpdateRole={handleUpdateRole}
+            togglePermission={togglePermission}
+            getRoleColor={getRoleColor}
+            canReorder={false}
+          />
+        ))}
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={roles.map(r => r.roleId)}
+          items={sortableRoles.map(r => r.roleId)}
           strategy={verticalListSortingStrategy}
         >
           <div className="grid grid-cols-1 gap-6">
-            {roles.map((role) => (
+            {sortableRoles.map((role) => (
               <SortableRoleCard
                 key={role.roleId}
                 role={role}
@@ -405,6 +438,7 @@ function RolesContent({ editingRole, setEditingRole, newRole, setNewRole }: Role
                 onUpdateRole={handleUpdateRole}
                 togglePermission={togglePermission}
                 getRoleColor={getRoleColor}
+                canReorder={true}
               />
             ))}
           </div>
@@ -426,6 +460,7 @@ interface SortableRoleCardProps {
   onUpdateRole: () => void;
   togglePermission: (permissionId: string) => void;
   getRoleColor: (isDefault: boolean) => string;
+  canReorder: boolean;
 }
 
 function SortableRoleCard({
@@ -440,6 +475,7 @@ function SortableRoleCard({
   onUpdateRole,
   togglePermission,
   getRoleColor,
+  canReorder,
 }: SortableRoleCardProps) {
   const {
     attributes,
@@ -448,7 +484,7 @@ function SortableRoleCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: role.roleId });
+  } = useSortable({ id: role.roleId, disabled: !canReorder });
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -460,16 +496,18 @@ function SortableRoleCard({
     <div ref={setNodeRef} style={style} className="group">
       <Card className="relative overflow-hidden">
         {/* Grip handle - left side, centered */}
-        <button
-          className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted cursor-grab active:cursor-grabbing transition-all duration-200 ease-out z-10"
-          {...attributes}
-          {...listeners}
-          title="Drag to reorder"
-        >
-          <GripVertical className="size-5 text-muted-foreground" />
-        </button>
+        {canReorder && (
+          <button
+            className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted cursor-grab active:cursor-grabbing transition-all duration-200 ease-out z-10"
+            {...attributes}
+            {...listeners}
+            title="Drag to reorder"
+          >
+            <GripVertical className="size-5 text-muted-foreground" />
+          </button>
+        )}
         {/* Main content - shifts right on hover */}
-        <div className="transition-all duration-200 ease-out group-hover:pl-10">
+        <div className={canReorder ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>

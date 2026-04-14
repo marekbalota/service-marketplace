@@ -16,6 +16,7 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
+import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts/$postId'
@@ -56,15 +57,20 @@ const AppCreatePostRouteRoute = AppCreatePostRouteRouteImport.update({
   path: '/create-post',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AppRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppPostsPostIdRoute = AppPostsPostIdRouteImport.update({
   id: '/posts/$postId',
@@ -72,14 +78,14 @@ const AppPostsPostIdRoute = AppPostsPostIdRouteImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
-  id: '/admin/roles',
-  path: '/admin/roles',
-  getParentRoute: () => AppRouteRoute,
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppAdminAccountsRoute = AppAdminAccountsRouteImport.update({
-  id: '/admin/accounts',
-  path: '/admin/accounts',
-  getParentRoute: () => AppRouteRoute,
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/banned': typeof BannedRoute
+  '/admin': typeof AppAdminRouteRouteWithChildren
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/admin/accounts': typeof AppAdminAccountsRoute
@@ -114,6 +121,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/banned': typeof BannedRoute
+  '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/create-post': typeof AppCreatePostRouteRoute
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
@@ -130,6 +138,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/banned'
+    | '/admin'
     | '/create-post'
     | '/my-postings'
     | '/admin/accounts'
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/banned'
+    | '/_app/admin'
     | '/_app/create-post'
     | '/_app/my-postings'
     | '/_app/'
@@ -224,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreatePostRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/posts/': {
       id: '/_app/posts/'
       path: '/posts'
@@ -233,10 +250,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/admin/': {
       id: '/_app/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppRouteRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/posts/$postId': {
       id: '/_app/posts/$postId'
@@ -247,40 +264,52 @@ declare module '@tanstack/react-router' {
     }
     '/_app/admin/roles': {
       id: '/_app/admin/roles'
-      path: '/admin/roles'
+      path: '/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AppAdminRolesRouteImport
-      parentRoute: typeof AppRouteRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/admin/accounts': {
       id: '/_app/admin/accounts'
-      path: '/admin/accounts'
+      path: '/accounts'
       fullPath: '/admin/accounts'
       preLoaderRoute: typeof AppAdminAccountsRouteImport
-      parentRoute: typeof AppRouteRoute
+      parentRoute: typeof AppAdminRouteRoute
     }
   }
 }
 
+interface AppAdminRouteRouteChildren {
+  AppAdminAccountsRoute: typeof AppAdminAccountsRoute
+  AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminAccountsRoute: AppAdminAccountsRoute,
+  AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
 interface AppRouteRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppAdminAccountsRoute: typeof AppAdminAccountsRoute
-  AppAdminRolesRoute: typeof AppAdminRolesRoute
   AppPostsPostIdRoute: typeof AppPostsPostIdRoute
-  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppPostsIndexRoute: typeof AppPostsIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppCreatePostRouteRoute: AppCreatePostRouteRoute,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,
-  AppAdminAccountsRoute: AppAdminAccountsRoute,
-  AppAdminRolesRoute: AppAdminRolesRoute,
   AppPostsPostIdRoute: AppPostsPostIdRoute,
-  AppAdminIndexRoute: AppAdminIndexRoute,
   AppPostsIndexRoute: AppPostsIndexRoute,
 }
 

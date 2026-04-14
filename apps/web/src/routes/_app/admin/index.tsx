@@ -1,12 +1,9 @@
-import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Suspense } from 'react';
 import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { Users, Shield, Flag, ChevronRight } from 'lucide-react';
 import { api } from '#/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import type { UsersMeGet } from '#/types/api';
-
-type AdminUserResponse = NonNullable<Awaited<ReturnType<UsersMeGet>>['data']>;
 
 const adminOptions = [
   {
@@ -32,29 +29,20 @@ const adminOptions = [
   },
 ];
 
-export const adminUserQueryOptions = queryOptions({
+export const userPermissionsQueryOptions = queryOptions({
   queryKey: ['users', 'me'],
   queryFn: async () => {
     const { data, error } = await api.users.me.get();
     if (error || !data) {
       throw new Error('Unauthorized');
     }
-    return data as AdminUserResponse;
+    return data;
   },
   staleTime: 5 * 60 * 1000,
 });
 
 export const Route = createFileRoute('/_app/admin/')({
   component: AdminDashboard,
-  beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.fetchQuery(adminUserQueryOptions);
-    const permissions = user.role?.permissions ?? [];
-    const hasAdminAccess = permissions.some((p: string) => p.startsWith('admin:'));
-    if (!hasAdminAccess) {
-      throw redirect({ to: '/' });
-    }
-    return { user };
-  },
 });
 
 function AdminDashboard() {
@@ -130,7 +118,7 @@ interface AdminOptionsProps {
 }
 
 function AdminOptions({ navigate }: AdminOptionsProps) {
-  const { data: user } = useSuspenseQuery(adminUserQueryOptions);
+  const { data: user } = useSuspenseQuery(userPermissionsQueryOptions);
   const permissions = user?.role?.permissions ?? [];
 
   const canManageUsers = permissions.includes('admin:users:view') ||
