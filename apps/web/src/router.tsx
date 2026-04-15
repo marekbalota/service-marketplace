@@ -7,15 +7,23 @@ import type { User } from '#/types/api'
 // handlers can perform soft navigation without a full page reload.
 export let routerRef: ReturnType<typeof getRouter> | null = null
 
+// Guard against multiple parallel 401s each triggering a redirect.
+let redirecting401 = false
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error: unknown) => {
       const e = error as { status?: number } | null
-      if (e?.status === 401) {
+      if (e?.status === 401 && !redirecting401) {
+        redirecting401 = true
         queryClient.clear()
         if (routerRef) {
           void routerRef.invalidate()
-          void routerRef.navigate({ to: '/login' })
+          void routerRef.navigate({ to: '/login' }).then(() => {
+            redirecting401 = false
+          })
+        } else {
+          redirecting401 = false
         }
       }
     },

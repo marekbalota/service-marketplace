@@ -14,7 +14,6 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
 import appCss from '../styles.css?url'
-import { authClient } from '#/auth'
 import { currentUserQueryOptions } from '#/hooks/useActiveProfile'
 import type { User } from '#/types/api'
 
