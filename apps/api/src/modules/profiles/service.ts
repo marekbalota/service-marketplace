@@ -12,6 +12,7 @@ const profileSelect = {
   phoneNumber:   userProfiles.phoneNumber,
   fax:           userProfiles.fax,
   createdAt:     userProfiles.createdAt,
+  updatedAt:     userProfiles.updatedAt,
   accountName:   users.name,
   roleName:      roles.name,
 }

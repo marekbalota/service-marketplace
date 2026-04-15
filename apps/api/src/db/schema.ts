@@ -113,6 +113,7 @@ export const userProfiles = pgTable("user_profiles", {
   phoneNumber: text("phone_number"),
   fax: text("fax"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
   deletedAt: timestamp("deleted_at"),
 });
 

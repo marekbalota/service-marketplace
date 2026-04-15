@@ -102,6 +102,7 @@ entity UserProfile {
     phone_number : text
     fax : text
     created_at : timestamp <<NOT NULL>>
+    updated_at : timestamp
     deleted_at : timestamp
 }
 

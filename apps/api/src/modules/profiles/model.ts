@@ -9,6 +9,7 @@ const profileItem = t.Object({
   phoneNumber:   t.Nullable(t.String()),
   fax:           t.Nullable(t.String()),
   createdAt:     t.Date(),
+  updatedAt:     t.Nullable(t.Date()),
   accountName:   t.String(),
   roleName:      t.String(),
 })
