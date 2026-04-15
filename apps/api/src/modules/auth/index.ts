@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { auth, AuthService } from "./service";
+import { auth } from "./service";
 import { AuthErrorMessages } from "../../lib/errors";
 import { RBACService } from "../../lib/rbac/rbac-helper";
 import type { PermissionType } from "../../lib/rbac/permissions";
@@ -47,17 +47,6 @@ export const authRoutes = new Elysia({ name: "better-auth" })
                     return status(401, { message: AuthErrorMessages.unauthorized });
                 }
 
-                const banStatus = await AuthService.checkBanStatus(session.user.id);
-                if (banStatus) {
-                    await AuthService.clearUserSessions(session.user.id);
-
-                    return status(403, {
-                        message: AuthErrorMessages.banned,
-                        reason: banStatus.reason,
-                        expiresAt: banStatus.expiresAt,
-                    });
-                }
-
                 return {
                     user: session.user,
                     session: session.session,
@@ -71,17 +60,6 @@ export const authRoutes = new Elysia({ name: "better-auth" })
                     return status(401, { message: AuthErrorMessages.unauthorized });
                 }
 
-                const banStatus = await AuthService.checkBanStatus(session.user.id);
-                if (banStatus) {
-                    await AuthService.clearUserSessions(session.user.id);
-
-                    return status(403, {
-                        message: AuthErrorMessages.banned,
-                        reason: banStatus.reason,
-                        expiresAt: banStatus.expiresAt,
-                    });
-                }
-                
                 const userPermissions = await RBACService.getUserPermissions(session.user.id);
 
                 if (requiredPermissions) {
