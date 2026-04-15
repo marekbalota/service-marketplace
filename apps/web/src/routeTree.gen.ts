@@ -15,6 +15,7 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
+import { Route as AppAccountSettingsRouteRouteImport } from './routes/_app/account-settings/route'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts/$postId'
 
@@ -47,6 +48,11 @@ const AppCreatePostRouteRoute = AppCreatePostRouteRouteImport.update({
   path: '/create-post',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAccountSettingsRouteRoute = AppAccountSettingsRouteRouteImport.update({
+  id: '/account-settings',
+  path: '/account-settings',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
+  '/account-settings': typeof AppAccountSettingsRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
+  '/account-settings': typeof AppAccountSettingsRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/': typeof AppIndexRoute
@@ -81,6 +89,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
+  '/_app/account-settings': typeof AppAccountSettingsRouteRoute
   '/_app/create-post': typeof AppCreatePostRouteRoute
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
+    | '/account-settings'
     | '/create-post'
     | '/my-postings'
     | '/posts/$postId'
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/register'
+    | '/account-settings'
     | '/create-post'
     | '/my-postings'
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/register'
+    | '/_app/account-settings'
     | '/_app/create-post'
     | '/_app/my-postings'
     | '/_app/'
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreatePostRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/account-settings': {
+      id: '/_app/account-settings'
+      path: '/account-settings'
+      fullPath: '/account-settings'
+      preLoaderRoute: typeof AppAccountSettingsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/posts/': {
       id: '/_app/posts/'
       path: '/posts'
@@ -186,6 +205,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppAccountSettingsRouteRoute: typeof AppAccountSettingsRouteRoute
   AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -194,6 +214,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAccountSettingsRouteRoute: AppAccountSettingsRouteRoute,
   AppCreatePostRouteRoute: AppCreatePostRouteRoute,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,
