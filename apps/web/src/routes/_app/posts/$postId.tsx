@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -75,7 +75,8 @@ const RATE_LABELS: Record<string, string> = {
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { activeProfile } = useActiveUser()
+  const { user } = Route.useRouteContext()
+  const { activeProfile } = useActiveProfile(user)
   const router = useRouter()
   const isOwner = activeProfile?.userProfileId === post.authorId
 

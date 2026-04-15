@@ -1,4 +1,4 @@
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link, useRouter, useRouteContext } from '@tanstack/react-router'
 import {
   Settings,
   FileText,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -37,7 +37,8 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { activeProfile, user, setActiveProfileId } = useActiveUser()
+  const { user } = useRouteContext({ strict: false })
+  const { activeProfile, setActiveProfileId } = useActiveProfile(user)
   const router = useRouter()
   const allProfiles = user?.profiles ?? []
   const isAdmin = (user?.role?.permissions ?? []).some((p: string) => p.startsWith('admin:'))
@@ -58,13 +59,13 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             >
               <SelectTrigger className="!h-auto w-full px-3 py-3 [&_[data-slot=select-value]]:line-clamp-none">
                 <SelectValue>
-                  {activeProfile && <ProfileOption name={activeProfile.name}/>}
+                  {activeProfile && <ProfileOption name={activeProfile.name} />}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {allProfiles.map((profile) => (
                   <SelectItem key={profile.userProfileId} value={profile.userProfileId} className="py-3 pl-3 pr-10">
-                    <ProfileOption name={profile.name}/>
+                    <ProfileOption name={profile.name} />
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -157,6 +158,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             onClick={async () => {
               await authClient.signOut()
               queryClient.clear()
+              router.invalidate()
               onClose()
               void router.navigate({ to: '/' })
             }}

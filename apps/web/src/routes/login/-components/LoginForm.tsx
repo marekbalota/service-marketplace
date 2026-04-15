@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
 import { authClient } from "#/auth"
+import { handleBanError } from '#/lib/ban-handler'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
@@ -25,6 +26,7 @@ export function LoginForm() {
     await authClient.signIn.email(values, {
       onSuccess: () => navigate({ to: "/" }),
       onError: (ctx) => {
+        if (handleBanError(ctx.error)) return
         form.setError("root", { message: ctx.error.message })
       },
     })

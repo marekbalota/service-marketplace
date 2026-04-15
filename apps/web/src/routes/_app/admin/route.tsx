@@ -1,22 +1,14 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { Outlet } from '@tanstack/react-router';
-import { currentUserQueryOptions } from '#/contexts/ActiveUserContext';
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/admin')({
   component: AdminLayout,
-  beforeLoad: async ({ context : { queryClient } }) => {
-    const user = await queryClient.fetchQuery(currentUserQueryOptions);
-    const permissions = user.role?.permissions ?? [];
-    const hasAdminAccess = permissions.some((p: string) => p.startsWith('admin:'));
-
-    if (!hasAdminAccess) {
-      throw redirect({ to: '/' });
-    }
-
-    return { user };
+  beforeLoad: ({ context: { user } }) => {
+    const permissions = user?.role?.permissions ?? []
+    const hasAdminAccess = permissions.some((p: string) => p.startsWith('admin:'))
+    if (!hasAdminAccess) throw redirect({ to: '/' })
   },
-});
+})
 
 function AdminLayout() {
-  return <Outlet />;
+  return <Outlet />
 }

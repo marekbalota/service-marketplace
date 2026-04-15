@@ -4,9 +4,8 @@ import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@ta
 import { Plus } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveUser, currentUserQueryOptions } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { Skeleton } from '#/components/ui/skeleton'
-import { authClient } from '#/auth'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 
@@ -22,14 +21,8 @@ export function myPostingsQueryOptions(profileId: string) {
 }
 
 export const Route = createFileRoute('/_app/my-postings')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
-  },
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(currentUserQueryOptions)
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   component: MyPostingsPage,
 })
@@ -95,7 +88,8 @@ function PostsGrid({ profileId }: { profileId: string }) {
 }
 
 function MyPostingsPage() {
-  const { activeProfile } = useActiveUser()
+  const { user } = Route.useRouteContext()
+  const { activeProfile } = useActiveProfile(user)
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">

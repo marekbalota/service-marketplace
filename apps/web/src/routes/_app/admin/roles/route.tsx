@@ -32,7 +32,6 @@ import { Checkbox } from '#/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card';
 
 import type { AdminRolesModel } from 'api';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
 
 export type Role = AdminRolesModel['rolesResponse'][number];
 export type Permission = AdminRolesModel['permissionResponse'][number];
@@ -59,7 +58,7 @@ export const Route = createFileRoute('/_app/admin/roles')({
 
 function ManageRoles() {
   const navigate = useNavigate();
-  const { user } = useActiveUser();
+  const { user } = Route.useRouteContext();
   const userPriority = user?.role?.priority ?? 0;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { ArrowLeft, MapPin, User, FileText, AlignLeft, Tag, DollarSign } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { api } from '#/api'
-import { authClient } from '#/auth'
 import { categoriesQueryOptions } from '#/routes/_app/posts/index'
 import { formatLocation } from '#/lib/format'
 import { Button } from '#/components/ui/button'
@@ -34,7 +33,7 @@ import {
   FormControl,
   FormMessage,
 } from '#/components/ui/form'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 // --- Query options ---
 
@@ -72,9 +71,8 @@ type FormValues = z.infer<typeof schema>
 // --- Route ---
 
 export const Route = createFileRoute('/_app/create-post')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) throw redirect({ to: '/login' })
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(categoriesQueryOptions)
@@ -88,7 +86,8 @@ function CreatePostPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { activeProfile } = useActiveUser()
+  const { user } = Route.useRouteContext()
+  const { activeProfile } = useActiveProfile(user)
   const [isManualLocation, setIsManualLocation] = useState(false)
 
   const { data: categories = [] } = useQuery(categoriesQueryOptions)
