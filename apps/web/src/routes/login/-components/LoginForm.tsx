@@ -4,6 +4,7 @@ import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
 import { authClient } from "#/auth"
 import { handleBanError } from '#/lib/ban-handler'
+import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
@@ -24,7 +25,10 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     await authClient.signIn.email(values, {
-      onSuccess: () => navigate({ to: "/" }),
+      onSuccess: () => {
+        queryClient.clear()
+        navigate({ to: "/" })
+      },
       onError: (ctx) => {
         if (handleBanError(ctx.error)) return
         form.setError("root", { message: ctx.error.message })

@@ -60,8 +60,6 @@ export const Route = createRootRouteWithContext<{
   user: User | null
 }>()({
   beforeLoad: async ({ context: { queryClient } }) => {
-    const { data: session } = await authClient.getSession()
-    if (!session) return { user: null }
     const user = await queryClient.fetchQuery(currentUserQueryOptions)
     return { user: user ?? null }
   },

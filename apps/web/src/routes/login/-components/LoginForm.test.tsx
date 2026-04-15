@@ -14,6 +14,12 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
 }))
 
+const mockQueryClientClear = vi.hoisted(() => vi.fn())
+
+vi.mock('#/router', () => ({
+  queryClient: { clear: mockQueryClientClear },
+}))
+
 const mockHandleBanError = vi.hoisted(() => vi.fn().mockReturnValue(false))
 
 vi.mock('#/lib/ban-handler', () => ({
