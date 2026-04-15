@@ -43,6 +43,27 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       detail: { summary: 'Get profile by ID', operationId: 'getProfile', tags: ['Profiles'] },
     },
   )
+  .post(
+    '/',
+    async ({ body, user, set }) => {
+      const created = await ProfilesService.create({ ...body, accountId: user.id })
+      if (!created) {
+        set.status = 500
+        return { message: 'Failed to create profile' }
+      }
+      set.status = 201
+      return created
+    },
+    {
+      auth: true,
+      body: ProfilesModel.createBody,
+      response: {
+        201: ProfilesModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+      },
+      detail: { summary: 'Create a profile', operationId: 'createProfile', tags: ['Profiles'] },
+    },
+  )
   .patch(
     '/:id',
     async ({ params, body, set, user }) => {
@@ -69,6 +90,42 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         404: errorResponse,
       },
       detail: { summary: 'Update a profile', operationId: 'updateProfile', tags: ['Profiles'] },
+    },
+  )
+  .delete(
+    '/:id',
+    async ({ params, user, set }) => {
+      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
+      if (!isOwner) {
+        set.status = 403
+        return { message: AuthModel.messages.forbidden }
+      }
+
+      const activeCount = await ProfilesService.countActiveByAccountId(user.id)
+      if (activeCount <= 1) {
+        set.status = 409
+        return { message: ErrorMessages.cannotDeleteLastProfile }
+      }
+
+      const deleted = await ProfilesService.delete(params.id)
+      if (!deleted) {
+        set.status = 404
+        return { message: ErrorMessages.profileNotFound }
+      }
+
+      set.status = 204
+    },
+    {
+      auth: true,
+      params: ProfilesModel.deleteParams,
+      response: {
+        204: t.Void(),
+        401: AuthModel.unauthorizedResponse,
+        403: errorResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Delete a profile', operationId: 'deleteProfile', tags: ['Profiles'] },
     },
   )
   .get(

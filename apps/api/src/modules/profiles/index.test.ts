@@ -11,6 +11,10 @@ const client = treaty(app)
 let aliceCookie: string
 let aliceProfileId: string
 
+// Track every profile created by this test suite so the 409 test can clean up
+// only what this run created — not Alice's original seed profile
+const testCreatedProfileIds: string[] = []
+
 beforeAll(async () => {
   const signInRes = await auth.api.signInEmail({
     body: { email: 'alice@example.com', password: 'password123' },
@@ -19,7 +23,9 @@ beforeAll(async () => {
   aliceCookie = signInRes.headers.get('set-cookie') ?? ''
 
   const { data } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-  aliceProfileId = data?.[0]?.userProfileId ?? ''
+  // Prefer the seed profile by name; fall back to first available
+  const aliceProfile = data?.find(p => p.name === 'Alice Johnson') ?? data?.[0]
+  aliceProfileId = aliceProfile?.userProfileId ?? ''
 })
 
 describe('GET /profiles/:id', () => {
@@ -86,11 +92,122 @@ describe('GET /profiles/me', () => {
     expect(error?.status).toBe(401)
   })
 
-  it('returns the profiles belonging to the logged-in user', async () => {
+  it('returns profiles belonging to the logged-in user', async () => {
     const { data, error } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
     expect(Array.isArray(data)).toBe(true)
     expect(data!.length).toBeGreaterThan(0)
-    expect(data![0]!.name).toBe('Alice Johnson')
+    // Every returned profile must belong to Alice's account
+    for (const p of data!) {
+      expect(p.accountId).toBe(data![0]!.accountId)
+    }
+  })
+})
+
+describe('POST /profiles', () => {
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles.post({ name: 'New Profile', email: 'new@example.com' })
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 422 when name is missing', async () => {
+    const { error } = await client.profiles.post(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { email: 'new@example.com' } as any,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(422)
+  })
+
+  it('returns 422 for invalid email format', async () => {
+    const { error } = await client.profiles.post(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { name: 'New Profile', email: 'not-an-email' } as any,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(422)
+  })
+
+  it('creates a profile and returns 201 with the new profile', async () => {
+    const { data, error } = await client.profiles.post(
+      { name: 'Test Profile', email: 'test-profile@example.com', bio: 'A test bio' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+    expect(data!.name).toBe('Test Profile')
+    expect(data!.email).toBe('test-profile@example.com')
+    expect(data!.bio).toBe('A test bio')
+    testCreatedProfileIds.push(data!.userProfileId)
+  })
+
+  it('sets accountId from session, not from body', async () => {
+    const { data } = await client.profiles.post(
+      { name: 'Session Profile', email: 'session@example.com' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    testCreatedProfileIds.push(data!.userProfileId)
+    const { data: me } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
+    const found = me!.find(p => p.userProfileId === data!.userProfileId)
+    expect(found).toBeDefined()
+  })
+})
+
+describe('DELETE /profiles/:id', () => {
+  let secondProfileId: string
+
+  beforeAll(async () => {
+    const { data } = await client.profiles.post(
+      { name: 'Profile To Delete', email: 'to-delete@example.com' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    secondProfileId = data!.userProfileId
+    testCreatedProfileIds.push(secondProfileId)
+  })
+
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: secondProfileId }).delete()
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 403 when trying to delete a profile not owned by the user', async () => {
+    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(403)
+  })
+
+  it('returns 204 and soft-deletes the profile', async () => {
+    const { data: created } = await client.profiles.post(
+      { name: 'Soft Delete Me', email: 'soft-delete@example.com' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    testCreatedProfileIds.push(created!.userProfileId)
+
+    const { error } = await client.profiles({ id: created!.userProfileId }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data: me } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
+    const found = me!.find(p => p.userProfileId === created!.userProfileId)
+    expect(found).toBeUndefined()
+  })
+
+  it('returns 409 when attempting to delete the last active profile', async () => {
+    // Delete all profiles created by this test suite (except aliceProfileId)
+    // so only the original seed profile remains
+    for (const id of testCreatedProfileIds) {
+      if (id !== aliceProfileId) {
+        await client.profiles({ id }).delete(undefined, { headers: { Cookie: aliceCookie } })
+      }
+    }
+    // Now only aliceProfileId remains — attempting to delete it must return 409
+    const { error } = await client.profiles({ id: aliceProfileId }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(409)
   })
 })

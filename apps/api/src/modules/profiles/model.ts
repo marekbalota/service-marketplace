@@ -26,7 +26,16 @@ export const ProfilesModel = {
     fax:         t.Optional(t.Union([t.String(), t.Null()])),
   }),
   profilePostsParams: t.Object({ id: t.String() }),
-  meResponse: t.Array(profileItem),
+  meResponse:         t.Array(profileItem),
+  createBody: t.Object({
+    name:        t.String({ minLength: 1 }),
+    email:       t.String({ format: 'email' }),
+    bio:         t.Optional(t.Union([t.String(), t.Null()])),
+    phoneNumber: t.Optional(t.Union([t.String(), t.Null()])),
+    fax:         t.Optional(t.Union([t.String(), t.Null()])),
+  }),
+  createResponse: profileItem,
+  deleteParams:   t.Object({ id: t.String() }),
 } as const
 
 export type ProfilesModel = {

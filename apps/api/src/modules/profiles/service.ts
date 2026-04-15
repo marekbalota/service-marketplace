@@ -1,6 +1,6 @@
 import { db } from '../../db'
 import { userProfiles, users, roles } from '../../db/schema'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
 
 const profileSelect = {
@@ -57,5 +57,42 @@ export abstract class ProfilesService {
       .returning({ userProfileId: userProfiles.userProfileId })
 
     return updated ?? null
+  }
+
+  static async create(body: ProfilesModel['createBody'] & { accountId: string }) {
+    const [inserted] = await db
+      .insert(userProfiles)
+      .values({
+        accountId:   body.accountId,
+        name:        body.name,
+        email:       body.email,
+        bio:         body.bio ?? null,
+        phoneNumber: body.phoneNumber ?? null,
+        fax:         body.fax ?? null,
+      })
+      .returning({ userProfileId: userProfiles.userProfileId })
+
+    if (!inserted) return null
+
+    return ProfilesService.findById(inserted.userProfileId)
+  }
+
+  static async countActiveByAccountId(accountId: string) {
+    const [row] = await db
+      .select({ total: count() })
+      .from(userProfiles)
+      .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
+
+    return row?.total ?? 0
+  }
+
+  static async delete(id: string) {
+    const [deleted] = await db
+      .update(userProfiles)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
+      .returning({ userProfileId: userProfiles.userProfileId })
+
+    return deleted ?? null
   }
 }
