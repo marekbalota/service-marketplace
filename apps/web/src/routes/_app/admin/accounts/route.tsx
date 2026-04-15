@@ -1,7 +1,8 @@
 import { useNavigate, createFileRoute } from '@tanstack/react-router';
-import { Suspense, useState } from 'react';
-import { useSuspenseQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
-import { ArrowLeft, Search, MoreVertical, Ban, Shield, Trash2, Eye } from 'lucide-react';
+import { Suspense } from 'react';
+import { useSuspenseQuery, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
+import { ArrowLeft, Search, MoreVertical, Ban, Shield, Trash2, Eye, Loader2 } from 'lucide-react';
+import { z } from 'zod';
 import { api } from '#/api';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -43,21 +44,25 @@ export const assignableRolesQueryOptions = queryOptions({
   },
 });
 
+const searchSchema = z.object({
+  q: z.string().optional().catch(undefined),
+  role: z.string().optional().catch(undefined),
+  status: z.enum(['all', 'active', 'banned']).optional().catch(undefined),
+});
+
 export const Route = createFileRoute('/_app/admin/accounts')({
+  validateSearch: searchSchema,
   component: ManageAccounts,
 });
 
 const STATUS_LABELS: Record<string, string> = {
-    all: 'All Statuses',
-    active: 'Active',
-    banned: 'Banned',
-  };
+  all: 'All Statuses',
+  active: 'Active',
+  banned: 'Banned',
+};
 
 function ManageAccounts() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
@@ -77,44 +82,92 @@ function ManageAccounts() {
         </p>
       </div>
 
-      <Suspense fallback={<AccountsSkeleton />}>
-        <AccountsContent
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          roleFilter={roleFilter}
-          setRoleFilter={setRoleFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
+      <FiltersCard />
+
+      <Suspense fallback={<StatsAndListSkeleton />}>
+        <AccountsData />
       </Suspense>
     </main>
   );
 }
 
-function AccountsSkeleton() {
+function FiltersCard() {
+  const { q = '', role = 'all', status = 'all' } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions);
+
+  const roleLabels: Record<string, string> = {
+    all: 'All Roles',
+    ...Object.fromEntries(assignableRoles.map((r) => [r.name.toLowerCase(), r.name])),
+  };
+
+  return (
+    <Card className="mb-6">
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={q}
+              onChange={(e) =>
+                navigate({ search: (prev) => ({ ...prev, q: e.target.value || undefined }) })
+              }
+              className="pl-10"
+            />
+          </div>
+          <Select
+            value={role}
+            onValueChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, role: value === 'all' ? undefined : value }) })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>{roleLabels[role] ?? 'All Roles'}</SelectValue>
+            </SelectTrigger>
+            <SelectContent className="w-[var(--anchor-width)]">
+              <SelectItem value="all">All Roles</SelectItem>
+              {assignableRoles.map((r) => (
+                <SelectItem key={r.roleId} value={r.name.toLowerCase()}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={status}
+            onValueChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, status: value === 'all' ? undefined : value as 'active' | 'banned' }) })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>{STATUS_LABELS[status]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent className="w-[var(--anchor-width)]">
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatsAndListSkeleton() {
   return (
     <>
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="h-10 bg-muted rounded animate-pulse" />
-            <div className="h-10 bg-muted rounded animate-pulse" />
-            <div className="h-10 bg-muted rounded animate-pulse" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[...Array(3)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-2 pb-2">
               <div className="h-8 bg-muted rounded w-16 mb-2 animate-pulse" />
               <div className="h-4 bg-muted rounded w-24 animate-pulse" />
             </CardContent>
           </Card>
         ))}
       </div>
-
       <Card>
         <CardHeader>
           <div className="h-6 bg-muted rounded w-32 animate-pulse" />
@@ -131,41 +184,24 @@ function AccountsSkeleton() {
   );
 }
 
-interface AccountsContentProps {
-  searchQuery: string;
-  setSearchQuery: (value: string) => void;
-  roleFilter: string;
-  setRoleFilter: (value: string) => void;
-  statusFilter: string;
-  setStatusFilter: (value: string) => void;
-}
-
-function AccountsContent({
-  searchQuery,
-  setSearchQuery,
-  roleFilter,
-  setRoleFilter,
-  statusFilter,
-  setStatusFilter,
-}: AccountsContentProps) {
-  const { data: usersData } = useSuspenseQuery(usersQueryOptions(searchQuery));
-  const { data: assignableRoles = [] } = useSuspenseQuery(assignableRolesQueryOptions);
-  const users = usersData?.items ?? [];
+function AccountsData() {
+  const { q = '', role = 'all', status = 'all' } = Route.useSearch();
   const queryClient = useQueryClient();
-
-  const roleLabels: Record<string, string> = {
-    all: 'All Roles',
-    ...Object.fromEntries(assignableRoles.map(r => [r.name.toLowerCase(), r.name])),
-  };
+  const { data: usersData, isFetching } = useSuspenseQuery({
+    ...usersQueryOptions(q),
+    placeholderData: (prev) => prev,
+  });
+  const users = usersData?.items ?? [];
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.roleName?.toLowerCase() === roleFilter.toLowerCase();
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'active' && !user.isBanned) ||
-      (statusFilter === 'banned' && user.isBanned);
+      user.name.toLowerCase().includes(q.toLowerCase()) ||
+      user.email.toLowerCase().includes(q.toLowerCase());
+    const matchesRole = role === 'all' || user.roleName?.toLowerCase() === role.toLowerCase();
+    const matchesStatus =
+      status === 'all' ||
+      (status === 'active' && !user.isBanned) ||
+      (status === 'banned' && user.isBanned);
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -179,58 +215,18 @@ function AccountsContent({
     queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
   };
 
-  const getRoleColor = (role: string | null) => {
-    if (!role) return 'bg-gray-100 text-gray-800';
-    if (role.toLowerCase() === 'admin') return 'bg-purple-100 text-purple-800';
-    if (role.toLowerCase() === 'moderator') return 'bg-blue-100 text-blue-800';
+  const getRoleColor = (roleName: string | null) => {
+    if (!roleName) return 'bg-gray-100 text-gray-800';
+    if (roleName.toLowerCase() === 'admin') return 'bg-purple-100 text-purple-800';
+    if (roleName.toLowerCase() === 'moderator') return 'bg-blue-100 text-blue-800';
     return 'bg-gray-100 text-gray-800';
   };
 
-  const getStatusColor = (isBanned: boolean) => {
-    return isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
-  };
+  const getStatusColor = (isBanned: boolean) =>
+    isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
 
   return (
     <>
-      <Card className="mb-6">
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value ?? 'all')}>
-              <SelectTrigger className="w-full">
-                <SelectValue>{roleLabels[roleFilter] ?? 'All Roles'}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="w-[var(--anchor-width)]">
-                <SelectItem value="all">All Roles</SelectItem>
-                {assignableRoles.map((role) => (
-                  <SelectItem key={role.roleId} value={role.name.toLowerCase()}>
-                    {role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? 'all')}>
-              <SelectTrigger className="w-full">
-                <SelectValue>{STATUS_LABELS[statusFilter]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="w-[var(--anchor-width)]">
-                {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-2 pb-2">
@@ -241,7 +237,7 @@ function AccountsContent({
         <Card>
           <CardContent className="pt-2 pb-2">
             <p className="text-2xl font-bold">
-              {users.filter(u => !u.isBanned).length}
+              {users.filter((u) => !u.isBanned).length}
             </p>
             <p className="text-sm text-muted-foreground">Active Users</p>
           </CardContent>
@@ -249,7 +245,7 @@ function AccountsContent({
         <Card>
           <CardContent className="pt-2 pb-2">
             <p className="text-2xl font-bold">
-              {users.filter(u => u.isBanned).length}
+              {users.filter((u) => u.isBanned).length}
             </p>
             <p className="text-sm text-muted-foreground">Banned</p>
           </CardContent>
@@ -258,7 +254,10 @@ function AccountsContent({
 
       <Card>
         <CardHeader>
-          <CardTitle>User Accounts ({filteredUsers.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            User Accounts ({filteredUsers.length})
+            {isFetching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

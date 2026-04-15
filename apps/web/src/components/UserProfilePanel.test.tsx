@@ -3,20 +3,36 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { UserProfilePanel } from './UserProfilePanel'
+import type { User } from '#/types/api'
 
 const mockSignOut = vi.hoisted(() => vi.fn())
-const mockUseActiveUser = vi.hoisted(() => vi.fn())
+const mockUseActiveProfile = vi.hoisted(() => vi.fn())
+const mockInvalidate = vi.hoisted(() => vi.fn())
+const mockNavigate = vi.hoisted(() => vi.fn())
+const mockQueryClientClear = vi.hoisted(() => vi.fn())
+const mockUser = vi.hoisted(() => ({ current: null as User | null }))
 
 vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
 }))
 
-vi.mock('#/contexts/ActiveUserContext', () => ({
-  useActiveUser: mockUseActiveUser,
+vi.mock('#/hooks/useActiveProfile', () => ({
+  useActiveProfile: mockUseActiveProfile,
 }))
 
-// SheetClose requires a Sheet (Dialog) context that isn't present in unit tests;
-// replace it with a passthrough that renders the `render` prop with its children.
+vi.mock('#/router', () => ({
+  queryClient: { clear: mockQueryClientClear },
+}))
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    useRouteContext: () => ({ user: mockUser.current }),
+    useRouter: () => ({ invalidate: mockInvalidate, navigate: mockNavigate }),
+  }
+})
+
 vi.mock('#/components/ui/sheet', async (importOriginal) => {
   const actual = await importOriginal<typeof import('#/components/ui/sheet')>()
   return {
@@ -29,8 +45,15 @@ vi.mock('#/components/ui/sheet', async (importOriginal) => {
 const baseProfile = {
   userProfileId: 'profile-1',
   name: 'Alice',
-  roleName: 'user',
   email: 'alice@example.com',
+}
+
+const baseUser: User = {
+  userId: 'user-1',
+  name: 'Alice',
+  email: 'alice@example.com',
+  role: null,
+  profiles: [baseProfile],
 }
 
 async function renderPanel(onClose = vi.fn()) {
@@ -44,9 +67,11 @@ async function renderPanel(onClose = vi.fn()) {
 describe('UserProfilePanel', () => {
   beforeEach(() => {
     mockSignOut.mockResolvedValue(undefined)
-    mockUseActiveUser.mockReturnValue({
+    mockInvalidate.mockReset()
+    mockQueryClientClear.mockReset()
+    mockUser.current = baseUser
+    mockUseActiveProfile.mockReturnValue({
       activeProfile: baseProfile,
-      allProfiles: [baseProfile],
       setActiveProfileId: vi.fn(),
     })
   })
@@ -57,13 +82,15 @@ describe('UserProfilePanel', () => {
     expect(screen.getByText('My Postings')).toBeInTheDocument()
   })
 
-  it('calls authClient.signOut and onClose when Log out is clicked', async () => {
+  it('calls signOut, clears queryClient, and invalidates router on log out', async () => {
     const onClose = vi.fn()
     await renderPanel(onClose)
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /log out/i }))
     })
     expect(mockSignOut).toHaveBeenCalled()
+    expect(mockQueryClientClear).toHaveBeenCalled()
+    expect(mockInvalidate).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
   })
 
@@ -73,11 +100,8 @@ describe('UserProfilePanel', () => {
   })
 
   it('hides the profile switcher when there are no profiles', async () => {
-    mockUseActiveUser.mockReturnValue({
-      activeProfile: null,
-      allProfiles: [],
-      setActiveProfileId: vi.fn(),
-    })
+    mockUser.current = { ...baseUser, profiles: [] }
+    mockUseActiveProfile.mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderPanel()
     expect(screen.queryByText('Switch Profile')).not.toBeInTheDocument()
   })

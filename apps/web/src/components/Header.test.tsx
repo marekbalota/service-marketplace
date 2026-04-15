@@ -2,16 +2,21 @@ import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { Header } from './Header'
+import type { User } from '#/types/api'
 
-const mockUseSession = vi.hoisted(() => vi.fn())
-const mockUseActiveUser = vi.hoisted(() => vi.fn())
+const mockUser = vi.hoisted(() => ({ current: null as User | null }))
+const mockUseActiveProfile = vi.hoisted(() => vi.fn())
 
-vi.mock('#/auth', () => ({
-  authClient: { useSession: mockUseSession },
-}))
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    useRouteContext: () => ({ user: mockUser.current }),
+  }
+})
 
-vi.mock('#/contexts/ActiveUserContext', () => ({
-  useActiveUser: mockUseActiveUser,
+vi.mock('#/hooks/useActiveProfile', () => ({
+  useActiveProfile: mockUseActiveProfile,
 }))
 
 async function renderHeader() {
@@ -24,27 +29,21 @@ async function renderHeader() {
 
 describe('Header', () => {
   beforeEach(() => {
-    mockUseActiveUser.mockReturnValue({ activeProfile: null })
+    mockUser.current = null
+    mockUseActiveProfile.mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
   })
 
-  it('shows Log in and Register links when logged out', async () => {
-    mockUseSession.mockReturnValue({ data: null, isPending: false })
+  it('shows Log in and Register links when user is null', async () => {
     await renderHeader()
     expect(screen.getByRole('link', { name: /log in/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /register/i })).toBeInTheDocument()
   })
 
-  it('hides auth links while session is loading', async () => {
-    mockUseSession.mockReturnValue({ data: null, isPending: true })
-    await renderHeader()
-    expect(screen.queryByRole('link', { name: /log in/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /register/i })).not.toBeInTheDocument()
-  })
-
-  it('shows profile button and hides auth links when logged in', async () => {
-    mockUseSession.mockReturnValue({ data: { user: { name: 'Alice' } }, isPending: false })
-    mockUseActiveUser.mockReturnValue({
-      activeProfile: { name: 'Alice', userProfileId: 'profile-1', roleName: 'user' },
+  it('shows profile button and hides auth links when user is not null', async () => {
+    mockUser.current = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    mockUseActiveProfile.mockReturnValue({
+      activeProfile: { userProfileId: 'p1', name: 'Alice', email: 'alice@example.com' },
+      setActiveProfileId: vi.fn(),
     })
     await renderHeader()
     expect(screen.queryByRole('link', { name: /log in/i })).not.toBeInTheDocument()
@@ -52,7 +51,8 @@ describe('Header', () => {
   })
 
   it('falls back to "Profile" in the button label when no active profile name is set', async () => {
-    mockUseSession.mockReturnValue({ data: { user: { name: 'Alice' } }, isPending: false })
+    mockUser.current = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    mockUseActiveProfile.mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderHeader()
     expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument()
   })
