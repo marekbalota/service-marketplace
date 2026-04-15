@@ -286,7 +286,7 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" className="gap-2" />}>
+      <DialogTrigger render={<Button variant="outline" size="sm" className="w-24 gap-2" />}>
         <Edit className="size-4" />
         Edit
       </DialogTrigger>
@@ -334,7 +334,7 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
       <Button
         variant="outline"
         size="sm"
-        className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        className="w-24 gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
         disabled={mutation.isPending}
         onClick={() => {
           setErrorMsg(null)
@@ -385,11 +385,12 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                 {profile.phoneNumber && <span>📞 {profile.phoneNumber}</span>}
                 {profile.fax && <span>📠 {profile.fax}</span>}
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Created {new Date(profile.createdAt).toLocaleDateString()}
-                {profile.updatedAt &&
-                  ` • Updated ${new Date(profile.updatedAt).toLocaleDateString()}`}
-              </p>
+              <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
+                {profile.updatedAt && (
+                  <p>Updated {new Date(profile.updatedAt).toLocaleDateString()}</p>
+                )}
+              </div>
             </div>
           </div>
 
