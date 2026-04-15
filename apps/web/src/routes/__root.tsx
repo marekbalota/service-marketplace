@@ -1,4 +1,12 @@
-import { HeadContent, Link, Outlet, Scripts, createRootRouteWithContext, useRouter, type ErrorComponentProps } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Link,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+  useRouter,
+  type ErrorComponentProps,
+} from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Button, buttonVariants } from '../components/ui/button'
@@ -6,7 +14,9 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
 import appCss from '../styles.css?url'
-import { ActiveUserProvider } from '#/contexts/ActiveUserContext'
+import { authClient } from '#/auth'
+import { currentUserQueryOptions } from '#/hooks/useActiveProfile'
+import type { User } from '#/types/api'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
 
@@ -18,7 +28,7 @@ function PageEyebrow({ children }: { children: React.ReactNode }) {
   )
 }
 
-function RootErrorComponent({ error }: ErrorComponentProps ) {
+function RootErrorComponent({ error }: ErrorComponentProps) {
   const router = useRouter()
   return (
     <main className="mx-auto max-w-7xl px-4 py-32 text-center">
@@ -45,39 +55,36 @@ function NotFound() {
   )
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient; permissions: string[] }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+  user: User | null
+}>()({
+  beforeLoad: async ({ context: { queryClient } }) => {
+    const { data: session } = await authClient.getSession()
+    if (!session) return { user: null }
+    const user = await queryClient.fetchQuery(currentUserQueryOptions)
+    return { user: user ?? null }
+  },
   notFoundComponent: NotFound,
   errorComponent: RootErrorComponent,
   head: () => ({
     meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'Marketplace for Services',
-      },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'Marketplace for Services' },
     ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   component: RootComponent,
 })
 
 function RootComponent() {
-    return (
-      <RootDocument>
-        <Outlet />
-      </RootDocument>
-    )
-  }
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -88,20 +95,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
-          <ActiveUserProvider>
-            {children}
-          </ActiveUserProvider>
+          {children}
           <ReactQueryDevtools buttonPosition="bottom-left" />
           <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
+            config={{ position: 'bottom-right' }}
+            plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
           />
         </QueryClientProvider>
         <Scripts />
