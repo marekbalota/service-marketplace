@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { authClient } from '#/auth'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Star, ChevronDown, Check } from 'lucide-react'
 
 function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
   return (
@@ -53,14 +53,17 @@ import {
 } from '#/components/ui/pagination'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
-const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
+const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
+
+const ratingRangeSchema = z.enum(['5-4', '4-3', '3-2', '2-1', 'none'])
 
 const searchSchema = z.object({
-  q:        z.string().optional().catch(undefined),
-  type:     postTypeEnum.optional().catch(undefined),
-  category: z.string().optional().catch(undefined),
-  sort:     sortEnum.optional().catch(undefined),
-  page:     z.number().int().positive().optional().catch(undefined),
+  q:          z.string().optional().catch(undefined),
+  type:       postTypeEnum.optional().catch(undefined),
+  category:   z.string().optional().catch(undefined),
+  sort:       sortEnum.optional().catch(undefined),
+  page:       z.number().int().positive().optional().catch(undefined),
+  rating:     z.union([ratingRangeSchema, z.array(ratingRangeSchema)]).optional().catch(undefined),
 })
 
 type PostTypeFilter = z.infer<typeof postTypeEnum>
@@ -79,6 +82,8 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-low': 'Price: Low to High',
   'price-high': 'Price: High to Low',
   name: 'Name: A to Z',
+  'reviews-most': 'Reviews: Most First',
+  'reviews-least': 'Reviews: Fewest First',
 }
 
 // --- Query options ---
@@ -92,18 +97,38 @@ export const categoriesQueryOptions = queryOptions({
   },
 })
 
+function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): string[] {
+  if (!rating) return []
+  return Array.isArray(rating) ? rating : [rating]
+}
+
 export function postsQueryOptions(deps: {
   type?: PostTypeFilter
   category?: string
   q?: string
   sort: SortOption
   page: number
+  rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
+  const ratingRanges = normalizeRating(deps.rating)
+  // Build rating filter params - multiple ranges will be sent as comma-separated min-max pairs
+  const ratingFilter = ratingRanges.length > 0
+    ? ratingRanges.map(r => {
+        if (r === '5-4') return { min: 4, max: 5 }
+        if (r === '4-3') return { min: 3, max: 4 }
+        if (r === '3-2') return { min: 2, max: 3 }
+        if (r === '2-1') return { min: 1, max: 2 }
+        if (r === 'none') return { min: 0, max: 0 }
+        return null
+      }).filter(Boolean)
+    : undefined
+
   const query = {
     type:       deps.type && deps.type !== 'all' ? deps.type.toUpperCase() as 'OFFER' | 'REQUEST' : undefined,
     categoryId: deps.category !== 'all' ? deps.category : undefined,
     search:     deps.q,
     sort:       deps.sort,
+    ratingFilter: ratingFilter ? JSON.stringify(ratingFilter) : undefined,
     offset:     (deps.page - 1) * PAGE_SIZE,
     size:       PAGE_SIZE,
   }
@@ -213,14 +238,15 @@ export function buildPageNumbers(current: number, total: number): (number | 'ell
 
 // --- Posts list (suspends while its query is loading) ---
 
-function PostsList({ type, category, q, sort, page }: {
+function PostsList({ type, category, q, sort, page, rating }: {
   type: PostTypeFilter
   category: string
   q: string
   sort: SortOption
   page: number
+  rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page }))
+  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating }))
   const navigate = Route.useNavigate()
 
   const setPage = (value: number) =>
@@ -350,6 +376,7 @@ function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
 function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
   const { sort = 'newest' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
   return (
     <Select
       value={sort}
@@ -369,10 +396,128 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
   )
 }
 
+const RATING_RANGES = [
+  { min: 4, max: 5, label: '5-4 ★' },
+  { min: 3, max: 4, label: '4-3 ★' },
+  { min: 2, max: 3, label: '3-2 ★' },
+  { min: 1, max: 2, label: '2-1 ★' },
+  { min: 0, max: 1, label: '1-0 ★' },
+] as const
+
+const RATING_OPTIONS = [
+  { value: '5-4', label: '5-4 ★' },
+  { value: '4-3', label: '4-3 ★' },
+  { value: '3-2', label: '3-2 ★' },
+  { value: '2-1', label: '2-1 ★' },
+  { value: 'none', label: 'Without review' },
+] as const
+
+function RatingSelect({ triggerClassName }: { triggerClassName?: string }) {
+  const { rating } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const selected = normalizeRating(rating)
+  const hasSelection = selected.length > 0
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const clearAll = () => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        rating: undefined,
+        page: undefined
+      })
+    })
+  }
+
+  const toggleOption = (value: string) => {
+    const current = normalizeRating(rating)
+    const isSelected = current.includes(value as z.infer<typeof ratingRangeSchema>)
+    const newSelection = isSelected
+      ? current.filter(v => v !== value)
+      : [...current, value as z.infer<typeof ratingRangeSchema>]
+
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        rating: newSelection.length > 0 ? newSelection : undefined,
+        page: undefined
+      })
+    })
+  }
+
+  const displayLabel = selected.length === 0
+    ? 'All Ratings'
+    : selected.length === 1
+      ? RATING_OPTIONS.find(o => o.value === selected[0])?.label
+      : `${selected.length} selected`
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-2 pr-2 text-sm transition-colors hover:bg-accent",
+          triggerClassName
+        )}
+      >
+        <span className="flex-1 text-left">{displayLabel}</span>
+        <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full z-50 mt-1 w-[180px] rounded-lg border bg-popover p-1 shadow-md">
+          <button
+            type="button"
+            onClick={() => {
+              clearAll()
+              setIsOpen(false)
+            }}
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent",
+              hasSelection ? 'font-semibold text-primary' : ''
+            )}
+          >
+            {hasSelection ? 'Clear filter' : 'All Ratings'}
+          </button>
+          {RATING_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => toggleOption(option.value)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent"
+            >
+              <span className="flex h-4 w-4 items-center justify-center">
+                {selected.includes(option.value as z.infer<typeof ratingRangeSchema>) && (
+                  <Check className="size-4" />
+                )}
+              </span>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
 // --- Page ---
 
 function HomePage() {
-  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
+  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1, rating } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: session } = authClient.useSession()
   const isAuthenticated = !!session?.user
@@ -426,6 +571,10 @@ function HomePage() {
                     <CategorySelect triggerClassName="w-full" />
                   </div>
                   <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Rating</label>
+                    <RatingSelect triggerClassName="w-full" />
+                  </div>
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium">Sort By</label>
                     <SortSelect triggerClassName="w-full" />
                   </div>
@@ -435,17 +584,18 @@ function HomePage() {
           </div>
 
           {/* Desktop filters */}
-          <div className="hidden gap-3 md:flex">
+          <div className="hidden flex-wrap gap-3 md:flex">
             <PostTypeSelect triggerClassName="w-[160px]" />
             <CategorySelect triggerClassName="w-[200px]" />
-            <SortSelect triggerClassName="w-[200px]" />
+            <RatingSelect triggerClassName="w-[160px]" />
+            <SortSelect triggerClassName="w-[220px]" />
           </div>
         </div>
       </div>
 
       {/* Posts — Suspense boundary only covers this area */}
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} page={page} />
+        <PostsList type={type} category={category} q={q} sort={sort} page={page} rating={rating} />
       </Suspense>
     </>
   )
