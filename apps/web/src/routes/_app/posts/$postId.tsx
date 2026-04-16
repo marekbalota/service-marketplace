@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
+import { queryOptions, useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { api } from '#/api'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
@@ -10,6 +11,8 @@ import { Separator } from '#/components/ui/separator'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
 import { formatLocation } from '#/lib/format'
+import { ReviewForm } from '#/components/ReviewForm'
+import { useMutation } from '@tanstack/react-query'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -77,13 +80,32 @@ function PostDetailPage() {
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
+  const [showReviewForm, setShowReviewForm] = useState(false)
+
+  // Check if user has already reviewed this post
+  const hasReviewed = post.reviews.some(
+    (r) => r.reviewerId === activeProfile?.userProfileId
+  )
+
+  const deleteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { error } = await api.reviews({ id: reviewId }).delete()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', postId] })
+    },
+  })
 
   const primaryCategory = post.categories[0]?.name ?? null
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
   const locationText = post.location ? formatLocation(post.location) : null
+
+  const showReviewButton = !isOwner && activeProfile && !hasReviewed
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
@@ -191,10 +213,30 @@ function PostDetailPage() {
                   <MessageSquare className="size-4" />
                   Send Message
                 </Button>
-                <Button variant="outline" className="w-full gap-2" disabled>
-                  <Star className="size-4" />
-                  Leave a Review
-                </Button>
+                {showReviewButton && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => setShowReviewForm(true)}
+                    >
+                      <Star className="size-4" />
+                      Leave a Review
+                    </Button>
+                    {showReviewForm && (
+                      <ReviewForm
+                        postId={postId}
+                        onSuccess={() => setShowReviewForm(false)}
+                        onCancel={() => setShowReviewForm(false)}
+                      />
+                    )}
+                  </>
+                )}
+                {hasReviewed && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reviewed this post
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -218,13 +260,30 @@ function PostDetailPage() {
                             {new Date(review.createdAt).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
-                            />
-                          ))}
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
+                              />
+                            ))}
+                          </div>
+                          {review.reviewerId === activeProfile?.userProfileId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete your review?')) {
+                                  deleteMutation.mutate(review.reviewId)
+                                }
+                              }}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                       {review.reviewDescription && (
