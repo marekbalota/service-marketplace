@@ -14,6 +14,7 @@ import { Route as LoginRouteRouteImport } from './routes/login/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
+import { Route as AppFavouritesRouteRouteImport } from './routes/_app/favourites/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts/$postId'
@@ -42,6 +43,11 @@ const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
   path: '/my-postings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppFavouritesRouteRoute = AppFavouritesRouteRouteImport.update({
+  id: '/favourites',
+  path: '/favourites',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppCreatePostRouteRoute = AppCreatePostRouteRouteImport.update({
   id: '/create-post',
   path: '/create-post',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
+  '/favourites': typeof AppFavouritesRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/posts/': typeof AppPostsIndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
+  '/favourites': typeof AppFavouritesRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/': typeof AppIndexRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/_app/create-post': typeof AppCreatePostRouteRoute
+  '/_app/favourites': typeof AppFavouritesRouteRoute
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/create-post'
+    | '/favourites'
     | '/my-postings'
     | '/posts/$postId'
     | '/posts/'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/create-post'
+    | '/favourites'
     | '/my-postings'
     | '/'
     | '/posts/$postId'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_app/create-post'
+    | '/_app/favourites'
     | '/_app/my-postings'
     | '/_app/'
     | '/_app/posts/$postId'
@@ -161,6 +173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMyPostingsRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/favourites': {
+      id: '/_app/favourites'
+      path: '/favourites'
+      fullPath: '/favourites'
+      preLoaderRoute: typeof AppFavouritesRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/create-post': {
       id: '/_app/create-post'
       path: '/create-post'
@@ -187,6 +206,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
+  AppFavouritesRouteRoute: typeof AppFavouritesRouteRoute
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
   AppPostsPostIdRoute: typeof AppPostsPostIdRoute
@@ -195,6 +215,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppCreatePostRouteRoute: AppCreatePostRouteRoute,
+  AppFavouritesRouteRoute: AppFavouritesRouteRoute,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,
   AppPostsPostIdRoute: AppPostsPostIdRoute,

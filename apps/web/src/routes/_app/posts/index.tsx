@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { authClient } from '#/auth'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Star } from 'lucide-react'
 
 function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
   return (
@@ -24,7 +24,7 @@ function SearchInput({ value, onChange, disabled }: { value?: string; onChange?:
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { Input } from '#/components/ui/input'
-import { buttonVariants } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
@@ -61,10 +61,12 @@ const searchSchema = z.object({
   category: z.string().optional().catch(undefined),
   sort:     sortEnum.optional().catch(undefined),
   page:     z.number().int().positive().optional().catch(undefined),
+  favourites: z.boolean().optional().catch(undefined),
 })
 
 type PostTypeFilter = z.infer<typeof postTypeEnum>
 type SortOption = z.infer<typeof sortEnum>
+type SearchParams = z.infer<typeof searchSchema>
 
 const PAGE_SIZE = 12
 
@@ -118,6 +120,15 @@ export function postsQueryOptions(deps: {
     placeholderData: keepPreviousData,
   })
 }
+
+export const favouritesQueryOptions = queryOptions({
+  queryKey: ['favourites'],
+  queryFn: async () => {
+    const { data, error } = await api.favourites.get()
+    if (error) throw error
+    return data
+  },
+})
 
 // --- Route ---
 
@@ -213,38 +224,80 @@ export function buildPageNumbers(current: number, total: number): (number | 'ell
 
 // --- Posts list (suspends while its query is loading) ---
 
-function PostsList({ type, category, q, sort, page }: {
+function PostsList({ type, category, q, sort, page, favouritesOnly }: {
   type: PostTypeFilter
   category: string
   q: string
   sort: SortOption
   page: number
+  favouritesOnly: boolean
 }) {
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page }))
+  const { data: postsData } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page }))
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
+
+  // Prefetch favourites if authenticated
+  const { data: favouritesData } = useQuery({
+    ...favouritesQueryOptions,
+    enabled: isAuthenticated,
+  })
+
   const navigate = Route.useNavigate()
 
   const setPage = (value: number) =>
     navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
 
+  // Build set of favourite post IDs (only for authenticated users)
+  const favouritePostIds = useMemo(() => {
+    if (!isAuthenticated || !favouritesData?.items) return new Set<string>()
+    return new Set(favouritesData.items.map(f => f.postId))
+  }, [isAuthenticated, favouritesData])
+
+  // Filter posts if favouritesOnly mode
+  const displayPosts = useMemo(() => {
+    if (!favouritesOnly) return postsData.items
+    return postsData.items.filter(post => favouritePostIds.has(post.postId))
+  }, [postsData.items, favouritePostIds, favouritesOnly])
+
+  const totalItems = favouritesOnly ? displayPosts.length : postsData.total
+  const totalPages = favouritesOnly
+    ? Math.ceil(displayPosts.length / PAGE_SIZE)
+    : postsData.totalPages
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <p className="mb-4 text-muted-foreground">
-        {data.total} service{data.total !== 1 ? 's' : ''} available
+        {totalItems} service{totalItems !== 1 ? 's' : ''} available
+        {favouritesOnly && ' (favourites only)'}
       </p>
 
-      {data.items.length === 0 ? (
+      {displayPosts.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-muted-foreground">No services found matching your criteria.</p>
+          {favouritesOnly ? (
+            <>
+              <Star className="mx-auto size-12 text-muted-foreground/50" />
+              <p className="mt-4 text-muted-foreground">No favourites found matching your criteria.</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Browse posts and click the star icon to add them to your favourites.
+              </p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">No services found matching your criteria.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((post) => (
-            <PostCard key={post.postId} post={post} />
+          {displayPosts.map((post) => (
+            <PostCard
+              key={post.postId}
+              post={post}
+              isFavourite={favouritePostIds.has(post.postId)}
+            />
           ))}
         </div>
       )}
 
-      {data.totalPages > 1 && (
+      {totalPages > 1 && !favouritesOnly && (
         <div className="mt-8 flex justify-center">
           <Pagination>
             <PaginationContent>
@@ -256,7 +309,7 @@ function PostsList({ type, category, q, sort, page }: {
                 />
               </PaginationItem>
 
-              {buildPageNumbers(page, data.totalPages).map((item, i) =>
+              {buildPageNumbers(page, totalPages).map((item, i) =>
                 item === 'ellipsis' ? (
                   <PaginationItem key={`ellipsis-${i}`}>
                     <PaginationEllipsis />
@@ -277,8 +330,8 @@ function PostsList({ type, category, q, sort, page }: {
               <PaginationItem>
                 <PaginationNext
                   onClick={() => setPage(page + 1)}
-                  aria-disabled={page >= data.totalPages}
-                  className={page >= data.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  aria-disabled={page >= totalPages}
+                  className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -372,7 +425,7 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
 // --- Page ---
 
 function HomePage() {
-  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
+  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1, favourites = false } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: session } = authClient.useSession()
   const isAuthenticated = !!session?.user
@@ -384,6 +437,17 @@ function HomePage() {
     (value: string) => navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
     { wait: 400 },
   )
+
+  const toggleFavourites = () => {
+    navigate({ search: (prev) => ({ ...prev, favourites: !favourites || undefined, page: undefined }) })
+  }
+
+  // Clear favourites filter when user logs out
+  useEffect(() => {
+    if (!isAuthenticated && favourites) {
+      navigate({ search: (prev) => ({ ...prev, favourites: undefined }) })
+    }
+  }, [isAuthenticated, favourites, navigate])
 
   return (
     <>
@@ -417,6 +481,16 @@ function HomePage() {
                   <SheetDescription>Refine your search results</SheetDescription>
                 </SheetHeader>
                 <div className="mt-4 space-y-4 px-4">
+                  {isAuthenticated && (
+                    <Button
+                      variant={favourites ? 'default' : 'outline'}
+                      className="w-full gap-2"
+                      onClick={toggleFavourites}
+                    >
+                      <Star className={cn('size-4', favourites && 'fill-white')} />
+                      {favourites ? 'Favourites' : 'Show Favourites'}
+                    </Button>
+                  )}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Post Type</label>
                     <PostTypeSelect triggerClassName="w-full" />
@@ -435,7 +509,20 @@ function HomePage() {
           </div>
 
           {/* Desktop filters */}
-          <div className="hidden gap-3 md:flex">
+          <div className="hidden flex-wrap items-center gap-3 md:flex">
+            {isAuthenticated && (
+              <Button
+                variant={favourites ? 'default' : 'outline'}
+                className="gap-2"
+                onClick={toggleFavourites}
+              >
+                <Star className={cn('size-4', favourites && 'fill-white')} />
+                <span className="hidden lg:inline">
+                  {favourites ? 'Favourites' : 'Favourites'}
+                </span>
+                <span className="lg:hidden">Favourites</span>
+              </Button>
+            )}
             <PostTypeSelect triggerClassName="w-[160px]" />
             <CategorySelect triggerClassName="w-[200px]" />
             <SortSelect triggerClassName="w-[200px]" />
@@ -445,7 +532,7 @@ function HomePage() {
 
       {/* Posts — Suspense boundary only covers this area */}
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} page={page} />
+        <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} />
       </Suspense>
     </>
   )

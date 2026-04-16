@@ -4,10 +4,12 @@ import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
-import { useState } from 'react'
-import type { api } from '#/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { authClient } from '#/auth'
+import { api } from '#/api'
+import type { api as ApiType } from '#/api'
 
-export type Post = NonNullable<Awaited<ReturnType<typeof api.posts.get>>['data']>['items'][number]
+export type Post = NonNullable<Awaited<ReturnType<typeof ApiType.posts.get>>['data']>['items'][number]
 
 const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',
@@ -15,8 +17,128 @@ const RATE_LABELS: Record<string, string> = {
   FIXED: 'fixed',
 }
 
-export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDelete?: () => void; deleteDisabled?: boolean }) {
-  const [favorited, setFavorited] = useState(false)
+type PostCardProps = {
+  post: Post
+  onDelete?: () => void
+  deleteDisabled?: boolean
+  isFavourite?: boolean
+  onFavouriteToggle?: () => void
+  favouriteDisabled?: boolean
+  showFavouriteButton?: boolean
+}
+
+function FavouriteButton({
+  postId,
+  initialIsFavourite,
+  onToggle,
+  disabled,
+}: {
+  postId: string
+  initialIsFavourite?: boolean
+  onToggle?: () => void
+  disabled?: boolean
+}) {
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
+
+  const { data: checkData } = useQuery({
+    queryKey: ['favourites', 'check', postId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites['check']({ postId }).get()
+      if (error) throw error
+      return data
+    },
+    enabled: isAuthenticated && initialIsFavourite === undefined,
+  })
+
+  const isFavourite = initialIsFavourite ?? checkData?.isFavourite ?? false
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error, response } = await api.favourites({ postId }).post()
+      if (error) {
+        console.error('Add favourite error:', error, 'Status:', response?.status)
+        throw error
+      }
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      onToggle?.()
+    },
+    onError: (error) => {
+      console.error('Add favourite mutation error:', error)
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const { error, response } = await api.favourites({ postId }).delete()
+      if (error) {
+        console.error('Remove favourite error:', error, 'Status:', response?.status)
+        throw error
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      onToggle?.()
+    },
+    onError: (error) => {
+      console.error('Remove favourite mutation error:', error)
+    },
+  })
+
+  const isPending = addMutation.isPending || removeMutation.isPending || disabled
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isPending) return
+
+    if (isFavourite) {
+      removeMutation.mutate()
+    } else {
+      addMutation.mutate()
+    }
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={isPending}
+      onClick={handleClick}
+      className={cn(
+        'transition-colors',
+        isFavourite
+          ? 'text-[#facc15] hover:text-[#facc15]/80'
+          : 'text-muted-foreground hover:text-[#facc15]'
+      )}
+    >
+      <Star
+        className={cn(
+          'size-5 transition-all',
+          isFavourite && 'fill-[#facc15]'
+        )}
+      />
+    </Button>
+  )
+}
+
+export function PostCard({
+  post,
+  onDelete,
+  deleteDisabled,
+  isFavourite,
+  onFavouriteToggle,
+  favouriteDisabled,
+  showFavouriteButton = true,
+}: PostCardProps) {
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
@@ -42,21 +164,14 @@ export function PostCard({ post, onDelete, deleteDisabled }: { post: Post; onDel
                 >
                   <Trash2 className="size-5" />
                 </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setFavorited((f) => !f)
-                  }}
-                >
-                  <Star
-                    className={cn('size-5', favorited ? 'fill-star-filled text-star-filled' : 'text-muted-foreground')}
-                  />
-                </Button>
-              )}
+              ) : showFavouriteButton && isAuthenticated ? (
+                <FavouriteButton
+                  postId={post.postId}
+                  initialIsFavourite={isFavourite}
+                  onToggle={onFavouriteToggle}
+                  disabled={favouriteDisabled}
+                />
+              ) : null}
             </div>
           </div>
           {/* Badge row spans full card width — capped at 2 lines */}

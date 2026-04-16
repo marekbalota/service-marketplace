@@ -1,7 +1,8 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
+import { authClient } from '#/auth'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -72,12 +73,90 @@ const RATE_LABELS: Record<string, string> = {
   FIXED: 'fixed',
 }
 
+function FavouriteButton({ postId }: { postId: string }) {
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
+
+  const { data: checkData } = useQuery({
+    queryKey: ['favourites', 'check', postId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites['check']({ postId }).get()
+      if (error) throw error
+      return data
+    },
+    enabled: isAuthenticated,
+  })
+
+  const isFavourite = checkData?.isFavourite ?? false
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.favourites({ postId }).post()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.favourites({ postId }).delete()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+    },
+  })
+
+  const isPending = addMutation.isPending || removeMutation.isPending
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isPending) return
+
+    if (isFavourite) {
+      removeMutation.mutate()
+    } else {
+      addMutation.mutate()
+    }
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={isPending}
+      onClick={handleClick}
+      className={cn(
+        'transition-colors',
+        isFavourite
+          ? 'text-[#facc15] hover:text-[#facc15]/80'
+          : 'text-muted-foreground hover:text-[#facc15]'
+      )}
+    >
+      <Star
+        className={cn(
+          'size-6 transition-all',
+          isFavourite && 'fill-[#facc15]'
+        )}
+      />
+    </Button>
+  )
+}
+
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
+  const { data: session } = authClient.useSession()
   const router = useRouter()
   const isOwner = activeProfile?.userProfileId === post.authorId
+  const isAuthenticated = !!session?.user
 
   const primaryCategory = post.categories[0]?.name ?? null
   const isOffer = post.postType === 'OFFER'
@@ -98,12 +177,17 @@ function PostDetailPage() {
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
-            {isOwner && (
-              <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
-                <Pencil className="size-4" />
-                Edit
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isAuthenticated && !isOwner && (
+                <FavouriteButton postId={postId} />
+              )}
+              {isOwner && (
+                <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
+                  <Pencil className="size-4" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Badges */}

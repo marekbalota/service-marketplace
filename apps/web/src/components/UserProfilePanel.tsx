@@ -7,6 +7,7 @@ import {
   Search,
   LogOut,
   User,
+  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -21,6 +22,7 @@ import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
+import { queryClient } from '#/router'
 
 function ProfileOption({ name, role }: { name: string; role?: string }) {
   return (
@@ -108,6 +110,22 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <span>My Postings</span>
             </SheetClose>
 
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/favourites"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
+                <Heart className="size-5 text-rose-600" />
+              </div>
+              <span>My Favourites</span>
+            </SheetClose>
+
             <Button
               variant="ghost"
               className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-foreground hover:text-foreground"
@@ -146,6 +164,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
+              queryClient.removeQueries({ queryKey: ['favourites'] })
+              queryClient.removeQueries({ queryKey: ['favourites', 'check'] })
               onClose()
               void router.navigate({ to: '/' })
             }}

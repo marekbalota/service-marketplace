@@ -6,6 +6,7 @@ import { logger } from "./logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
+import { favouritesRoutes } from "./modules/favourites";
 
 export const app = new Elysia()
   .use(cors({
@@ -24,9 +25,10 @@ export const app = new Elysia()
         { url: "http://localhost:3001", description: "Local development" },
       ],
       tags: [
-        { name: "Posts",      description: "Service post listings (offers and requests)" },
-        { name: "Profiles",   description: "User profiles" },
-        { name: "Categories", description: "Post categories" },
+        { name: "Posts",       description: "Service post listings (offers and requests)" },
+        { name: "Profiles",    description: "User profiles" },
+        { name: "Categories",  description: "Post categories" },
+        { name: "Favourites",  description: "User's favourite posts" },
       ],
     },
   }))
@@ -36,6 +38,7 @@ export const app = new Elysia()
   .use(postsRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
+  .use(favouritesRoutes)
   .listen(3001);
 
 console.log(
