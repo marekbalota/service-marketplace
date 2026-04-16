@@ -6,7 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { AccountSettingsPage } from './route'
+import { AccountSettingsPage } from './index'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -108,9 +108,9 @@ describe('AccountSettingsPage', () => {
     expect(screen.getByRole('heading', { name: /account settings/i })).toBeInTheDocument()
   })
 
-  it('renders Add Profile button', async () => {
+  it('renders Add Profile link', async () => {
     await renderPage()
-    expect(screen.getByRole('button', { name: /add profile/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /add profile/i })).toBeInTheDocument()
   })
 
   it('renders a card for each profile', async () => {
@@ -129,21 +129,18 @@ describe('AccountSettingsPage', () => {
     expect(screen.getByText('alice@example.com')).toBeInTheDocument()
   })
 
-  it('shows profile bio when present', async () => {
-    await renderPage()
-    expect(screen.getByText('Software engineer')).toBeInTheDocument()
-  })
-
   it('shows phone number when present', async () => {
     await renderPage()
     expect(screen.getByText(/\+1 \(555\) 111-2222/)).toBeInTheDocument()
   })
 
-  it('renders Edit and Delete buttons for each profile', async () => {
+  it('renders View and Edit links and Delete buttons for each profile', async () => {
     await renderPage()
-    const editButtons = screen.getAllByRole('button', { name: /edit/i })
+    const viewLinks = screen.getAllByRole('link', { name: /view/i })
+    const editLinks = screen.getAllByRole('link', { name: /edit/i })
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
-    expect(editButtons).toHaveLength(2)
+    expect(viewLinks).toHaveLength(2)
+    expect(editLinks).toHaveLength(2)
     expect(deleteButtons).toHaveLength(2)
   })
 })
