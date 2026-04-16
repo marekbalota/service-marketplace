@@ -7,12 +7,13 @@ A full-stack monorepo where users post offers or requests for services (e.g. tut
 | Frontend | TanStack Start (SPA), React 19, Tailwind CSS v4, Shadcn/UI |
 | Backend | ElysiaJS, Drizzle ORM |
 | Database | PostgreSQL 17 |
+| File Storage | MinIO (S3-compatible) |
 | Runtime | Bun |
 
 ## Prerequisites
 
 - [Bun](https://bun.sh) v1.0+
-- [Docker](https://www.docker.com) (for the database)
+- [Docker](https://www.docker.com) with Compose v2
 
 ## Setup
 
@@ -28,10 +29,12 @@ bun install
 cp .env.example .env
 ```
 
-### 3. Start the database
+The default `.env` works out of the box for local development — see `.env.example` for all available variables.
+
+### 3. Start Docker services
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 4. Run migrations
@@ -40,11 +43,12 @@ docker-compose up -d
 bun run --filter api db:migrate
 ```
 
-### 5. (Optional) Seed the database
+### 5. Seed the database (first time only)
 
 ```bash
 bun run --filter api db:seed
 ```
+
 
 ### 6. Start the development servers
 
@@ -55,7 +59,9 @@ bun run dev
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:3000 |
-| Backend | http://localhost:3001 |
+| API | http://localhost:3001 |
+| API docs (Swagger) | http://localhost:3001/swagger |
+| MinIO console | http://localhost:9001 |
 
 ## Project Structure
 

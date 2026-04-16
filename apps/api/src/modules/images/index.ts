@@ -5,6 +5,7 @@ import { ProfilesService } from '../profiles/service'
 import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
 import { ErrorMessages, errorResponse } from '../../errors'
+import { uploadImage } from '../../storage'
 
 export const imagesRoutes = new Elysia()
   .use(authRoutes)
@@ -12,9 +13,9 @@ export const imagesRoutes = new Elysia()
     '/profiles/:id/images',
     async ({ params }) => ImagesService.findByProfileId(params.id),
     {
-      params: ImagesModel.profileImagesParams,
+      params:   ImagesModel.profileImagesParams,
       response: { 200: ImagesModel.profileImagesResponse },
-      detail: { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
+      detail:   { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
     },
   )
   .post(
@@ -25,7 +26,8 @@ export const imagesRoutes = new Elysia()
         set.status = 403
         return { message: AuthModel.messages.forbidden }
       }
-      const created = await ImagesService.create(params.id, body)
+      const link = await uploadImage(body.file, params.id)
+      const created = await ImagesService.create(params.id, { link, name: body.file.name })
       if (!created) {
         set.status = 500
         return { message: 'Failed to create image' }
@@ -34,15 +36,15 @@ export const imagesRoutes = new Elysia()
       return created
     },
     {
-      auth: true,
-      params: ImagesModel.profileImagesParams,
-      body: ImagesModel.createBody,
+      auth:     true,
+      params:   ImagesModel.profileImagesParams,
+      body:     ImagesModel.createBody,
       response: {
         201: ImagesModel.createResponse,
         401: AuthModel.unauthorizedResponse,
         403: errorResponse,
       },
-      detail: { summary: 'Add image to profile', operationId: 'createProfileImage', tags: ['Images'] },
+      detail: { summary: 'Upload image to profile', operationId: 'createProfileImage', tags: ['Images'] },
     },
   )
   .delete(
@@ -61,8 +63,8 @@ export const imagesRoutes = new Elysia()
       set.status = 204
     },
     {
-      auth: true,
-      params: ImagesModel.deleteParams,
+      auth:     true,
+      params:   ImagesModel.deleteParams,
       response: {
         204: t.Void(),
         401: AuthModel.unauthorizedResponse,

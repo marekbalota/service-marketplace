@@ -1,4 +1,15 @@
-import { describe, it, expect, beforeAll } from 'bun:test'
+import { mock, describe, it, expect, beforeAll } from 'bun:test'
+
+// Mock MinIO storage BEFORE any module that imports it is resolved.
+// Bun hoists mock.module calls, so this intercepts the transitive import
+// from imagesRoutes → index.ts → storage.ts
+mock.module('../../storage', () => ({
+  uploadImage: async (_file: File, profileId: string) =>
+    `http://localhost:9000/marketplace/profiles/${profileId}/test.jpg`,
+  initBucket:  async () => {},
+  minioClient: {},
+}))
+
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { imagesRoutes } from '.'
@@ -12,6 +23,12 @@ const client = treaty(app)
 let aliceCookie: string
 let aliceProfileId: string
 let testImageId: string
+
+const fakeJpeg = new File(
+  [Buffer.from([0xff, 0xd8, 0xff, 0xe0])], // minimal JPEG magic bytes
+  'photo.jpg',
+  { type: 'image/jpeg' },
+)
 
 beforeAll(async () => {
   const signInRes = await auth.api.signInEmail({
@@ -42,36 +59,28 @@ describe('GET /profiles/:id/images', () => {
 describe('POST /profiles/:id/images', () => {
   it('returns 401 without a session cookie', async () => {
     const { error } = await client.profiles({ id: aliceProfileId }).images.post(
-      { link: 'https://example.com/img.jpg' },
+      { file: fakeJpeg },
     )
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 when adding image to a profile not owned by the user', async () => {
     const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).images.post(
-      { link: 'https://example.com/img.jpg' },
+      { file: fakeJpeg },
       { headers: { Cookie: aliceCookie } },
     )
     expect(error?.status).toBe(403)
   })
 
-  it('returns 422 for empty link', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).images.post(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { link: '' } as any,
-      { headers: { Cookie: aliceCookie } },
-    )
-    expect(error?.status).toBe(422)
-  })
-
   it('returns 201 with the created image', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).images.post(
-      { link: 'https://example.com/test-image.jpg' },
+      { file: fakeJpeg },
       { headers: { Cookie: aliceCookie } },
     )
     expect(error).toBeNull()
-    expect(data!.link).toBe('https://example.com/test-image.jpg')
+    expect(data!.link).toContain(aliceProfileId)
     expect(data!.userProfileId).toBe(aliceProfileId)
+    expect(data!.name).toBe('photo.jpg')
     testImageId = data!.imageId
   })
 
@@ -79,7 +88,7 @@ describe('POST /profiles/:id/images', () => {
     const { data } = await client.profiles({ id: aliceProfileId }).images.get()
     const found = data!.find(img => img.imageId === testImageId)
     expect(found).toBeDefined()
-    expect(found!.link).toBe('https://example.com/test-image.jpg')
+    expect(found!.link).toContain(aliceProfileId)
   })
 })
 

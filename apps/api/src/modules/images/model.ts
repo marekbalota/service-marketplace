@@ -1,5 +1,7 @@
 import { t, type UnwrapSchema } from 'elysia'
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
 const imageItem = t.Object({
   imageId:       t.String(),
   userProfileId: t.String(),
@@ -11,7 +13,12 @@ const imageItem = t.Object({
 export const ImagesModel = {
   profileImagesParams:   t.Object({ id: t.String() }),
   profileImagesResponse: t.Array(imageItem),
-  createBody:            t.Object({ link: t.String({ minLength: 1 }) }),
+  createBody:            t.Object({
+    file: t.File({
+      maxSize: '5m',
+      type:    ALLOWED_TYPES,
+    }),
+  }),
   createResponse:        imageItem,
   deleteParams:          t.Object({ id: t.String() }),
 } as const

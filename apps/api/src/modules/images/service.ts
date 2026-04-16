@@ -19,10 +19,10 @@ export abstract class ImagesService {
       .orderBy(images.createdAt)
   }
 
-  static async create(profileId: string, body: { link: string }) {
+  static async create(profileId: string, data: { link: string; name: string }) {
     const [inserted] = await db
       .insert(images)
-      .values({ userProfileId: profileId, name: body.link, link: body.link })
+      .values({ userProfileId: profileId, name: data.name, link: data.link })
       .returning(imageSelect)
     return inserted ?? null
   }

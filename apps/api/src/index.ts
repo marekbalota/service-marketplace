@@ -7,6 +7,7 @@ import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 import { imagesRoutes } from "./modules/images";
+import { initBucket } from "./storage";
 
 export const app = new Elysia()
   .use(cors({
@@ -40,6 +41,8 @@ export const app = new Elysia()
   .use(profilesRoutes)
   .use(imagesRoutes)
   .listen(3001);
+
+initBucket().catch((err) => console.error('[MinIO] bucket init failed:', err))
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { Suspense } from 'react'
@@ -110,49 +110,58 @@ function AccountSettingsSkeleton() {
 // ── Image input section ───────────────────────────────────────────────────────
 
 function ImageInputSection({
-  links,
-  linkInput,
-  onLinkInputChange,
-  onAdd,
+  previews,
+  onFilePicked,
   onRemove,
+  isUploading,
 }: {
-  links: string[]
-  linkInput: string
-  onLinkInputChange: (v: string) => void
-  onAdd: () => void
-  onRemove: (link: string) => void
+  previews: string[]
+  onFilePicked: (file: File) => void
+  onRemove: (index: number) => void
+  isUploading?: boolean
 }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      onFilePicked(file)
+      e.target.value = '' // allow re-selecting the same file
+    }
+  }
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Images</label>
-      <div className="flex gap-2">
-        <Input
-          placeholder="Enter image URL"
-          value={linkInput}
-          onChange={(e) => onLinkInputChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              onAdd()
-            }
-          }}
-        />
-        <Button type="button" variant="outline" size="icon" onClick={onAdd}>
-          <Plus className="size-4" />
-        </Button>
-      </div>
-      {links.length > 0 && (
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        className="hidden"
+        onChange={handleChange}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="gap-2"
+        disabled={isUploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Plus className="size-4" />
+        {isUploading ? 'Uploading…' : 'Add Image'}
+      </Button>
+      {previews.length > 0 && (
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {links.map((link) => (
-            <div key={link} className="group relative">
+          {previews.map((preview, i) => (
+            <div key={preview} className="group relative">
               <img
-                src={link}
+                src={preview}
                 alt="Preview"
                 className="h-24 w-full rounded-lg border object-cover"
               />
               <button
                 type="button"
-                onClick={() => onRemove(link)}
+                onClick={() => onRemove(i)}
                 className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
               >
                 <X className="size-3" />
@@ -281,8 +290,7 @@ function ProfileForm({
 
 function CreateProfileDialog() {
   const [open, setOpen] = useState(false)
-  const [pendingLinks, setPendingLinks] = useState<string[]>([])
-  const [linkInput, setLinkInput] = useState('')
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
@@ -296,32 +304,41 @@ function CreateProfileDialog() {
       })
       if (error) throw error
       if (data && 'userProfileId' in data) {
-        for (const link of pendingLinks) {
-          await api.profiles({ id: data.userProfileId }).images.post({ link })
+        for (const { file } of pendingFiles) {
+          await api.profiles({ id: data.userProfileId }).images.post({ file })
         }
       }
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
-      setPendingLinks([])
-      setLinkInput('')
+      cleanup()
       setOpen(false)
     },
   })
 
-  const defaultValues: ProfileFormValues = { name: '', email: '', bio: '', phoneNumber: '', fax: '' }
-
-  function addLink() {
-    const trimmed = linkInput.trim()
-    if (trimmed && !pendingLinks.includes(trimmed)) {
-      setPendingLinks((prev) => [...prev, trimmed])
+  function cleanup() {
+    for (const { preview } of pendingFiles) {
+      URL.revokeObjectURL(preview)
     }
-    setLinkInput('')
+    setPendingFiles([])
   }
 
+  function addFile(file: File) {
+    setPendingFiles(prev => [...prev, { file, preview: URL.createObjectURL(file) }])
+  }
+
+  function removeFile(index: number) {
+    setPendingFiles(prev => {
+      URL.revokeObjectURL(prev[index]!.preview)
+      return prev.filter((_, i) => i !== index)
+    })
+  }
+
+  const defaultValues: ProfileFormValues = { name: '', email: '', bio: '', phoneNumber: '', fax: '' }
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPendingLinks([]); setLinkInput('') } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) cleanup() }}>
       <DialogTrigger render={<Button className="gap-2" />}>
         <Plus className="size-4" />
         Add Profile
@@ -341,11 +358,9 @@ function CreateProfileDialog() {
           isPending={mutation.isPending}
         >
           <ImageInputSection
-            links={pendingLinks}
-            linkInput={linkInput}
-            onLinkInputChange={setLinkInput}
-            onAdd={addLink}
-            onRemove={(link) => setPendingLinks((prev) => prev.filter((l) => l !== link))}
+            previews={pendingFiles.map(f => f.preview)}
+            onFilePicked={addFile}
+            onRemove={removeFile}
           />
         </ProfileForm>
       </DialogContent>
@@ -357,7 +372,6 @@ function CreateProfileDialog() {
 
 function EditProfileDialog({ profile }: { profile: UserProfile }) {
   const [open, setOpen] = useState(false)
-  const [linkInput, setLinkInput] = useState('')
   const queryClient = useQueryClient()
 
   const { data: images = [] } = useQuery({
@@ -383,13 +397,12 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
   })
 
   const addImageMutation = useMutation({
-    mutationFn: async (link: string) => {
-      const { error } = await api.profiles({ id: profile.userProfileId }).images.post({ link })
+    mutationFn: async (file: File) => {
+      const { error } = await api.profiles({ id: profile.userProfileId }).images.post({ file })
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profile.userProfileId).queryKey })
-      setLinkInput('')
     },
   })
 
@@ -411,13 +424,8 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
     fax:         profile.fax ?? '',
   }
 
-  function addLink() {
-    const trimmed = linkInput.trim()
-    if (trimmed) addImageMutation.mutate(trimmed)
-  }
-
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setLinkInput('') }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="outline" size="sm" className="w-24 gap-2" />}>
         <Edit className="size-4" />
         Edit
@@ -437,14 +445,13 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
           isPending={patchMutation.isPending}
         >
           <ImageInputSection
-            links={images.map((img) => img.link)}
-            linkInput={linkInput}
-            onLinkInputChange={setLinkInput}
-            onAdd={addLink}
-            onRemove={(link) => {
-              const img = images.find((i) => i.link === link)
+            previews={images.map(img => img.link)}
+            onFilePicked={(file) => addImageMutation.mutate(file)}
+            onRemove={(i) => {
+              const img = images[i]
               if (img) deleteImageMutation.mutate(img.imageId)
             }}
+            isUploading={addImageMutation.isPending}
           />
         </ProfileForm>
       </DialogContent>
