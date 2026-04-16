@@ -23,6 +23,7 @@ import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
 import { queryClient } from '#/router'
+import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 
 function ProfileOption({ name, role }: { name: string; role?: string }) {
   return (
@@ -164,8 +165,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              queryClient.removeQueries({ queryKey: ['favourites'] })
-              queryClient.removeQueries({ queryKey: ['favourites', 'check'] })
+              queryClient.removeQueries({ queryKey: profilesQueryOptions.queryKey })
               onClose()
               void router.navigate({ to: '/' })
             }}
