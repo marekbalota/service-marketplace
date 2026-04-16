@@ -528,12 +528,9 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                 )}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
-              {profile.bio && (
-                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{profile.bio}</p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                {profile.phoneNumber && <span>📞 {profile.phoneNumber}</span>}
-                {profile.fax && <span>📠 {profile.fax}</span>}
+              <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
+                {profile.phoneNumber && <p>📞 {profile.phoneNumber}</p>}
+                {profile.fax && <p>📠 {profile.fax}</p>}
               </div>
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                 <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
