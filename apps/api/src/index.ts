@@ -6,6 +6,7 @@ import { logger } from "./logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
+import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
 
 export const app = new Elysia()
   .use(cors({
@@ -27,6 +28,7 @@ export const app = new Elysia()
         { name: "Posts",      description: "Service post listings (offers and requests)" },
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
+        { name: "Reviews",    description: "Post reviews and ratings" },
       ],
     },
   }))
@@ -34,6 +36,8 @@ export const app = new Elysia()
   .get("/", () => "Marketplace API")
   .use(authRoutes)
   .use(postsRoutes)
+  .use(reviewsRoutes)
+  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .listen(3001);
