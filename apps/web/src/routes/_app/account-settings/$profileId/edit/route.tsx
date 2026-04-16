@@ -97,15 +97,12 @@ function EditProfilePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex items-center gap-3">
         <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
           <ArrowLeft className="mr-1 size-4" />
           Back
         </Link>
-        <div>
-          <h1 className="text-2xl font-semibold">Edit Profile</h1>
-          <p className="text-sm text-muted-foreground">Update your profile information</p>
-        </div>
+        <h1 className="text-sm font-semibold">Update your profile information</h1>
       </div>
       {patchMutation.isError && (
         <p className="mb-4 text-sm text-destructive">{(patchMutation.error as Error).message}</p>

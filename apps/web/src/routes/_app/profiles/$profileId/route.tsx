@@ -74,25 +74,25 @@ function ProfileViewPage() {
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Phone</p>
+                <p className="text-xs font-medium uppercase tracking-wide">Phone</p>
                 <p>{profile.phoneNumber ?? <span className="text-muted-foreground">—</span>}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Fax</p>
+                <p className="text-xs font-medium uppercase tracking-wide">Fax</p>
                 <p>{profile.fax ?? <span className="text-muted-foreground">—</span>}</p>
               </div>
             </div>
 
             {profile.bio && (
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bio</p>
+                <p className="text-xs font-medium uppercase tracking-wide">Bio</p>
                 <p className="whitespace-pre-wrap">{profile.bio}</p>
               </div>
             )}
 
             {images.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Images</p>
+                <p className="text-xs font-medium uppercase tracking-wide">Images</p>
                 <div className="grid grid-cols-3 gap-2">
                   {images.map((img) => (
                     <img

@@ -118,7 +118,7 @@ export function ProfileForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name *</FormLabel>
+                <FormLabel >Name *</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., John Smith" {...field} />
                 </FormControl>
@@ -131,7 +131,7 @@ export function ProfileForm({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email *</FormLabel>
+                <FormLabel >Email *</FormLabel>
                 <FormControl>
                   <Input type="email" placeholder="email@example.com" {...field} />
                 </FormControl>
@@ -146,7 +146,7 @@ export function ProfileForm({
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel >Phone Number</FormLabel>
                 <FormControl>
                   <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
                 </FormControl>
@@ -159,7 +159,7 @@ export function ProfileForm({
             name="fax"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fax</FormLabel>
+                <FormLabel >Fax</FormLabel>
                 <FormControl>
                   <Input type="tel" placeholder="+1 (555) 123-4568" {...field} />
                 </FormControl>
@@ -173,7 +173,7 @@ export function ProfileForm({
           name="bio"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bio</FormLabel>
+              <FormLabel >Bio</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Tell others about yourself or your business..."
