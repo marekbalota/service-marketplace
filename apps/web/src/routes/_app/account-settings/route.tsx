@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { Suspense } from 'react'
-import { Plus, Edit, Trash2, CheckCircle2, User, X } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle2, User, X, Eye } from 'lucide-react'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -126,7 +126,7 @@ function ImageInputSection({
     const file = e.target.files?.[0]
     if (file) {
       onFilePicked(file)
-      e.target.value = '' // allow re-selecting the same file
+      e.target.value = ''
     }
   }
 
@@ -140,36 +140,36 @@ function ImageInputSection({
         className="hidden"
         onChange={handleChange}
       />
-      <Button
-        type="button"
-        variant="outline"
-        className="gap-2"
-        disabled={isUploading}
-        onClick={() => inputRef.current?.click()}
-      >
-        <Plus className="size-4" />
-        {isUploading ? 'Uploading…' : 'Add Image'}
-      </Button>
-      {previews.length > 0 && (
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {previews.map((preview, i) => (
-            <div key={preview} className="group relative">
-              <img
-                src={preview}
-                alt="Preview"
-                className="h-24 w-full rounded-lg border object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <X className="size-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-3 gap-2">
+        {previews.map((preview, i) => (
+          <div key={preview} className="group relative">
+            <img
+              src={preview}
+              alt="Preview"
+              className="h-24 w-full rounded-lg border object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <X className="size-3" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          disabled={isUploading}
+          onClick={() => inputRef.current?.click()}
+          className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
+        >
+          {isUploading ? (
+            <span className="text-xs">Uploading…</span>
+          ) : (
+            <Plus className="size-6" />
+          )}
+        </button>
+      </div>
     </div>
   )
 }
@@ -266,6 +266,7 @@ function ProfileForm({
                 <Textarea
                   placeholder="Tell others about yourself or your business..."
                   rows={3}
+                  className="resize-none break-words [field-sizing:fixed]"
                   {...field}
                 />
               </FormControl>
@@ -501,6 +502,79 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
   )
 }
 
+// ── View dialog ───────────────────────────────────────────────────────────────
+
+function ViewProfileDialog({ profile }: { profile: UserProfile }) {
+  const [open, setOpen] = useState(false)
+
+  const { data: images = [] } = useQuery({
+    ...imagesQueryOptions(profile.userProfileId),
+    enabled: open,
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" className="w-24 gap-2" />}>
+        <Eye className="size-4" />
+        View
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{profile.name}</DialogTitle>
+          <DialogDescription>Profile details</DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4 text-sm">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</p>
+              <p>{profile.name}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+              <p>{profile.email}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Phone Number</p>
+              <p>{profile.phoneNumber ?? <span className="text-muted-foreground">—</span>}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fax</p>
+              <p>{profile.fax ?? <span className="text-muted-foreground">—</span>}</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bio</p>
+            <p className="whitespace-pre-wrap">{profile.bio ?? <span className="text-muted-foreground">—</span>}</p>
+          </div>
+          {images.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Images</p>
+              <div className="grid grid-cols-3 gap-2">
+                {images.map((img) => (
+                  <img
+                    key={img.imageId}
+                    src={img.link}
+                    alt={img.name}
+                    className="h-24 w-full rounded-lg border object-cover"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="border-t pt-3 space-y-0.5 text-xs text-muted-foreground">
+            <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
+            {profile.updatedAt && (
+              <p>Updated {new Date(profile.updatedAt).toLocaleDateString()}</p>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ── Profile card ──────────────────────────────────────────────────────────────
 
 function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
@@ -542,6 +616,7 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-2">
+            <ViewProfileDialog profile={profile} />
             <EditProfileDialog profile={profile} />
             <DeleteProfileButton profile={profile} />
           </div>
