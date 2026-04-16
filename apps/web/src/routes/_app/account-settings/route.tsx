@@ -295,8 +295,10 @@ function CreateProfileDialog() {
         fax:         values.fax || undefined,
       })
       if (error) throw error
-      for (const link of pendingLinks) {
-        await api.profiles({ id: data!.userProfileId }).images.post({ link })
+      if (data && 'userProfileId' in data) {
+        for (const link of pendingLinks) {
+          await api.profiles({ id: data.userProfileId }).images.post({ link })
+        }
       }
       return data
     },
