@@ -36,6 +36,13 @@
       "when": 1775844418655,
       "tag": "0004_misty_zuras",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776114810323,
+      "tag": "0005_fast_liz_osborn",
+      "breakpoints": true
     }
   ]
 }
