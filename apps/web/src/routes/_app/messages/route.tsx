@@ -11,6 +11,7 @@ export function threadsQueryOptions(profileId: string) {
       if (error) throw error
       return data ?? []
     },
+    staleTime: 0,
   })
 }
 

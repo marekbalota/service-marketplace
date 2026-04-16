@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
-import { queryOptions, useSuspenseQuery, useQuery, useMutation } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
@@ -87,6 +87,7 @@ export function existingThreadQueryOptions(postId: string, profileId: string) {
 
 function SendMessageSection({ postId, profileId }: { postId: string; profileId: string }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
 
@@ -100,6 +101,7 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
       return data
     },
     onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ['threads'] })
       void router.navigate({ to: '/messages/$threadId', params: { threadId: (data as { threadId: string }).threadId } })
     },
   })
