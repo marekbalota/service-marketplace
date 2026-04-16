@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { Suspense } from 'react'
-import { Plus, Edit, Trash2, CheckCircle2, User } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle2, User, X } from 'lucide-react'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -45,6 +45,19 @@ export const Route = createFileRoute('/_app/account-settings')({
   pendingComponent: AccountSettingsSkeleton,
   component: AccountSettingsPage,
 })
+
+// ── Query options ─────────────────────────────────────────────────────────────
+
+export function imagesQueryOptions(profileId: string) {
+  return queryOptions({
+    queryKey: ['profiles', profileId, 'images'],
+    queryFn: async () => {
+      const { data, error } = await api.profiles({ id: profileId }).images.get()
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
@@ -94,6 +107,64 @@ function AccountSettingsSkeleton() {
   )
 }
 
+// ── Image input section ───────────────────────────────────────────────────────
+
+function ImageInputSection({
+  links,
+  linkInput,
+  onLinkInputChange,
+  onAdd,
+  onRemove,
+}: {
+  links: string[]
+  linkInput: string
+  onLinkInputChange: (v: string) => void
+  onAdd: () => void
+  onRemove: (link: string) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Images</label>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter image URL"
+          value={linkInput}
+          onChange={(e) => onLinkInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onAdd()
+            }
+          }}
+        />
+        <Button type="button" variant="outline" size="icon" onClick={onAdd}>
+          <Plus className="size-4" />
+        </Button>
+      </div>
+      {links.length > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {links.map((link) => (
+            <div key={link} className="group relative">
+              <img
+                src={link}
+                alt="Preview"
+                className="h-24 w-full rounded-lg border object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => onRemove(link)}
+                className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Profile form ──────────────────────────────────────────────────────────────
 
 function ProfileForm({
@@ -101,11 +172,13 @@ function ProfileForm({
   onSubmit,
   submitLabel,
   isPending,
+  children,
 }: {
   defaultValues: ProfileFormValues
   onSubmit: SubmitHandler<ProfileFormValues>
   submitLabel: string
   isPending: boolean
+  children?: React.ReactNode
 }) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -192,6 +265,8 @@ function ProfileForm({
           )}
         />
 
+        {children}
+
         <div className="flex gap-3 pt-2">
           <Button type="submit" className="flex-1" disabled={isPending}>
             {isPending ? 'Saving…' : submitLabel}
@@ -206,6 +281,8 @@ function ProfileForm({
 
 function CreateProfileDialog() {
   const [open, setOpen] = useState(false)
+  const [pendingLinks, setPendingLinks] = useState<string[]>([])
+  const [linkInput, setLinkInput] = useState('')
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
@@ -218,18 +295,31 @@ function CreateProfileDialog() {
         fax:         values.fax || undefined,
       })
       if (error) throw error
+      for (const link of pendingLinks) {
+        await api.profiles({ id: data!.userProfileId }).images.post({ link })
+      }
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+      setPendingLinks([])
+      setLinkInput('')
       setOpen(false)
     },
   })
 
   const defaultValues: ProfileFormValues = { name: '', email: '', bio: '', phoneNumber: '', fax: '' }
 
+  function addLink() {
+    const trimmed = linkInput.trim()
+    if (trimmed && !pendingLinks.includes(trimmed)) {
+      setPendingLinks((prev) => [...prev, trimmed])
+    }
+    setLinkInput('')
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPendingLinks([]); setLinkInput('') } }}>
       <DialogTrigger render={<Button className="gap-2" />}>
         <Plus className="size-4" />
         Add Profile
@@ -247,7 +337,15 @@ function CreateProfileDialog() {
           onSubmit={(v) => mutation.mutate(v)}
           submitLabel="Create Profile"
           isPending={mutation.isPending}
-        />
+        >
+          <ImageInputSection
+            links={pendingLinks}
+            linkInput={linkInput}
+            onLinkInputChange={setLinkInput}
+            onAdd={addLink}
+            onRemove={(link) => setPendingLinks((prev) => prev.filter((l) => l !== link))}
+          />
+        </ProfileForm>
       </DialogContent>
     </Dialog>
   )
@@ -257,9 +355,15 @@ function CreateProfileDialog() {
 
 function EditProfileDialog({ profile }: { profile: UserProfile }) {
   const [open, setOpen] = useState(false)
+  const [linkInput, setLinkInput] = useState('')
   const queryClient = useQueryClient()
 
-  const mutation = useMutation({
+  const { data: images = [] } = useQuery({
+    ...imagesQueryOptions(profile.userProfileId),
+    enabled: open,
+  })
+
+  const patchMutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
       const { error } = await api.profiles({ id: profile.userProfileId }).patch({
         name:        values.name,
@@ -276,6 +380,27 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
     },
   })
 
+  const addImageMutation = useMutation({
+    mutationFn: async (link: string) => {
+      const { error } = await api.profiles({ id: profile.userProfileId }).images.post({ link })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profile.userProfileId).queryKey })
+      setLinkInput('')
+    },
+  })
+
+  const deleteImageMutation = useMutation({
+    mutationFn: async (imageId: string) => {
+      const { error } = await api.images({ id: imageId }).delete()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profile.userProfileId).queryKey })
+    },
+  })
+
   const defaultValues: ProfileFormValues = {
     name:        profile.name,
     email:       profile.email,
@@ -284,8 +409,13 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
     fax:         profile.fax ?? '',
   }
 
+  function addLink() {
+    const trimmed = linkInput.trim()
+    if (trimmed) addImageMutation.mutate(trimmed)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setLinkInput('') }}>
       <DialogTrigger render={<Button variant="outline" size="sm" className="w-24 gap-2" />}>
         <Edit className="size-4" />
         Edit
@@ -295,15 +425,26 @@ function EditProfileDialog({ profile }: { profile: UserProfile }) {
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>Update your profile information</DialogDescription>
         </DialogHeader>
-        {mutation.isError && (
-          <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
+        {patchMutation.isError && (
+          <p className="text-sm text-destructive">{(patchMutation.error as Error).message}</p>
         )}
         <ProfileForm
           defaultValues={defaultValues}
-          onSubmit={(v) => mutation.mutate(v)}
+          onSubmit={(v) => patchMutation.mutate(v)}
           submitLabel="Save Changes"
-          isPending={mutation.isPending}
-        />
+          isPending={patchMutation.isPending}
+        >
+          <ImageInputSection
+            links={images.map((img) => img.link)}
+            linkInput={linkInput}
+            onLinkInputChange={setLinkInput}
+            onAdd={addLink}
+            onRemove={(link) => {
+              const img = images.find((i) => i.link === link)
+              if (img) deleteImageMutation.mutate(img.imageId)
+            }}
+          />
+        </ProfileForm>
       </DialogContent>
     </Dialog>
   )
@@ -354,6 +495,8 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
 // ── Profile card ──────────────────────────────────────────────────────────────
 
 function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
+  const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
+
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
@@ -385,6 +528,23 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                 {profile.phoneNumber && <span>📞 {profile.phoneNumber}</span>}
                 {profile.fax && <span>📠 {profile.fax}</span>}
               </div>
+              {images.length > 0 && (
+                <div className="mt-3 flex gap-2">
+                  {images.slice(0, 3).map((img) => (
+                    <img
+                      key={img.imageId}
+                      src={img.link}
+                      alt={img.name}
+                      className="size-16 shrink-0 rounded border object-cover"
+                    />
+                  ))}
+                  {images.length > 3 && (
+                    <div className="flex size-16 shrink-0 items-center justify-center rounded border bg-muted text-sm text-muted-foreground">
+                      +{images.length - 3}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                 <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
                 {profile.updatedAt && (
