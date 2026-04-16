@@ -504,8 +504,6 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
 // ── Profile card ──────────────────────────────────────────────────────────────
 
 function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
-  const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
-
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
@@ -537,23 +535,6 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                 {profile.phoneNumber && <span>📞 {profile.phoneNumber}</span>}
                 {profile.fax && <span>📠 {profile.fax}</span>}
               </div>
-              {images.length > 0 && (
-                <div className="mt-3 flex gap-2">
-                  {images.slice(0, 3).map((img) => (
-                    <img
-                      key={img.imageId}
-                      src={img.link}
-                      alt={img.name}
-                      className="size-16 shrink-0 rounded border object-cover"
-                    />
-                  ))}
-                  {images.length > 3 && (
-                    <div className="flex size-16 shrink-0 items-center justify-center rounded border bg-muted text-sm text-muted-foreground">
-                      +{images.length - 3}
-                    </div>
-                  )}
-                </div>
-              )}
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                 <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
                 {profile.updatedAt && (
