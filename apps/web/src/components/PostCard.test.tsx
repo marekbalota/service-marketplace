@@ -81,18 +81,18 @@ describe('PostCard', () => {
     expect(screen.getByText('Education')).toBeInTheDocument()
   })
 
-  it('toggles favourite state when star button is clicked', async () => {
+  it('toggles favourite state when heart button is clicked', async () => {
     await renderWithRouter(<PostCard post={basePost} />)
-    const starButton = screen.getByRole('button')
-    const star = starButton.querySelector('svg')!
+    const heartButton = screen.getByRole('button')
+    const heart = heartButton.querySelector('svg')!
 
-    expect(star.classList.contains('fill-star-filled')).toBe(false)
+    expect(heart.classList.contains('fill-red-500')).toBe(false)
 
-    fireEvent.click(starButton)
-    expect(star.classList.contains('fill-star-filled')).toBe(true)
+    fireEvent.click(heartButton)
+    expect(heart.classList.contains('fill-red-500')).toBe(true)
 
-    fireEvent.click(starButton)
-    expect(star.classList.contains('fill-star-filled')).toBe(false)
+    fireEvent.click(heartButton)
+    expect(heart.classList.contains('fill-red-500')).toBe(false)
   })
 
   it('wraps card in a link to the post detail page', async () => {

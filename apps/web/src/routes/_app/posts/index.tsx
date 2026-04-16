@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Heart } from 'lucide-react'
 
 function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
   return (
@@ -275,10 +275,10 @@ function PostsList({ type, category, q, sort, page, favouritesOnly }: {
         <div className="py-12 text-center">
           {favouritesOnly ? (
             <>
-              <Star className="mx-auto size-12 text-muted-foreground/50" />
+              <Heart className="mx-auto size-12 text-muted-foreground/50" />
               <p className="mt-4 text-muted-foreground">No favourites found matching your criteria.</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Browse posts and click the star icon to add them to your favourites.
+                Browse posts and click the heart icon to add them to your favourites.
               </p>
             </>
           ) : (
@@ -487,7 +487,7 @@ function HomePage() {
                       className="w-full gap-2"
                       onClick={toggleFavourites}
                     >
-                      <Star className={cn('size-4', favourites && 'fill-white')} />
+                      <Heart className={cn('size-4', favourites && 'fill-red-500')} />
                       {favourites ? 'Favourites' : 'Show Favourites'}
                     </Button>
                   )}
@@ -516,7 +516,7 @@ function HomePage() {
                 className="gap-2"
                 onClick={toggleFavourites}
               >
-                <Star className={cn('size-4', favourites && 'fill-white')} />
+                <Heart className={cn('size-4', favourites && 'fill-red-500')} />
                 <span className="hidden lg:inline">
                   {favourites ? 'Favourites' : 'Favourites'}
                 </span>

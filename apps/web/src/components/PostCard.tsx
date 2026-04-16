@@ -1,4 +1,4 @@
-import { MapPin, User, DollarSign, Star, Trash2 } from 'lucide-react'
+import { MapPin, User, DollarSign, Heart, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -114,14 +114,14 @@ function FavouriteButton({
       className={cn(
         'transition-colors',
         isFavourite
-          ? 'text-[#facc15] hover:text-[#facc15]/80'
-          : 'text-muted-foreground hover:text-[#facc15]'
+          ? 'text-red-500 hover:text-red-600'
+          : 'text-muted-foreground hover:text-red-500'
       )}
     >
-      <Star
+      <Heart
         className={cn(
           'size-5 transition-all',
-          isFavourite && 'fill-[#facc15]'
+          isFavourite && 'fill-red-500 text-red-500'
         )}
       />
     </Button>

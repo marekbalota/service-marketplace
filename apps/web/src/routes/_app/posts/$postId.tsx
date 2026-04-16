@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
+import { ArrowLeft, DollarSign, MapPin, User, Heart, MessageSquare, Pencil, Star } from 'lucide-react'
 import { api } from '#/api'
 import { authClient } from '#/auth'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
@@ -135,14 +135,14 @@ function FavouriteButton({ postId }: { postId: string }) {
       className={cn(
         'transition-colors',
         isFavourite
-          ? 'text-[#facc15] hover:text-[#facc15]/80'
-          : 'text-muted-foreground hover:text-[#facc15]'
+          ? 'text-red-500 hover:text-red-600'
+          : 'text-muted-foreground hover:text-red-500'
       )}
     >
-      <Star
+      <Heart
         className={cn(
           'size-6 transition-all',
-          isFavourite && 'fill-[#facc15]'
+          isFavourite && 'fill-red-500 text-red-500'
         )}
       />
     </Button>

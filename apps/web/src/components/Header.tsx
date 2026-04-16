@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { User, ChevronDown, Heart } from "lucide-react";
+import { User, ChevronDown } from "lucide-react";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import {
@@ -43,13 +43,6 @@ export function Header() {
             )}
             {session && (
               <>
-                <Link
-                  to="/favourites"
-                  className={cn(buttonVariants({ variant: "outline", size: "icon" }), "hidden sm:flex")}
-                  title="My Favourites"
-                >
-                  <Heart className="size-4" />
-                </Link>
                 <Sheet open={open} onOpenChange={setOpen}>
                   <SheetTrigger
                     render={<Button variant="outline" className="gap-2" data-testid="profile-menu-trigger" />}
