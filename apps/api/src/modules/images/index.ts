@@ -1,55 +1,20 @@
 import { Elysia, t } from 'elysia'
 import { ImagesModel } from './model'
 import { ImagesService } from './service'
-import { ProfilesService } from '../profiles/service'
 import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
 import { ErrorMessages, errorResponse } from '../../errors'
-import { uploadImage } from '../../storage'
 
-export const imagesRoutes = new Elysia()
+export const imagesRoutes = new Elysia({ prefix: '/images' })
   .use(authRoutes)
-  .get(
-    '/profiles/:id/images',
-    async ({ params }) => ImagesService.findByProfileId(params.id),
-    {
-      params:   ImagesModel.profileImagesParams,
-      response: { 200: ImagesModel.profileImagesResponse },
-      detail:   { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
-    },
-  )
-  .post(
-    '/profiles/:id/images',
-    async ({ params, body, user, set }) => {
-      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
-      if (!isOwner) {
-        set.status = 403
-        return { message: AuthModel.messages.forbidden }
-      }
-      const link = await uploadImage(body.file, params.id)
-      const created = await ImagesService.create(params.id, { link, name: body.file.name })
-      if (!created) {
-        set.status = 500
-        return { message: 'Failed to create image' }
-      }
-      set.status = 201
-      return created
-    },
-    {
-      auth:     true,
-      params:   ImagesModel.profileImagesParams,
-      body:     ImagesModel.createBody,
-      response: {
-        201: ImagesModel.createResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: errorResponse,
-      },
-      detail: { summary: 'Upload image to profile', operationId: 'createProfileImage', tags: ['Images'] },
-    },
-  )
   .delete(
-    '/images/:id',
+    '/:id',
     async ({ params, user, set }) => {
+      const image = await ImagesService.findById(params.id)
+      if (!image) {
+        set.status = 404
+        return { message: ErrorMessages.imageNotFound }
+      }
       const isOwner = await ImagesService.isImageOwnedByAccount(params.id, user.id)
       if (!isOwner) {
         set.status = 403

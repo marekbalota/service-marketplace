@@ -41,7 +41,7 @@ function ProfileViewSkeleton() {
   )
 }
 
-function ProfileViewPage() {
+export function ProfileViewPage() {
   const { profileId } = Route.useParams()
   const router = useRouter()
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))

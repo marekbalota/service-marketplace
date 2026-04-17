@@ -27,6 +27,15 @@ export abstract class ImagesService {
     return inserted ?? null
   }
 
+  static async findById(imageId: string) {
+    const [row] = await db
+      .select(imageSelect)
+      .from(images)
+      .where(and(eq(images.imageId, imageId), isNull(images.deletedAt)))
+      .limit(1)
+    return row ?? null
+  }
+
   static async isImageOwnedByAccount(imageId: string, accountId: string) {
     const [row] = await db
       .select({ imageId: images.imageId })
@@ -37,6 +46,7 @@ export abstract class ImagesService {
           eq(images.imageId, imageId),
           eq(userProfiles.accountId, accountId),
           isNull(images.deletedAt),
+          isNull(userProfiles.deletedAt),
         ),
       )
       .limit(1)

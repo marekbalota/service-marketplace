@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Suspense, useState } from 'react'
-import { Plus, Edit, Trash2, CheckCircle2, User, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
 import { api } from '#/api'
 import { profilesQueryOptions, useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -110,8 +110,18 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
               <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
-                {profile.phoneNumber && <p>📞 {profile.phoneNumber}</p>}
-                {profile.fax && <p>📠 {profile.fax}</p>}
+                {profile.phoneNumber && (
+                  <p className="flex items-center gap-1.5">
+                    <Phone className="size-3.5 shrink-0" />
+                    {profile.phoneNumber}
+                  </p>
+                )}
+                {profile.fax && (
+                  <p className="flex items-center gap-1.5">
+                    <Printer className="size-3.5 shrink-0" />
+                    {profile.fax}
+                  </p>
+                )}
               </div>
               <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                 <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>

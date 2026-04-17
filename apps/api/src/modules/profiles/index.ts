@@ -5,8 +5,11 @@ import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
 import { LocationsModel, LocationsService } from '../locations'
+import { ImagesModel } from '../images/model'
+import { ImagesService } from '../images/service'
 import { authRoutes } from '../auth'
 import { ErrorMessages, errorResponse } from '../../errors'
+import { uploadImage, deleteUploadedImage } from '../../storage'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
@@ -60,6 +63,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       response: {
         201: ProfilesModel.createResponse,
         401: AuthModel.unauthorizedResponse,
+        500: errorResponse,
       },
       detail: { summary: 'Create a profile', operationId: 'createProfile', tags: ['Profiles'] },
     },
@@ -145,5 +149,46 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       params: LocationsModel.profileLocationsParams,
       response: { 200: LocationsModel.profileLocationsResponse },
       detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
+    },
+  )
+  .get(
+    '/:id/images',
+    async ({ params }) => ImagesService.findByProfileId(params.id),
+    {
+      params:   ImagesModel.profileImagesParams,
+      response: { 200: ImagesModel.profileImagesResponse },
+      detail:   { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
+    },
+  )
+  .post(
+    '/:id/images',
+    async ({ params, body, user, set }) => {
+      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
+      if (!isOwner) {
+        set.status = 403
+        return { message: AuthModel.messages.forbidden }
+      }
+      const link = await uploadImage(body.file, params.id)
+      const created = await ImagesService.create(params.id, { link, name: body.file.name })
+      if (!created) {
+        // Best-effort cleanup: remove the orphaned MinIO object
+        await deleteUploadedImage(link).catch(() => {})
+        set.status = 500
+        return { message: 'Failed to save image' }
+      }
+      set.status = 201
+      return created
+    },
+    {
+      auth:     true,
+      params:   ImagesModel.profileImagesParams,
+      body:     ImagesModel.createBody,
+      response: {
+        201: ImagesModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: errorResponse,
+        500: errorResponse,
+      },
+      detail: { summary: 'Upload image to profile', operationId: 'createProfileImage', tags: ['Images'] },
     },
   )

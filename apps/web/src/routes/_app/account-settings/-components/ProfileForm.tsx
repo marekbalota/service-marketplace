@@ -6,6 +6,7 @@ import { Plus, X } from 'lucide-react'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { Button } from '#/components/ui/button'
+import { Label } from '#/components/ui/label'
 import {
   Form,
   FormControl,
@@ -48,7 +49,7 @@ export function ImageInputSection({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Images</label>
+      <Label>Images</Label>
       <input
         ref={inputRef}
         type="file"
@@ -64,27 +65,30 @@ export function ImageInputSection({
               alt="Preview"
               className="h-24 w-full rounded-lg border object-cover"
             />
-            <button
+            <Button
               type="button"
+              variant="destructive"
+              size="icon"
               onClick={() => onRemove(i)}
-              className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute right-1 top-1 size-5 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
             >
               <X className="size-3" />
-            </button>
+            </Button>
           </div>
         ))}
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="flex h-24 w-full items-center justify-center rounded-lg border-2 border-dashed text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
+          className="h-24 w-full border-dashed text-muted-foreground hover:border-foreground/40 hover:text-foreground"
         >
           {isUploading ? (
             <span className="text-xs">Uploading…</span>
           ) : (
             <Plus className="size-6" />
           )}
-        </button>
+        </Button>
       </div>
     </div>
   )

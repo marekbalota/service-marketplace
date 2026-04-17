@@ -1,7 +1,6 @@
 import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import { authClient } from '#/auth'
 import { api } from '#/api'
 import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { buttonVariants } from '#/components/ui/button'
@@ -11,13 +10,9 @@ import {
   ImageInputSection,
   type ProfileFormValues,
 } from '../../-components/ProfileForm'
-import { imagesQueryOptions } from '#/lib/profileQueries'
+import { imagesQueryOptions, profileQueryOptions } from '#/lib/profileQueries'
 
 export const Route = createFileRoute('/_app/account-settings/$profileId/edit')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) throw redirect({ to: '/login' })
-  },
   loader: async ({ context: { queryClient }, params }) => {
     const profiles = await queryClient.ensureQueryData(profilesQueryOptions)
     const isOwner = profiles?.some(p => p.userProfileId === params.profileId)
@@ -40,7 +35,7 @@ function EditSkeleton() {
   )
 }
 
-function EditProfilePage() {
+export function EditProfilePage() {
   const { profileId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -63,6 +58,7 @@ function EditProfilePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+      queryClient.invalidateQueries({ queryKey: profileQueryOptions(profileId).queryKey })
       navigate({ to: '/account-settings' })
     },
   })

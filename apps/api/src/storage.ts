@@ -7,7 +7,7 @@ const PUBLIC_URL = process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000'
 export const minioClient = new Client({
   endPoint:  process.env.MINIO_ENDPOINT ?? 'localhost',
   port:      parseInt(process.env.MINIO_PORT ?? '9000', 10),
-  useSSL:    false,
+  useSSL:    process.env.MINIO_USE_SSL === 'true',
   accessKey: process.env.MINIO_ROOT_USER ?? 'minioadmin',
   secretKey: process.env.MINIO_ROOT_PASSWORD ?? 'minioadmin',
 })
@@ -43,4 +43,15 @@ export async function uploadImage(file: File, profileId: string): Promise<string
     'Content-Type': file.type,
   })
   return `${PUBLIC_URL}/${BUCKET}/${key}`
+}
+
+/**
+ * Deletes a previously uploaded object from MinIO given its public URL.
+ * Used for cleanup when a DB insert fails after a successful upload.
+ */
+export async function deleteUploadedImage(url: string): Promise<void> {
+  const prefix = `${PUBLIC_URL}/${BUCKET}/`
+  if (!url.startsWith(prefix)) return
+  const key = url.slice(prefix.length)
+  await minioClient.removeObject(BUCKET, key)
 }
