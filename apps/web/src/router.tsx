@@ -1,6 +1,8 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { QueryClient, QueryCache } from '@tanstack/react-query'
 import { routeTree } from './routeTree.gen'
+import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
+import { NotFound } from './components/NotFound'
 import type { User } from '#/types/api'
 
 // Module-level ref — populated inside getRouter() so QueryCache error
@@ -42,6 +44,8 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    defaultErrorComponent: DefaultCatchBoundary,
+    defaultNotFoundComponent: NotFound,
   })
 
   routerRef = router
@@ -51,8 +55,5 @@ export function getRouter() {
 declare module '@tanstack/react-router' {
   interface Register {
     router: ReturnType<typeof getRouter>
-  }
-  interface StaticDataRouteOption {
-    permissions?: string[]
   }
 }

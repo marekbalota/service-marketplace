@@ -12,13 +12,11 @@ import {
 } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
-import { useRouteContext } from '@tanstack/react-router'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 export function Header() {
   const [open, setOpen] = useState(false)
-  const { user } = useRouteContext({ strict: false })
-  const { activeProfile } = useActiveProfile(user)
+  const { user, activeProfile } = useActiveUser()
 
   return (
     <header className="sticky top-0 z-10 border-b bg-card shadow-sm">

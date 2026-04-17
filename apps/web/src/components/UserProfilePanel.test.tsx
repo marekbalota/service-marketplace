@@ -6,7 +6,7 @@ import { UserProfilePanel } from './UserProfilePanel'
 import type { User } from '#/types/api'
 
 const mockSignOut = vi.hoisted(() => vi.fn())
-const mockUseActiveProfile = vi.hoisted(() => vi.fn())
+const mockUseActiveUser = vi.hoisted(() => vi.fn())
 const mockInvalidate = vi.hoisted(() => vi.fn())
 const mockNavigate = vi.hoisted(() => vi.fn())
 const mockQueryClientClear = vi.hoisted(() => vi.fn())
@@ -16,8 +16,8 @@ vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
-  useActiveProfile: mockUseActiveProfile,
+vi.mock('#/contexts/ActiveUserContext', () => ({
+  useActiveUser: mockUseActiveUser,
 }))
 
 vi.mock('#/router', () => ({
@@ -28,7 +28,6 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
-    useRouteContext: () => ({ user: mockUser.current }),
     useRouter: () => ({ invalidate: mockInvalidate, navigate: mockNavigate }),
   }
 })
@@ -70,9 +69,11 @@ describe('UserProfilePanel', () => {
     mockInvalidate.mockReset()
     mockQueryClientClear.mockReset()
     mockUser.current = baseUser
-    mockUseActiveProfile.mockReturnValue({
+    mockUseActiveUser.mockReturnValue({
+      user: baseUser,
       activeProfile: baseProfile,
       setActiveProfileId: vi.fn(),
+      isLoading: false,
     })
   })
 
@@ -101,7 +102,12 @@ describe('UserProfilePanel', () => {
 
   it('hides the profile switcher when there are no profiles', async () => {
     mockUser.current = { ...baseUser, profiles: [] }
-    mockUseActiveProfile.mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    mockUseActiveUser.mockReturnValue({
+      user: { ...baseUser, profiles: [] },
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+      isLoading: false,
+    })
     await renderPanel()
     expect(screen.queryByText('Switch Profile')).not.toBeInTheDocument()
   })

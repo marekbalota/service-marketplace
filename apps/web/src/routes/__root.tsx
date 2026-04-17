@@ -1,77 +1,50 @@
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
-  createRootRouteWithContext,
-  useRouter,
-  type ErrorComponentProps,
+  createRootRouteWithContext
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { Button, buttonVariants } from '../components/ui/button'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
-import appCss from '../styles.css?url'
-import { currentUserQueryOptions } from '#/hooks/useActiveProfile'
+import { currentUserQueryOptions } from '#/contexts/ActiveUserContext'
 import type { User } from '#/types/api'
+import appCss from '../styles.css?url'
+import { ActiveUserProvider } from '#/contexts/ActiveUserContext'
+import { DefaultCatchBoundary } from '#/components/DefaultCatchBoundary'
+import { NotFound } from '#/components/NotFound'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
-
-function PageEyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-      {children}
-    </p>
-  )
-}
-
-function RootErrorComponent({ error }: ErrorComponentProps) {
-  const router = useRouter()
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-32 text-center">
-      <PageEyebrow>Error</PageEyebrow>
-      <h1 className="mb-4 text-3xl font-semibold text-foreground">Something went wrong</h1>
-      <p className="mb-8 text-muted-foreground">
-        {error.message || 'An unexpected error occurred. Please try again.'}
-      </p>
-      <Button variant="outline" onClick={() => router.invalidate()}>
-        Try again
-      </Button>
-    </main>
-  )
-}
-
-function NotFound() {
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-32 text-center">
-      <PageEyebrow>404</PageEyebrow>
-      <h1 className="mb-4 text-3xl font-semibold text-foreground">Page not found</h1>
-      <p className="mb-8 text-muted-foreground">The page you're looking for doesn't exist.</p>
-      <Link to="/" className={buttonVariants({ variant: 'outline' })}>Back to main page</Link>
-    </main>
-  )
-}
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
   user: User | null
 }>()({
-  beforeLoad: async ({ context: { queryClient } }) => {
-    const user = await queryClient.fetchQuery(currentUserQueryOptions)
-    return { user: user ?? null }
-  },
-  notFoundComponent: NotFound,
-  errorComponent: RootErrorComponent,
   head: () => ({
     meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Marketplace for Services' },
+      {
+        charSet: 'utf-8'
+      },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1'
+      },
+      {
+        title: 'Marketplace for Services'
+      },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'stylesheet', href: appCss }
+    ],
   }),
+  beforeLoad: async () => {
+    const user = await queryClient.fetchQuery(currentUserQueryOptions)
+    return { user }
+  },
+  notFoundComponent: NotFound,
+  errorComponent: DefaultCatchBoundary,
   component: RootComponent,
 })
 
@@ -92,12 +65,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
-          {children}
-          <ReactQueryDevtools buttonPosition="bottom-left" />
-          <TanStackDevtools
-            config={{ position: 'bottom-right' }}
-            plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
-          />
+          <ActiveUserProvider>
+            {children}
+            <ReactQueryDevtools buttonPosition="bottom-left" />
+            <TanStackDevtools
+              config={{ position: 'bottom-right' }}
+              plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
+            />
+          </ActiveUserProvider>
         </QueryClientProvider>
         <Scripts />
       </body>

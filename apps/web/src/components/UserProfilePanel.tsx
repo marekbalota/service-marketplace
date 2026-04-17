@@ -1,4 +1,4 @@
-import { Link, useRouter, useRouteContext } from '@tanstack/react-router'
+import { Link, useRouter, useNavigate } from '@tanstack/react-router'
 import {
   Settings,
   FileText,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -37,9 +37,9 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { user } = useRouteContext({ strict: false })
-  const { activeProfile, setActiveProfileId } = useActiveProfile(user)
+  const { user, activeProfile, setActiveProfileId } = useActiveUser()
   const router = useRouter()
+  const navigate = useNavigate()
   const allProfiles = user?.profiles ?? []
   const isAdmin = (user?.role?.permissions ?? []).some((p: string) => p.startsWith('admin:'))
 
@@ -157,10 +157,10 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              queryClient.clear()
+              queryClient.invalidateQueries()
               router.invalidate()
               onClose()
-              void router.navigate({ to: '/' })
+              navigate({ to: '/' })
             }}
           >
             <LogOut className="size-5" />
