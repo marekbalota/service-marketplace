@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { authClient } from '#/auth'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Heart, ChevronDown, Check } from 'lucide-react'
 
 function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
   return (
@@ -24,7 +24,7 @@ function SearchInput({ value, onChange, disabled }: { value?: string; onChange?:
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { Input } from '#/components/ui/input'
-import { buttonVariants } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
@@ -53,7 +53,9 @@ import {
 } from '#/components/ui/pagination'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
-const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
+const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
+
+const ratingRangeSchema = z.enum(['5-4', '4-3', '3-2', '2-1', 'none'])
 
 const searchSchema = z.object({
   q:        z.string().optional().catch(undefined),
@@ -61,10 +63,13 @@ const searchSchema = z.object({
   category: z.string().optional().catch(undefined),
   sort:     sortEnum.optional().catch(undefined),
   page:     z.number().int().positive().optional().catch(undefined),
+  favourites: z.boolean().optional().catch(undefined),
+  rating:   z.union([ratingRangeSchema, z.array(ratingRangeSchema)]).optional().catch(undefined),
 })
 
 type PostTypeFilter = z.infer<typeof postTypeEnum>
 type SortOption = z.infer<typeof sortEnum>
+type RatingRange = z.infer<typeof ratingRangeSchema>
 
 const PAGE_SIZE = 12
 
@@ -79,6 +84,8 @@ const SORT_LABELS: Record<SortOption, string> = {
   'price-low': 'Price: Low to High',
   'price-high': 'Price: High to Low',
   name: 'Name: A to Z',
+  'reviews-most': 'Reviews: Most First',
+  'reviews-least': 'Reviews: Fewest First',
 }
 
 // --- Query options ---
@@ -92,18 +99,38 @@ export const categoriesQueryOptions = queryOptions({
   },
 })
 
+function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): string[] {
+  if (!rating) return []
+  return Array.isArray(rating) ? rating : [rating]
+}
+
 export function postsQueryOptions(deps: {
   type?: PostTypeFilter
   category?: string
   q?: string
   sort: SortOption
   page: number
+  rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
+  const ratingRanges = normalizeRating(deps.rating)
+  // Build rating filter params - multiple ranges will be sent as comma-separated min-max pairs
+  const ratingFilter = ratingRanges.length > 0
+    ? ratingRanges.map(r => {
+        if (r === '5-4') return { min: 4, max: 5 }
+        if (r === '4-3') return { min: 3, max: 4 }
+        if (r === '3-2') return { min: 2, max: 3 }
+        if (r === '2-1') return { min: 1, max: 2 }
+        if (r === 'none') return { min: 0, max: 0 }
+        return null
+      }).filter(Boolean)
+    : undefined
+
   const query = {
     type:       deps.type && deps.type !== 'all' ? deps.type.toUpperCase() as 'OFFER' | 'REQUEST' : undefined,
     categoryId: deps.category !== 'all' ? deps.category : undefined,
     search:     deps.q,
     sort:       deps.sort,
+    ratingFilter: ratingFilter ? JSON.stringify(ratingFilter) : undefined,
     offset:     (deps.page - 1) * PAGE_SIZE,
     size:       PAGE_SIZE,
   }
@@ -118,6 +145,15 @@ export function postsQueryOptions(deps: {
     placeholderData: keepPreviousData,
   })
 }
+
+export const favouritesQueryOptions = queryOptions({
+  queryKey: ['favourites'],
+  queryFn: async () => {
+    const { data, error } = await api.favourites.get()
+    if (error) throw error
+    return data
+  },
+})
 
 // --- Route ---
 
@@ -213,38 +249,81 @@ export function buildPageNumbers(current: number, total: number): (number | 'ell
 
 // --- Posts list (suspends while its query is loading) ---
 
-function PostsList({ type, category, q, sort, page }: {
+function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
   type: PostTypeFilter
   category: string
   q: string
   sort: SortOption
   page: number
+  favouritesOnly: boolean
+  rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page }))
+  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating }))
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
+
+  // Prefetch favourites if authenticated
+  const { data: favouritesData } = useQuery({
+    ...favouritesQueryOptions,
+    enabled: isAuthenticated,
+  })
+
   const navigate = Route.useNavigate()
 
   const setPage = (value: number) =>
     navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
 
+  // Build set of favourite post IDs (only for authenticated users)
+  const favouritePostIds = useMemo(() => {
+    if (!isAuthenticated || !favouritesData?.items) return new Set<string>()
+    return new Set(favouritesData.items.map((f: { postId: string }) => f.postId))
+  }, [isAuthenticated, favouritesData])
+
+  // Filter posts if favouritesOnly mode
+  const displayPosts = useMemo(() => {
+    if (!favouritesOnly) return data.items
+    return data.items.filter((post: { postId: string }) => favouritePostIds.has(post.postId))
+  }, [data.items, favouritePostIds, favouritesOnly])
+
+  const totalItems = favouritesOnly ? displayPosts.length : data.total
+  const totalPages = favouritesOnly
+    ? Math.ceil(displayPosts.length / PAGE_SIZE)
+    : data.totalPages
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <p className="mb-4 text-muted-foreground">
-        {data.total} service{data.total !== 1 ? 's' : ''} available
+        {totalItems} service{totalItems !== 1 ? 's' : ''} available
+        {favouritesOnly && ' (favourites only)'}
       </p>
 
-      {data.items.length === 0 ? (
+      {displayPosts.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-muted-foreground">No services found matching your criteria.</p>
+          {favouritesOnly ? (
+            <>
+              <Heart className="mx-auto size-12 text-muted-foreground/50" />
+              <p className="mt-4 text-muted-foreground">No favourites found matching your criteria.</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Browse posts and click the heart icon to add them to your favourites.
+              </p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">No services found matching your criteria.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((post) => (
-            <PostCard key={post.postId} post={post} />
+          {displayPosts.map((post: { postId: string }) => (
+            <PostCard
+              key={post.postId}
+              post={post}
+              isFavourite={favouritePostIds.has(post.postId)}
+            />
           ))}
         </div>
       )}
 
-      {data.totalPages > 1 && (
+      {totalPages > 1 && !favouritesOnly && (
         <div className="mt-8 flex justify-center">
           <Pagination>
             <PaginationContent>
@@ -256,7 +335,7 @@ function PostsList({ type, category, q, sort, page }: {
                 />
               </PaginationItem>
 
-              {buildPageNumbers(page, data.totalPages).map((item, i) =>
+              {buildPageNumbers(page, totalPages).map((item, i) =>
                 item === 'ellipsis' ? (
                   <PaginationItem key={`ellipsis-${i}`}>
                     <PaginationEllipsis />
@@ -277,8 +356,8 @@ function PostsList({ type, category, q, sort, page }: {
               <PaginationItem>
                 <PaginationNext
                   onClick={() => setPage(page + 1)}
-                  aria-disabled={page >= data.totalPages}
-                  className={page >= data.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  aria-disabled={page >= totalPages}
+                  className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -332,12 +411,12 @@ function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
         <SelectValue>
           {category === 'all'
             ? 'All Categories'
-            : (categories.find((c) => c.categoryId === category)?.name ?? 'All Categories')}
+            : (categories.find((c: { categoryId: string; name: string }) => c.categoryId === category)?.name ?? 'All Categories')}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All Categories</SelectItem>
-        {categories.map((cat) => (
+        {categories.map((cat: { categoryId: string; name: string }) => (
           <SelectItem key={cat.categoryId} value={cat.categoryId}>
             {cat.name}
           </SelectItem>
@@ -350,6 +429,7 @@ function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
 function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
   const { sort = 'newest' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
   return (
     <Select
       value={sort}
@@ -369,10 +449,119 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
   )
 }
 
+const RATING_OPTIONS: { value: RatingRange; label: string }[] = [
+  { value: '5-4', label: '5-4 ★' },
+  { value: '4-3', label: '4-3 ★' },
+  { value: '3-2', label: '3-2 ★' },
+  { value: '2-1', label: '2-1 ★' },
+  { value: 'none', label: 'Without review' },
+]
+
+function RatingSelect({ triggerClassName }: { triggerClassName?: string }) {
+  const { rating } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const selected = normalizeRating(rating) as RatingRange[]
+  const hasSelection = selected.length > 0
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const clearAll = () => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        rating: undefined,
+        page: undefined,
+      }),
+    })
+  }
+
+  const toggleOption = (value: RatingRange) => {
+    const current = selected
+    const isSelected = current.includes(value)
+    const newSelection = isSelected
+      ? current.filter((v) => v !== value)
+      : [...current, value]
+
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        rating: newSelection.length > 0 ? newSelection : undefined,
+        page: undefined,
+      }),
+    })
+  }
+
+  const displayLabel =
+    selected.length === 0
+      ? 'All Ratings'
+      : selected.length === 1
+      ? RATING_OPTIONS.find((o) => o.value === selected[0])?.label
+      : `${selected.length} selected`
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-2 pr-2 text-sm transition-colors hover:bg-accent',
+          triggerClassName,
+        )}
+      >
+        <span className="flex-1 text-left">{displayLabel}</span>
+        <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full z-50 mt-1 w-[180px] rounded-lg border bg-popover p-1 shadow-md">
+          <button
+            type="button"
+            onClick={() => {
+              clearAll()
+              setIsOpen(false)
+            }}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent',
+              hasSelection ? 'font-semibold text-primary' : '',
+            )}
+          >
+            {hasSelection ? 'Clear filter' : 'All Ratings'}
+          </button>
+          {RATING_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => toggleOption(option.value)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent"
+            >
+              <span className="flex h-4 w-4 items-center justify-center">
+                {selected.includes(option.value) && <Check className="size-4" />}
+              </span>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
 // --- Page ---
 
 function HomePage() {
-  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
+  const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1, favourites = false, rating } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: session } = authClient.useSession()
   const isAuthenticated = !!session?.user
@@ -384,6 +573,17 @@ function HomePage() {
     (value: string) => navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
     { wait: 400 },
   )
+
+  const toggleFavourites = () => {
+    navigate({ search: (prev) => ({ ...prev, favourites: !favourites || undefined, page: undefined }) })
+  }
+
+  // Clear favourites filter when user logs out
+  useEffect(() => {
+    if (!isAuthenticated && favourites) {
+      navigate({ search: (prev) => ({ ...prev, favourites: undefined }) })
+    }
+  }, [isAuthenticated, favourites, navigate])
 
   return (
     <>
@@ -417,6 +617,16 @@ function HomePage() {
                   <SheetDescription>Refine your search results</SheetDescription>
                 </SheetHeader>
                 <div className="mt-4 space-y-4 px-4">
+                  {isAuthenticated && (
+                    <Button
+                      variant={favourites ? 'default' : 'outline'}
+                      className="w-full gap-2"
+                      onClick={toggleFavourites}
+                    >
+                      <Heart className={cn('size-4', favourites && 'fill-red-500')} />
+                      {favourites ? 'Favourites' : 'Show Favourites'}
+                    </Button>
+                  )}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Post Type</label>
                     <PostTypeSelect triggerClassName="w-full" />
@@ -424,6 +634,10 @@ function HomePage() {
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Category</label>
                     <CategorySelect triggerClassName="w-full" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Rating</label>
+                    <RatingSelect triggerClassName="w-full" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Sort By</label>
@@ -435,17 +649,31 @@ function HomePage() {
           </div>
 
           {/* Desktop filters */}
-          <div className="hidden gap-3 md:flex">
+          <div className="hidden flex-wrap items-center gap-3 md:flex">
+            {isAuthenticated && (
+              <Button
+                variant={favourites ? 'default' : 'outline'}
+                className="gap-2"
+                onClick={toggleFavourites}
+              >
+                <Heart className={cn('size-4', favourites && 'fill-red-500')} />
+                <span className="hidden lg:inline">
+                  {favourites ? 'Favourites' : 'Favourites'}
+                </span>
+                <span className="lg:hidden">Favourites</span>
+              </Button>
+            )}
             <PostTypeSelect triggerClassName="w-[160px]" />
             <CategorySelect triggerClassName="w-[200px]" />
-            <SortSelect triggerClassName="w-[200px]" />
+            <RatingSelect triggerClassName="w-[160px]" />
+            <SortSelect triggerClassName="w-[220px]" />
           </div>
         </div>
       </div>
 
       {/* Posts — Suspense boundary only covers this area */}
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} page={page} />
+        <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} />
       </Suspense>
     </>
   )

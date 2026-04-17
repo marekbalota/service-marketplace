@@ -14,6 +14,7 @@ import { Route as LoginRouteRouteImport } from './routes/login/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
+import { Route as AppFavouritesRouteRouteImport } from './routes/_app/favourites/route'
 import { Route as AppMessagesRouteRouteImport } from './routes/_app/messages/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
@@ -44,6 +45,10 @@ const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
   id: '/my-postings',
   path: '/my-postings',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppFavouritesRouteRoute = AppFavouritesRouteRouteImport.update({
+  id: '/favourites',
+  path: '/favourites',
 } as any)
 const AppMessagesRouteRoute = AppMessagesRouteRouteImport.update({
   id: '/messages',
@@ -81,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
+  '/favourites': typeof AppFavouritesRouteRoute
   '/messages': typeof AppMessagesRouteRouteWithChildren
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/messages/$threadId': typeof AppMessagesThreadIdRoute
@@ -92,6 +98,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
+  '/favourites': typeof AppFavouritesRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/': typeof AppIndexRoute
   '/messages/$threadId': typeof AppMessagesThreadIdRoute
@@ -105,6 +112,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/_app/create-post': typeof AppCreatePostRouteRoute
+  '/_app/favourites': typeof AppFavouritesRouteRoute
   '/_app/messages': typeof AppMessagesRouteRouteWithChildren
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
@@ -120,6 +128,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/create-post'
+    | '/favourites'
     | '/messages'
     | '/my-postings'
     | '/messages/$threadId'
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/create-post'
+    | '/favourites'
     | '/my-postings'
     | '/'
     | '/messages/$threadId'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_app/create-post'
+    | '/_app/favourites'
     | '/_app/messages'
     | '/_app/my-postings'
     | '/_app/'
@@ -193,6 +204,13 @@ declare module '@tanstack/react-router' {
       path: '/my-postings'
       fullPath: '/my-postings'
       preLoaderRoute: typeof AppMyPostingsRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/favourites': {
+      id: '/_app/favourites'
+      path: '/favourites'
+      fullPath: '/favourites'
+      preLoaderRoute: typeof AppFavouritesRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/messages': {
@@ -255,6 +273,7 @@ const AppMessagesRouteRouteWithChildren =
 
 interface AppRouteRouteChildren {
   AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
+  AppFavouritesRouteRoute: typeof AppFavouritesRouteRoute
   AppMessagesRouteRoute: typeof AppMessagesRouteRouteWithChildren
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -264,6 +283,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppCreatePostRouteRoute: AppCreatePostRouteRoute,
+  AppFavouritesRouteRoute: AppFavouritesRouteRoute,
   AppMessagesRouteRoute: AppMessagesRouteRouteWithChildren,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,

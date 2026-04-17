@@ -1,8 +1,9 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
+import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
 import { api } from '#/api'
+import { authClient } from '#/auth'
 import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -12,6 +13,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
 import { formatLocation } from '#/lib/format'
+import { ReviewForm } from '#/components/ReviewForm'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -72,6 +74,82 @@ const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',
   DAILY: '/day',
   FIXED: 'fixed',
+}
+
+function FavouriteButton({ postId }: { postId: string }) {
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
+  const isAuthenticated = !!session?.user
+
+  const { data: checkData } = useQuery({
+    queryKey: ['favourites', 'check', postId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites['check']({ postId }).get()
+      if (error) throw error
+      return data
+    },
+    enabled: isAuthenticated,
+  })
+
+  const isFavourite = checkData?.isFavourite ?? false
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.favourites({ postId }).post()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.favourites({ postId }).delete()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+    },
+  })
+
+  const isPending = addMutation.isPending || removeMutation.isPending
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isPending) return
+
+    if (isFavourite) {
+      removeMutation.mutate()
+    } else {
+      addMutation.mutate()
+    }
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={isPending}
+      onClick={handleClick}
+      className={cn(
+        'transition-colors',
+        isFavourite
+          ? 'text-red-500 hover:text-red-600'
+          : 'text-muted-foreground hover:text-red-500'
+      )}
+    >
+      <Heart
+        className={cn(
+          'size-6 transition-all',
+          isFavourite && 'fill-red-500 text-red-500'
+        )}
+      />
+    </Button>
+  )
 }
 
 export function existingThreadQueryOptions(postId: string, profileId: string) {
@@ -137,9 +215,9 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
       {open && (
         <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
           <Textarea
-            placeholder="Write your message…"
+            placeholder="Write your message..."
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
             rows={3}
             className="resize-none bg-card"
           />
@@ -152,7 +230,7 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
               disabled={!draft.trim() || send.isPending}
               onClick={() => send.mutate()}
             >
-              {send.isPending ? 'Sending…' : 'Send'}
+              {send.isPending ? 'Sending...' : 'Send'}
             </Button>
           </div>
           {send.isError && (
@@ -170,14 +248,36 @@ function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
+  const { data: session } = authClient.useSession()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
+  const isAuthenticated = !!session?.user
+  const [showReviewForm, setShowReviewForm] = useState(false)
+
+  // Check if user has already reviewed this post
+  const hasReviewed = post.reviews.some(
+    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
+  )
+
+  const deleteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { error } = await api.reviews({ id: reviewId }).delete()
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', postId] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+  })
 
   const primaryCategory = post.categories[0]?.name ?? null
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
   const locationText = post.location ? formatLocation(post.location) : null
+
+  const showReviewButton = !isOwner && activeProfile && !hasReviewed
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
@@ -192,12 +292,17 @@ function PostDetailPage() {
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
-            {isOwner && (
-              <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
-                <Pencil className="size-4" />
-                Edit
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isAuthenticated && !isOwner && (
+                <FavouriteButton postId={postId} />
+              )}
+              {isOwner && (
+                <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
+                  <Pencil className="size-4" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Badges */}
@@ -282,10 +387,30 @@ function PostDetailPage() {
               <Separator />
               <div className="space-y-3">
                 <SendMessageSection postId={postId} profileId={activeProfile.userProfileId} />
-                <Button variant="outline" className="w-full gap-2" disabled>
-                  <Star className="size-4" />
-                  Leave a Review
-                </Button>
+                {showReviewButton && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => setShowReviewForm(true)}
+                    >
+                      <Star className="size-4" />
+                      Leave a Review
+                    </Button>
+                    {showReviewForm && (
+                      <ReviewForm
+                        postId={postId}
+                        onSuccess={() => setShowReviewForm(false)}
+                        onCancel={() => setShowReviewForm(false)}
+                      />
+                    )}
+                  </>
+                )}
+                {hasReviewed && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reviewed this post
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -299,7 +424,7 @@ function PostDetailPage() {
               <p className="py-8 text-center text-muted-foreground">No reviews yet.</p>
             ) : (
               <div className="space-y-4">
-                {post.reviews.map((review) => (
+                {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
                   <Card key={review.reviewId}>
                     <CardContent className="pt-6">
                       <div className="mb-2 flex items-start justify-between">
@@ -309,13 +434,30 @@ function PostDetailPage() {
                             {new Date(review.createdAt).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
-                            />
-                          ))}
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
+                              />
+                            ))}
+                          </div>
+                          {review.reviewerId === activeProfile?.userProfileId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete your review?')) {
+                                  deleteMutation.mutate(review.reviewId)
+                                }
+                              }}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                       {review.reviewDescription && (
