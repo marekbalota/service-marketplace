@@ -8,6 +8,7 @@ import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
+import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
 
 export const app = new Elysia()
   .use(cors({
@@ -26,11 +27,12 @@ export const app = new Elysia()
         { url: "http://localhost:3001", description: "Local development" },
       ],
       tags: [
-        { name: "Posts",       description: "Service post listings (offers and requests)" },
-        { name: "Profiles",    description: "User profiles" },
-        { name: "Categories",  description: "Post categories" },
-        { name: "Favourites",  description: "User's favourite posts" },
+        { name: "Posts",      description: "Service post listings (offers and requests)" },
+        { name: "Profiles",   description: "User profiles" },
+        { name: "Categories", description: "Post categories" },
+        { name: "Favourites", description: "User's favourite posts" },
         { name: "Messages",   description: "Message threads and chat messages" },
+        { name: "Reviews",    description: "Post reviews and ratings" },
       ],
     },
   }))
@@ -38,6 +40,8 @@ export const app = new Elysia()
   .get("/", () => "Marketplace API")
   .use(authRoutes)
   .use(postsRoutes)
+  .use(reviewsRoutes)
+  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(favouritesRoutes)
@@ -45,7 +49,7 @@ export const app = new Elysia()
   .listen(3001);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+  `Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 export type App = typeof app;

@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
-import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count } from "drizzle-orm";
+import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
 import type { PostsModel } from "./model";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -37,16 +37,46 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery']) {
-    const { search, type, categoryId, sort, offset, size } = query;
+    const { search, type, categoryId, sort, offset, size, ratingFilter } = query;
     const effectiveOffset = offset ?? 0;
+
+    // Parse rating filters
+    const ratingRanges: Array<{ min: number; max: number }> = []
+    if (ratingFilter) {
+      try {
+        const parsed = JSON.parse(ratingFilter) as Array<{ min: number; max: number }>
+        ratingRanges.push(...parsed)
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
 
     const orderBy =
       sort === 'price-low'  ? asc(posts.price)     :
       sort === 'price-high' ? desc(posts.price)    :
       sort === 'name'       ? asc(posts.postTitle) :
+      sort === 'reviews-most'  ? desc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
+      sort === 'reviews-least' ? asc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
       desc(posts.createdAt);
 
     return db.transaction(async (tx) => {
+      // Subquery for average rating
+      const avgRatingSubquery = sql<number>`(
+        SELECT COALESCE(AVG(r.rating), 0)
+        FROM reviews r
+        WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL
+      )`;
+
+      // Build rating filter conditions (OR across multiple ranges)
+      const ratingConditions = ratingRanges.length > 0
+        ? or(...ratingRanges.map(range =>
+            and(
+              gte(avgRatingSubquery, sql`${range.min}`),
+              lte(avgRatingSubquery, sql`${range.max}`)
+            )
+          ))
+        : undefined;
+
       const conditions = and(
         isNull(posts.deletedAt),
         search
@@ -69,6 +99,7 @@ export abstract class PostsService {
               ),
             )
           : undefined,
+        ratingConditions,
       );
 
       const [countRow] = await tx
@@ -157,12 +188,13 @@ export abstract class PostsService {
             '[]'::json
           )
         `,
-        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerName: string; createdAt: Date }[]>`
+        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerId: string; reviewerName: string; createdAt: Date }[]>`
           coalesce(
             (select json_agg(json_build_object(
               'reviewId',          r.review_id,
               'rating',            r.rating,
               'reviewDescription', r.review_description,
+              'reviewerId',        r.reviewer_id,
               'reviewerName',      rp.name,
               'createdAt',         r.created_at
             ) order by r.created_at desc)
