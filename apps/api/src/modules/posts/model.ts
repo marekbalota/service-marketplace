@@ -101,7 +101,15 @@ export const PostsModel = {
   }),
   createResponse: postRow,
   deleteParams:            t.Object({ id: t.String() }),
-  findByProfileResponse:   t.Array(postItem),
+  findByProfileQuery: t.Object({
+    offset: t.Optional(t.Numeric()),
+    size:   t.Optional(t.Numeric()),
+  }),
+  findByProfileResponse: t.Object({
+    items:      t.Array(postItem),
+    total:      t.Number(),
+    totalPages: t.Number(),
+  }),
 } as const
 
 export type PostsModel = {

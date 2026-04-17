@@ -7,6 +7,7 @@ import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 import { favouritesRoutes } from "./modules/favourites";
+import { messagesRoutes } from "./modules/messages";
 
 export const app = new Elysia()
   .use(cors({
@@ -29,6 +30,7 @@ export const app = new Elysia()
         { name: "Profiles",    description: "User profiles" },
         { name: "Categories",  description: "Post categories" },
         { name: "Favourites",  description: "User's favourite posts" },
+        { name: "Messages",   description: "Message threads and chat messages" },
       ],
     },
   }))
@@ -39,6 +41,7 @@ export const app = new Elysia()
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(favouritesRoutes)
+  .use(messagesRoutes)
   .listen(3001);
 
 console.log(
