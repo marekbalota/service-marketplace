@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { AdminUsersService } from './service';
 import { AdminUsersModel } from './model';
-import { Permissions } from '../../../lib/rbac/permissions';
+import { Permissions } from '@marketplace/shared';
 import { authRoutes } from '../../auth';
 import { authErrorResponses, notFoundResponse } from '../../auth/model';
 

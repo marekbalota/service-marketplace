@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
-import { Permissions } from "../../lib/rbac/permissions";
+import { Permissions } from "@marketplace/shared";
 import { authErrorResponses, notFoundResponse } from "../auth/model";
 import { errorResponse } from "../../lib/errors";
 

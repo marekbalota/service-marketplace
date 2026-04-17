@@ -1,7 +1,7 @@
 import * as schema from "./schema";
 import { db, client } from "./index";
 import { auth } from "../modules/auth/service";
-import { Permissions } from "../lib/rbac/permissions";
+import { Permissions } from "@marketplace/shared";
 import { eq, and } from "drizzle-orm";
 
 const permissionDefinitions = [

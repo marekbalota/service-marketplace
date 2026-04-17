@@ -3,7 +3,7 @@ import { UsersModel } from "./model";
 import { UsersService } from "./service";
 import { authErrorResponses } from "../auth/model";
 import { authRoutes } from "../auth";
-import { ErrorMessages, errorResponse } from '../../lib/errors'
+import { errorResponse } from '../../lib/errors'
 
 export const usersRoutes = new Elysia({ prefix: "/users" })
   .use(authRoutes)

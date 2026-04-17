@@ -2,7 +2,8 @@ import { Elysia } from "elysia";
 import { auth } from "./service";
 import { AuthErrorMessages } from "../../lib/errors";
 import { RBACService } from "../../lib/rbac/rbac-helper";
-import type { PermissionType } from "../../lib/rbac/permissions";
+import type { Permission } from "@marketplace/shared";
+type PermissionType = Permission;
 
 type PermissionCheck =
     | PermissionType
