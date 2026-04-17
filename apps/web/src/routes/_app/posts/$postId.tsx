@@ -267,6 +267,7 @@ function PostDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', postId] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
     },
   })
 

@@ -46,6 +46,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', postId] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
       onSuccess()
     },
     onError: (err: { message?: string; status?: number }) => {
