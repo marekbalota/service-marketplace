@@ -1,13 +1,19 @@
-import { useNavigate, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Suspense } from 'react';
 import { useSuspenseQuery, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
-import { ArrowLeft, Search, MoreVertical, Ban, Shield, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Search, MoreVertical, Ban, Shield, Trash2, Eye, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { api } from '#/api';
+import { BackButton } from '#/components/BackButton';
+import { PageHeader } from '#/components/PageHeader';
+import { StatCard } from '../-components/StatCard';
+import { EmptyState } from '#/components/EmptyState';
+import { SearchFilterBar } from '#/components/SearchFilterBar';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Badge } from '#/components/ui/badge';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -21,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import { Permissions, hasPermissions } from '@marketplace/shared';
 
 export type User = AdminUsersModel['usersResponse']['items'][number];
 
@@ -52,6 +59,12 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_app/admin/accounts')({
   validateSearch: searchSchema,
+  beforeLoad: async ({ context }) => {
+    const user = context.user
+    const permissions = user?.role?.permissions ?? []
+    const hasAdminAccess = hasPermissions(permissions, [Permissions.AdminUsersView])
+    if (!hasAdminAccess) throw redirect({ to: '/' })
+  },
   component: ManageAccounts,
 });
 
@@ -61,97 +74,110 @@ const STATUS_LABELS: Record<string, string> = {
   banned: 'Banned',
 };
 
+function RoleSelect() {
+  const { role = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions)
+
+  const roleLabels: Record<string, string> = {
+    all: 'All Roles',
+    ...Object.fromEntries(assignableRoles.map((r) => [r.name.toLowerCase(), r.name])),
+  }
+
+  return (
+    <Select
+      value={role}
+      onValueChange={(value) => {
+        if (!value) return
+        navigate({ search: (prev) => ({ ...prev, role: value === 'all' ? undefined : value }) })
+      }}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue>{roleLabels[role] ?? 'All Roles'}</SelectValue>
+      </SelectTrigger>
+      <SelectContent className="w-[var(--anchor-width)]">
+        <SelectItem value="all">All Roles</SelectItem>
+        {assignableRoles.map((r) => (
+          <SelectItem key={r.roleId} value={r.name.toLowerCase()}>
+            {r.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+function StatusSelect() {
+  const { status = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  return (
+    <Select
+      value={status}
+      onValueChange={(value) =>
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            status: value === 'all' ? undefined : (value as 'active' | 'banned'),
+          }),
+        })
+      }
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue>{STATUS_LABELS[status]}</SelectValue>
+      </SelectTrigger>
+      <SelectContent className="w-[var(--anchor-width)]">
+        {Object.entries(STATUS_LABELS).map(([value, label]) => (
+          <SelectItem key={value} value={value}>{label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
 function ManageAccounts() {
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
+  const { q = '' } = Route.useSearch();
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <Button
-        variant="ghost"
-        className="mb-4 gap-2"
-        onClick={() => navigate({ to: '/admin' })}
-      >
-        <ArrowLeft className="size-4" />
-        Back to Admin
-      </Button>
+      <BackButton onClick={() => navigate({ to: '/admin' })} label="Back to Admin" />
 
-      <div className="mb-6">
-        <h1 className="text-2xl mb-2">Manage Accounts</h1>
-        <p className="text-muted-foreground">
-          View and manage user accounts, roles, and permissions
-        </p>
-      </div>
+      <PageHeader
+        title="Manage Accounts"
+        description="View and manage user accounts, roles, and permissions"
+      />
 
-      <FiltersCard />
+      <Card className="mb-6">
+        <CardContent >
+          <SearchFilterBar
+            search={
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={q}
+                  onChange={(e) =>
+                    navigate({ search: (prev) => ({ ...prev, q: e.target.value || undefined }) })
+                  }
+                  className="pl-10"
+                />
+              </div>
+            }
+            filters={[
+              { label: 'Role', control: <RoleSelect />, desktopWidth: 'w-[180px]' },
+              { label: 'Status', control: <StatusSelect />, desktopWidth: 'w-[160px]' },
+            ]}
+            sheetTitle="Filter Accounts"
+            sheetDescription="Narrow the list by role or status"
+          />
+        </CardContent>
+      </Card>
 
       <Suspense fallback={<StatsAndListSkeleton />}>
         <AccountsData />
       </Suspense>
     </main>
-  );
-}
-
-function FiltersCard() {
-  const { q = '', role = 'all', status = 'all' } = Route.useSearch();
-  const navigate = Route.useNavigate();
-  const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions);
-
-  const roleLabels: Record<string, string> = {
-    all: 'All Roles',
-    ...Object.fromEntries(assignableRoles.map((r) => [r.name.toLowerCase(), r.name])),
-  };
-
-  return (
-    <Card className="mb-6">
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={q}
-              onChange={(e) =>
-                navigate({ search: (prev) => ({ ...prev, q: e.target.value || undefined }) })
-              }
-              className="pl-10"
-            />
-          </div>
-          <Select
-            value={role}
-            onValueChange={(value) =>
-              navigate({ search: (prev) => ({ ...prev, role: value === 'all' ? undefined : value }) })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue>{roleLabels[role] ?? 'All Roles'}</SelectValue>
-            </SelectTrigger>
-            <SelectContent className="w-[var(--anchor-width)]">
-              <SelectItem value="all">All Roles</SelectItem>
-              {assignableRoles.map((r) => (
-                <SelectItem key={r.roleId} value={r.name.toLowerCase()}>
-                  {r.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={status}
-            onValueChange={(value) =>
-              navigate({ search: (prev) => ({ ...prev, status: value === 'all' ? undefined : value as 'active' | 'banned' }) })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue>{STATUS_LABELS[status]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent className="w-[var(--anchor-width)]">
-              {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -162,20 +188,20 @@ function StatsAndListSkeleton() {
         {[...Array(3)].map((_, i) => (
           <Card key={i}>
             <CardContent className="pt-2 pb-2">
-              <div className="h-8 bg-muted rounded w-16 mb-2 animate-pulse" />
-              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+              <Skeleton className="mb-2 h-8 w-16" />
+              <Skeleton className="h-4 w-24" />
             </CardContent>
           </Card>
         ))}
       </div>
       <Card>
         <CardHeader>
-          <div className="h-6 bg-muted rounded w-32 animate-pulse" />
+          <Skeleton className="h-6 w-32" />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted rounded animate-pulse" />
+              <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
         </CardContent>
@@ -187,17 +213,14 @@ function StatsAndListSkeleton() {
 function AccountsData() {
   const { q = '', role = 'all', status = 'all' } = Route.useSearch();
   const queryClient = useQueryClient();
-  const { data: usersData, isFetching } = useSuspenseQuery({
-    ...usersQueryOptions(q),
-    placeholderData: (prev) => prev,
-  });
+  const { data: usersData, isFetching } = useSuspenseQuery(usersQueryOptions(q));
   const users = usersData?.items ?? [];
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(q.toLowerCase()) ||
       user.email.toLowerCase().includes(q.toLowerCase());
-    const matchesRole = role === 'all' || user.roleName?.toLowerCase() === role.toLowerCase();
+    const matchesRole = role === 'all' || user.role?.name.toLowerCase() === role.toLowerCase();
     const matchesStatus =
       status === 'all' ||
       (status === 'active' && !user.isBanned) ||
@@ -228,28 +251,9 @@ function AccountsData() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-2 pb-2">
-            <p className="text-2xl font-bold">{users.length}</p>
-            <p className="text-sm text-muted-foreground">Total Users</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-2 pb-2">
-            <p className="text-2xl font-bold">
-              {users.filter((u) => !u.isBanned).length}
-            </p>
-            <p className="text-sm text-muted-foreground">Active Users</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-2 pb-2">
-            <p className="text-2xl font-bold">
-              {users.filter((u) => u.isBanned).length}
-            </p>
-            <p className="text-sm text-muted-foreground">Banned</p>
-          </CardContent>
-        </Card>
+        <StatCard value={users.length} label="Total Users" />
+        <StatCard value={users.filter((u) => !u.isBanned).length} label="Active Users" />
+        <StatCard value={users.filter((u) => u.isBanned).length} label="Banned" />
       </div>
 
       <Card>
@@ -268,8 +272,8 @@ function AccountsData() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold">{user.name}</h3>
-                        <Badge className={getRoleColor(user.roleName)}>
-                          {user.roleName || 'User'}
+                        <Badge className={getRoleColor(user.role?.name ?? null)}>
+                          {user.role?.name ?? 'User'}
                         </Badge>
                         <Badge className={getStatusColor(user.isBanned)}>
                           {user.isBanned ? 'banned' : 'active'}
@@ -328,9 +332,7 @@ function AccountsData() {
               </Card>
             ))}
             {filteredUsers.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No accounts found
-              </p>
+              <EmptyState message="No accounts found." />
             )}
           </div>
         </CardContent>

@@ -1,16 +1,19 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { authClient } from '#/auth'
 import { Suspense, useState, useEffect } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
+import { PostCardSkeleton } from '#/components/PostCardSkeleton'
+import { EmptyState } from '#/components/EmptyState'
+import { SearchFilterBar } from '#/components/SearchFilterBar'
 import { Input } from '#/components/ui/input'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 import {
   Select,
   SelectContent,
@@ -18,14 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '#/components/ui/sheet'
 import {
   Pagination,
   PaginationContent,
@@ -35,22 +30,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
-
-function SearchInput({ value, onChange, disabled }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) {
-  return (
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        type="search"
-        placeholder="Search services, providers, or keywords..."
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className="pl-9"
-      />
-    </div>
-  )
-}
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
@@ -135,35 +114,14 @@ export const Route = createFileRoute('/_app/posts/')({
 
 // --- Skeletons ---
 
-function PostSkeleton() {
-  return (
-    <div className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </div>
-        </div>
-        <Skeleton className="h-6 w-14" />
-      </div>
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-5/6" />
-      <div className="flex gap-4">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-24" />
-      </div>
-    </div>
-  )
-}
-
 function PostsSkeleton() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <Skeleton className="mb-4 h-4 w-40" />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: PAGE_SIZE }).map((_, i) => <PostSkeleton key={i} />)}
+        {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+          <PostCardSkeleton key={i} />
+        ))}
       </div>
     </main>
   )
@@ -175,14 +133,16 @@ function PageSkeleton() {
     <>
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="mb-4 flex gap-2">
-            <SearchInput disabled />
-            <Skeleton className="size-9 shrink-0 rounded-md md:hidden" />
-          </div>
-          <div className="hidden gap-3 md:flex">
-            <Skeleton className="h-9 w-[160px] rounded-md" />
-            <Skeleton className="h-9 w-[200px] rounded-md" />
-            <Skeleton className="h-9 w-[200px] rounded-md" />
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Skeleton className="h-9 flex-1" />
+              <Skeleton className="size-9 shrink-0 rounded-md" />
+            </div>
+            <div className="hidden gap-3 md:flex">
+              <Skeleton className="h-9 w-[160px] rounded-md" />
+              <Skeleton className="h-9 w-[200px] rounded-md" />
+              <Skeleton className="h-9 w-[200px] rounded-md" />
+            </div>
           </div>
         </div>
       </div>
@@ -233,9 +193,7 @@ function PostsList({ type, category, q, sort, page }: {
       </p>
 
       {data.items.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">No services found matching your criteria.</p>
-        </div>
+        <EmptyState message="No services found matching your criteria." />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.items.map((post) => (
@@ -291,10 +249,9 @@ function PostsList({ type, category, q, sort, page }: {
 
 // --- Filter select sub-components ---
 // Each reads its own slice of search params and navigates independently,
-// so they can be dropped into both the mobile Sheet and the desktop bar
-// without prop-drilling.
+// so they render correctly both in the mobile Sheet and the desktop bar.
 
-function PostTypeSelect({ triggerClassName }: { triggerClassName?: string }) {
+function PostTypeSelect() {
   const { type = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
   return (
@@ -304,7 +261,7 @@ function PostTypeSelect({ triggerClassName }: { triggerClassName?: string }) {
         navigate({ search: (prev) => ({ ...prev, type: v === 'all' ? undefined : (v as PostTypeFilter), page: undefined }) })
       }
     >
-      <SelectTrigger className={triggerClassName}>
+      <SelectTrigger className="w-full">
         <SelectValue>{POST_TYPE_LABELS[type]}</SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -316,7 +273,7 @@ function PostTypeSelect({ triggerClassName }: { triggerClassName?: string }) {
   )
 }
 
-function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
+function CategorySelect() {
   const { category = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
   // useQuery (not suspense) so the filter bar renders immediately before categories arrive
@@ -328,7 +285,7 @@ function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
         v && navigate({ search: (prev) => ({ ...prev, category: v === 'all' ? undefined : v, page: undefined }) })
       }
     >
-      <SelectTrigger className={triggerClassName}>
+      <SelectTrigger className="w-full">
         <SelectValue>
           {category === 'all'
             ? 'All Categories'
@@ -347,7 +304,7 @@ function CategorySelect({ triggerClassName }: { triggerClassName?: string }) {
   )
 }
 
-function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
+function SortSelect() {
   const { sort = 'newest' } = Route.useSearch()
   const navigate = Route.useNavigate()
   return (
@@ -357,7 +314,7 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
         navigate({ search: (prev) => ({ ...prev, sort: v === 'newest' ? undefined : (v as SortOption), page: undefined }) })
       }
     >
-      <SelectTrigger className={triggerClassName}>
+      <SelectTrigger className="w-full">
         <SelectValue>{SORT_LABELS[sort]}</SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -374,8 +331,7 @@ function SortSelect({ triggerClassName }: { triggerClassName?: string }) {
 function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1 } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { user } = useActiveUser()
 
   const [inputValue, setInputValue] = useState(q)
   useEffect(() => { setInputValue(q) }, [q])
@@ -387,59 +343,41 @@ function HomePage() {
 
   return (
     <>
-      {/* Search & Filters bar — always visible */}
+      {/* Search & Filters bar */}
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="mb-4 flex gap-2">
-            <SearchInput
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value)
-                searchDebouncer.maybeExecute(e.target.value)
-              }}
-            />
-
-            {isAuthenticated && (
-              <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
-                <Plus className="size-4" />
-                <span className="hidden sm:inline">New Post</span>
-              </Link>
-            )}
-
-            {/* Mobile filter sheet */}
-            <Sheet>
-              <SheetTrigger className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'shrink-0 md:hidden')}>
-                <SlidersHorizontal className="size-4" />
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filters & Sort</SheetTitle>
-                  <SheetDescription>Refine your search results</SheetDescription>
-                </SheetHeader>
-                <div className="mt-4 space-y-4 px-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Post Type</label>
-                    <PostTypeSelect triggerClassName="w-full" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Category</label>
-                    <CategorySelect triggerClassName="w-full" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Sort By</label>
-                    <SortSelect triggerClassName="w-full" />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Desktop filters */}
-          <div className="hidden gap-3 md:flex">
-            <PostTypeSelect triggerClassName="w-[160px]" />
-            <CategorySelect triggerClassName="w-[200px]" />
-            <SortSelect triggerClassName="w-[200px]" />
-          </div>
+          <SearchFilterBar
+            search={
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search services, providers, or keywords..."
+                  value={inputValue}
+                  onChange={(e) => {
+                    setInputValue(e.target.value)
+                    searchDebouncer.maybeExecute(e.target.value)
+                  }}
+                  className="pl-9"
+                />
+              </div>
+            }
+            filters={[
+              { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[160px]' },
+              { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
+              { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[200px]' },
+            ]}
+            sheetTitle="Filters & Sort"
+            sheetDescription="Refine your search results"
+            action={
+              user !== null ? (
+                <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">New Post</span>
+                </Link>
+              ) : undefined
+            }
+          />
         </div>
       </div>
 

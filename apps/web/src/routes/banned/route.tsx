@@ -1,11 +1,18 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router';
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 
 export const Route = createFileRoute('/banned')({
   component: BannedPage,
+  beforeLoad: async () => {
+    const stored = sessionStorage.getItem('banInfo');
+    const banInfo = stored ? JSON.parse(stored) : {};
+    if (!banInfo.reason && !banInfo.expiresAt) {
+      throw redirect({ to: '/' });
+    }
+  },
 });
 
 interface BanInfo {
@@ -20,13 +27,6 @@ function BannedPage() {
     const stored = sessionStorage.getItem('banInfo');
     return stored ? JSON.parse(stored) : {};
   });
-
-  useEffect(() => {
-    // If no ban info, redirect to home
-    if (!banInfo.reason && !banInfo.expiresAt) {
-      navigate({ to: '/' });
-    }
-  }, [banInfo, navigate]);
 
   const handleUnderstand = () => {
     // Clear ban info

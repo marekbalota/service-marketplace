@@ -1,4 +1,4 @@
-import { useNavigate, createFileRoute } from '@tanstack/react-router';
+import { useNavigate, createFileRoute, redirect } from '@tanstack/react-router';
 import type React from 'react';
 import { Suspense, useState, useCallback, useEffect } from 'react';
 import { useSuspenseQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
@@ -19,8 +19,11 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowLeft, Plus, Edit, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
 import { api } from '#/api';
+import { BackButton } from '#/components/BackButton';
+import { PageHeader } from '#/components/PageHeader';
+import { StatCard } from '../-components/StatCard';
 import { Button } from '#/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
@@ -30,6 +33,9 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Checkbox } from '#/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card';
+import { Skeleton } from '#/components/ui/skeleton';
+import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { Permissions, hasPermissions } from '@marketplace/shared';
 
 import type { AdminRolesModel } from 'api';
 
@@ -53,12 +59,19 @@ export const permissionsQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute('/_app/admin/roles')({
+  beforeLoad: async ({ context }) => {
+    const user = context.user;
+    const permissions = user?.role?.permissions ?? [];
+    if (!hasPermissions(permissions, [Permissions.AdminRolesManage])) {
+      throw redirect({ to: '/admin' });
+    }
+  },
   component: ManageRoles,
 });
 
 function ManageRoles() {
   const navigate = useNavigate();
-  const { user } = Route.useRouteContext();
+  const { user } = useActiveUser();
   const userPriority = user?.role?.priority ?? 0;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -71,31 +84,22 @@ function ManageRoles() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <Button
-        variant="ghost"
-        className="mb-4 gap-2"
-        onClick={() => navigate({ to: '/admin' })}
-      >
-        <ArrowLeft className="size-4" />
-        Back to Admin
-      </Button>
+      <BackButton onClick={() => navigate({ to: '/admin' })} label="Back to Admin" />
 
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl mb-2">Manage Roles</h1>
-          <p className="text-muted-foreground">
-            Configure user roles and permissions for the platform
-          </p>
-        </div>
-        <Suspense fallback={null}>
-          <CreateRoleButton
-            isOpen={isCreateDialogOpen}
-            setIsOpen={setIsCreateDialogOpen}
-            newRole={newRole}
-            setNewRole={setNewRole}
-          />
-        </Suspense>
-      </div>
+      <PageHeader
+        title="Manage Roles"
+        description="Configure user roles and permissions for the platform"
+        action={
+          <Suspense fallback={null}>
+            <CreateRoleButton
+              isOpen={isCreateDialogOpen}
+              setIsOpen={setIsCreateDialogOpen}
+              newRole={newRole}
+              setNewRole={setNewRole}
+            />
+          </Suspense>
+        }
+      />
 
       <Suspense fallback={<RolesSkeleton />}>
         <RolesContent
@@ -117,8 +121,8 @@ function RolesSkeleton() {
         {[...Array(3)].map((_, i) => (
           <Card key={i}>
             <CardContent className="pt-6">
-              <div className="h-8 bg-muted rounded w-16 mb-2 animate-pulse" />
-              <div className="h-4 bg-muted rounded w-32 animate-pulse" />
+              <Skeleton className="mb-2 h-8 w-16" />
+              <Skeleton className="h-4 w-32" />
             </CardContent>
           </Card>
         ))}
@@ -130,14 +134,14 @@ function RolesSkeleton() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="h-6 bg-muted rounded w-32 mb-2 animate-pulse" />
-                  <div className="h-4 bg-muted rounded w-48 animate-pulse" />
+                  <Skeleton className="mb-2 h-6 w-32" />
+                  <Skeleton className="h-4 w-48" />
                 </div>
-                <div className="h-8 bg-muted rounded w-20 animate-pulse" />
+                <Skeleton className="h-8 w-20" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-16 bg-muted rounded animate-pulse" />
+              <Skeleton className="h-16 w-full" />
             </CardContent>
           </Card>
         ))}
@@ -370,26 +374,9 @@ function RolesContent({ editingRole, setEditingRole, newRole, setNewRole, userPr
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{roles.length}</p>
-            <p className="text-sm text-muted-foreground">Total Roles</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{permissions.length}</p>
-            <p className="text-sm text-muted-foreground">Available Permissions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">
-              {roles.reduce((sum, r) => sum + (r.userCount || 0), 0)}
-            </p>
-            <p className="text-sm text-muted-foreground">Total Users with Roles</p>
-          </CardContent>
-        </Card>
+        <StatCard value={roles.length} label="Total Roles" />
+        <StatCard value={permissions.length} label="Available Permissions" />
+        <StatCard value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0)} label="Total Users with Roles" />
       </div>
 
       {/* Non-sortable roles (equal or higher priority than current user) */}

@@ -6,6 +6,7 @@ import { authClient } from "#/auth"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
+import { queryClient } from "#/router"
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,7 +25,10 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterValues) => {
     await authClient.signUp.email(values, {
-      onSuccess: () => navigate({ to: "/" }),
+      onSuccess: async () => {
+        await queryClient.invalidateQueries();
+        navigate({ to: "/" })
+      },
       onError: (ctx) => {
         form.setError("root", { message: ctx.error.message })
       },
@@ -90,9 +94,7 @@ export function RegisterForm() {
         />
       </FieldGroup>
       {form.formState.errors.root && (
-        <p className="text-sm text-destructive">
-          {form.formState.errors.root.message}
-        </p>
+        <FieldError errors={[form.formState.errors.root]} />
       )}
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Registering…" : "Register"}

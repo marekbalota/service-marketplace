@@ -3,7 +3,11 @@ import { Suspense } from 'react';
 import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { Users, Shield, Flag, ChevronRight } from 'lucide-react';
 import { api } from '#/api';
+import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { PageHeader } from '#/components/PageHeader';
+import { Skeleton } from '#/components/ui/skeleton';
+import { Permissions, hasAnyPermission } from '@marketplace/shared';
 
 const adminOptions = [
   {
@@ -50,12 +54,10 @@ function AdminDashboard() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage platform settings, users, and content moderation
-        </p>
-      </div>
+      <PageHeader
+        title="Admin Dashboard"
+        description="Manage platform settings, users, and content moderation"
+      />
 
       <Suspense fallback={<OptionsSkeleton />}>
         <AdminOptions navigate={navigate} />
@@ -67,23 +69,11 @@ function AdminDashboard() {
           <CardDescription>Overview of platform activity</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-3xl font-bold">1,247</p>
-              <p className="text-sm text-muted-foreground mt-1">Total Users</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-3xl font-bold">342</p>
-              <p className="text-sm text-muted-foreground mt-1">Active Posts</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-3xl font-bold">23</p>
-              <p className="text-sm text-muted-foreground mt-1">Pending Reports</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-3xl font-bold">12</p>
-              <p className="text-sm text-muted-foreground mt-1">Active Bans</p>
-            </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <StatCard value="1,247" label="Total Users" />
+            <StatCard value="342" label="Active Posts" />
+            <StatCard value="23" label="Pending Reports" />
+            <StatCard value="12" label="Active Bans" />
           </div>
         </CardContent>
       </Card>
@@ -95,17 +85,17 @@ function OptionsSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[...Array(3)].map((_, i) => (
-        <Card key={i} className="animate-pulse">
+        <Card key={i}>
           <CardHeader>
             <div className="flex items-start justify-between">
-              <div className="p-3 bg-muted rounded-lg mb-4 w-12 h-12" />
-              <div className="w-5 h-5 bg-muted rounded" />
+              <Skeleton className="mb-4 size-12 rounded-lg" />
+              <Skeleton className="size-5" />
             </div>
-            <div className="h-6 bg-muted rounded w-40 mb-2" />
-            <div className="h-4 bg-muted rounded w-full" />
+            <Skeleton className="mb-2 h-6 w-40" />
+            <Skeleton className="h-4 w-full" />
           </CardHeader>
           <CardContent>
-            <div className="h-10 bg-muted rounded w-full" />
+            <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
       ))}
@@ -121,12 +111,14 @@ function AdminOptions({ navigate }: AdminOptionsProps) {
   const { data: user } = useSuspenseQuery(userPermissionsQueryOptions);
   const permissions = user?.role?.permissions ?? [];
 
-  const canManageUsers = permissions.includes('admin:users:view') ||
-    permissions.includes('admin:users:ban') ||
-    permissions.includes('admin:users:assign-role');
-  const canManageRoles = permissions.includes('admin:roles:manage') ||
-    permissions.includes('admin:roles:reorder') ||
-    permissions.includes('admin:roles:set-default');
+  const canManageUsers = hasAnyPermission(permissions, [
+    Permissions.AdminUsersView,
+    Permissions.AdminUsersBan,
+    Permissions.AdminUsersAssignRole,
+  ]);
+  const canManageRoles = hasAnyPermission(permissions, [
+    Permissions.AdminRolesManage,
+  ]);
 
   const visibleOptions = adminOptions.filter(option => {
     if (option.id === 'accounts') return canManageUsers;

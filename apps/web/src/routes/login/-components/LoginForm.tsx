@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { authClient } from "#/auth"
 import { handleBanError } from '#/lib/ban-handler'
 import { queryClient } from '#/router'
+import { currentUserQueryOptions } from '#/contexts/ActiveUserContext'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
@@ -25,9 +26,12 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     await authClient.signIn.email(values, {
-      onSuccess: () => {
-        queryClient.clear()
-        navigate({ to: "/" })
+      onSuccess: async () => {
+        // Fetch user into cache before navigating so the home page renders with user data
+        // immediately (no flash of login/register buttons). staleTime:0 forces a fresh fetch
+        // even if the previous null result is still within staleTime.
+        await queryClient.fetchQuery({ ...currentUserQueryOptions, staleTime: 0 })
+        void navigate({ to: "/" })
       },
       onError: (ctx) => {
         if (handleBanError(ctx.error)) return
@@ -77,9 +81,7 @@ export function LoginForm() {
         />
       </FieldGroup>
       {form.formState.errors.root && (
-        <p className="text-sm text-destructive">
-          {form.formState.errors.root.message}
-        </p>
+        <FieldError errors={[form.formState.errors.root]} />
       )}
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Signing in…" : "Log in"}

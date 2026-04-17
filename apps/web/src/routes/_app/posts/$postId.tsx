@@ -1,8 +1,10 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
+import { DollarSign, MapPin, User, Star, MessageSquare, Pencil } from 'lucide-react'
 import { api } from '#/api'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { BackButton } from '#/components/BackButton'
+import { EmptyState } from '#/components/EmptyState'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -75,8 +77,7 @@ const RATE_LABELS: Record<string, string> = {
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { user } = Route.useRouteContext()
-  const { activeProfile } = useActiveProfile(user)
+  const { activeProfile } = useActiveUser()
   const router = useRouter()
   const isOwner = activeProfile?.userProfileId === post.authorId
 
@@ -89,10 +90,7 @@ function PostDetailPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
       {/* Back button */}
-      <Button variant="ghost" onClick={() => router.history.back()} className="mb-4 gap-2">
-        <ArrowLeft className="size-4" />
-        Back
-      </Button>
+      <BackButton onClick={() => router.history.back()} />
 
       <Card className='gap-2'>
         <CardHeader>
@@ -206,7 +204,7 @@ function PostDetailPage() {
           <div className="space-y-4">
             <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
             {post.reviews.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">No reviews yet.</p>
+              <EmptyState message="No reviews yet." />
             ) : (
               <div className="space-y-4">
                 {post.reviews.map((review) => (
