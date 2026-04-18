@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
 import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { buttonVariants } from '#/components/ui/button'
+import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
   ProfileForm,
@@ -26,11 +27,16 @@ function EditSkeleton() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <Skeleton className="mb-6 h-8 w-32" />
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <Skeleton className="h-6 w-56" />
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </main>
   )
 }
@@ -93,32 +99,36 @@ export function EditProfilePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6">
         <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
           <ArrowLeft className="mr-1 size-4" />
           Back
         </Link>
-        <h1 className="text-sm font-semibold">Update your profile information</h1>
       </div>
-      {patchMutation.isError && (
-        <p className="mb-4 text-sm text-destructive">{(patchMutation.error as Error).message}</p>
-      )}
-      <ProfileForm
-        defaultValues={defaultValues}
-        onSubmit={(v) => patchMutation.mutate(v)}
-        submitLabel="Save Changes"
-        isPending={patchMutation.isPending}
-      >
-        <ImageInputSection
-          previews={images.map(img => img.link)}
-          onFilePicked={(file) => addImageMutation.mutate(file)}
-          onRemove={(i) => {
-            const img = images[i]
-            if (img) deleteImageMutation.mutate(img.imageId)
-          }}
-          isUploading={addImageMutation.isPending}
-        />
-      </ProfileForm>
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>
+          {patchMutation.isError && (
+            <p className="text-sm text-destructive">{(patchMutation.error as Error).message}</p>
+          )}
+          <ProfileForm
+            defaultValues={defaultValues}
+            onSubmit={(v) => patchMutation.mutate(v)}
+            submitLabel="Save Changes"
+            isPending={patchMutation.isPending}
+          >
+            <ImageInputSection
+              previews={images.map(img => img.link)}
+              onFilePicked={(file) => addImageMutation.mutate(file)}
+              onRemove={(i) => {
+                const img = images[i]
+                if (img) deleteImageMutation.mutate(img.imageId)
+              }}
+              isUploading={addImageMutation.isPending}
+            />
+          </ProfileForm>
+        </CardContent>
+      </Card>
     </main>
   )
 }

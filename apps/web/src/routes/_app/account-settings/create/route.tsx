@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
 import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
 import { buttonVariants } from '#/components/ui/button'
+import { Card, CardContent } from '#/components/ui/card'
 import {
   ProfileForm,
   ImageInputSection,
@@ -76,43 +77,55 @@ export function CreateProfilePage() {
   if (uploadWarning) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
-          <p className="font-medium">Profile created with a warning</p>
-          <p className="mt-1">{uploadWarning}</p>
-        </div>
-        <div className="mt-4">
-          <Link to="/account-settings" className={buttonVariants({ variant: 'default' })}>
-            Go to Account Settings
+        <div className="mb-6">
+          <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <ArrowLeft className="mr-1 size-4" />
+            Back
           </Link>
         </div>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
+              <p className="font-medium">Profile created with a warning</p>
+              <p className="mt-1">{uploadWarning}</p>
+            </div>
+            <Link to="/account-settings" className={buttonVariants({ variant: 'default' })}>
+              Go to Account Settings
+            </Link>
+          </CardContent>
+        </Card>
       </main>
     )
   }
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6">
         <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
           <ArrowLeft className="mr-1 size-4" />
           Back
         </Link>
-        <h1 className="text-sm font-semibold">Add a new user profile to your account</h1>
       </div>
-      {mutation.isError && (
-        <p className="mb-4 text-sm text-destructive">{(mutation.error as Error).message}</p>
-      )}
-      <ProfileForm
-        defaultValues={defaultValues}
-        onSubmit={(v) => mutation.mutate(v)}
-        submitLabel="Create Profile"
-        isPending={mutation.isPending}
-      >
-        <ImageInputSection
-          previews={pendingFiles.map(f => f.preview)}
-          onFilePicked={addFile}
-          onRemove={removeFile}
-        />
-      </ProfileForm>
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h1 className="text-lg font-semibold text-nav-browse-fg">Add a new profile to your account</h1>
+          {mutation.isError && (
+            <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
+          )}
+          <ProfileForm
+            defaultValues={defaultValues}
+            onSubmit={(v) => mutation.mutate(v)}
+            submitLabel="Create Profile"
+            isPending={mutation.isPending}
+          >
+            <ImageInputSection
+              previews={pendingFiles.map(f => f.preview)}
+              onFilePicked={addFile}
+              onRemove={removeFile}
+            />
+          </ProfileForm>
+        </CardContent>
+      </Card>
     </main>
   )
 }
