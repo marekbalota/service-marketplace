@@ -9,19 +9,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ user }) => {
-      // Get the user's profile from their account ID
-      const { ProfilesService } = await import('../profiles/service')
-      const profiles = await ProfilesService.findByAccountId(user.id)
-
-      if (profiles.length === 0) {
-        return { items: [], total: 0 }
-      }
-
-      // Use the first profile (primary profile)
-      const profileId = profiles[0]!.userProfileId
-      return await FavouritesService.findAllByProfile(profileId)
-    },
+    async ({ user }) => FavouritesService.findAllForAccount(user.id),
     {
       auth: true,
       response: {
@@ -34,24 +22,8 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .post(
     '/:postId',
     async ({ params, user, set }) => {
-      const { ProfilesService } = await import('../profiles/service')
-      const profiles = await ProfilesService.findByAccountId(user.id)
-
-      if (profiles.length === 0) {
-        set.status = 404
-        return { message: 'Profile not found' }
-      }
-
-      const profileId = profiles[0]!.userProfileId
-      const result = await FavouritesService.addFavourite(profileId, params.postId)
-
-      if (!result) {
-        set.status = 404
-        return { message: 'Post not found' }
-      }
-
       set.status = 201
-      return result
+      return FavouritesService.addFavouriteForAccount(user.id, params.postId)
     },
     {
       auth: true,
@@ -67,22 +39,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .delete(
     '/:postId',
     async ({ params, user, set }) => {
-      const { ProfilesService } = await import('../profiles/service')
-      const profiles = await ProfilesService.findByAccountId(user.id)
-
-      if (profiles.length === 0) {
-        set.status = 404
-        return { message: 'Profile not found' }
-      }
-
-      const profileId = profiles[0]!.userProfileId
-      const removed = await FavouritesService.removeFavourite(profileId, params.postId)
-
-      if (!removed) {
-        set.status = 404
-        return { message: 'Favourite not found' }
-      }
-
+      await FavouritesService.removeFavouriteForAccount(user.id, params.postId)
       set.status = 204
     },
     {
@@ -98,18 +55,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   )
   .get(
     '/check/:postId',
-    async ({ params, user }) => {
-      const { ProfilesService } = await import('../profiles/service')
-      const profiles = await ProfilesService.findByAccountId(user.id)
-
-      if (profiles.length === 0) {
-        return { isFavourite: false }
-      }
-
-      const profileId = profiles[0]!.userProfileId
-      const isFavourite = await FavouritesService.isFavourite(profileId, params.postId)
-      return { isFavourite }
-    },
+    async ({ params, user }) => FavouritesService.isFavouriteForAccount(user.id, params.postId),
     {
       auth: true,
       params: FavouritesModel.addParams,
