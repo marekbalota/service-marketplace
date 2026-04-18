@@ -1,17 +1,18 @@
 import { describe, it, expect, beforeAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
-import { reviewsRoutes, reviewsDeleteRoutes } from '.'
+import { reviewsRoutes } from '.'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
 import { profilesRoutes } from '../profiles'
 import { categoriesRoutes } from '../categories'
+import { errorsPlugin } from '../../lib/errors'
 
 const app = new Elysia()
+  .use(errorsPlugin)
   .use(authRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
-  .use(reviewsDeleteRoutes)
   .use(profilesRoutes)
   .use(categoriesRoutes)
 

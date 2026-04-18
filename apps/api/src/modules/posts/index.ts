@@ -3,8 +3,10 @@ import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
 import { Permissions } from "@marketplace/shared";
-import { authErrorResponses, notFoundResponse } from "../auth/model";
+import { authErrorResponses, notFoundResponse, AuthModel } from "../auth/model";
 import { errorResponse } from "../../lib/errors";
+import { ReviewsModel } from "../reviews/model";
+import { ReviewsService } from "../reviews/service";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
@@ -79,5 +81,26 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         ...authErrorResponses,
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
+    },
+  )
+  .post(
+    '/:postId/reviews',
+    async ({ params, body, user, set }) => {
+      const review = await ReviewsService.createForAccount(user.id, params.postId, body)
+      set.status = 201
+      return review
+    },
+    {
+      auth: true,
+      params: ReviewsModel.createParams,
+      body: ReviewsModel.createBody,
+      response: {
+        201: ReviewsModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
     },
   );
