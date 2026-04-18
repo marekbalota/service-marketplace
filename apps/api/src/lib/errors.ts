@@ -1,4 +1,4 @@
-import { t } from 'elysia'
+import { Elysia, t } from 'elysia'
 
 export const errorResponse = t.Object({ message: t.String() })
 
@@ -30,19 +30,34 @@ export const AuthErrorMessages = {
   cannotSetSameOrHigherAsDefault: 'Cannot set roles with equal or higher priority as default',
 } as const
 
-// Custom error classes for service layer
 export class ForbiddenError extends Error {
-    status = 403;
-    constructor(message: string) {
-        super(message);
-        this.name = 'ForbiddenError';
-    }
+  status = 403;
+  constructor(message: string) {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
 }
 
 export class NotFoundError extends Error {
-    status = 404;
-    constructor(message: string) {
-        super(message);
-        this.name = 'NotFoundError';
-    }
+  status = 404;
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
 }
+
+export class ConflictError extends Error {
+  status = 409;
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
+export const errorsPlugin = new Elysia({ name: 'errors' })
+  .error({ ForbiddenError, NotFoundError, ConflictError })
+  .onError(({ code, error, status }) => {
+    if (code === 'ForbiddenError') return status(403, { message: error.message })
+    if (code === 'NotFoundError')  return status(404, { message: error.message })
+    if (code === 'ConflictError')  return status(409, { message: error.message })
+  })

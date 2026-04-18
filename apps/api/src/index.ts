@@ -13,21 +13,13 @@ import { profilesRoutes } from "./modules/profiles";
 import { usersRoutes } from "./modules/users";
 import { adminRolesRoutes } from "./modules/admin/roles";
 import { adminUsersRoutes } from "./modules/admin/users";
-import { ForbiddenError, NotFoundError } from "./lib/errors";
+import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
-import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
+import { reviewsRoutes } from "./modules/reviews";
 
 export const app = new Elysia()
-  .error({ ForbiddenError, NotFoundError })
-  .onError(({ code, error, status }) => {
-    if (code === 'ForbiddenError') {
-      return status(403, { message: error.message });
-    }
-    if (code === 'NotFoundError') {
-      return status(404, { message: error.message });
-    }
-  })
+  .use(errorsPlugin)
   .use(cors({
     origin: "http://localhost:3000",
     credentials: true,
@@ -60,7 +52,6 @@ export const app = new Elysia()
   .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
-  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(adminRolesRoutes)
