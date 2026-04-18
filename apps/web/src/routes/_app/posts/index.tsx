@@ -102,10 +102,11 @@ export function postsQueryOptions(deps: {
 
 export const Route = createFileRoute('/_app/posts/')({
   validateSearch: searchSchema,
-  loader: async ({ context: { queryClient } }) => {
+  loaderDeps: ({ search: { q, type, category, sort, page } }) => ({ q, type, category, sort, page }),
+  loader: async ({ context: { queryClient }, deps: { q, type, category, sort = 'newest', page = 1 } }) => {
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions),
-      queryClient.ensureQueryData(postsQueryOptions({ sort: 'newest', page: 1 })),
+      queryClient.ensureQueryData(postsQueryOptions({ q, type, category, sort, page })),
     ])
   },
   pendingComponent: PageSkeleton,

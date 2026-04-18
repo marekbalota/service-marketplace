@@ -4,8 +4,8 @@ import { RegisterForm } from "./-components/RegisterForm";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
-  beforeLoad: async ({ context }) => {
-    if (context.user) {
+  beforeLoad: async ({ context : { user } }) => {
+    if (user) {
       throw redirect({ to: "/" });
     }
   },

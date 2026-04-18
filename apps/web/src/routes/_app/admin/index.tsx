@@ -1,13 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Suspense } from 'react';
-import { useSuspenseQuery, queryOptions } from '@tanstack/react-query';
 import { Users, Shield, Flag, ChevronRight } from 'lucide-react';
-import { api } from '#/api';
 import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { PageHeader } from '#/components/PageHeader';
-import { Skeleton } from '#/components/ui/skeleton';
 import { Permissions, hasAnyPermission } from '@marketplace/shared';
+import { useActiveUser } from '#/contexts/ActiveUserContext';
 
 const adminOptions = [
   {
@@ -33,25 +30,11 @@ const adminOptions = [
   },
 ];
 
-export const userPermissionsQueryOptions = queryOptions({
-  queryKey: ['users', 'me'],
-  queryFn: async () => {
-    const { data, error } = await api.users.me.get();
-    if (error || !data) {
-      throw new Error('Unauthorized');
-    }
-    return data;
-  },
-  staleTime: 5 * 60 * 1000,
-});
-
 export const Route = createFileRoute('/_app/admin/')({
   component: AdminDashboard,
 });
 
 function AdminDashboard() {
-  const navigate = useNavigate();
-
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
       <PageHeader
@@ -59,9 +42,7 @@ function AdminDashboard() {
         description="Manage platform settings, users, and content moderation"
       />
 
-      <Suspense fallback={<OptionsSkeleton />}>
-        <AdminOptions navigate={navigate} />
-      </Suspense>
+      <AdminOptions />
 
       <Card className="mt-8">
         <CardHeader>
@@ -81,34 +62,9 @@ function AdminDashboard() {
   );
 }
 
-function OptionsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[...Array(3)].map((_, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <Skeleton className="mb-4 size-12 rounded-lg" />
-              <Skeleton className="size-5" />
-            </div>
-            <Skeleton className="mb-2 h-6 w-40" />
-            <Skeleton className="h-4 w-full" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-interface AdminOptionsProps {
-  navigate: ReturnType<typeof useNavigate>;
-}
-
-function AdminOptions({ navigate }: AdminOptionsProps) {
-  const { data: user } = useSuspenseQuery(userPermissionsQueryOptions);
+function AdminOptions() {
+  const navigate = useNavigate();
+  const { user } = useActiveUser();
   const permissions = user?.role?.permissions ?? [];
 
   const canManageUsers = hasAnyPermission(permissions, [

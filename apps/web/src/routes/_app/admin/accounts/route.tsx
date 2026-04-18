@@ -29,25 +29,36 @@ import {
 } from '#/components/ui/dropdown-menu';
 import { Permissions, hasPermissions } from '@marketplace/shared';
 
-export type User = AdminUsersModel['usersResponse']['items'][number];
-
 import type { AdminUsersModel } from 'api';
+
+export type User = AdminUsersModel['usersResponse']['items'][number];
 
 export const usersQueryOptions = (search: string) => queryOptions({
   queryKey: ['admin', 'users', search],
   queryFn: async () => {
-    const response = await api.admin.users.get({
+    const { data, error } = await api.admin.users.get({
       query: search ? { search } : undefined,
     });
-    return response.data;
+    if (error) throw error;
+    return data;
   },
 });
 
 export const assignableRolesQueryOptions = queryOptions({
   queryKey: ['admin', 'users', 'assignable-roles'],
   queryFn: async () => {
-    const response = await api.admin.users['roles'].assignable.get();
-    return response.data ?? [];
+    const { data, error } = await api.admin.users['roles'].assignable.get();
+    if (error) throw error;
+    return data ?? [];
+  },
+});
+
+export const allRolesQueryOptions = queryOptions({
+  queryKey: ['admin', 'roles'],
+  queryFn: async () => {
+    const { data, error } = await api.admin.roles.get();
+    if (error) throw error;
+    return data ?? [];
   },
 });
 
@@ -59,7 +70,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_app/admin/accounts')({
   validateSearch: searchSchema,
-  beforeLoad: async ({ context }) => {
+  beforeLoad: ({ context }) => {
     const user = context.user
     const permissions = user?.role?.permissions ?? []
     const hasAdminAccess = hasPermissions(permissions, [Permissions.AdminUsersView])
@@ -77,11 +88,11 @@ const STATUS_LABELS: Record<string, string> = {
 function RoleSelect() {
   const { role = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions)
+  const { data: allRoles = [] } = useQuery(allRolesQueryOptions)
 
   const roleLabels: Record<string, string> = {
     all: 'All Roles',
-    ...Object.fromEntries(assignableRoles.map((r) => [r.name.toLowerCase(), r.name])),
+    ...Object.fromEntries(allRoles.map((r) => [r.name.toLowerCase(), r.name])),
   }
 
   return (
@@ -97,7 +108,7 @@ function RoleSelect() {
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
         <SelectItem value="all">All Roles</SelectItem>
-        {assignableRoles.map((r) => (
+        {allRoles.map((r) => (
           <SelectItem key={r.roleId} value={r.name.toLowerCase()}>
             {r.name}
           </SelectItem>
@@ -217,15 +228,12 @@ function AccountsData() {
   const users = usersData?.items ?? [];
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(q.toLowerCase()) ||
-      user.email.toLowerCase().includes(q.toLowerCase());
     const matchesRole = role === 'all' || user.role?.name.toLowerCase() === role.toLowerCase();
     const matchesStatus =
       status === 'all' ||
       (status === 'active' && !user.isBanned) ||
       (status === 'banned' && user.isBanned);
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesRole && matchesStatus;
   });
 
   const handleBanUser = async (userId: string) => {

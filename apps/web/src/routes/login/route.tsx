@@ -4,8 +4,8 @@ import { LoginForm } from "./-components/LoginForm";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  beforeLoad: async ({ context }) => {
-    if (context.user) {
+  beforeLoad: async ({ context : { user } }) => {
+    if (user) {
       throw redirect({ to: "/" });
     }
   },

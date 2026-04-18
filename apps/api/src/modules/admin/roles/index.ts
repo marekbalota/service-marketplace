@@ -11,7 +11,12 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
     '/',
     async () => await AdminRolesService.getAllRoles(),
     {
-      authWithPermissions: Permissions.AdminRolesManage,
+      authWithPermissions: [
+        Permissions.AdminRolesManage,
+        Permissions.AdminUsersView,
+        Permissions.AdminUsersBan,
+        Permissions.AdminUsersAssignRole,
+      ],
       response: {
         200: AdminRolesModel.rolesResponse,
         ...authErrorResponses,

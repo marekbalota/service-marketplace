@@ -52,7 +52,7 @@ export function RegisterForm() {
                 autoComplete="name"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -70,7 +70,7 @@ export function RegisterForm() {
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -88,14 +88,12 @@ export function RegisterForm() {
                 autoComplete="new-password"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
       </FieldGroup>
-      {form.formState.errors.root && (
-        <FieldError errors={[form.formState.errors.root]} />
-      )}
+      <FieldError errors={[form.formState.errors.root]} />
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Registering…" : "Register"}
       </Button>

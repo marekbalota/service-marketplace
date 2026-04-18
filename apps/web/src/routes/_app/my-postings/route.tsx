@@ -23,8 +23,7 @@ export function myPostingsQueryOptions(profileId: string) {
 }
 
 export const Route = createFileRoute('/_app/my-postings')({
-  beforeLoad: async ({ context }) => {
-    const user = context.user
+  beforeLoad: async ({ context : { user } }) => {
     if (!user) throw redirect({ to: '/login' })
   },
   component: MyPostingsPage,
@@ -91,7 +90,7 @@ function MyPostingsPage() {
         <Suspense
           fallback={
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, i) => (
+              {Array.from({ length: 6 }).map((_, i) => (
                 <PostCardSkeleton key={i} />
               ))}
             </div>

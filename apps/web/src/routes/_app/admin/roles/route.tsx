@@ -1,5 +1,5 @@
 import { useNavigate, createFileRoute, redirect } from '@tanstack/react-router';
-import type React from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { Suspense, useState, useCallback, useEffect } from 'react';
 import { useSuspenseQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
 import {
@@ -59,7 +59,7 @@ export const permissionsQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute('/_app/admin/roles')({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: ({ context }) => {
     const user = context.user;
     const permissions = user?.role?.permissions ?? [];
     if (!hasPermissions(permissions, [Permissions.AdminRolesManage])) {
@@ -156,7 +156,7 @@ interface CreateRoleButtonProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   newRole: NewRoleState;
-  setNewRole: React.Dispatch<React.SetStateAction<NewRoleState>>;
+  setNewRole: Dispatch<SetStateAction<NewRoleState>>;
 }
 
 function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: CreateRoleButtonProps) {
@@ -268,7 +268,7 @@ interface RolesContentProps {
   editingRole: Role | null;
   setEditingRole: (role: Role | null) => void;
   newRole: NewRoleState;
-  setNewRole: React.Dispatch<React.SetStateAction<NewRoleState>>;
+  setNewRole: Dispatch<SetStateAction<NewRoleState>>;
   userPriority: number;
 }
 
@@ -440,7 +440,7 @@ interface SortableRoleCardProps {
   editingRole: Role | null;
   setEditingRole: (role: Role | null) => void;
   newRole: NewRoleState;
-  setNewRole: React.Dispatch<React.SetStateAction<NewRoleState>>;
+  setNewRole: Dispatch<SetStateAction<NewRoleState>>;
   onEdit: (role: Role) => void;
   onDelete: (roleId: string) => void;
   onUpdateRole: () => void;

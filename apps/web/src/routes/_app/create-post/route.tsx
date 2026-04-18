@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
-import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useQuery, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -70,8 +70,7 @@ type FormValues = z.infer<typeof schema>
 // --- Route ---
 
 export const Route = createFileRoute('/_app/create-post')({
-  beforeLoad: async ({ context }) => {
-    const user = context.user
+  beforeLoad: ({ context: { user } }) => {
     if (!user) throw redirect({ to: '/login' })
     const canCreatePosts = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsCreate])
     if (!canCreatePosts) throw redirect({ to: '/' })
@@ -91,14 +90,14 @@ function CreatePostPage() {
   const { activeProfile } = useActiveUser()
   const [isManualLocation, setIsManualLocation] = useState(false)
 
-  const { data: categories = [] } = useQuery(categoriesQueryOptions)
+  const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions)
   const { data: previousLocations = [] } = useQuery(
     profileLocationsQueryOptions(activeProfile?.userProfileId ?? ''),
   )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    mode: 'onChange',
+    mode: 'onTouched',
     defaultValues: {
       postType:    'OFFER',
       postTitle:   '',
@@ -253,7 +252,7 @@ function CreatePostPage() {
                     className="h-11"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
@@ -278,7 +277,7 @@ function CreatePostPage() {
                     className="resize-none"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
@@ -296,11 +295,11 @@ function CreatePostPage() {
                     <FieldLabel className="text-base font-semibold">Category *</FieldLabel>
                   </div>
                   {/* !h-11: override Base UI's data-[size=default]:h-8 which has higher CSS specificity */}
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={(v) => { field.onChange(v); field.onBlur() }}>
                     <SelectTrigger className="!h-11 w-full" aria-invalid={fieldState.invalid}>
                       <SelectValue placeholder="Select a category">
                         {field.value
-                          ? (categories.find((c) => c.categoryId === field.value)?.name ?? undefined)
+                          ? categories.find((c) => c.categoryId === field.value)?.name
                           : undefined}
                       </SelectValue>
                     </SelectTrigger>
@@ -312,7 +311,7 @@ function CreatePostPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
@@ -344,7 +343,7 @@ function CreatePostPage() {
                   name="locationId"
                   render={({ field }) => (
                     <div className="space-y-2">
-                      <Select value={field.value} onValueChange={field.onChange} disabled={previousLocations.length === 0}>
+                      <Select value={field.value} onValueChange={(v) => { field.onChange(v); field.onBlur() }} disabled={previousLocations.length === 0}>
                         <SelectTrigger className="!h-11 w-full">
                           <SelectValue placeholder="Select from your previous locations">
                             {field.value
@@ -381,7 +380,7 @@ function CreatePostPage() {
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="country">Country</FieldLabel>
                             <Input {...field} id="country" placeholder="e.g., Czech Republic" aria-invalid={fieldState.invalid} />
-                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            <FieldError errors={[fieldState.error]} />
                           </Field>
                         )}
                       />
@@ -392,7 +391,7 @@ function CreatePostPage() {
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="region">Region/State</FieldLabel>
                             <Input {...field} id="region" placeholder="e.g., South Moravian Region" aria-invalid={fieldState.invalid} />
-                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            <FieldError errors={[fieldState.error]} />
                           </Field>
                         )}
                       />
@@ -404,7 +403,7 @@ function CreatePostPage() {
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel htmlFor="city">City</FieldLabel>
                           <Input {...field} id="city" placeholder="e.g., Brno" aria-invalid={fieldState.invalid} />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          <FieldError errors={[fieldState.error]} />
                         </Field>
                       )}
                     />
@@ -470,7 +469,7 @@ function CreatePostPage() {
                       <FieldLabel>Rate Type</FieldLabel>
                       <Select
                         value={field.value ?? ''}
-                        onValueChange={field.onChange}
+                        onValueChange={(v) => { field.onChange(v); field.onBlur() }}
                         disabled={!priceValue}
                       >
                         <SelectTrigger className="!h-11 w-full">
@@ -490,7 +489,7 @@ function CreatePostPage() {
                           <SelectItem value="FIXED">Fixed Price</SelectItem>
                         </SelectContent>
                       </Select>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      <FieldError errors={[fieldState.error]} />
                     </Field>
                   )}
                 />
@@ -506,7 +505,7 @@ function CreatePostPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate({ to: '/posts' })}
+                onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
                 Cancel
