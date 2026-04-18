@@ -9,6 +9,7 @@ import {
   numeric,
   primaryKey,
   check,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -213,14 +214,23 @@ export const favourites = pgTable(
   (table) => [primaryKey({ columns: [table.userProfileId, table.postId] })],
 );
 
-export const messageThreads = pgTable("message_threads", {
-  threadId: uuid("thread_id").primaryKey().defaultRandom(),
-  postId: uuid("post_id")
-    .notNull()
-    .references(() => posts.postId),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
+export const messageThreads = pgTable(
+  "message_threads",
+  {
+    threadId: uuid("thread_id").primaryKey().defaultRandom(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.postId),
+    initiatorId: uuid("initiator_id")
+      .notNull()
+      .references(() => userProfiles.userProfileId),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    unique("message_threads_post_initiator_unique").on(table.postId, table.initiatorId),
+  ],
+);
 
 export const messages = pgTable("messages", {
   messageId: uuid("message_id").primaryKey().defaultRandom(),
@@ -231,6 +241,7 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => messageThreads.threadId),
   content: text("content").notNull(),
+  readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 });
@@ -293,6 +304,7 @@ export const userProfilesRelations = relations(
     posts: many(posts),
     reviewsGiven: many(reviews, { relationName: "reviewer" }),
     messagesSent: many(messages),
+    initiatedThreads: many(messageThreads, { relationName: "initiatedThreads" }),
     images: many(images),
     favourites: many(favourites),
     reports: many(reports),
@@ -373,6 +385,11 @@ export const messageThreadsRelations = relations(
     post: one(posts, {
       fields: [messageThreads.postId],
       references: [posts.postId],
+    }),
+    initiator: one(userProfiles, {
+      fields: [messageThreads.initiatorId],
+      references: [userProfiles.userProfileId],
+      relationName: "initiatedThreads",
     }),
     messages: many(messages),
   }),

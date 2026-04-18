@@ -81,19 +81,21 @@ describe('GET /profiles/:profileId/posts', () => {
     expect(error?.status).toBe(401)
   })
 
-  it('returns 200 with an array when authenticated', async () => {
+  it('returns 200 with items, total, and totalPages when authenticated', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get({
       headers: { Cookie: aliceCookie }
     })
     expect(error).toBeNull()
-    expect(Array.isArray(data)).toBe(true)
+    expect(Array.isArray(data!.items)).toBe(true)
+    expect(typeof data!.total).toBe('number')
+    expect(typeof data!.totalPages).toBe('number')
   })
 
   it('only returns posts authored by the given profile', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).posts.get({
       headers: { Cookie: aliceCookie }
     })
-    for (const post of data!) {
+    for (const post of data!.items) {
       expect(post.authorId).toBe(aliceProfileId)
     }
   })
@@ -103,7 +105,39 @@ describe('GET /profiles/:profileId/posts', () => {
       headers: { Cookie: aliceCookie }
     })
     expect(error).toBeNull()
-    expect(data).toHaveLength(0)
+    expect(data!.items).toHaveLength(0)
+    expect(data!.total).toBe(0)
+  })
+
+  it('size param limits number of returned items', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { size: 1 },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(data!.items.length).toBeLessThanOrEqual(1)
+  })
+
+  it('totalPages is ceil(total / size)', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { size: 2 },
+      headers: { Cookie: aliceCookie },
+    })
+    const expected = Math.ceil(data!.total / 2)
+    expect(data!.totalPages).toBe(expected)
+  })
+
+  it('offset paginates to a different set of items', async () => {
+    const { data: page1 } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { size: 1, offset: 0 },
+      headers: { Cookie: aliceCookie },
+    })
+    const { data: page2 } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { size: 1, offset: 1 },
+      headers: { Cookie: aliceCookie },
+    })
+    if (page1!.total > 1) {
+      expect(page1!.items[0]!.postId).not.toBe(page2!.items[0]?.postId)
+    }
   })
 })
 

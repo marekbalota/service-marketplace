@@ -14,6 +14,9 @@ import { usersRoutes } from "./modules/users";
 import { adminRolesRoutes } from "./modules/admin/roles";
 import { adminUsersRoutes } from "./modules/admin/users";
 import { ForbiddenError, NotFoundError } from "./lib/errors";
+import { favouritesRoutes } from "./modules/favourites";
+import { messagesRoutes } from "./modules/messages";
+import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
 
 export const app = new Elysia()
   .error({ ForbiddenError, NotFoundError })
@@ -45,6 +48,9 @@ export const app = new Elysia()
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
         { name: "Admin",      description: "Admin operations" },
+        { name: "Favourites", description: "User's favourite posts" },
+        { name: "Messages",   description: "Message threads and chat messages" },
+        { name: "Reviews",    description: "Post reviews and ratings" },
       ],
     },
   }))
@@ -53,14 +59,18 @@ export const app = new Elysia()
   .use(authRoutes)
   .use(usersRoutes)
   .use(postsRoutes)
+  .use(reviewsRoutes)
+  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(adminRolesRoutes)
   .use(adminUsersRoutes)
+  .use(favouritesRoutes)
+  .use(messagesRoutes)
   .listen(3001);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+  `Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 export type App = typeof app;

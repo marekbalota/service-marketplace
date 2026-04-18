@@ -1,6 +1,6 @@
 {
-  "id": "30746e29-a7c2-4c23-aa25-0f8b62b0acdb",
-  "prevId": "b3799bb4-80f3-4d3e-8657-04c779a73aa4",
+  "id": "f1320176-4760-461a-a9eb-a88da1e30451",
+  "prevId": "d81a36b8-ee9d-4796-9d0f-0345006c77db",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -275,6 +275,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "initiator_id": {
+          "name": "initiator_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -303,10 +309,32 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "message_threads_initiator_id_user_profiles_user_profile_id_fk": {
+          "name": "message_threads_initiator_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "message_threads",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "initiator_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "message_threads_post_initiator_unique": {
+          "name": "message_threads_post_initiator_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "post_id",
+            "initiator_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -339,6 +367,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

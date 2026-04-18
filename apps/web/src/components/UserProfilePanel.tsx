@@ -7,6 +7,7 @@ import {
   Search,
   LogOut,
   User,
+  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { currentUserQueryOptions, useActiveUser } from '#/contexts/ActiveUserContext'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -111,15 +112,37 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <span>My Postings</span>
             </SheetClose>
 
-            <Button
-              variant="ghost"
-              className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-foreground hover:text-foreground"
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/favourites"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
+                <Heart className="size-5 text-rose-600" />
+              </div>
+              <span>My Favourites</span>
+            </SheetClose>
+
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/messages"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
             >
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50">
                 <MessageSquare className="size-5 text-purple-600" />
               </div>
               <span>Messages</span>
-            </Button>
+            </SheetClose>
 
             {isAdmin && (
               <SheetClose
@@ -157,8 +180,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              queryClient.invalidateQueries()
               router.invalidate()
+              queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
               onClose()
               navigate({ to: '/' })
             }}

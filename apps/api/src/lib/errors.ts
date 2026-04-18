@@ -5,6 +5,9 @@ export const errorResponse = t.Object({ message: t.String() })
 export const ErrorMessages = {
   postNotFound:    'Post not found',
   profileNotFound: 'Profile not found',
+  favouriteNotFound: 'Favourite not found',
+  reviewNotFound:  'Review not found',
+  alreadyReviewed: 'You have already reviewed this post',
   userNotFound: 'User not found',
   userRoleNotFound: 'User role not found',
   roleNotFound: 'Role not found',

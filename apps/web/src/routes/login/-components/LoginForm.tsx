@@ -8,6 +8,7 @@ import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
+import { currentUserQueryOptions } from "#/contexts/ActiveUserContext"
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -25,9 +26,9 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginValues) => {
     await authClient.signIn.email(values, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries()
-        void navigate({ to: "/" })
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
+        navigate({ to: "/" })
       },
       onError: (ctx) => {
         if (handleBanError(ctx.error)) return
