@@ -1,5 +1,5 @@
 {
-  "id": "edbdf0f1-e493-46c1-9344-8e9b792ccffb",
+  "id": "d81a36b8-ee9d-4796-9d0f-0345006c77db",
   "prevId": "fff8b29e-8258-4416-a5e3-aaad6078bc14",
   "version": "7",
   "dialect": "postgresql",
@@ -275,6 +275,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "initiator_id": {
+          "name": "initiator_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -303,10 +309,32 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "message_threads_initiator_id_user_profiles_user_profile_id_fk": {
+          "name": "message_threads_initiator_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "message_threads",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "initiator_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "message_threads_post_initiator_unique": {
+          "name": "message_threads_post_initiator_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "post_id",
+            "initiator_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -339,6 +367,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1139,12 +1173,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         },
         "deleted_at": {
           "name": "deleted_at",

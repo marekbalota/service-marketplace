@@ -31,12 +31,20 @@ const postItem = t.Object({
 
 export const PostsModel = {
   findAllQuery: t.Object({
-    search:     t.Optional(t.String()),
-    type:       t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
-    categoryId: t.Optional(t.String()),
-    sort:       t.Optional(t.Union([t.Literal("newest"), t.Literal("price-low"), t.Literal("price-high"), t.Literal("name")])),
-    offset:     t.Optional(t.Numeric()),
-    size:       t.Optional(t.Numeric()),
+    search:       t.Optional(t.String()),
+    type:         t.Optional(t.Union([t.Literal("OFFER"), t.Literal("REQUEST")])),
+    categoryId:   t.Optional(t.String()),
+    sort:         t.Optional(t.Union([
+      t.Literal("newest"),
+      t.Literal("price-low"),
+      t.Literal("price-high"),
+      t.Literal("name"),
+      t.Literal("reviews-most"),
+      t.Literal("reviews-least"),
+    ])),
+    ratingFilter: t.Optional(t.String()), // JSON array of {min, max} objects
+    offset:       t.Optional(t.Numeric()),
+    size:         t.Optional(t.Numeric()),
   }),
   findAllResponse: t.Object({
     items:      t.Array(postItem),
@@ -67,6 +75,7 @@ export const PostsModel = {
       reviewId:          t.String(),
       rating:            t.Number(),
       reviewDescription: t.Nullable(t.String()),
+      reviewerId:        t.String(),
       reviewerName:      t.String(),
       createdAt:         t.Date(),
     })),
@@ -101,7 +110,15 @@ export const PostsModel = {
   }),
   createResponse: postRow,
   deleteParams:            t.Object({ id: t.String() }),
-  findByProfileResponse:   t.Array(postItem),
+  findByProfileQuery: t.Object({
+    offset: t.Optional(t.Numeric()),
+    size:   t.Optional(t.Numeric()),
+  }),
+  findByProfileResponse: t.Object({
+    items:      t.Array(postItem),
+    total:      t.Number(),
+    totalPages: t.Number(),
+  }),
 } as const
 
 export type PostsModel = {

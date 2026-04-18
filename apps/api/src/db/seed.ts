@@ -71,6 +71,20 @@ async function seed() {
   const homeRepair = await upsertCategory("Home Repair", "General home maintenance and repairs");
   const cleaning = await upsertCategory("Cleaning", "Home and office cleaning services");
   const techSupport = await upsertCategory("Tech Support", "IT help and computer repairs");
+  const marketing = await upsertCategory("Marketing & Business", "Marketing, branding, and business support");
+  const writing = await upsertCategory("Writing & Translation", "Copywriting, content writing, and translation services");
+  const admin = await upsertCategory("Admin & Virtual Assistance", "Administrative help and virtual assistant services");
+  const transport = await upsertCategory("Transport & Delivery", "Delivery, moving, and transportation services");
+  const construction = await upsertCategory("Construction & Trades", "Building, carpentry, and skilled trades");
+  const automotive = await upsertCategory("Automotive", "Car repair and maintenance services");
+  const personal = await upsertCategory("Personal Services", "Personal assistance and everyday services");
+  const beauty = await upsertCategory("Beauty & Wellness", "Hair, makeup, fitness, and wellness services");
+  const events = await upsertCategory("Events & Entertainment", "Event planning, music, and entertainment");
+  const photoVideo = await upsertCategory("Photography & Video", "Photography, videography, and editing");
+  const pet = await upsertCategory("Pet Services", "Pet care, sitting, and training");
+  const childcare = await upsertCategory("Childcare & Elderly Care", "Babysitting and elderly care services");
+  const legalFinance = await upsertCategory("Legal & Finance", "Legal advice, accounting, and financial services");
+  const other = await upsertCategory("Others", "Services that do not fit into other categories");
 
   const postsData: {
     authorId: string;

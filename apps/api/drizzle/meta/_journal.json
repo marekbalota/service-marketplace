@@ -40,8 +40,15 @@
     {
       "idx": 5,
       "version": "7",
+      "when": 1776114810323,
+      "tag": "0005_fast_liz_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
       "when": 1776288371119,
-      "tag": "0005_add_updated_at_to_user_profiles",
+      "tag": "0006_add_updated_at_to_user_profiles",
       "breakpoints": true
     }
   ]

@@ -66,23 +66,45 @@ describe('PATCH /profiles/:id', () => {
 })
 
 describe('GET /profiles/:profileId/posts', () => {
-  it('returns 200 with an array', async () => {
+  it('returns 200 with items, total, and totalPages', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get()
     expect(error).toBeNull()
-    expect(Array.isArray(data)).toBe(true)
+    expect(Array.isArray(data!.items)).toBe(true)
+    expect(typeof data!.total).toBe('number')
+    expect(typeof data!.totalPages).toBe('number')
   })
 
   it('only returns posts authored by the given profile', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).posts.get()
-    for (const post of data!) {
+    for (const post of data!.items) {
       expect(post.authorId).toBe(aliceProfileId)
     }
   })
 
-  it('returns 200 with empty array for unknown profile', async () => {
+  it('returns 200 with empty items for unknown profile', async () => {
     const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).posts.get()
     expect(error).toBeNull()
-    expect(data).toHaveLength(0)
+    expect(data!.items).toHaveLength(0)
+    expect(data!.total).toBe(0)
+  })
+
+  it('size param limits number of returned items', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).posts.get({ query: { size: 1 } })
+    expect(data!.items.length).toBeLessThanOrEqual(1)
+  })
+
+  it('totalPages is ceil(total / size)', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).posts.get({ query: { size: 2 } })
+    const expected = Math.ceil(data!.total / 2)
+    expect(data!.totalPages).toBe(expected)
+  })
+
+  it('offset paginates to a different set of items', async () => {
+    const { data: page1 } = await client.profiles({ id: aliceProfileId }).posts.get({ query: { size: 1, offset: 0 } })
+    const { data: page2 } = await client.profiles({ id: aliceProfileId }).posts.get({ query: { size: 1, offset: 1 } })
+    if (page1!.total > 1) {
+      expect(page1!.items[0]!.postId).not.toBe(page2!.items[0]?.postId)
+    }
   })
 })
 

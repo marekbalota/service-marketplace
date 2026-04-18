@@ -7,6 +7,7 @@ import {
   Search,
   LogOut,
   User,
+  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -110,15 +111,37 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <span>My Postings</span>
             </SheetClose>
 
-            <Button
-              variant="ghost"
-              className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-foreground hover:text-foreground"
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/favourites"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
+                <Heart className="size-5 text-rose-600" />
+              </div>
+              <span>My Favourites</span>
+            </SheetClose>
+
+            <SheetClose
+              nativeButton={false}
+              render={
+                <Link
+                  to="/messages"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+                />
+              }
             >
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-messages-bg)]">
                 <MessageSquare className="size-5 text-[var(--nav-messages-fg)]" />
               </div>
               <span>Messages</span>
-            </Button>
+            </SheetClose>
 
             <Button
               variant="ghost"

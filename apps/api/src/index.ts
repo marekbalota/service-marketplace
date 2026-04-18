@@ -8,6 +8,9 @@ import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 import { imagesRoutes } from "./modules/images";
 import { initBucket } from "./storage";
+import { favouritesRoutes } from "./modules/favourites";
+import { messagesRoutes } from "./modules/messages";
+import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
 
 export const app = new Elysia()
   .use(cors({
@@ -30,6 +33,9 @@ export const app = new Elysia()
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
         { name: "Images",     description: "Profile images" },
+        { name: "Favourites", description: "User's favourite posts" },
+        { name: "Messages",   description: "Message threads and chat messages" },
+        { name: "Reviews",    description: "Post reviews and ratings" },
       ],
     },
   }))
@@ -37,15 +43,19 @@ export const app = new Elysia()
   .get("/", () => "Marketplace API")
   .use(authRoutes)
   .use(postsRoutes)
+  .use(reviewsRoutes)
+  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(imagesRoutes)
+  .use(favouritesRoutes)
+  .use(messagesRoutes)
   .listen(3001);
 
 initBucket().catch((err) => console.error('[MinIO] bucket init failed:', err))
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+  `Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 export type App = typeof app;
