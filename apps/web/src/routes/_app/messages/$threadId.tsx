@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, Link, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { ArrowLeft, ExternalLink, Send, Trash2 } from 'lucide-react'
 import { authClient } from '#/auth'
 import { api } from '#/api'
@@ -10,6 +10,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { getInitials } from './route'
 
 export function threadDetailQueryOptions(threadId: string, profileId: string) {
   return queryOptions({
@@ -34,10 +35,15 @@ export const Route = createFileRoute('/_app/messages/$threadId')({
 
 function ThreadPageSkeleton() {
   return (
-    <main className="flex h-[calc(100svh-4rem)] flex-col">
+    <main className="flex flex-1 flex-col min-h-0">
       <div className="border-b bg-card px-4 py-3">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="mt-1 h-4 w-24" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-9 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {[1, 2, 3].map((i) => (
@@ -91,15 +97,12 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
 
   const { data: thread } = useSuspenseQuery(threadDetailQueryOptions(threadId, profileId))
 
-  // Scroll to bottom within the messages container (not the whole page)
   useEffect(() => {
     const container = messagesContainerRef.current
     if (container) {
       container.scrollTop = container.scrollHeight
     }
   }, [thread.messages.length])
-
-  const isProvider = thread.label === 'provider'
 
   const send = useMutation({
     mutationFn: async (content: string) => {
@@ -127,41 +130,47 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
     }
   }
 
+  const isPostOwner = thread.myRole === 'post_owner'
+
   return (
-    <main className="flex h-[calc(100svh-4rem)] flex-col">
+    <main className="flex flex-1 flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b bg-card px-4 py-3">
+      <div className="flex items-center gap-3 border-b bg-card px-4 py-3 shrink-0">
         <Button
           variant="ghost"
           size="icon"
-          className="shrink-0"
+          className="shrink-0 md:hidden"
           onClick={() => router.navigate({ to: '/messages' })}
           aria-label="Back to messages"
         >
           <ArrowLeft className="size-4" />
         </Button>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-foreground">
-            {thread.otherPartyName} — {thread.postTitle}
-          </p>
-          {thread.postDeleted ? (
-            <Badge variant="outline" className="mt-0.5 text-xs text-muted-foreground">
-              Post deleted
-            </Badge>
-          ) : (
-            <Badge
-              variant={isProvider ? 'default' : 'outline'}
-              className={cn(
-                'mt-0.5 text-xs',
-                isProvider
-                  ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
-                  : 'border-request-border text-request-fg',
-              )}
-            >
-              {thread.label}
-            </Badge>
-          )}
+
+        {/* Avatar */}
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
+          {getInitials(thread.otherPartyName)}
         </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-foreground">{thread.otherPartyName}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-xs text-muted-foreground">{thread.postTitle}</p>
+            {isPostOwner && !thread.postDeleted && (
+              <Badge
+                variant="outline"
+                className="h-4 shrink-0 border-muted-foreground/40 px-1 text-[10px] text-muted-foreground"
+              >
+                Your post
+              </Badge>
+            )}
+            {thread.postDeleted && (
+              <Badge variant="outline" className="mt-0.5 text-xs text-muted-foreground">
+                Post deleted
+              </Badge>
+            )}
+          </div>
+        </div>
+
         {!thread.postDeleted && (
           <Link
             to="/posts/$postId"
@@ -179,14 +188,14 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
 
       {/* Archived banner */}
       {thread.postDeleted && (
-        <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-2 text-sm text-muted-foreground shrink-0">
           <Trash2 className="size-4 shrink-0" />
           <span>The post for this conversation has been deleted. This thread is read-only.</span>
         </div>
       )}
 
       {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div ref={messagesContainerRef} className="flex-1 space-y-4 overflow-y-auto p-4 min-h-0">
         {thread.messages.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No messages yet. Say hello!
@@ -198,7 +207,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
       </div>
 
       {/* Input */}
-      <div className="border-t bg-card p-3">
+      <div className="border-t bg-card p-3 shrink-0">
         {thread.postDeleted ? (
           <p className="py-1 text-center text-sm text-muted-foreground">
             Replies are disabled for archived threads.
@@ -208,7 +217,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
             <div className="flex items-end gap-2">
               <Textarea
                 ref={textareaRef}
-                placeholder="Write a message… (Enter to send, Shift+Enter for newline)"
+                placeholder="Write a message…"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -243,9 +252,8 @@ function ThreadPage() {
   }
 
   return (
-    <ChatInterface
-      threadId={threadId}
-      profileId={activeProfile.userProfileId}
-    />
+    <Suspense fallback={<ThreadPageSkeleton />}>
+      <ChatInterface threadId={threadId} profileId={activeProfile.userProfileId} />
+    </Suspense>
   )
 }
