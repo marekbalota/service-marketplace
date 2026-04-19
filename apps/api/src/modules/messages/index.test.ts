@@ -4,6 +4,7 @@ import { treaty } from '@elysiajs/eden'
 import { messagesRoutes } from '.'
 import { postsRoutes } from '../posts'
 import { profilesRoutes } from '../profiles'
+import { usersRoutes } from '../users'
 import { authRoutes } from '../auth'
 import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
@@ -13,6 +14,7 @@ import { eq } from 'drizzle-orm'
 const app = new Elysia()
   .use(errorsPlugin)
   .use(authRoutes)
+  .use(usersRoutes)
   .use(profilesRoutes)
   .use(postsRoutes)
   .use(messagesRoutes)
@@ -45,14 +47,14 @@ beforeAll(async () => {
   )
   bobCookie = bobRes.headers.get('set-cookie') ?? ''
 
-  const { data: aliceProfiles } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-  aliceProfile = aliceProfiles?.[0]?.userProfileId ?? ''
+  const aliceMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: aliceCookie } }))).json() as { profiles: { userProfileId: string }[] }
+  aliceProfile = aliceMeData.profiles[0]?.userProfileId ?? ''
 
-  const { data: bobProfiles } = await client.profiles.me.get({ headers: { Cookie: bobCookie } })
-  bobProfile = bobProfiles?.[0]?.userProfileId ?? ''
+  const bobMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: bobCookie } }))).json() as { profiles: { userProfileId: string }[] }
+  bobProfile = bobMeData.profiles[0]?.userProfileId ?? ''
 
-  const { data: alicePosts } = await client.profiles({ id: aliceProfile }).posts.get()
-  alicePostId = alicePosts?.[0]?.postId ?? ''
+  const { data: alicePosts } = await client.profiles({ id: aliceProfile }).posts.get({ headers: { Cookie: aliceCookie } })
+  alicePostId = alicePosts?.items?.[0]?.postId ?? ''
 
   // Clean up threads from previous test runs so the tests are idempotent
   if (bobProfile) {
@@ -205,8 +207,8 @@ describe('GET /threads/:threadId', () => {
       }),
     )
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
-    const { data: carolProfiles } = await client.profiles.me.get({ headers: { Cookie: carolCookie } })
-    const carolProfile = carolProfiles?.[0]?.userProfileId ?? ''
+    const carolMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: carolCookie } }))).json() as { profiles: { userProfileId: string }[] }
+    const carolProfile = carolMeData.profiles[0]?.userProfileId ?? ''
 
     const { error } = await client.threads({ threadId }).get({
       query:   { profileId: carolProfile },
@@ -278,8 +280,8 @@ describe('POST /threads/:threadId/messages', () => {
       }),
     )
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
-    const { data: carolProfiles } = await client.profiles.me.get({ headers: { Cookie: carolCookie } })
-    const carolProfile = carolProfiles?.[0]?.userProfileId ?? ''
+    const carolMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: carolCookie } }))).json() as { profiles: { userProfileId: string }[] }
+    const carolProfile = carolMeData.profiles[0]?.userProfileId ?? ''
 
     const { error } = await client.threads({ threadId }).messages.post(
       { profileId: carolProfile, content: 'Intruder!' },
