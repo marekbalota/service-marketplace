@@ -39,12 +39,10 @@ export type Thread = {
   threadId: string
   postId: string
   postTitle: string
-  postType: 'OFFER' | 'REQUEST'
   otherPartyName: string
   lastMessage: { content: string; createdAt: Date | string; sentByMe: boolean } | null
   unreadCount: number
   myRole: 'initiator' | 'post_owner'
-  label: 'provider' | 'client'
   postDeleted: boolean
 }
 
