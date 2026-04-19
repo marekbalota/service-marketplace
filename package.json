@@ -1,7 +1,7 @@
 {
   "name": "marketplace-for-services",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "test": "bun test apps/api && bun run --filter web test",

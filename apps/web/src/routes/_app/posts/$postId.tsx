@@ -1,10 +1,12 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ArrowLeft, DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
+import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { authClient } from '#/auth'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { BackButton } from '#/components/BackButton'
+import { EmptyState } from '#/components/EmptyState'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -82,9 +84,9 @@ function FavouriteButton({ postId }: { postId: string }) {
   const isAuthenticated = !!session?.user
 
   const { data: checkData } = useQuery({
-    queryKey: ['favourites', 'check', postId],
+    queryKey: ['favourites', postId],
     queryFn: async () => {
-      const { data, error } = await api.favourites['check']({ postId }).get()
+      const { data, error } = await api.favourites({ postId }).get()
       if (error) throw error
       return data
     },
@@ -99,7 +101,7 @@ function FavouriteButton({ postId }: { postId: string }) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
       queryClient.invalidateQueries({ queryKey: ['favourites'] })
     },
   })
@@ -110,7 +112,7 @@ function FavouriteButton({ postId }: { postId: string }) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
       queryClient.invalidateQueries({ queryKey: ['favourites'] })
     },
   })
@@ -247,12 +249,11 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { activeProfile } = useActiveProfile()
-  const { data: session } = authClient.useSession()
+  const { activeProfile, user } = useActiveUser()
   const router = useRouter()
   const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
-  const isAuthenticated = !!session?.user
+  const isAuthenticated = user !== null
   const [showReviewForm, setShowReviewForm] = useState(false)
 
   // Check if user has already reviewed this post
@@ -282,10 +283,7 @@ function PostDetailPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
       {/* Back button */}
-      <Button variant="ghost" onClick={() => router.history.back()} className="mb-4 gap-2">
-        <ArrowLeft className="size-4" />
-        Back
-      </Button>
+      <BackButton onClick={() => router.history.back()} />
 
       <Card className='gap-2'>
         <CardHeader>
@@ -421,7 +419,7 @@ function PostDetailPage() {
           <div className="space-y-4">
             <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
             {post.reviews.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">No reviews yet.</p>
+              <EmptyState message="No reviews yet." />
             ) : (
               <div className="space-y-4">
                 {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (

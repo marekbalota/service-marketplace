@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { MessageSquare } from 'lucide-react'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
 import { Suspense } from 'react'
 import { threadsQueryOptions, formatRelativeTime } from './route'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 export const Route = createFileRoute('/_app/messages/')({
   component: MessagesPage,
@@ -138,7 +138,7 @@ function ThreadList({ profileId }: { profileId: string }) {
 }
 
 function MessagesPage() {
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">

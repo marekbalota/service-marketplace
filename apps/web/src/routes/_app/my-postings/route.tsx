@@ -5,9 +5,10 @@ import { z } from 'zod'
 import { Plus } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile, profilesQueryOptions } from '#/contexts/ActiveProfileContext'
-import { Skeleton } from '#/components/ui/skeleton'
-import { authClient } from '#/auth'
+import { PostCardSkeleton } from '#/components/PostCardSkeleton'
+import { EmptyState } from '#/components/EmptyState'
+import { PageHeader } from '#/components/PageHeader'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import {
@@ -46,14 +47,8 @@ export function myPostingsQueryOptions(profileId: string, page: number) {
 
 export const Route = createFileRoute('/_app/my-postings')({
   validateSearch: searchSchema,
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
-  },
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(profilesQueryOptions)
+  beforeLoad: async ({ context : { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   component: MyPostingsPage,
 })
@@ -61,16 +56,8 @@ export const Route = createFileRoute('/_app/my-postings')({
 function PostsSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="space-y-3 rounded-lg border bg-card p-5 shadow-sm">
-          <Skeleton className="h-5 w-3/4" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
-        </div>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <PostCardSkeleton key={i} />
       ))}
     </div>
   )
@@ -100,13 +87,12 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
 
   if (posts.length === 0 && page === 1) {
     return (
-      <div className="py-16 text-center">
-        <p className="mb-4 text-muted-foreground">You haven't created any postings yet.</p>
+      <EmptyState message="You haven't created any postings yet.">
         <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
           <Plus className="size-4" />
           Create your first posting
         </Link>
-      </div>
+      </EmptyState>
     )
   }
 
@@ -169,30 +155,28 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
 }
 
 function MyPostingsPage() {
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
   const { page = 1 } = Route.useSearch()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">My Postings</h1>
-          <p className="mt-1 text-muted-foreground">Manage your service offerings</p>
-        </div>
-        <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
-          <Plus className="size-4" />
-          Create Posting
-        </Link>
-      </div>
+      <PageHeader
+        title="My Postings"
+        description="Manage your service offerings"
+        action={
+          <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
+            <Plus className="size-4" />
+            Create Posting
+          </Link>
+        }
+      />
 
       {activeProfile ? (
         <Suspense fallback={<PostsSkeleton />}>
           <PostsGrid profileId={activeProfile.userProfileId} page={page} />
         </Suspense>
       ) : (
-        <div className="py-16 text-center">
-          <p className="text-muted-foreground">No profile found.</p>
-        </div>
+        <EmptyState message="No profile found." />
       )}
     </main>
   )

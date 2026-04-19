@@ -1,17 +1,20 @@
 import { describe, it, expect, beforeAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
-import { reviewsRoutes, reviewsDeleteRoutes } from '.'
+import { reviewsRoutes } from '.'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
 import { profilesRoutes } from '../profiles'
+import { usersRoutes } from '../users'
 import { categoriesRoutes } from '../categories'
+import { errorsPlugin } from '../../lib/errors'
 
 const app = new Elysia()
+  .use(errorsPlugin)
   .use(authRoutes)
+  .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
-  .use(reviewsDeleteRoutes)
   .use(profilesRoutes)
   .use(categoriesRoutes)
 
@@ -34,8 +37,8 @@ beforeAll(async () => {
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
   // Get user profile
-  const { data: profiles } = await client.profiles.me.get({ headers: { Cookie: sessionCookie } })
-  authorId = profiles?.[0]?.userProfileId ?? ''
+  const meData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))).json() as { profiles: { userProfileId: string }[] }
+  authorId = meData.profiles[0]?.userProfileId ?? ''
 
   // Create a test post
   const { data: post } = await client.posts.post(

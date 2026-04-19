@@ -2,6 +2,8 @@ import { db } from '../../db'
 import { favourites, posts, userProfiles, postCategories, categories, locations } from '../../db/schema'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import type { FavouritesModel } from './model'
+import { NotFoundError, ErrorMessages } from '../../lib/errors'
+import { ProfilesService } from '../profiles/service'
 
 export abstract class FavouritesService {
   private static favouriteSelect = (tx: typeof db) => tx
@@ -52,25 +54,21 @@ export abstract class FavouritesService {
       location: locationId ? { locationId, city: locationCity, country: locationCountry } : null,
     }))
 
-    return {
-      items,
-      total: items.length,
-    }
+    return { items, total: items.length }
   }
 
-  static async addFavourite(userProfileId: string, postId: string): Promise<FavouritesModel['addResponse'] | null> {
-    // Check if post exists and is not deleted
+  /**
+   * @throws NotFoundError if the post doesn't exist or is deleted
+   */
+  static async addFavourite(userProfileId: string, postId: string): Promise<FavouritesModel['addResponse']> {
     const [post] = await db
       .select({ postId: posts.postId })
       .from(posts)
       .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
       .limit(1)
 
-    if (!post) {
-      return null
-    }
+    if (!post) throw new NotFoundError(ErrorMessages.postNotFound)
 
-    // Check if already favourited (including soft-deleted)
     const [existing] = await db
       .select({ deletedAt: favourites.deletedAt })
       .from(favourites)
@@ -79,7 +77,6 @@ export abstract class FavouritesService {
 
     if (existing) {
       if (existing.deletedAt === null) {
-        // Already favourited, return existing
         const [row] = await db
           .select({
             userProfileId: favourites.userProfileId,
@@ -89,10 +86,9 @@ export abstract class FavouritesService {
           .from(favourites)
           .where(and(eq(favourites.userProfileId, userProfileId), eq(favourites.postId, postId)))
           .limit(1)
-        return row ?? null
+        return row!
       }
 
-      // Restore soft-deleted favourite
       const [restored] = await db
         .update(favourites)
         .set({ deletedAt: null })
@@ -102,11 +98,9 @@ export abstract class FavouritesService {
           postId:        favourites.postId,
           createdAt:     favourites.createdAt,
         })
-
-      return restored ?? null
+      return restored!
     }
 
-    // Create new favourite
     const [inserted] = await db
       .insert(favourites)
       .values({ userProfileId, postId })
@@ -115,11 +109,13 @@ export abstract class FavouritesService {
         postId:        favourites.postId,
         createdAt:     favourites.createdAt,
       })
-
-    return inserted ?? null
+    return inserted!
   }
 
-  static async removeFavourite(userProfileId: string, postId: string): Promise<boolean> {
+  /**
+   * @throws NotFoundError if there is no active favourite to remove
+   */
+  static async removeFavourite(userProfileId: string, postId: string): Promise<void> {
     const [result] = await db
       .update(favourites)
       .set({ deletedAt: new Date() })
@@ -132,7 +128,7 @@ export abstract class FavouritesService {
       )
       .returning({ userProfileId: favourites.userProfileId })
 
-    return !!result
+    if (!result) throw new NotFoundError(ErrorMessages.favouriteNotFound)
   }
 
   static async isFavourite(userProfileId: string, postId: string): Promise<boolean> {
@@ -152,9 +148,7 @@ export abstract class FavouritesService {
   }
 
   static async checkFavouritesForProfile(userProfileId: string, postIds: string[]): Promise<Set<string>> {
-    if (postIds.length === 0) {
-      return new Set()
-    }
+    if (postIds.length === 0) return new Set()
 
     const rows = await db
       .select({ postId: favourites.postId })
@@ -168,5 +162,40 @@ export abstract class FavouritesService {
       )
 
     return new Set(rows.map(r => r.postId))
+  }
+
+  // ── Account-aware wrappers ──────────────────────────────────────────────
+
+  /** Returns empty list when the account has no profile. */
+  static async findAllForAccount(accountId: string): Promise<FavouritesModel['findAllResponse']> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) return { items: [], total: 0 }
+    return this.findAllByProfile(profiles[0]!.userProfileId)
+  }
+
+  /**
+   * @throws NotFoundError if account has no profile, or if the post doesn't exist
+   */
+  static async addFavouriteForAccount(accountId: string, postId: string): Promise<FavouritesModel['addResponse']> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) throw new NotFoundError(ErrorMessages.profileNotFound)
+    return this.addFavourite(profiles[0]!.userProfileId, postId)
+  }
+
+  /**
+   * @throws NotFoundError if account has no profile, or if there is no active favourite
+   */
+  static async removeFavouriteForAccount(accountId: string, postId: string): Promise<void> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) throw new NotFoundError(ErrorMessages.profileNotFound)
+    await this.removeFavourite(profiles[0]!.userProfileId, postId)
+  }
+
+  /** Returns { isFavourite: false } when the account has no profile. */
+  static async isFavouriteForAccount(accountId: string, postId: string): Promise<{ isFavourite: boolean }> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) return { isFavourite: false }
+    const result = await this.isFavourite(profiles[0]!.userProfileId, postId)
+    return { isFavourite: result }
   }
 }

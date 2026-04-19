@@ -26,6 +26,8 @@ export const roles = pgTable("roles", {
   description: text("description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  priority: integer("priority").notNull().default(0),
+  isDefault: boolean("is_default").notNull().default(false),
 });
 
 export const permissions = pgTable("permissions", {
@@ -45,7 +47,6 @@ export const rolePermissions = pgTable(
     permissionId: uuid("permission_id")
       .notNull()
       .references(() => permissions.permissionId),
-    deletedAt: timestamp("deleted_at"),
   },
   (table) => [primaryKey({ columns: [table.roleId, table.permissionId] })],
 );
@@ -61,6 +62,9 @@ export const users = pgTable("user", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull().$onUpdate(() => new Date()),
   roleId: uuid("role_id").references(() => roles.roleId),
+  isBanned: boolean("is_banned").notNull().default(false),
+  banReason: text("ban_reason"),
+  banExpiration: timestamp("ban_expiration"),
 });
 
 export const sessions = pgTable("session", {

@@ -1,24 +1,22 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { User, ChevronDown } from "lucide-react";
-import { Button, buttonVariants } from "#/components/ui/button";
-import { cn } from "#/lib/utils";
+import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { User, ChevronDown } from 'lucide-react'
+import { Button, buttonVariants } from '#/components/ui/button'
+import { cn } from '#/lib/utils'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "#/components/ui/sheet";
+} from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
-import { UserProfilePanel } from "./UserProfilePanel";
-import { useActiveProfile } from "#/contexts/ActiveProfileContext";
-import { authClient } from "#/auth";
+import { UserProfilePanel } from './UserProfilePanel'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 export function Header() {
-  const [open, setOpen] = useState(false);
-  const { activeProfile } = useActiveProfile();
-  const { data: session, isPending } = authClient.useSession();
+  const [open, setOpen] = useState(false)
+  const { user, activeProfile } = useActiveUser()
 
   return (
     <header className="sticky top-0 z-10 border-b bg-card shadow-sm">
@@ -30,10 +28,10 @@ export function Header() {
             </h1>
           </Link>
           <div className="flex items-center gap-2">
-            <ThemeToggle/>
-          {!isPending && !session && (
+            <ThemeToggle />
+            {user === null && (
               <>
-                <Link to="/login" className={cn(buttonVariants({ variant: "outline" }))}>
+                <Link to="/login" className={cn(buttonVariants({ variant: 'outline' }))}>
                   Log in
                 </Link>
                 <Link to="/register" className={cn(buttonVariants())}>
@@ -41,7 +39,7 @@ export function Header() {
                 </Link>
               </>
             )}
-            {session && (
+            {user !== null && (
               <>
                 <Sheet open={open} onOpenChange={setOpen}>
                   <SheetTrigger
@@ -49,7 +47,7 @@ export function Header() {
                   >
                     <User className="size-4" />
                     <span className="hidden sm:inline">
-                      {activeProfile?.name ?? "Profile"}
+                      {activeProfile?.name ?? 'Profile'}
                     </span>
                     <ChevronDown className="size-4" />
                   </SheetTrigger>
@@ -60,10 +58,10 @@ export function Header() {
                       </div>
                       <div className="min-w-0">
                         <SheetTitle className="truncate text-lg font-semibold text-foreground">
-                          {session?.user.name ?? activeProfile?.name ?? '—'}
+                          {user.name ?? activeProfile?.name ?? '—'}
                         </SheetTitle>
                         <p className="truncate text-sm text-muted-foreground capitalize">
-                          {activeProfile?.roleName ?? ''}
+                          {user.role?.name ?? ''}
                         </p>
                       </div>
                     </SheetHeader>
@@ -76,5 +74,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }

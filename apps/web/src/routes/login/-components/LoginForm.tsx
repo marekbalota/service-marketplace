@@ -3,11 +3,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
 import { authClient } from "#/auth"
-import { queryClient } from "#/router"
-import { profilesQueryOptions } from "#/contexts/ActiveProfileContext"
+import { handleBanError } from '#/lib/ban-handler'
+import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
+import { currentUserQueryOptions } from "#/contexts/ActiveUserContext"
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -26,10 +27,11 @@ export function LoginForm() {
   const onSubmit = async (values: LoginValues) => {
     await authClient.signIn.email(values, {
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+        void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
         navigate({ to: "/" })
       },
       onError: (ctx) => {
+        if (handleBanError(ctx.error)) return
         form.setError("root", { message: ctx.error.message })
       },
     })
@@ -52,7 +54,7 @@ export function LoginForm() {
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
@@ -70,16 +72,12 @@ export function LoginForm() {
                 autoComplete="current-password"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <FieldError errors={[fieldState.error]} />
             </Field>
           )}
         />
       </FieldGroup>
-      {form.formState.errors.root && (
-        <p className="text-sm text-destructive">
-          {form.formState.errors.root.message}
-        </p>
-      )}
+      <FieldError errors={[form.formState.errors.root]} />
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Signing in…" : "Log in"}
       </Button>
