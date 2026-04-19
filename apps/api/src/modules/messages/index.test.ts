@@ -5,11 +5,13 @@ import { messagesRoutes } from '.'
 import { postsRoutes } from '../posts'
 import { profilesRoutes } from '../profiles'
 import { authRoutes } from '../auth'
+import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
 import { messageThreads, messages } from '../../db/schema'
 import { eq } from 'drizzle-orm'
 
 const app = new Elysia()
+  .use(errorsPlugin)
   .use(authRoutes)
   .use(profilesRoutes)
   .use(postsRoutes)
