@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { authClient } from '#/auth'
-import { Suspense, useState, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Heart, ChevronDown, Check } from 'lucide-react'
+import { Plus, Heart } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { PostCardSkeleton } from '#/components/PostCardSkeleton'
@@ -13,6 +13,7 @@ import { SearchFilterBar, type FilterItem } from '#/components/SearchFilterBar'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
+import { MultiSelect } from '#/components/ui/multi-select'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
 import {
   Select,
@@ -420,97 +421,25 @@ const RATING_OPTIONS: { value: RatingRange; label: string }[] = [
 function RatingSelect() {
   const { rating } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const selected = normalizeRating(rating) as RatingRange[]
-  const hasSelection = selected.length > 0
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const clearAll = () => {
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        rating: undefined,
-        page: undefined,
-      }),
-    })
-  }
-
-  const toggleOption = (value: RatingRange) => {
-    const current = selected
-    const isSelected = current.includes(value)
-    const newSelection = isSelected
-      ? current.filter((v) => v !== value)
-      : [...current, value]
-
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        rating: newSelection.length > 0 ? newSelection : undefined,
-        page: undefined,
-      }),
-    })
-  }
-
-  const displayLabel =
-    selected.length === 0
-      ? 'All Ratings'
-      : selected.length === 1
-      ? RATING_OPTIONS.find((o) => o.value === selected[0])?.label
-      : `${selected.length} selected`
+  const selected = normalizeRating(rating)
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-2 pr-2 text-sm transition-colors hover:bg-accent"
-      >
-        <span className="flex-1 text-left">{displayLabel}</span>
-        <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-full z-50 mt-1 w-[180px] rounded-lg border bg-popover p-1 shadow-md">
-          <button
-            type="button"
-            onClick={() => {
-              clearAll()
-              setIsOpen(false)
-            }}
-            className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent',
-              hasSelection ? 'font-semibold text-primary' : '',
-            )}
-          >
-            {hasSelection ? 'Clear filter' : 'All Ratings'}
-          </button>
-          {RATING_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => toggleOption(option.value)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left hover:bg-accent"
-            >
-              <span className="flex h-4 w-4 items-center justify-center">
-                {selected.includes(option.value) && <Check className="size-4" />}
-              </span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <MultiSelect
+      options={RATING_OPTIONS}
+      value={selected}
+      onValueChange={(next) =>
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            rating: next.length > 0 ? (next as RatingRange[]) : undefined,
+            page: undefined,
+          }),
+        })
+      }
+      placeholder="All Ratings"
+      displayMode="text"
+      showSelectAll
+    />
   )
 }
 
