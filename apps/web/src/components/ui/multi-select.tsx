@@ -14,7 +14,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from '#/components/ui/command'
 
 export interface MultiSelectOption {
@@ -53,6 +52,7 @@ export function MultiSelect({
   emptyText = 'No results found.',
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
 
   const toggle = (optionValue: string) => {
     const next = value.includes(optionValue)
@@ -77,6 +77,10 @@ export function MultiSelect({
   const overflowCount = maxTags != null ? Math.max(0, value.length - maxTags) : 0
 
   const showControls = showSelectAll && (value.length < enabledOptions.length || value.length > 0)
+
+  const filteredOptions = search
+    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+    : options
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -136,14 +140,14 @@ export function MultiSelect({
         />
       </PopoverTrigger>
       <PopoverContent className="w-(--anchor-width) p-0" align="start">
-        <Command>
-          {searchable && <CommandInput placeholder={searchPlaceholder} />}
-          {searchable && showControls && <CommandSeparator className='mt-2 mb-1' />}
+        <Command shouldFilter={false} className='p-0'>
+          {searchable && <CommandInput placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />}
+          {searchable && <div className="mt-1 h-px bg-border" />}
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
-            {showControls && (
+            {showControls && !search && (
               <>
-                <CommandGroup>
+                <CommandGroup className='p-0'>
                   {value.length == 0 && (
                     <CommandItem onSelect={selectAll}>Select all</CommandItem>
                   )}
@@ -153,8 +157,8 @@ export function MultiSelect({
                 </CommandGroup>
               </>
             )}
-            <CommandGroup>
-              {options.map((option) => (
+            <CommandGroup className='p-0'>
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.label}
