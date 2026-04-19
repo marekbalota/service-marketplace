@@ -385,24 +385,22 @@ function PostDetailPage() {
               <Separator />
               <div className="space-y-3">
                 <SendMessageSection postId={postId} profileId={activeProfile.userProfileId} />
-                {showReviewButton && (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => setShowReviewForm(true)}
-                    >
-                      <Star className="size-4" />
-                      Leave a Review
-                    </Button>
-                    {showReviewForm && (
-                      <ReviewForm
-                        postId={postId}
-                        onSuccess={() => setShowReviewForm(false)}
-                        onCancel={() => setShowReviewForm(false)}
-                      />
-                    )}
-                  </>
+                {showReviewButton && !showReviewForm && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => setShowReviewForm(true)}
+                  >
+                    <Star className="size-4" />
+                    Leave a Review
+                  </Button>
+                )}
+                {showReviewForm && (
+                  <ReviewForm
+                    postId={postId}
+                    onSuccess={() => setShowReviewForm(false)}
+                    onCancel={() => setShowReviewForm(false)}
+                  />
                 )}
                 {hasReviewed && (
                   <p className="text-center text-sm text-muted-foreground">
