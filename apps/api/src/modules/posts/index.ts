@@ -84,9 +84,9 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     },
   )
   .post(
-    '/:postId/reviews',
+    '/:id/reviews',
     async ({ params, body, user, set }) => {
-      const review = await ReviewsService.createForAccount(user.id, params.postId, body)
+      const review = await ReviewsService.createForAccount(user.id, params.id, body)
       set.status = 201
       return review
     },
