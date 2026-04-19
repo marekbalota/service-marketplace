@@ -19,8 +19,7 @@ const favouriteItem = t.Object({
 })
 
 export const FavouritesModel = {
-  addParams:    t.Object({ postId: t.String() }),
-  removeParams: t.Object({ postId: t.String() }),
+  postIdParams: t.Object({ postId: t.String() }),
   findAllResponse: t.Object({
     items: t.Array(favouriteItem),
     total: t.Number(),

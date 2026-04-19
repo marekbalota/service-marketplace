@@ -19,6 +19,19 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
       detail: { summary: 'List user favourites', operationId: 'listFavourites', tags: ['Favourites'] },
     },
   )
+  .get(
+    '/:postId',
+    async ({ params, user }) => FavouritesService.isFavouriteForAccount(user.id, params.postId),
+    {
+      auth: true,
+      params: FavouritesModel.postIdParams,
+      response: {
+        200: FavouritesModel.isFavouriteResponse,
+        401: AuthModel.unauthorizedResponse,
+      },
+      detail: { summary: 'Check if post is favourited', operationId: 'checkFavourite', tags: ['Favourites'] },
+    },
+  )
   .post(
     '/:postId',
     async ({ params, user, set }) => {
@@ -27,7 +40,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
     },
     {
       auth: true,
-      params: FavouritesModel.addParams,
+      params: FavouritesModel.postIdParams,
       response: {
         201: FavouritesModel.addResponse,
         401: AuthModel.unauthorizedResponse,
@@ -44,25 +57,12 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
     },
     {
       auth: true,
-      params: FavouritesModel.removeParams,
+      params: FavouritesModel.postIdParams,
       response: {
         204: t.Void(),
         401: AuthModel.unauthorizedResponse,
         404: errorResponse,
       },
       detail: { summary: 'Remove post from favourites', operationId: 'removeFavourite', tags: ['Favourites'] },
-    },
-  )
-  .get(
-    '/check/:postId',
-    async ({ params, user }) => FavouritesService.isFavouriteForAccount(user.id, params.postId),
-    {
-      auth: true,
-      params: FavouritesModel.addParams,
-      response: {
-        200: FavouritesModel.isFavouriteResponse,
-        401: AuthModel.unauthorizedResponse,
-      },
-      detail: { summary: 'Check if post is favourited', operationId: 'checkFavourite', tags: ['Favourites'] },
     },
   )

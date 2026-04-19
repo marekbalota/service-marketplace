@@ -5,6 +5,7 @@ import { profilesRoutes } from '.'
 import { authRoutes } from '../auth'
 import { usersRoutes } from '../users'
 import { auth } from '../auth/service'
+import { LocationsModel } from '../locations'
 
 const app = new Elysia().use(authRoutes).use(usersRoutes).use(profilesRoutes)
 const client = treaty(app)
@@ -138,6 +139,38 @@ describe('GET /profiles/:profileId/posts', () => {
     if (page1!.total > 1) {
       expect(page1!.items[0]!.postId).not.toBe(page2!.items[0]?.postId)
     }
+  })
+})
+
+describe('GET /profiles/:id/locations', () => {
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).locations.get()
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 200 with an array when authenticated', async () => {
+    const { data, error } = await client.profiles({ id: aliceProfileId }).locations.get({
+      headers: { Cookie: aliceCookie }
+    })
+    expect(error).toBeNull()
+    expect(Array.isArray(data)).toBe(true)
+  })
+
+  it('each location has locationId as string', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).locations.get({
+      headers: { Cookie: aliceCookie }
+    })
+    for (const loc of data ?? []) {
+      expect(typeof loc.locationId).toBe('string')
+    }
+  })
+
+  it('returns empty array for a profile with no posts at that id', async () => {
+    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get({
+      headers: { Cookie: aliceCookie }
+    })
+    expect(error).toBeNull()
+    expect(data).toEqual([])
   })
 })
 

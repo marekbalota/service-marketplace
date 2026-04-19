@@ -84,9 +84,9 @@ function FavouriteButton({ postId }: { postId: string }) {
   const isAuthenticated = !!session?.user
 
   const { data: checkData } = useQuery({
-    queryKey: ['favourites', 'check', postId],
+    queryKey: ['favourites', postId],
     queryFn: async () => {
-      const { data, error } = await api.favourites['check']({ postId }).get()
+      const { data, error } = await api.favourites({ postId }).get()
       if (error) throw error
       return data
     },
@@ -101,7 +101,7 @@ function FavouriteButton({ postId }: { postId: string }) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
       queryClient.invalidateQueries({ queryKey: ['favourites'] })
     },
   })
@@ -112,7 +112,7 @@ function FavouriteButton({ postId }: { postId: string }) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', 'check', postId] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
       queryClient.invalidateQueries({ queryKey: ['favourites'] })
     },
   })
