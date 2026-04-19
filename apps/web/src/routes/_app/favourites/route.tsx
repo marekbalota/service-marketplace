@@ -4,11 +4,11 @@ import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@ta
 import { Heart, ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Skeleton } from '#/components/ui/skeleton'
 import { authClient } from '#/auth'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 export const favouritesQueryOptions = queryOptions({
   queryKey: ['favourites'],
@@ -109,18 +109,12 @@ function FavouritesGrid() {
 
 function FavouritesPage() {
   const { data: session } = authClient.useSession()
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8 flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            to="/posts"
-            className={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}
-          >
-            <ArrowLeft className="size-4" />
-          </Link>
           <div>
             <h1 className="text-3xl font-semibold text-foreground">My Favourites</h1>
             <p className="mt-1 text-muted-foreground">

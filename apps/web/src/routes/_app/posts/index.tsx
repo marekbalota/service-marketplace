@@ -4,20 +4,12 @@ import { Suspense, useState, useEffect, useMemo, useRef } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Plus, Search, SlidersHorizontal, Heart, ChevronDown, Check } from 'lucide-react'
+import { Plus, Heart, ChevronDown, Check } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { PostCardSkeleton } from '#/components/PostCardSkeleton'
 import { EmptyState } from '#/components/EmptyState'
-import { Input } from '#/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '#/components/ui/sheet'
+import { SearchFilterBar, type FilterItem } from '#/components/SearchFilterBar'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -38,21 +30,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '#/components/ui/pagination'
-
-function SearchInput({ value, onChange }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
-  return (
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        type="search"
-        placeholder="Search services, providers, or keywords..."
-        value={value}
-        onChange={onChange}
-        className="pl-9"
-      />
-    </div>
-  )
-}
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
@@ -440,7 +417,7 @@ const RATING_OPTIONS: { value: RatingRange; label: string }[] = [
   { value: 'none', label: 'Without review' },
 ]
 
-function RatingSelect({ triggerClassName }: { triggerClassName?: string }) {
+function RatingSelect() {
   const { rating } = Route.useSearch()
   const navigate = Route.useNavigate()
   const [isOpen, setIsOpen] = useState(false)
@@ -497,10 +474,7 @@ function RatingSelect({ triggerClassName }: { triggerClassName?: string }) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-2 pr-2 text-sm transition-colors hover:bg-accent',
-          triggerClassName,
-        )}
+        className="flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-2 pr-2 text-sm transition-colors hover:bg-accent"
       >
         <span className="flex-1 text-left">{displayLabel}</span>
         <ChevronDown className={cn('size-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
@@ -568,89 +542,46 @@ function HomePage() {
     }
   }, [isAuthenticated, favourites, navigate])
 
+  const filters: FilterItem[] = [
+    ...(isAuthenticated ? [{
+      label: 'Favourites',
+      control: (
+        <Button variant={favourites ? 'default' : 'outline'} className="w-full gap-2" onClick={toggleFavourites}>
+          <Heart className={cn('size-4', favourites && 'fill-red-500')} />
+          {favourites ? 'Favourites' : 'Show Favourites'}
+        </Button>
+      ),
+    }] : []),
+    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[160px]' },
+    { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[160px]' },
+    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[220px]' },
+  ]
+
   return (
     <>
       {/* Search & Filters bar */}
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="mb-4 flex gap-2">
-            <SearchInput
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value)
-                searchDebouncer.maybeExecute(e.target.value)
-              }}
-            />
-
-            {isAuthenticated && (
-              <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
-                <Plus className="size-4" />
-                <span className="hidden sm:inline">New Post</span>
-              </Link>
-            )}
-
-            {/* Mobile filter sheet */}
-            <Sheet>
-              <SheetTrigger className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'shrink-0 md:hidden')}>
-                <SlidersHorizontal className="size-4" />
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filters & Sort</SheetTitle>
-                  <SheetDescription>Refine your search results</SheetDescription>
-                </SheetHeader>
-                <div className="mt-4 space-y-4 px-4">
-                  {isAuthenticated && (
-                    <Button
-                      variant={favourites ? 'default' : 'outline'}
-                      className="w-full gap-2"
-                      onClick={toggleFavourites}
-                    >
-                      <Heart className={cn('size-4', favourites && 'fill-red-500')} />
-                      {favourites ? 'Favourites' : 'Show Favourites'}
-                    </Button>
-                  )}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Post Type</label>
-                    <PostTypeSelect triggerClassName="w-full" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Category</label>
-                    <CategorySelect triggerClassName="w-full" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Rating</label>
-                    <RatingSelect triggerClassName="w-full" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Sort By</label>
-                    <SortSelect triggerClassName="w-full" />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Desktop filters */}
-          <div className="hidden flex-wrap items-center gap-3 md:flex">
-            {isAuthenticated && (
-              <Button
-                variant={favourites ? 'default' : 'outline'}
-                className="gap-2"
-                onClick={toggleFavourites}
-              >
-                <Heart className={cn('size-4', favourites && 'fill-red-500')} />
-                <span className="hidden lg:inline">
-                  {favourites ? 'Favourites' : 'Favourites'}
-                </span>
-                <span className="lg:hidden">Favourites</span>
-              </Button>
-            )}
-            <PostTypeSelect triggerClassName="w-[160px]" />
-            <CategorySelect triggerClassName="w-[200px]" />
-            <RatingSelect triggerClassName="w-[160px]" />
-            <SortSelect triggerClassName="w-[220px]" />
-          </div>
+          <SearchFilterBar
+            searchPlaceholder="Search services, providers, or keywords..."
+            searchValue={inputValue}
+            onSearchChange={(value) => {
+              setInputValue(value)
+              searchDebouncer.maybeExecute(value)
+            }}
+            filters={filters}
+            sheetTitle="Filters & Sort"
+            sheetDescription="Refine your search results"
+            action={
+              isAuthenticated ? (
+                <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">New Post</span>
+                </Link>
+              ) : undefined
+            }
+          />
         </div>
       </div>
 

@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 import { SearchFilterBar } from './SearchFilterBar'
 
 const mockFilters = [
@@ -8,10 +8,36 @@ const mockFilters = [
 ]
 
 describe('SearchFilterBar', () => {
+  it('renders the search input with the given placeholder', () => {
+    render(
+      <SearchFilterBar
+        searchPlaceholder="Search posts..."
+        searchValue=""
+        onSearchChange={vi.fn()}
+        filters={mockFilters}
+      />,
+    )
+    expect(screen.getByPlaceholderText('Search posts...')).toBeInTheDocument()
+  })
+
+  it('calls onSearchChange when the input changes', () => {
+    const onSearchChange = vi.fn()
+    render(
+      <SearchFilterBar
+        searchValue=""
+        onSearchChange={onSearchChange}
+        filters={mockFilters}
+      />,
+    )
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'hello' } })
+    expect(onSearchChange).toHaveBeenCalledWith('hello')
+  })
+
   it('renders filter labels inside the sheet', () => {
     render(
       <SearchFilterBar
-        search={<input placeholder="Search..." />}
+        searchValue=""
+        onSearchChange={vi.fn()}
         filters={mockFilters}
         sheetTitle="Filters"
       />,
@@ -23,7 +49,8 @@ describe('SearchFilterBar', () => {
   it('renders the mobile sheet trigger button', () => {
     render(
       <SearchFilterBar
-        search={<input placeholder="Search..." />}
+        searchValue=""
+        onSearchChange={vi.fn()}
         filters={mockFilters}
       />,
     )

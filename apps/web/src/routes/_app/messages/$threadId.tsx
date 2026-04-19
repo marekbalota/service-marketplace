@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ExternalLink, Send, Trash2 } from 'lucide-react'
 import { authClient } from '#/auth'
 import { api } from '#/api'
-import { useActiveProfile } from '#/contexts/ActiveProfileContext'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
+import { useActiveUser } from '#/contexts/ActiveUserContext'
 
 export function threadDetailQueryOptions(threadId: string, profileId: string) {
   return queryOptions({
@@ -236,7 +236,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
 
 function ThreadPage() {
   const { threadId } = Route.useParams()
-  const { activeProfile } = useActiveProfile()
+  const { activeProfile } = useActiveUser()
 
   if (!activeProfile) {
     return <ThreadPageSkeleton />

@@ -1,7 +1,8 @@
 import type React from 'react'
-import { SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal } from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { buttonVariants } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
 import {
   Sheet,
   SheetContent,
@@ -19,7 +20,9 @@ export interface FilterItem {
 }
 
 interface SearchFilterBarProps {
-  search: React.ReactNode
+  searchPlaceholder?: string
+  searchValue: string
+  onSearchChange: (value: string) => void
   filters: FilterItem[]
   sheetTitle?: string
   sheetDescription?: string
@@ -27,7 +30,9 @@ interface SearchFilterBarProps {
 }
 
 export function SearchFilterBar({
-  search,
+  searchPlaceholder = 'Search...',
+  searchValue,
+  onSearchChange,
   filters,
   sheetTitle = 'Filters',
   sheetDescription,
@@ -37,7 +42,15 @@ export function SearchFilterBar({
     <div className="space-y-0">
       {/* Row 1: search + optional action + mobile sheet trigger */}
       <div className="flex gap-2">
-        <div className="flex-1">{search}</div>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
         {action}
 

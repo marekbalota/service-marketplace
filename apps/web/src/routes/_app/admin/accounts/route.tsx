@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Suspense } from 'react';
 import { useSuspenseQuery, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
-import { Search, MoreVertical, Ban, Shield, Trash2, Eye, Loader2 } from 'lucide-react';
+import { MoreVertical, Ban, Shield, Trash2, Eye, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { api } from '#/api';
 import { BackButton } from '#/components/BackButton';
@@ -10,7 +10,6 @@ import { StatCard } from '../-components/StatCard';
 import { EmptyState } from '#/components/EmptyState';
 import { SearchFilterBar } from '#/components/SearchFilterBar';
 import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Badge } from '#/components/ui/badge';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -162,18 +161,10 @@ function ManageAccounts() {
       <Card className="mb-6">
         <CardContent >
           <SearchFilterBar
-            search={
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={q}
-                  onChange={(e) =>
-                    navigate({ search: (prev) => ({ ...prev, q: e.target.value || undefined }) })
-                  }
-                  className="pl-10"
-                />
-              </div>
+            searchPlaceholder="Search by name or email..."
+            searchValue={q}
+            onSearchChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, q: value || undefined }) })
             }
             filters={[
               { label: 'Role', control: <RoleSelect />, desktopWidth: 'w-[180px]' },
