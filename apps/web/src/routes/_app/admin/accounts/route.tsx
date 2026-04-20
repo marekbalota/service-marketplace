@@ -58,7 +58,7 @@ import type { AdminUsersModel } from 'api';
 
 export type User = AdminUsersModel['usersResponse']['items'][number];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 export const usersQueryOptions = (params: {
   search: string;
@@ -225,6 +225,11 @@ function BanDialog({
 
   const durationType = watch('durationType');
 
+  const durationLabels: Record<string, string> = {
+    permanent: 'Permanent',
+    'until-date': 'Until date',
+  };
+
   const submit: SubmitHandler<BanFormValues> = async (values) => {
     const expiresAt =
       values.durationType === 'until-date' && values.expiresAt
@@ -270,11 +275,12 @@ function BanDialog({
                   onValueChange={(v) => { field.onChange(v); field.onBlur(); }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{durationLabels[field.value]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="permanent">Permanent</SelectItem>
-                    <SelectItem value="until-date">Until date</SelectItem>
+                    {Object.entries(durationLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </Field>

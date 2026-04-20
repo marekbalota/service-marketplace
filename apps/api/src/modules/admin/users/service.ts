@@ -40,7 +40,7 @@ export abstract class AdminUsersService {
         .select({ total: count() })
         .from(users)
         .leftJoin(roles, eq(users.roleId, roles.roleId))
-        .where(and(baseConditions, eq(users.isBanned, true)));
+        .where(and(conditions, eq(users.isBanned, true)));
 
       const total = countRow?.total ?? 0;
       const totalBanned = bannedCountRow?.total ?? 0;

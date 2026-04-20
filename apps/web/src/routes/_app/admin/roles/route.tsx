@@ -180,7 +180,10 @@ function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: CreateRole
     });
     setIsOpen(false);
     setNewRole({ name: '', description: '', permissionIds: [] });
-    queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
+      queryClient.invalidateQueries({ queryKey: ['users', 'me'] }),
+    ]);
   };
 
   return (
@@ -511,104 +514,108 @@ function SortableRoleCard({
                 <CardDescription>{role.description}</CardDescription>
               </div>
               <div className="flex gap-2">
-              <Dialog
-                open={editingRole?.roleId === role.roleId}
-                onOpenChange={(open) => {
-                  if (!open) {
-                    setEditingRole(null);
-                    setNewRole({ name: '', description: '', permissionIds: [] });
-                  }
-                }}
-              >
-                <DialogTrigger>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => onEdit(role)}
+              {canReorder && (
+                <>
+                  <Dialog
+                    open={editingRole?.roleId === role.roleId}
+                    onOpenChange={(open) => {
+                      if (!open) {
+                        setEditingRole(null);
+                        setNewRole({ name: '', description: '', permissionIds: [] });
+                      }
+                    }}
                   >
-                    <Edit className="size-4" />
-                    Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Edit Role</DialogTitle>
-                    <DialogDescription>
-                      Modify role permissions and details
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-name">Role Name *</Label>
-                      <Input
-                        id="edit-name"
-                        value={newRole.name}
-                        onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-description">Description *</Label>
-                      <Input
-                        id="edit-description"
-                        value={newRole.description}
-                        onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label>Permissions</Label>
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
-                        {permissions.map((permission) => (
-                          <div key={permission.permissionId} className="flex items-start space-x-3">
-                            <Checkbox
-                              id={`edit-${permission.permissionId}`}
-                              checked={newRole.permissionIds.includes(permission.permissionId)}
-                              onCheckedChange={() => togglePermission(permission.permissionId)}
-                            />
-                            <div className="flex-1">
-                              <label
-                                htmlFor={`edit-${permission.permissionId}`}
-                                className="text-sm font-medium cursor-pointer"
-                              >
-                                {permission.description ?? permission.name}
-                              </label>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 pt-4">
+                    <DialogTrigger>
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          setEditingRole(null);
-                          setNewRole({ name: '', description: '', permissionIds: [] });
-                        }}
-                        className="flex-1"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => onEdit(role)}
                       >
-                        Cancel
+                        <Edit className="size-4" />
+                        Edit
                       </Button>
-                      <Button
-                        onClick={onUpdateRole}
-                        disabled={!newRole.name || !newRole.description}
-                        className="flex-1"
-                      >
-                        Save Changes
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              {!role.isDefault && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-red-600 hover:text-red-700"
-                  onClick={() => onDelete(role.roleId)}
-                >
-                  <Trash2 className="size-4" />
-                  Delete
-                </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Edit Role</DialogTitle>
+                        <DialogDescription>
+                          Modify role permissions and details
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-name">Role Name *</Label>
+                          <Input
+                            id="edit-name"
+                            value={newRole.name}
+                            onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-description">Description *</Label>
+                          <Input
+                            id="edit-description"
+                            value={newRole.description}
+                            onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label>Permissions</Label>
+                          <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
+                            {permissions.map((permission) => (
+                              <div key={permission.permissionId} className="flex items-start space-x-3">
+                                <Checkbox
+                                  id={`edit-${permission.permissionId}`}
+                                  checked={newRole.permissionIds.includes(permission.permissionId)}
+                                  onCheckedChange={() => togglePermission(permission.permissionId)}
+                                />
+                                <div className="flex-1">
+                                  <label
+                                    htmlFor={`edit-${permission.permissionId}`}
+                                    className="text-sm font-medium cursor-pointer"
+                                  >
+                                    {permission.description ?? permission.name}
+                                  </label>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setEditingRole(null);
+                              setNewRole({ name: '', description: '', permissionIds: [] });
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={onUpdateRole}
+                            disabled={!newRole.name || !newRole.description}
+                            className="flex-1"
+                          >
+                            Save Changes
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  {!role.isDefault && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-red-600 hover:text-red-700"
+                      onClick={() => onDelete(role.roleId)}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
