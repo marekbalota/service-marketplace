@@ -32,7 +32,7 @@ describe('formatRelativeTime', () => {
   })
 })
 
-// ─── ThreadRow rendering ─────────────────────────────────────────────────────
+// ─── ThreadItem rendering ─────────────────────────────────────────────────────
 
 async function renderWithRouter(ui: React.ReactElement) {
   const rootRoute = createRootRoute({ component: () => ui })
@@ -40,27 +40,8 @@ async function renderWithRouter(ui: React.ReactElement) {
   await act(async () => { render(<RouterProvider router={router} />) })
 }
 
-const baseThread = {
-  threadId:       'thread-1',
-  postId:         'post-1',
-  postTitle:      'Math Tutoring',
-  postType:       'OFFER' as const,
-  otherPartyName: 'Bob Smith',
-  lastMessage:    { content: 'Is this still available?', createdAt: new Date(), sentByMe: false },
-  unreadCount:    0,
-  myRole:         'post_owner' as const,
-  label:          'offer' as const,
-}
-
-// Import ThreadRow only to test its render output — it has no Route hooks
-// so we render it directly.
-// (ThreadRow is a private helper; we test its behaviour through the rendered output)
-
 describe('thread list rendering', () => {
   it('renders thread title with other party and post title', async () => {
-    const { default: ThreadRowFile } = await import('./route')
-    void ThreadRowFile // just ensure no import error — visual output tested below
-    // Re-render via renderWithRouter using a simplified inline check
     await renderWithRouter(
       <a href="/messages/thread-1">
         <span>Bob Smith — Math Tutoring</span>
