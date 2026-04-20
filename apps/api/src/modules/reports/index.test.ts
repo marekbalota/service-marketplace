@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
+import { and, isNull, eq, ne } from 'drizzle-orm'
+import { db } from '../../db'
+import { posts } from '../../db/schema'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
 import { profilesRoutes } from '../profiles'
@@ -19,12 +22,10 @@ const app = new Elysia()
 const client = treaty(app)
 
 let sessionCookie = ''
-let authorCookie = ''
-let reporterProfileId = ''
-let postId = ''
+let ownPostId = ''   // post authored by alice (for 403 self-report test)
+let otherPostId = '' // post NOT authored by alice (for 201/409/check tests)
 
 beforeAll(async () => {
-  // Sign in as alice (will be the reporter)
   const signInRes = await app.handle(
     new Request('http://localhost/api/auth/sign-in/email', {
       method: 'POST',
@@ -37,43 +38,32 @@ beforeAll(async () => {
   const meData = await (
     await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))
   ).json() as { profiles: { userProfileId: string }[] }
-  reporterProfileId = meData.profiles[0]?.userProfileId ?? ''
+  const aliceProfileId = meData.profiles[0]?.userProfileId ?? ''
 
-  // Sign in as bob (will be the post author so alice can report)
-  const authorRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'bob@example.com', password: 'password123' }),
-    }),
-  )
-  authorCookie = authorRes.headers.get('set-cookie') ?? ''
+  // Find a post alice authored
+  const [alicePost] = await db
+    .select({ postId: posts.postId })
+    .from(posts)
+    .where(and(eq(posts.authorId, aliceProfileId), isNull(posts.deletedAt)))
+    .limit(1)
+  ownPostId = alicePost?.postId ?? ''
 
-  const bobData = await (
-    await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: authorCookie } }))
-  ).json() as { profiles: { userProfileId: string }[] }
-  const authorId = bobData.profiles[0]?.userProfileId ?? ''
-
-  const { data: post } = await client.posts.post(
-    {
-      authorId,
-      postTitle: 'Test post for reports',
-      description: 'This is a test post for report functionality testing',
-      postType: 'OFFER',
-    },
-    { headers: { Cookie: authorCookie } },
-  )
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  postId = (post as any)?.postId ?? ''
+  // Find a post NOT authored by alice
+  const [otherPost] = await db
+    .select({ postId: posts.postId })
+    .from(posts)
+    .where(and(ne(posts.authorId, aliceProfileId), isNull(posts.deletedAt)))
+    .limit(1)
+  otherPostId = otherPost?.postId ?? ''
 })
 
 describe('POST /posts/:id/reports', () => {
   it('returns 401 when not authenticated', async () => {
     const res = await app.handle(
-      new Request(`http://localhost/posts/${postId}/reports`, {
+      new Request(`http://localhost/posts/${otherPostId}/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: 'spam', description: 'This is spam' }),
+        body: JSON.stringify({ reason: 'spam', description: 'test' }),
       }),
     )
     expect(res.status).toBe(401)
@@ -87,46 +77,45 @@ describe('POST /posts/:id/reports', () => {
     expect(error?.status).toBe(404)
   })
 
+  it('returns 403 when reporter is the post author', async () => {
+    const { error } = await client.posts({ id: ownPostId }).reports.post(
+      { reason: 'spam', description: 'Self-report attempt' },
+      { headers: { Cookie: sessionCookie } },
+    )
+    expect(error?.status).toBe(403)
+  })
+
   it('creates a report with valid data (201)', async () => {
-    const { data, error } = await client.posts({ id: postId }).reports.post(
+    const { data, error } = await client.posts({ id: otherPostId }).reports.post(
       { reason: 'spam', description: 'This post is spam' },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
-    expect(data).toBeDefined()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((data as any)?.reason).toBe('spam')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((data as any)?.postId).toBe(postId)
+    expect((data as any)?.postId).toBe(otherPostId)
   })
 
   it('returns 409 for duplicate report', async () => {
-    const { error } = await client.posts({ id: postId }).reports.post(
+    const { error } = await client.posts({ id: otherPostId }).reports.post(
       { reason: 'misleading', description: 'Reported again' },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error?.status).toBe(409)
-  })
-
-  it('returns 403 when post owner tries to report their own post', async () => {
-    const { error } = await client.posts({ id: postId }).reports.post(
-      { reason: 'spam', description: 'Self-report attempt' },
-      { headers: { Cookie: authorCookie } },
-    )
-    expect(error?.status).toBe(403)
   })
 })
 
 describe('GET /posts/:id/reports/check', () => {
   it('returns 401 when not authenticated', async () => {
     const res = await app.handle(
-      new Request(`http://localhost/posts/${postId}/reports/check`),
+      new Request(`http://localhost/posts/${otherPostId}/reports/check`),
     )
     expect(res.status).toBe(401)
   })
 
   it('returns hasReported: true after reporting', async () => {
-    const { data, error } = await client.posts({ id: postId }).reports.check.get(
+    const { data, error } = await client.posts({ id: otherPostId }).reports.check.get(
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
@@ -134,21 +123,9 @@ describe('GET /posts/:id/reports/check', () => {
     expect((data as any)?.hasReported).toBe(true)
   })
 
-  it('returns hasReported: false for a post not yet reported', async () => {
-    const { data: freshPost } = await client.posts.post(
-      {
-        authorId: reporterProfileId,
-        postTitle: 'Another post for check test',
-        description: 'Not reported yet',
-        postType: 'REQUEST',
-      },
+  it('returns hasReported: false for an unreported post', async () => {
+    const { data, error } = await client.posts({ id: ownPostId }).reports.check.get(
       { headers: { Cookie: sessionCookie } },
-    )
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const freshPostId = (freshPost as any)?.postId ?? ''
-
-    const { data, error } = await client.posts({ id: freshPostId }).reports.check.get(
-      { headers: { Cookie: authorCookie } },
     )
     expect(error).toBeNull()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

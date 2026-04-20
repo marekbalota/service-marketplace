@@ -48,6 +48,7 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
   } = useForm<ReportFormData>({
     resolver: zodResolver(reportSchema),
     mode: 'onTouched',
+    defaultValues: { description: '' },
   })
 
   const mutation = useMutation({
