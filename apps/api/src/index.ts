@@ -43,6 +43,7 @@ export const app = new Elysia()
         { name: "Favourites", description: "User's favourite posts" },
         { name: "Messages",   description: "Message threads and chat messages" },
         { name: "Reviews",    description: "Post reviews and ratings" },
+        { name: "Reports",    description: "Post reports" },
       ],
     },
   }))

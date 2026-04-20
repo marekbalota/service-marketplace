@@ -8,6 +8,8 @@ export const ErrorMessages = {
   favouriteNotFound: 'Favourite not found',
   reviewNotFound:  'Review not found',
   alreadyReviewed: 'You have already reviewed this post',
+  alreadyReported: 'You have already reported this post',
+  reportNotFound: 'Report not found',
   userNotFound: 'User not found',
   userRoleNotFound: 'User role not found',
   roleNotFound: 'Role not found',

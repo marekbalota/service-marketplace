@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
+import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2, Flag } from 'lucide-react'
 import { api } from '#/api'
 import { authClient } from '#/auth'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
@@ -16,6 +16,7 @@ import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
 import { formatLocation } from '#/lib/format'
 import { ReviewForm } from '#/components/ReviewForm'
+import { ReportForm } from '#/components/ReportForm'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -255,11 +256,23 @@ function PostDetailPage() {
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user !== null
   const [showReviewForm, setShowReviewForm] = useState(false)
+  const [showReportForm, setShowReportForm] = useState(false)
 
   // Check if user has already reviewed this post
   const hasReviewed = post.reviews.some(
     (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
   )
+
+  const { data: reportCheck } = useQuery({
+    queryKey: ['reports', 'check', postId],
+    queryFn: async () => {
+      const { data, error } = await api.posts({ id: postId }).reports.check.get()
+      if (error) throw error
+      return data!
+    },
+    enabled: isAuthenticated && !isOwner,
+  })
+  const hasReported = reportCheck?.hasReported ?? false
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -405,6 +418,28 @@ function PostDetailPage() {
                 {hasReviewed && (
                   <p className="text-center text-sm text-muted-foreground">
                     You have already reviewed this post
+                  </p>
+                )}
+                {!hasReported && !showReportForm && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                    onClick={() => setShowReportForm(true)}
+                  >
+                    <Flag className="size-4" />
+                    Report Post
+                  </Button>
+                )}
+                {!hasReported && showReportForm && (
+                  <ReportForm
+                    postId={postId}
+                    onSuccess={() => setShowReportForm(false)}
+                    onCancel={() => setShowReportForm(false)}
+                  />
+                )}
+                {hasReported && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reported this post
                   </p>
                 )}
               </div>
