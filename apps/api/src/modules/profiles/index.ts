@@ -5,8 +5,7 @@ import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
 import { LocationsModel, LocationsService } from '../locations'
 import { authRoutes } from '../auth'
-import { errorResponse } from '../../lib/errors'
-import { authErrorResponses, notFoundResponse } from '../auth/model'
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
@@ -25,17 +24,19 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .patch(
     '/:id',
     async ({ params, body, user, set }) => {
-      await ProfilesService.updateWithOwnershipCheck(user.id, params.id, body);
-      set.status = 204;
+      const updated = await ProfilesService.updateWithOwnershipCheck(user.id, params.id, body);
+      set.status = 200;
+      return updated;
     },
     {
       auth: true,
       params: ProfilesModel.updateParams,
       body: ProfilesModel.updateBody,
       response: {
-        204: t.Void(),
-        404: errorResponse,
-        ...authErrorResponses,
+        200: ProfilesModel.updateResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Update a profile', operationId: 'updateProfile', tags: ['Profiles'] },
     },
@@ -47,7 +48,10 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       auth: true,
       params:   ProfilesModel.profilePostsParams,
       query:    PostsModel.findByProfileQuery,
-      response: { 200: PostsModel.findByProfileResponse },
+      response: {
+        200: PostsModel.findByProfileResponse,
+        ...unauthorizedResponse,
+      },
       detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
     },
   )
@@ -57,7 +61,10 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     {
       auth: true,
       params: LocationsModel.profileLocationsParams,
-      response: { 200: LocationsModel.profileLocationsResponse },
+      response: {
+        200: LocationsModel.profileLocationsResponse,
+        ...unauthorizedResponse,
+      },
       detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
     },
   );

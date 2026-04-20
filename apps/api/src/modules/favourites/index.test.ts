@@ -65,7 +65,7 @@ describe('favourites routes', () => {
     })
   })
 
-  describe('GET /favourites/check/:postId', () => {
+  describe('GET /favourites/:postId', () => {
     it('returns 401 when not authenticated', async () => {
       mock.module('./service', () => ({
         FavouritesService: {
@@ -74,7 +74,7 @@ describe('favourites routes', () => {
       }))
 
       const response = await favouritesRoutes.handle(
-        new Request('http://localhost:3001/favourites/check/post-123'),
+        new Request('http://localhost:3001/favourites/post-123'),
       )
       expect(response.status).toBe(401)
     })

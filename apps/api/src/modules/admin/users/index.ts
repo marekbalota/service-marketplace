@@ -3,7 +3,7 @@ import { AdminUsersService } from './service';
 import { AdminUsersModel } from './model';
 import { Permissions } from '@marketplace/shared';
 import { authRoutes } from '../../auth';
-import { authErrorResponses, notFoundResponse } from '../../auth/model';
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../../lib/errors';
 
 export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
   .use(authRoutes)
@@ -15,7 +15,8 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       query: AdminUsersModel.usersQuery,
       response: {
         200: AdminUsersModel.usersResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List users', operationId: 'listAdminUsers', tags: ['Admin'] },
     }
@@ -32,7 +33,8 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       body: AdminUsersModel.banBody,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Ban user', operationId: 'banUser', tags: ['Admin'] },
@@ -49,7 +51,9 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       params: AdminUsersModel.unbanParams,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Unban user', operationId: 'unbanUser', tags: ['Admin'] },
     }
@@ -66,21 +70,10 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       body: AdminUsersModel.assignRoleBody,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Assign role to user', operationId: 'assignUserRole', tags: ['Admin'] },
-    }
-  )
-  .get(
-    '/roles/assignable',
-    async ({ user }) => await AdminUsersService.listAssignableRoles(user.roleId),
-    {
-      authWithPermissions: Permissions.AdminUsersAssignRole,
-      response: {
-        200: AdminUsersModel.assignableRoleResponse,
-        ...authErrorResponses,
-      },
-      detail: { summary: 'List assignable roles', operationId: 'listAssignableRoles', tags: ['Admin'] },
     }
   );

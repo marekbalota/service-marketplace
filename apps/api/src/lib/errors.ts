@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 
-export const errorResponse = t.Object({ message: t.String() })
+const errorResponse = t.Object({ message: t.String() })
 
 export const ErrorMessages = {
   postNotFound:    'Post not found',
@@ -29,6 +29,22 @@ export const AuthErrorMessages = {
   invalidReorderOperation: 'Invalid reorder operation',
   cannotSetSameOrHigherAsDefault: 'Cannot set roles with equal or higher priority as default',
 } as const
+
+export const unauthorizedResponse = {
+  401: errorResponse,
+};
+
+export const forbiddenResponse = {
+  403: errorResponse,
+};
+
+export const notFoundResponse = {
+  404: errorResponse,
+};
+
+export const conflictResponse = {
+  409: errorResponse,
+};
 
 export class ForbiddenError extends Error {
   status = 403;

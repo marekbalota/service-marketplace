@@ -2,11 +2,30 @@ import { Elysia, t } from 'elysia'
 import { ReviewsModel } from './model'
 import { ReviewsService } from './service'
 import { authRoutes } from '../auth'
-import { AuthModel } from '../auth/model'
-import { errorResponse } from '../../lib/errors'
+import { conflictResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
 
 export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
   .use(authRoutes)
+  .post(
+    '/',
+    async ({ body, user, set }) => {
+      const review = await ReviewsService.createWithOwnerShipCheck(user.id, body.postId, body)
+      set.status = 201
+      return review
+    },
+    {
+      auth: true,
+      body: ReviewsModel.createBody,
+      response: {
+        201: ReviewsModel.createResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
+      },
+      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
+    },
+  )
   .delete(
     '/:id',
     async ({ params, user, set }) => {
@@ -18,9 +37,9 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
       params: ReviewsModel.deleteParams,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse
       },
       detail: { summary: 'Delete a review', operationId: 'deleteReview', tags: ['Reviews'] },
     },

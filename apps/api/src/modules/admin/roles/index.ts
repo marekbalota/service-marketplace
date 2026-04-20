@@ -3,7 +3,7 @@ import { AdminRolesService } from './service';
 import { AdminRolesModel } from './model';
 import { Permissions } from '@marketplace/shared';
 import { authRoutes } from '../../auth';
-import { authErrorResponses, notFoundResponse } from '../../auth/model';
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../../lib/errors';
 
 export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
   .use(authRoutes)
@@ -19,7 +19,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       ],
       response: {
         200: AdminRolesModel.rolesResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List all roles', operationId: 'listRoles', tags: ['Admin'] },
     }
@@ -31,7 +32,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       authWithPermissions: Permissions.AdminRolesManage,
       response: {
         200: AdminRolesModel.permissionResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List all permissions', operationId: 'listPermissions', tags: ['Admin'] },
     }
@@ -48,7 +50,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       body: AdminRolesModel.createBody,
       response: {
         201: AdminRolesModel.createResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'Create role', operationId: 'createRole', tags: ['Admin'] },
     }
@@ -64,7 +67,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       body: AdminRolesModel.updateBody,
       response: {
         200: AdminRolesModel.updateResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Update role', operationId: 'updateRole', tags: ['Admin'] },
@@ -81,7 +85,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       params: AdminRolesModel.deleteParams,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Delete role', operationId: 'deleteRole', tags: ['Admin'] },
@@ -98,7 +103,8 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       body: AdminRolesModel.reorderBody,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'Reorder roles', operationId: 'reorderRoles', tags: ['Admin'] },
     }
@@ -114,9 +120,23 @@ export const adminRolesRoutes = new Elysia({ prefix: '/admin/roles' })
       params: AdminRolesModel.setDefaultParams,
       response: {
         204: t.Void(),
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Set default role', operationId: 'setDefaultRole', tags: ['Admin'] },
+    }
+  )
+  .get(
+    '/assignable',
+    async ({ user }) => await AdminRolesService.listAssignableRoles(user.roleId),
+    {
+      authWithPermissions: Permissions.AdminUsersAssignRole,
+      response: {
+        200: AdminRolesModel.assignableRoleResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'List assignable roles', operationId: 'listAssignableRoles', tags: ['Admin'] },
     }
   );

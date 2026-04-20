@@ -53,12 +53,6 @@ export const AdminUsersModel = {
   assignRoleBody: t.Object({
     roleId: t.String(),
   }),
-
-  // List roles for assignment
-  assignableRoleResponse: t.Array(t.Object({
-    roleId: t.String(),
-    name: t.String(),
-  })),
 } as const;
 
 export type AdminUsersModel = {

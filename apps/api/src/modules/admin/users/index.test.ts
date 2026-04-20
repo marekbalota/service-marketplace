@@ -174,28 +174,6 @@ describe('GET /admin/users', () => {
   });
 });
 
-describe('GET /admin/users/roles/assignable', () => {
-  it('returns 401 without a session', async () => {
-    const { error } = await client['admin'].users.roles.assignable.get();
-    expect(error?.status).toBe(401);
-  });
-
-  it('returns 403 for non-admin user', async () => {
-    const { error } = await client['admin'].users.roles.assignable.get({
-      headers: { Cookie: userCookie },
-    });
-    expect(error?.status).toBe(403);
-  });
-
-  it('returns 200 with roles for admin', async () => {
-    const { data, error } = await client['admin'].users.roles.assignable.get({
-      headers: { Cookie: adminCookie },
-    });
-    expect(error).toBeNull();
-    expect(Array.isArray(data)).toBe(true);
-  });
-});
-
 describe('PATCH /admin/users/:id/ban', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client['admin'].users({ id: regularUserId }).ban.patch({
@@ -228,7 +206,10 @@ describe('PATCH /admin/users/:id/ban', () => {
     );
     expect(error).toBeNull();
 
-    const { data } = await client['admin'].users.get({ headers: { Cookie: adminCookie } });
+    const { data } = await client['admin'].users.get({
+      query: { size: 100 },
+      headers: { Cookie: adminCookie },
+    });
     const bannedUser = data!.items.find((u) => u.userId === banTargetUserId);
     expect(bannedUser!.isBanned).toBe(true);
     expect(bannedUser!.banReason).toBe('Integration test ban');
@@ -260,7 +241,10 @@ describe('PATCH /admin/users/:id/unban', () => {
     });
     expect(error).toBeNull();
 
-    const { data } = await client['admin'].users.get({ headers: { Cookie: adminCookie } });
+    const { data } = await client['admin'].users.get({
+      query: { size: 100 },
+      headers: { Cookie: adminCookie },
+    });
     const unbannedUser = data!.items.find((u) => u.userId === banTargetUserId);
     expect(unbannedUser!.isBanned).toBe(false);
   });

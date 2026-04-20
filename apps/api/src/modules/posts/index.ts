@@ -3,10 +3,7 @@ import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
 import { Permissions } from "@marketplace/shared";
-import { authErrorResponses, notFoundResponse, AuthModel } from "../auth/model";
-import { errorResponse } from "../../lib/errors";
-import { ReviewsModel } from "../reviews/model";
-import { ReviewsService } from "../reviews/service";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from "../../lib/errors";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
@@ -34,16 +31,17 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .post(
     "/",
     async ({ body, user, set }) => {
-      const role = await PostsService.createWithPermissionCheck(user.id, body);
+      const post = await PostsService.createWithPermissionCheck(user.id, body);
       set.status = 201;
-      return role;
+      return post;
     },
     {
       authWithPermissions: Permissions.PostsCreate,
       body: PostsModel.createBody,
       response: {
         201: PostsModel.createResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: "Create a post", operationId: "createPost", tags: ["Posts"] },
     },
@@ -51,17 +49,19 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .patch(
     "/:id",
     async ({ params, body, user, permissions, set }) => {
-      await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
-      set.status = 204;
+      const updated = await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
+      set.status = 200;
+      return updated;
     },
     {
-      authWithPermissions: [Permissions.PostsEditOwn, Permissions.PostsEditAny],
+      authWithPermissions: Permissions.PostsEditOwn,
       params: PostsModel.updateParams,
       body: PostsModel.updateBody,
       response: {
-        204: t.Void(),
-        404: errorResponse,
-        ...authErrorResponses,
+        200: PostsModel.updateResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: "Update a post", operationId: "updatePost", tags: ["Posts"] },
     },
@@ -73,34 +73,14 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       set.status = 204;
     },
     {
-      authWithPermissions: [Permissions.PostsDeleteOwn, Permissions.PostsDeleteAny],
+      authWithPermissions: Permissions.PostsDeleteOwn,
       params: PostsModel.deleteParams,
       response: {
         204: t.Void(),
-        404: errorResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
-    },
-  )
-  .post(
-    '/:id/reviews',
-    async ({ params, body, user, set }) => {
-      const review = await ReviewsService.createForAccount(user.id, params.id, body)
-      set.status = 201
-      return review
-    },
-    {
-      auth: true,
-      params: ReviewsModel.createParams,
-      body: ReviewsModel.createBody,
-      response: {
-        201: ReviewsModel.createResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
-        409: errorResponse,
-      },
-      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
     },
   );

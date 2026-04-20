@@ -54,21 +54,21 @@ beforeAll(async () => {
   postId = (post as any)?.postId
 })
 
-describe('POST /posts/:id/reviews', () => {
+describe('POST /reviews', () => {
   it('returns 401 when not authenticated', async () => {
     const res = await app.handle(
-      new Request(`http://localhost/posts/${postId}/reviews`, {
+      new Request('http://localhost/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: 5 }),
+        body: JSON.stringify({ rating: 5, postId, profileId: authorId }),
       }),
     )
     expect(res.status).toBe(401)
   })
 
   it('creates a review with valid data (201)', async () => {
-    const { data, error } = await client.posts({ id: postId }).reviews.post(
-      { rating: 5, reviewDescription: 'Excellent service!' },
+    const { data, error } = await client.reviews.post(
+      { rating: 5, reviewDescription: 'Excellent service!', postId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -81,8 +81,8 @@ describe('POST /posts/:id/reviews', () => {
   })
 
   it('returns 409 for duplicate review', async () => {
-    const { error } = await client.posts({ id: postId }).reviews.post(
-      { rating: 4 },
+    const { error } = await client.reviews.post(
+      { rating: 4, postId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -90,8 +90,8 @@ describe('POST /posts/:id/reviews', () => {
   })
 
   it('returns 404 for non-existent post', async () => {
-    const { error } = await client.posts({ id: '00000000-0000-0000-0000-000000000000' }).reviews.post(
-      { rating: 5 },
+    const { error } = await client.reviews.post(
+      { rating: 5, postId: '00000000-0000-0000-0000-000000000000', profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -132,8 +132,8 @@ describe('DELETE /reviews/:id', () => {
     const newPostId = (newPost as any)?.postId
 
     // Create another review
-    const { data: newReview } = await client.posts({ id: newPostId }).reviews.post(
-      { rating: 3 },
+    const { data: newReview } = await client.reviews.post(
+      { rating: 3, postId: newPostId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

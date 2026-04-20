@@ -1,19 +1,17 @@
 import { db } from '../../db'
-import { userProfiles, users } from '../../db/schema'
+import { userProfiles } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
-  accountId:     userProfiles.accountId,
   name:          userProfiles.name,
   email:         userProfiles.email,
   bio:           userProfiles.bio,
   phoneNumber:   userProfiles.phoneNumber,
   fax:           userProfiles.fax,
   createdAt:     userProfiles.createdAt,
-  accountName:   users.name,
 }
 
 export abstract class ProfilesService {
@@ -21,7 +19,6 @@ export abstract class ProfilesService {
     const [row] = await db
       .select(profileSelect)
       .from(userProfiles)
-      .innerJoin(users, eq(userProfiles.accountId, users.id))
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
@@ -36,7 +33,6 @@ export abstract class ProfilesService {
     return db
       .select(profileSelect)
       .from(userProfiles)
-      .innerJoin(users, eq(userProfiles.accountId, users.id))
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
   }
 
@@ -66,7 +62,7 @@ export abstract class ProfilesService {
       .update(userProfiles)
       .set(body)
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
-      .returning({ userProfileId: userProfiles.userProfileId })
+      .returning(profileSelect)
 
     if (!updated) {
       throw new NotFoundError(ErrorMessages.profileNotFound);
