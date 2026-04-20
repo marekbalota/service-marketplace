@@ -57,6 +57,13 @@
       "when": 1776716821304,
       "tag": "0007_lush_puff_adder",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776719180560,
+      "tag": "0008_harsh_wong",
+      "breakpoints": true
     }
   ]
 }

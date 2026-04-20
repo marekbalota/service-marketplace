@@ -2,19 +2,15 @@ import { createFileRoute, redirect, Link, useRouter } from '@tanstack/react-rout
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { ArrowLeft, ExternalLink, Flag, Send, Trash2 } from 'lucide-react'
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { authClient } from '#/auth'
 import { api } from '#/api'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '#/components/ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
+import { ReportForm } from '#/components/ReportForm'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { getInitials } from './route'
 
@@ -70,154 +66,6 @@ type Message = {
   readAt: Date | string | null
 }
 
-const MESSAGE_REPORT_REASONS = [
-  { value: 'spam', label: 'Spam' },
-  { value: 'harassment', label: 'Harassment or bullying' },
-  { value: 'harmful', label: 'Harmful or dangerous content' },
-  { value: 'inappropriate', label: 'Inappropriate language' },
-  { value: 'scam', label: 'Scam or fraud' },
-  { value: 'other', label: 'Other' },
-] as const
-
-const messageReportSchema = z.object({
-  reason: z.enum(['spam', 'harassment', 'harmful', 'inappropriate', 'scam', 'other']),
-  description: z.string().max(1000).optional(),
-})
-
-type MessageReportFormData = z.infer<typeof messageReportSchema>
-
-function MessageReportDialog({
-  open,
-  onOpenChange,
-  threadId,
-  messageId,
-  profileId,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  threadId: string
-  messageId: string
-  profileId: string
-}) {
-  const [serverError, setServerError] = useState<string | null>(null)
-
-  const { control, handleSubmit, reset } = useForm<MessageReportFormData>({
-    resolver: zodResolver(messageReportSchema),
-    mode: 'onTouched',
-    defaultValues: { description: '' },
-  })
-
-  const mutation = useMutation({
-    mutationFn: async (data: MessageReportFormData) => {
-      const { error } = await api.threads({ threadId }).messages({ messageId }).reports.post(
-        { reason: data.reason, description: data.description || undefined },
-        { query: { profileId } },
-      )
-      if (error) throw error
-    },
-    onSuccess: () => {
-      onOpenChange(false)
-      reset()
-      setServerError(null)
-    },
-    onError: (err: { status?: number; message?: string }) => {
-      if (err.status === 409) {
-        setServerError('You have already reported this message')
-      } else {
-        setServerError(err.message || 'Failed to submit report')
-      }
-    },
-  })
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      reset()
-      setServerError(null)
-    }
-    onOpenChange(nextOpen)
-  }
-
-  const onSubmit: SubmitHandler<MessageReportFormData> = (data) => {
-    setServerError(null)
-    mutation.mutate(data)
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Report Message</DialogTitle>
-          <DialogDescription>
-            Let us know why you're reporting this message. We'll review it and take appropriate action.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FieldGroup>
-            <Controller
-              name="reason"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Category *</FieldLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(v) => { field.onChange(v); field.onBlur() }}
-                    disabled={mutation.isPending}
-                  >
-                    <SelectTrigger aria-invalid={fieldState.invalid}>
-                      <SelectValue placeholder="Select a reason..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MESSAGE_REPORT_REASONS.map(({ value, label }) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-            <Controller
-              name="description"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Additional details (optional)</FieldLabel>
-                  <Textarea
-                    placeholder="Provide any additional context about why you're reporting this message..."
-                    maxLength={1000}
-                    rows={4}
-                    aria-invalid={fieldState.invalid}
-                    disabled={mutation.isPending}
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-          </FieldGroup>
-          {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-          <DialogFooter>
-            <DialogClose
-              render={<Button type="button" variant="outline" disabled={mutation.isPending} />}
-            >
-              Cancel
-            </DialogClose>
-            <Button
-              type="submit"
-              disabled={mutation.isPending}
-              className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Flag className="size-4" />
-              {mutation.isPending ? 'Submitting...' : 'Submit Report'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 export function MessageBubble({
   message,
@@ -392,7 +240,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
             key={msg.messageId}
             message={msg}
             otherPartyName={thread.otherPartyName}
-            onReport={!msg.sentByMe ? () => setReportingMessageId(msg.messageId) : undefined}
+            onReport={!msg.sentByMe && !isPostOwner ? () => setReportingMessageId(msg.messageId) : undefined}
           />
         ))}
       </div>
@@ -431,13 +279,21 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
         )}
       </div>
 
-      <MessageReportDialog
+      <Dialog
         open={reportingMessageId !== null}
         onOpenChange={(open) => { if (!open) setReportingMessageId(null) }}
-        threadId={threadId}
-        messageId={reportingMessageId ?? ''}
-        profileId={profileId}
-      />
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Report Post</DialogTitle>
+          </DialogHeader>
+          <ReportForm
+            postId={thread.postId}
+            onSuccess={() => setReportingMessageId(null)}
+            onCancel={() => setReportingMessageId(null)}
+          />
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

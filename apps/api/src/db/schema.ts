@@ -260,25 +260,6 @@ export const reports = pgTable("reports", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const messageReports = pgTable(
-  "message_reports",
-  {
-    reportId: uuid("report_id").primaryKey().defaultRandom(),
-    reporterId: uuid("reporter_id")
-      .notNull()
-      .references(() => userProfiles.userProfileId),
-    messageId: uuid("message_id")
-      .notNull()
-      .references(() => messages.messageId),
-    reason: text("reason").notNull(),
-    description: text("description"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at"),
-  },
-  (table) => [
-    unique("message_reports_reporter_message_unique").on(table.reporterId, table.messageId),
-  ],
-);
 
 // Relations
 
@@ -437,13 +418,3 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
-export const messageReportsRelations = relations(messageReports, ({ one }) => ({
-  reporter: one(userProfiles, {
-    fields: [messageReports.reporterId],
-    references: [userProfiles.userProfileId],
-  }),
-  message: one(messages, {
-    fields: [messageReports.messageId],
-    references: [messages.messageId],
-  }),
-}));

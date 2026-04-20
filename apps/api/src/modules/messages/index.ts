@@ -85,26 +85,3 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
     },
   )
 
-  // Report a message
-  .post(
-    '/:threadId/messages/:messageId/reports',
-    async ({ params, query, body, user, set }) => {
-      const report = await MessagesService.reportMessage(params.threadId, params.messageId, query.profileId, user.id, { reason: String(body.reason), description: body.description })
-      set.status = 201
-      return report
-    },
-    {
-      auth: true,
-      params: MessagesModel.reportMessageParams,
-      query: MessagesModel.reportMessageQuery,
-      body: MessagesModel.reportMessageBody,
-      response: {
-        201: MessagesModel.reportMessageResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
-        409: errorResponse,
-      },
-      detail: { summary: 'Report a message', operationId: 'reportMessage', tags: ['Messages'] },
-    },
-  )
