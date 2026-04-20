@@ -26,12 +26,15 @@ export const AdminUsersModel = {
       t.Literal('email'),
       t.Literal('created'),
     ])),
+    role: t.Optional(t.String()),
+    isBanned: t.Optional(t.Boolean()),
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
   }),
   usersResponse: t.Object({
     items: t.Array(userRow),
     total: t.Number(),
+    totalBanned: t.Number(),
     totalPages: t.Number(),
   }),
 

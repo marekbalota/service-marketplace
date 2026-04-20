@@ -7,29 +7,43 @@ import { ForbiddenError, NotFoundError, AuthErrorMessages, ErrorMessages } from 
 
 export abstract class AdminUsersService {
   static async findAll(query: AdminUsersModel['usersQuery']) {
-    const { search, sort, offset = 0, size } = query;
+    const { search, sort, offset = 0, size, role, isBanned } = query;
 
     const sortColumn =
       sort === 'name' ? users.name :
       sort === 'email' ? users.email :
       users.createdAt;
 
-    const conditions = and(
+    const baseConditions = and(
       search
         ? or(
             ilike(users.name, `%${search}%`),
             ilike(users.email, `%${search}%`),
           )
         : undefined,
+      role ? eq(roles.name, role) : undefined,
+    );
+
+    const conditions = and(
+      baseConditions,
+      isBanned !== undefined ? eq(users.isBanned, isBanned) : undefined,
     );
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
         .select({ total: count() })
         .from(users)
+        .leftJoin(roles, eq(users.roleId, roles.roleId))
         .where(conditions);
 
+      const [bannedCountRow] = await tx
+        .select({ total: count() })
+        .from(users)
+        .leftJoin(roles, eq(users.roleId, roles.roleId))
+        .where(and(baseConditions, eq(users.isBanned, true)));
+
       const total = countRow?.total ?? 0;
+      const totalBanned = bannedCountRow?.total ?? 0;
 
       const rows = await tx
         .select({
@@ -61,6 +75,7 @@ export abstract class AdminUsersService {
       return {
         items,
         total,
+        totalBanned,
         totalPages: size ? Math.ceil(total / size) : 1,
       };
     });

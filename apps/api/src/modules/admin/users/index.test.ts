@@ -118,6 +118,60 @@ describe('GET /admin/users', () => {
     expect(error).toBeNull();
     expect(Array.isArray(data!.items)).toBe(true);
   });
+
+  it('returns totalBanned in response', async () => {
+    const { data, error } = await client['admin'].users.get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(typeof data!.totalBanned).toBe('number');
+    expect(data!.totalBanned).toBeGreaterThanOrEqual(0);
+    expect(data!.totalBanned).toBeLessThanOrEqual(data!.total);
+  });
+
+  it('supports isBanned filter — returns only banned users', async () => {
+    // Ensure at least one banned user exists
+    await client['admin'].users({ id: banTargetUserId }).ban.patch(
+      { reason: 'Filter test ban' },
+      { headers: { Cookie: adminCookie } },
+    );
+
+    const { data, error } = await client['admin'].users.get({
+      query: { isBanned: true },
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(data!.items.every((u) => u.isBanned)).toBe(true);
+    expect(data!.totalBanned).toBe(data!.total);
+
+    // Clean up — unban bob
+    await client['admin'].users({ id: banTargetUserId }).unban.patch(undefined, {
+      headers: { Cookie: adminCookie },
+    });
+  });
+
+  it('supports isBanned filter — returns only active users', async () => {
+    const { data, error } = await client['admin'].users.get({
+      query: { isBanned: false },
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(data!.items.every((u) => !u.isBanned)).toBe(true);
+    expect(data!.totalBanned).toBeGreaterThanOrEqual(0);
+  });
+
+  it('supports role filter', async () => {
+    const { data, error } = await client['admin'].users.get({
+      query: { role: 'SuperAdmin' },
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(Array.isArray(data!.items)).toBe(true);
+    // All returned users should have the SuperAdmin role
+    data!.items.forEach((u) => {
+      expect(u.role?.name).toBe('SuperAdmin');
+    });
+  });
 });
 
 describe('GET /admin/users/roles/assignable', () => {
