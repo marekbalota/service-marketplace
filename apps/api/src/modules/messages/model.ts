@@ -58,6 +58,21 @@ export const MessagesModel = {
     content:   t.String({ minLength: 1 }),
   }),
   sendMessageResponse: messageItem,
+
+  reportMessageParams: t.Object({ threadId: t.String(), messageId: t.String() }),
+  reportMessageQuery: t.Object({ profileId: t.String() }),
+  reportMessageBody: t.Object({
+    reason: t.Union([
+      t.Literal('spam'),
+      t.Literal('harassment'),
+      t.Literal('harmful'),
+      t.Literal('inappropriate'),
+      t.Literal('scam'),
+      t.Literal('other'),
+    ] as [ReturnType<typeof t.Literal>, ...ReturnType<typeof t.Literal>[]]),
+    description: t.Optional(t.String({ maxLength: 1000 })),
+  }),
+  reportMessageResponse: t.Object({ reportId: t.String() }),
 } as const
 
 export type MessagesModel = {

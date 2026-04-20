@@ -10,6 +10,8 @@ export const ErrorMessages = {
   alreadyReviewed: 'You have already reviewed this post',
   alreadyReported: 'You have already reported this post',
   reportNotFound: 'Report not found',
+  messageNotFound: 'Message not found',
+  alreadyReportedMessage: 'You have already reported this message',
   userNotFound: 'User not found',
   userRoleNotFound: 'User role not found',
   roleNotFound: 'Role not found',

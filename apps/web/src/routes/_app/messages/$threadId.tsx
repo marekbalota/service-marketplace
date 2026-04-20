@@ -1,11 +1,17 @@
 import { createFileRoute, redirect, Link, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, Suspense } from 'react'
-import { ArrowLeft, ExternalLink, Send, Trash2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Flag, Send, Trash2 } from 'lucide-react'
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { authClient } from '#/auth'
 import { api } from '#/api'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '#/components/ui/dialog'
+import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
@@ -64,24 +70,203 @@ type Message = {
   readAt: Date | string | null
 }
 
-export function MessageBubble({ message, otherPartyName }: { message: Message; otherPartyName: string }) {
+const MESSAGE_REPORT_REASONS = [
+  { value: 'spam', label: 'Spam' },
+  { value: 'harassment', label: 'Harassment or bullying' },
+  { value: 'harmful', label: 'Harmful or dangerous content' },
+  { value: 'inappropriate', label: 'Inappropriate language' },
+  { value: 'scam', label: 'Scam or fraud' },
+  { value: 'other', label: 'Other' },
+] as const
+
+const messageReportSchema = z.object({
+  reason: z.enum(['spam', 'harassment', 'harmful', 'inappropriate', 'scam', 'other']),
+  description: z.string().max(1000).optional(),
+})
+
+type MessageReportFormData = z.infer<typeof messageReportSchema>
+
+function MessageReportDialog({
+  open,
+  onOpenChange,
+  threadId,
+  messageId,
+  profileId,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  threadId: string
+  messageId: string
+  profileId: string
+}) {
+  const [serverError, setServerError] = useState<string | null>(null)
+
+  const { control, handleSubmit, reset } = useForm<MessageReportFormData>({
+    resolver: zodResolver(messageReportSchema),
+    mode: 'onTouched',
+    defaultValues: { description: '' },
+  })
+
+  const mutation = useMutation({
+    mutationFn: async (data: MessageReportFormData) => {
+      const { error } = await api.threads({ threadId }).messages({ messageId }).reports.post(
+        { reason: data.reason, description: data.description || undefined },
+        { query: { profileId } },
+      )
+      if (error) throw error
+    },
+    onSuccess: () => {
+      onOpenChange(false)
+      reset()
+      setServerError(null)
+    },
+    onError: (err: { status?: number; message?: string }) => {
+      if (err.status === 409) {
+        setServerError('You have already reported this message')
+      } else {
+        setServerError(err.message || 'Failed to submit report')
+      }
+    },
+  })
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset()
+      setServerError(null)
+    }
+    onOpenChange(nextOpen)
+  }
+
+  const onSubmit: SubmitHandler<MessageReportFormData> = (data) => {
+    setServerError(null)
+    mutation.mutate(data)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Report Message</DialogTitle>
+          <DialogDescription>
+            Let us know why you're reporting this message. We'll review it and take appropriate action.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <FieldGroup>
+            <Controller
+              name="reason"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Category *</FieldLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                    disabled={mutation.isPending}
+                  >
+                    <SelectTrigger aria-invalid={fieldState.invalid}>
+                      <SelectValue placeholder="Select a reason..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MESSAGE_REPORT_REASONS.map(({ value, label }) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+            <Controller
+              name="description"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Additional details (optional)</FieldLabel>
+                  <Textarea
+                    placeholder="Provide any additional context about why you're reporting this message..."
+                    maxLength={1000}
+                    rows={4}
+                    aria-invalid={fieldState.invalid}
+                    disabled={mutation.isPending}
+                    {...field}
+                    value={field.value ?? ''}
+                  />
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+          </FieldGroup>
+          {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+          <DialogFooter>
+            <DialogClose
+              render={<Button type="button" variant="outline" disabled={mutation.isPending} />}
+            >
+              Cancel
+            </DialogClose>
+            <Button
+              type="submit"
+              disabled={mutation.isPending}
+              className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Flag className="size-4" />
+              {mutation.isPending ? 'Submitting...' : 'Submit Report'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function MessageBubble({
+  message,
+  otherPartyName,
+  onReport,
+}: {
+  message: Message
+  otherPartyName: string
+  onReport?: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
   const d = typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt
   const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className={cn('flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}>
+    <div
+      className={cn('flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {!message.sentByMe && (
         <span className="px-1 text-xs text-muted-foreground">{otherPartyName}</span>
       )}
-      <div
-        className={cn(
-          'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
-          message.sentByMe
-            ? 'rounded-br-sm bg-primary text-primary-foreground'
-            : 'rounded-bl-sm bg-muted text-foreground',
+      <div className={cn('flex items-center gap-1', message.sentByMe ? 'flex-row-reverse' : 'flex-row')}>
+        <div
+          className={cn(
+            'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
+            message.sentByMe
+              ? 'rounded-br-sm bg-primary text-primary-foreground'
+              : 'rounded-bl-sm bg-muted text-foreground',
+          )}
+        >
+          {message.content}
+        </div>
+        {!message.sentByMe && onReport && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'size-7 shrink-0 text-muted-foreground transition-opacity',
+              hovered ? 'opacity-100' : 'opacity-0',
+            )}
+            onClick={onReport}
+            aria-label="Report message"
+            tabIndex={-1}
+          >
+            <Flag className="size-3.5" />
+          </Button>
         )}
-      >
-        {message.content}
       </div>
       <span className="px-1 text-xs text-muted-foreground">{timeLabel}</span>
     </div>
@@ -92,6 +277,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
   const router = useRouter()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState('')
+  const [reportingMessageId, setReportingMessageId] = useState<string | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -202,7 +388,12 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
           </p>
         )}
         {thread.messages.map((msg) => (
-          <MessageBubble key={msg.messageId} message={msg} otherPartyName={thread.otherPartyName} />
+          <MessageBubble
+            key={msg.messageId}
+            message={msg}
+            otherPartyName={thread.otherPartyName}
+            onReport={!msg.sentByMe ? () => setReportingMessageId(msg.messageId) : undefined}
+          />
         ))}
       </div>
 
@@ -239,6 +430,14 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
           </>
         )}
       </div>
+
+      <MessageReportDialog
+        open={reportingMessageId !== null}
+        onOpenChange={(open) => { if (!open) setReportingMessageId(null) }}
+        threadId={threadId}
+        messageId={reportingMessageId ?? ''}
+        profileId={profileId}
+      />
     </main>
   )
 }

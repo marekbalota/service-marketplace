@@ -1,9 +1,9 @@
 import { db } from '../../db'
-import { messageThreads, messages, posts, userProfiles } from '../../db/schema'
+import { messageThreads, messages, messageReports, posts, userProfiles } from '../../db/schema'
 import { eq, or, and, isNull, desc, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { MessagesModel } from './model'
-import { ForbiddenError, ConflictError, AuthErrorMessages } from '../../lib/errors'
+import { ForbiddenError, NotFoundError, ConflictError, AuthErrorMessages, ErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 import { PostsService } from '../posts/service'
 
@@ -297,5 +297,47 @@ export abstract class MessagesService {
       sentByMe:  true,
       readAt:    null,
     }
+  }
+
+  static async reportMessage(
+    threadId: string,
+    messageId: string,
+    profileId: string,
+    accountId: string,
+    body: { reason: string; description?: string },
+  ): Promise<{ reportId: string }> {
+    const profile = await ProfilesService.findByAccountId(accountId)
+    if (!profile.length || profile[0]!.userProfileId !== profileId) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden)
+    }
+
+    const role = await this.getRole(threadId, profileId)
+    if (!role) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    return db.transaction(async (tx) => {
+      const [message] = await tx
+        .select({ messageId: messages.messageId, senderId: messages.senderId })
+        .from(messages)
+        .where(and(eq(messages.messageId, messageId), eq(messages.threadId, threadId), isNull(messages.deletedAt)))
+        .limit(1)
+
+      if (!message) throw new NotFoundError(ErrorMessages.messageNotFound)
+      if (message.senderId === profileId) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+      const [existing] = await tx
+        .select({ reportId: messageReports.reportId })
+        .from(messageReports)
+        .where(and(eq(messageReports.messageId, messageId), eq(messageReports.reporterId, profileId), isNull(messageReports.deletedAt)))
+        .limit(1)
+
+      if (existing) throw new ConflictError(ErrorMessages.alreadyReportedMessage)
+
+      const [report] = await tx
+        .insert(messageReports)
+        .values({ messageId, reporterId: profileId, reason: String(body.reason), description: body.description ?? null })
+        .returning({ reportId: messageReports.reportId })
+
+      return { reportId: report!.reportId }
+    })
   }
 }
