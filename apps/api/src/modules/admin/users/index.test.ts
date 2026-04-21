@@ -317,3 +317,25 @@ describe('GET /admin/users/:id', () => {
     expect(error?.status).toBe(404);
   });
 });
+
+describe('GET /admin/users/:id/profiles', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).profiles.get();
+    expect(error?.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin user', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).profiles.get({
+      headers: { Cookie: userCookie },
+    });
+    expect(error?.status).toBe(403);
+  });
+
+  it('returns 200 with profiles array for admin', async () => {
+    const { data, error } = await client['admin'].users({ id: regularUserId }).profiles.get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(Array.isArray(data)).toBe(true);
+  });
+});

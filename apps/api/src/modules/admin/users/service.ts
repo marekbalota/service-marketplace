@@ -1,5 +1,5 @@
 import { db } from '../../../db';
-import { users, roles, sessions } from '../../../db/schema';
+import { users, roles, sessions, userProfiles } from '../../../db/schema';
 import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm';
 import type { AdminUsersModel } from './model';
 import { RBACService } from '../../../lib/rbac/rbac-helper';
@@ -234,5 +234,24 @@ export abstract class AdminUsersService {
         ? { roleId, name: roleName, priority: rolePriority }
         : null,
     };
+  }
+
+  static async findProfiles(userId: string) {
+    return db
+      .select({
+        userProfileId: userProfiles.userProfileId,
+        accountId: userProfiles.accountId,
+        name: userProfiles.name,
+        email: userProfiles.email,
+        bio: userProfiles.bio,
+        phoneNumber: userProfiles.phoneNumber,
+        fax: userProfiles.fax,
+        createdAt: userProfiles.createdAt,
+      })
+      .from(userProfiles)
+      .where(and(
+        eq(userProfiles.accountId, userId),
+        isNull(userProfiles.deletedAt),
+      ));
   }
 }
