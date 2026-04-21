@@ -68,8 +68,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .delete(
     "/:id",
-    async ({ params, user, permissions, set }) => {
-      await PostsService.deleteWithPermissionCheck(user.id, permissions, params.id);
+    async ({ params, user, set }) => {
+      await PostsService.deleteWithPermissionCheck(user.id, params.id);
       set.status = 204;
     },
     {

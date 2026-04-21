@@ -364,7 +364,6 @@ export abstract class PostsService {
 
   static async deleteWithPermissionCheck(
     accountId: string,
-    permissions: string[],
     id: string
   ) {
     const post = await db.query.posts.findFirst({
