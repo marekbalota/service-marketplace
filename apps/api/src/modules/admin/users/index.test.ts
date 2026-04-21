@@ -284,3 +284,36 @@ describe('PATCH /admin/users/:id/role', () => {
     expect(error!.status).toBe(404);
   });
 });
+
+describe('GET /admin/users/:id', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).get();
+    expect(error?.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin user', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).get({
+      headers: { Cookie: userCookie },
+    });
+    expect(error?.status).toBe(403);
+  });
+
+  it('returns 200 with user details for admin', async () => {
+    const { data, error } = await client['admin'].users({ id: regularUserId }).get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(data).toBeTruthy();
+    expect(data!.userId).toBe(regularUserId);
+    expect(typeof data!.name).toBe('string');
+    expect(typeof data!.email).toBe('string');
+    expect(typeof data!.isBanned).toBe('boolean');
+  });
+
+  it('returns 404 for unknown user id', async () => {
+    const { error } = await client['admin'].users({ id: '00000000-0000-0000-0000-000000000000' }).get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error?.status).toBe(404);
+  });
+});

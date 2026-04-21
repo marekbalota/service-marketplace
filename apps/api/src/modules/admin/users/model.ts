@@ -53,6 +53,10 @@ export const AdminUsersModel = {
   assignRoleBody: t.Object({
     roleId: t.String(),
   }),
+
+  // Get single user
+  findByIdParams: t.Object({ id: t.String() }),
+  findByIdResponse: userRow,
 } as const;
 
 export type AdminUsersModel = {

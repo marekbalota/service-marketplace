@@ -21,6 +21,21 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
       detail: { summary: 'List users', operationId: 'listAdminUsers', tags: ['Admin'] },
     }
   )
+  .get(
+    '/:id',
+    async ({ params }) => AdminUsersService.findById(params.id),
+    {
+      authWithPermissions: Permissions.AdminUsersView,
+      params: AdminUsersModel.findByIdParams,
+      response: {
+        200: AdminUsersModel.findByIdResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+      },
+      detail: { summary: 'Get user by ID', operationId: 'getAdminUser', tags: ['Admin'] },
+    }
+  )
   .patch(
     '/:id/ban',
     async ({ params, body, user, set }) => {

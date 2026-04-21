@@ -206,4 +206,33 @@ export abstract class AdminUsersService {
 
     return user ? true : null;
   }
+
+  static async findById(userId: string) {
+    const [row] = await db
+      .select({
+        userId: users.id,
+        name: users.name,
+        email: users.email,
+        roleId: users.roleId,
+        roleName: roles.name,
+        rolePriority: roles.priority,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        banExpiration: users.banExpiration,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.roleId))
+      .where(eq(users.id, userId));
+
+    if (!row) throw new NotFoundError(ErrorMessages.userNotFound);
+
+    const { roleId, roleName, rolePriority, ...rest } = row;
+    return {
+      ...rest,
+      role: roleId && roleName && rolePriority !== null
+        ? { roleId, name: roleName, priority: rolePriority }
+        : null,
+    };
+  }
 }
