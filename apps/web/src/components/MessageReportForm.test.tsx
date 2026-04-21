@@ -5,9 +5,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MessageReportForm } from './MessageReportForm'
 
 const mockReportsPost = vi.hoisted(() => vi.fn())
+const mockCategoriesGet = vi.hoisted(() => vi.fn())
+
+const SPAM_UUID = 'a1b2c3d4-e5f6-4789-8abc-def012345678'
+const HARASSMENT_UUID = 'b2c3d4e5-f6a7-489a-9bcd-ef0123456789'
+
+const MOCK_MESSAGE_CATEGORIES = [
+  { categoryId: SPAM_UUID, targetType: 'MESSAGE', value: 'spam', label: 'Spam' },
+  { categoryId: HARASSMENT_UUID, targetType: 'MESSAGE', value: 'harassment', label: 'Harassment or Bullying' },
+]
 
 vi.mock('#/api', () => ({
   api: {
+    'report-categories': { get: mockCategoriesGet },
     threads: () => ({
       messages: () => ({
         reports: {
@@ -33,6 +43,7 @@ function renderForm(props: { onSuccess?: () => void; onCancel?: () => void } = {
 describe('MessageReportForm', () => {
   beforeEach(() => {
     mockReportsPost.mockReset()
+    mockCategoriesGet.mockResolvedValue({ data: MOCK_MESSAGE_CATEGORIES, error: null })
   })
 
   it('renders category select, description textarea, and action buttons', () => {
@@ -51,7 +62,7 @@ describe('MessageReportForm', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
-  it('shows a validation error when submitted without selecting a reason', async () => {
+  it('does not submit without selecting a reason', async () => {
     const user = userEvent.setup()
     renderForm()
     await user.click(screen.getByRole('button', { name: /submit report/i }))
@@ -66,7 +77,9 @@ describe('MessageReportForm', () => {
     const onSuccess = vi.fn()
     renderForm({ onSuccess })
 
+    await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(screen.getByText('Spam')).toBeInTheDocument())
     await user.click(screen.getByText('Spam'))
     fireEvent.change(screen.getByPlaceholderText(/additional details/i), {
       target: { value: 'This message is spam.' },
@@ -74,7 +87,7 @@ describe('MessageReportForm', () => {
     await user.click(screen.getByRole('button', { name: /submit report/i }))
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
-    expect(mockReportsPost).toHaveBeenCalledWith({ reason: 'spam', description: 'This message is spam.' })
+    expect(mockReportsPost).toHaveBeenCalledWith({ categoryId: SPAM_UUID, description: 'This message is spam.' })
   })
 
   it('shows already-reported message on 409 error', async () => {
@@ -82,7 +95,9 @@ describe('MessageReportForm', () => {
     const user = userEvent.setup()
     renderForm()
 
+    await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(screen.getByText('Harassment or Bullying')).toBeInTheDocument())
     await user.click(screen.getByText('Harassment or Bullying'))
     await user.click(screen.getByRole('button', { name: /submit report/i }))
 

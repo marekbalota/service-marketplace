@@ -116,7 +116,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     {
       auth: true,
       params: ReportsModel.createParams,
-      body: ReportsModel.postCreateBody,
+      body: ReportsModel.createBody,
       response: {
         201: ReportsModel.createResponse,
         401: AuthModel.unauthorizedResponse,

@@ -14,19 +14,10 @@ import {
 } from '#/components/ui/select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { api } from '#/api'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-const REPORT_REASONS = [
-  { value: 'spam', label: 'Spam' },
-  { value: 'harmful-language', label: 'Harmful Language' },
-  { value: 'inappropriate-content', label: 'Inappropriate Content' },
-  { value: 'scam', label: 'Scam or Fraud' },
-  { value: 'misleading', label: 'Misleading Information' },
-  { value: 'other', label: 'Other' },
-] as const
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const reportSchema = z.object({
-  reason: z.enum(['spam', 'harmful-language', 'inappropriate-content', 'scam', 'misleading', 'other']),
+  categoryId: z.string().uuid('Please select a category'),
   description: z.string().min(1, 'Description is required').max(1000),
 })
 
@@ -42,6 +33,15 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['report-categories', 'POST'],
+    queryFn: async () => {
+      const { data, error } = await api['report-categories'].get({ query: { targetType: 'POST' } })
+      if (error) throw error
+      return data!
+    },
+  })
+
   const {
     control,
     handleSubmit,
@@ -54,7 +54,7 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
   const mutation = useMutation({
     mutationFn: async (data: ReportFormData) => {
       const { error } = await api.posts({ id: postId }).reports.post({
-        reason: data.reason,
+        categoryId: data.categoryId,
         description: data.description,
       })
       if (error) throw error
@@ -84,9 +84,11 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
     >
       <FieldGroup>
         <Controller
-          name="reason"
+          name="categoryId"
           control={control}
-          render={({ field, fieldState }) => (
+          render={({ field, fieldState }) => {
+            const selectedLabel = categories.find(c => c.categoryId === field.value)?.label
+            return (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Report Category *</FieldLabel>
               <Select
@@ -95,22 +97,25 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
                   field.onChange(v)
                   field.onBlur()
                 }}
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || categoriesLoading}
               >
                 <SelectTrigger aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Select a reason..." />
+                  <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
+                    {selectedLabel}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {REPORT_REASONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <FieldError errors={[fieldState.error]} />
             </Field>
-          )}
+          )
+          }}
         />
 
         <Controller
@@ -139,7 +144,7 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
       <div className="flex gap-2">
         <Button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || categoriesLoading}
           className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Flag className="size-4" />

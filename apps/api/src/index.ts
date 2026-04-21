@@ -17,6 +17,7 @@ import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
+import { reportCategoriesRoutes } from "./modules/reports";
 
 export const app = new Elysia()
   .use(errorsPlugin)
@@ -59,6 +60,7 @@ export const app = new Elysia()
   .use(adminUsersRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
+  .use(reportCategoriesRoutes)
   .listen(3001);
 
 console.log(

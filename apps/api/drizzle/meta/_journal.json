@@ -71,6 +71,13 @@
       "when": 1776761265288,
       "tag": "0009_hot_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1745270000000,
+      "tag": "0010_report_categories",
+      "breakpoints": true
     }
   ]
 }

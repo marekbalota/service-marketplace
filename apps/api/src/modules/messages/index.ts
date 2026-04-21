@@ -104,7 +104,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
     {
       auth: true,
       params: ReportsModel.messageReportParams,
-      body: ReportsModel.messageCreateBody,
+      body: ReportsModel.createBody,
       response: {
         201: ReportsModel.createResponse,
         401: AuthModel.unauthorizedResponse,

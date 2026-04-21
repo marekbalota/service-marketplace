@@ -39,7 +39,7 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
     {
       auth: true,
       params: ReportsModel.createParams,
-      body: ReportsModel.reviewCreateBody,
+      body: ReportsModel.createBody,
       response: {
         201: ReportsModel.createResponse,
         401: AuthModel.unauthorizedResponse,

@@ -14,18 +14,10 @@ import {
 } from '#/components/ui/select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { api } from '#/api'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-const REVIEW_REPORT_REASONS = [
-  { value: 'spam', label: 'Spam' },
-  { value: 'misleading', label: 'Misleading Information' },
-  { value: 'inappropriate', label: 'Inappropriate Content' },
-  { value: 'fake-review', label: 'Fake Review' },
-  { value: 'other', label: 'Other' },
-] as const
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const reviewReportSchema = z.object({
-  reason: z.enum(['spam', 'misleading', 'inappropriate', 'fake-review', 'other']),
+  categoryId: z.string().uuid('Please select a category'),
   description: z.string().max(1000).optional(),
 })
 
@@ -41,6 +33,15 @@ export function ReviewReportForm({ reviewId, onSuccess, onCancel }: ReviewReport
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['report-categories', 'REVIEW'],
+    queryFn: async () => {
+      const { data, error } = await api['report-categories'].get({ query: { targetType: 'REVIEW' } })
+      if (error) throw error
+      return data!
+    },
+  })
+
   const { control, handleSubmit } = useForm<ReviewReportFormData>({
     resolver: zodResolver(reviewReportSchema),
     mode: 'onTouched',
@@ -50,7 +51,7 @@ export function ReviewReportForm({ reviewId, onSuccess, onCancel }: ReviewReport
   const mutation = useMutation({
     mutationFn: async (data: ReviewReportFormData) => {
       const { error } = await api.reviews({ id: reviewId }).reports.post({
-        reason: data.reason,
+        categoryId: data.categoryId,
         description: data.description,
       })
       if (error) throw error
@@ -80,9 +81,11 @@ export function ReviewReportForm({ reviewId, onSuccess, onCancel }: ReviewReport
     >
       <FieldGroup>
         <Controller
-          name="reason"
+          name="categoryId"
           control={control}
-          render={({ field, fieldState }) => (
+          render={({ field, fieldState }) => {
+            const selectedLabel = categories.find(c => c.categoryId === field.value)?.label
+            return (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Report Category *</FieldLabel>
               <Select
@@ -91,22 +94,25 @@ export function ReviewReportForm({ reviewId, onSuccess, onCancel }: ReviewReport
                   field.onChange(v)
                   field.onBlur()
                 }}
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || categoriesLoading}
               >
                 <SelectTrigger aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Select a reason..." />
+                  <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
+                    {selectedLabel}
+                  </SelectValue>               
                 </SelectTrigger>
                 <SelectContent>
-                  {REVIEW_REPORT_REASONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <FieldError errors={[fieldState.error]} />
             </Field>
-          )}
+          )  
+          }}
         />
 
         <Controller
@@ -135,7 +141,7 @@ export function ReviewReportForm({ reviewId, onSuccess, onCancel }: ReviewReport
       <div className="flex gap-2">
         <Button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || categoriesLoading}
           className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Flag className="size-4" />

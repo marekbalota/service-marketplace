@@ -5,9 +5,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReviewReportForm } from './ReviewReportForm'
 
 const mockReportsPost = vi.hoisted(() => vi.fn())
+const mockCategoriesGet = vi.hoisted(() => vi.fn())
+
+const SPAM_UUID = 'a1b2c3d4-e5f6-4789-8abc-def012345678'
+const FAKE_REVIEW_UUID = 'b2c3d4e5-f6a7-489a-9bcd-ef0123456789'
+
+const MOCK_REVIEW_CATEGORIES = [
+  { categoryId: SPAM_UUID, targetType: 'REVIEW', value: 'spam', label: 'Spam' },
+  { categoryId: FAKE_REVIEW_UUID, targetType: 'REVIEW', value: 'fake-review', label: 'Fake Review' },
+]
 
 vi.mock('#/api', () => ({
   api: {
+    'report-categories': { get: mockCategoriesGet },
     reviews: () => ({
       reports: {
         post: mockReportsPost,
@@ -31,6 +41,7 @@ function renderForm(props: { onSuccess?: () => void; onCancel?: () => void } = {
 describe('ReviewReportForm', () => {
   beforeEach(() => {
     mockReportsPost.mockReset()
+    mockCategoriesGet.mockResolvedValue({ data: MOCK_REVIEW_CATEGORIES, error: null })
   })
 
   it('renders category select, description textarea, and action buttons', () => {
@@ -64,7 +75,9 @@ describe('ReviewReportForm', () => {
     const onSuccess = vi.fn()
     renderForm({ onSuccess })
 
+    await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(screen.getByText('Fake Review')).toBeInTheDocument())
     await user.click(screen.getByText('Fake Review'))
     fireEvent.change(screen.getByPlaceholderText(/additional details/i), {
       target: { value: 'This review is fake.' },
@@ -72,7 +85,7 @@ describe('ReviewReportForm', () => {
     await user.click(screen.getByRole('button', { name: /submit report/i }))
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
-    expect(mockReportsPost).toHaveBeenCalledWith({ reason: 'fake-review', description: 'This review is fake.' })
+    expect(mockReportsPost).toHaveBeenCalledWith({ categoryId: FAKE_REVIEW_UUID, description: 'This review is fake.' })
   })
 
   it('shows already-reported message on 409 error', async () => {
@@ -80,7 +93,9 @@ describe('ReviewReportForm', () => {
     const user = userEvent.setup()
     renderForm()
 
+    await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))
+    await waitFor(() => expect(screen.getByText('Spam')).toBeInTheDocument())
     await user.click(screen.getByText('Spam'))
     await user.click(screen.getByRole('button', { name: /submit report/i }))
 

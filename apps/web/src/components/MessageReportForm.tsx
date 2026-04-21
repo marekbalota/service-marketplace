@@ -14,19 +14,10 @@ import {
 } from '#/components/ui/select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { api } from '#/api'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-const MESSAGE_REPORT_REASONS = [
-  { value: 'spam', label: 'Spam' },
-  { value: 'harassment', label: 'Harassment or Bullying' },
-  { value: 'harmful-language', label: 'Harmful or Dangerous Content' },
-  { value: 'inappropriate', label: 'Inappropriate Language' },
-  { value: 'scam', label: 'Scam or Fraud' },
-  { value: 'other', label: 'Other' },
-] as const
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const messageReportSchema = z.object({
-  reason: z.enum(['spam', 'harassment', 'harmful-language', 'inappropriate', 'scam', 'other']),
+  categoryId: z.string().uuid('Please select a category'),
   description: z.string().max(1000).optional(),
 })
 
@@ -43,6 +34,15 @@ export function MessageReportForm({ threadId, messageId, onSuccess, onCancel }: 
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['report-categories', 'MESSAGE'],
+    queryFn: async () => {
+      const { data, error } = await api['report-categories'].get({ query: { targetType: 'MESSAGE' } })
+      if (error) throw error
+      return data!
+    },
+  })
+
   const { control, handleSubmit } = useForm<MessageReportFormData>({
     resolver: zodResolver(messageReportSchema),
     mode: 'onTouched',
@@ -52,7 +52,7 @@ export function MessageReportForm({ threadId, messageId, onSuccess, onCancel }: 
   const mutation = useMutation({
     mutationFn: async (data: MessageReportFormData) => {
       const { error } = await api.threads({ threadId }).messages({ messageId }).reports.post({
-        reason: data.reason,
+        categoryId: data.categoryId,
         description: data.description,
       })
       if (error) throw error
@@ -82,9 +82,11 @@ export function MessageReportForm({ threadId, messageId, onSuccess, onCancel }: 
     >
       <FieldGroup>
         <Controller
-          name="reason"
+          name="categoryId"
           control={control}
-          render={({ field, fieldState }) => (
+          render={({ field, fieldState }) => {
+            const selectedLabel = categories.find(c => c.categoryId === field.value)?.label
+            return (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Report Category *</FieldLabel>
               <Select
@@ -93,22 +95,25 @@ export function MessageReportForm({ threadId, messageId, onSuccess, onCancel }: 
                   field.onChange(v)
                   field.onBlur()
                 }}
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || categoriesLoading}
               >
                 <SelectTrigger aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Select a reason..." />
+                  <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
+                    {selectedLabel}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {MESSAGE_REPORT_REASONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <FieldError errors={[fieldState.error]} />
             </Field>
-          )}
+            )  
+          }}
         />
 
         <Controller
@@ -137,7 +142,7 @@ export function MessageReportForm({ threadId, messageId, onSuccess, onCancel }: 
       <div className="flex gap-2">
         <Button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || categoriesLoading}
           className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Flag className="size-4" />

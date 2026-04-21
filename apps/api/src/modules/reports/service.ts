@@ -1,17 +1,46 @@
 import { db } from '../../db'
-import { reports, posts, messages, reviews } from '../../db/schema'
+import { reports, posts, messages, reviews, reportCategories } from '../../db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import type { ReportsModel } from './model'
 import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 
+type TargetType = 'POST' | 'MESSAGE' | 'REVIEW'
+
+async function resolveCategory(categoryId: string, targetType: TargetType) {
+  const [cat] = await db
+    .select({ categoryId: reportCategories.categoryId, targetType: reportCategories.targetType })
+    .from(reportCategories)
+    .where(and(eq(reportCategories.categoryId, categoryId), isNull(reportCategories.deletedAt)))
+    .limit(1)
+
+  if (!cat || cat.targetType !== targetType) {
+    throw new NotFoundError('Report category not found')
+  }
+  return cat
+}
+
 export abstract class ReportsService {
+  // ── Categories ─────────────────────────────────────────────────────────
+
+  static async findCategories(targetType: TargetType) {
+    return db
+      .select({
+        categoryId: reportCategories.categoryId,
+        targetType: reportCategories.targetType,
+        value: reportCategories.value,
+        label: reportCategories.label,
+      })
+      .from(reportCategories)
+      .where(and(eq(reportCategories.targetType, targetType), isNull(reportCategories.deletedAt)))
+  }
+
   // ── Posts ──────────────────────────────────────────────────────────────
 
   static async createForPost(
     postId: string,
     reporterId: string,
-    body: ReportsModel['postCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     return db.transaction(async (tx) => {
       const [post] = await tx
@@ -23,6 +52,8 @@ export abstract class ReportsService {
       if (!post) throw new NotFoundError(ErrorMessages.postNotFound)
       if (post.authorId === reporterId) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
+      await resolveCategory(body.categoryId, 'POST')
+
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
@@ -33,7 +64,7 @@ export abstract class ReportsService {
 
       const [report] = await tx
         .insert(reports)
-        .values({ postId, reporterId, reason: String(body.reason), description: body.description ?? null })
+        .values({ postId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
         .returning()
 
       return report!
@@ -53,7 +84,7 @@ export abstract class ReportsService {
   static async createForPostForAccount(
     accountId: string,
     postId: string,
-    body: ReportsModel['postCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
@@ -71,7 +102,7 @@ export abstract class ReportsService {
   static async createForMessage(
     messageId: string,
     reporterId: string,
-    body: ReportsModel['messageCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     return db.transaction(async (tx) => {
       const [message] = await tx
@@ -83,6 +114,8 @@ export abstract class ReportsService {
       if (!message) throw new NotFoundError(ErrorMessages.messageNotFound)
       if (message.senderId === reporterId) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
+      await resolveCategory(body.categoryId, 'MESSAGE')
+
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
@@ -93,7 +126,7 @@ export abstract class ReportsService {
 
       const [report] = await tx
         .insert(reports)
-        .values({ messageId, reporterId, reason: String(body.reason), description: body.description ?? null })
+        .values({ messageId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
         .returning()
 
       return report!
@@ -113,7 +146,7 @@ export abstract class ReportsService {
   static async createForMessageForAccount(
     accountId: string,
     messageId: string,
-    body: ReportsModel['messageCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
@@ -131,7 +164,7 @@ export abstract class ReportsService {
   static async createForReview(
     reviewId: string,
     reporterId: string,
-    body: ReportsModel['reviewCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     return db.transaction(async (tx) => {
       const [review] = await tx
@@ -143,6 +176,8 @@ export abstract class ReportsService {
       if (!review) throw new NotFoundError(ErrorMessages.reviewNotFound)
       if (review.reviewerId === reporterId) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
+      await resolveCategory(body.categoryId, 'REVIEW')
+
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
@@ -153,7 +188,7 @@ export abstract class ReportsService {
 
       const [report] = await tx
         .insert(reports)
-        .values({ reviewId, reporterId, reason: String(body.reason), description: body.description ?? null })
+        .values({ reviewId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
         .returning()
 
       return report!
@@ -173,7 +208,7 @@ export abstract class ReportsService {
   static async createForReviewForAccount(
     accountId: string,
     reviewId: string,
-    body: ReportsModel['reviewCreateBody'],
+    body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
