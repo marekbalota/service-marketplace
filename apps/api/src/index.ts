@@ -13,6 +13,7 @@ import { profilesRoutes } from "./modules/profiles";
 import { usersRoutes } from "./modules/users";
 import { adminRolesRoutes } from "./modules/admin/roles";
 import { adminUsersRoutes } from "./modules/admin/users";
+import { adminPostsRoutes } from "./modules/admin/posts";
 import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
@@ -56,6 +57,7 @@ export const app = new Elysia()
   .use(profilesRoutes)
   .use(adminRolesRoutes)
   .use(adminUsersRoutes)
+  .use(adminPostsRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
   .listen(3001);
