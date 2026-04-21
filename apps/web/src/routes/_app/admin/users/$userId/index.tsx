@@ -41,7 +41,7 @@ const getRoleColor = (name: string | null) => {
 const getStatusColor = (isBanned: boolean) =>
   isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
 
-export const Route = createFileRoute('/_app/admin/accounts/$userId/')({
+export const Route = createFileRoute('/_app/admin/users/$userId/')({
   component: UserDetailPage,
 });
 

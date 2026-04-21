@@ -65,7 +65,7 @@ export const profilePostsQueryOptions = (profileId: string, page: number) =>
   });
 
 export const Route = createFileRoute(
-  '/_app/admin/accounts/$userId/profile/$profileId/',
+  '/_app/admin/users/$userId/profile/$profileId/',
 )({
   validateSearch: searchSchema,
   component: ProfileDetailPage,

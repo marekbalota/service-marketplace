@@ -89,7 +89,7 @@ export const usersQueryOptions = (params: {
 export const assignableRolesQueryOptions = queryOptions({
   queryKey: ['admin', 'users', 'assignable-roles'],
   queryFn: async () => {
-    const { data, error } = await api.admin.users['roles'].assignable.get();
+    const { data, error } = await api.admin.roles.assignable.get();
     if (error) throw error;
     return data ?? [];
   },
@@ -145,7 +145,7 @@ function buildPageNumbers(current: number, total: number): (number | 'ellipsis')
   return result;
 }
 
-export const Route = createFileRoute('/_app/admin/accounts')({
+export const Route = createFileRoute('/_app/admin/users/')({
   validateSearch: searchSchema,
   component: ManageAccounts,
 });
@@ -405,7 +405,7 @@ function UserCard({
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => navigate({ to: '../accounts/$userId', params: { userId: user.userId } })}
+                onClick={() => navigate({ to: './$userId', params: { userId: user.userId } })}
               >
                 <Eye className="size-4" />
                 View

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 import { Permissions, hasPermissions } from '@marketplace/shared';
 
-export const Route = createFileRoute('/_app/admin/accounts')({
+export const Route = createFileRoute('/_app/admin/users')({
   beforeLoad: ({ context }) => {
     const user = context.user;
     const permissions = user?.role?.permissions ?? [];
