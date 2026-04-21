@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { ProfilesModel } from './model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'

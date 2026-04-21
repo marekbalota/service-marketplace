@@ -1,6 +1,6 @@
 import { db } from '../../../db';
 import { users, roles, sessions, userProfiles } from '../../../db/schema';
-import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm';
+import { eq, and, isNull, ilike, or, desc, count } from 'drizzle-orm';
 import type { AdminUsersModel } from './model';
 import { RBACService } from '../../../lib/rbac/rbac-helper';
 import { ForbiddenError, NotFoundError, AuthErrorMessages, ErrorMessages } from '../../../lib/errors';

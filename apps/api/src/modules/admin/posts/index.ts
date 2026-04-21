@@ -8,7 +8,7 @@ export const adminPostsRoutes = new Elysia({ prefix: '/admin/posts' })
   .use(authRoutes)
   .delete(
     '/:id',
-    async ({ params, body, set }) => {
+    async ({ params, set }) => {
       await AdminPostsService.deleteAny(params.id);
       set.status = 204;
     },

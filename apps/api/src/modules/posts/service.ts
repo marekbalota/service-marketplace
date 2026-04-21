@@ -3,7 +3,6 @@ import { posts, userProfiles, postCategories, categories, locations } from "../.
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
-import { Permissions } from "@marketplace/shared";
 import { ProfilesService } from "../profiles/service";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -339,7 +338,6 @@ export abstract class PostsService {
 
   static async updateWithPermissionCheck(
     accountId: string,
-    permissions: string[],
     id: string,
     body: PostsModel['updateBody']
   ) {
