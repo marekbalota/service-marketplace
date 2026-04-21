@@ -405,7 +405,7 @@ function UserCard({
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => navigate({ to: './$userId', params: { userId: user.userId } })}
+                onClick={() => navigate({ to: '/admin/users/$userId', params: { userId: user.userId } })}
               >
                 <Eye className="size-4" />
                 View

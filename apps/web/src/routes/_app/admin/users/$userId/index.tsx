@@ -153,7 +153,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                         className="gap-2 shrink-0"
                         onClick={() =>
                           navigate({
-                            to: '/admin/accounts/$userId/profile/$profileId',
+                            to: '/admin/users/$userId/profile/$profileId',
                             params: { userId, profileId: profile.userProfileId },
                           })
                         }
@@ -179,7 +179,7 @@ function UserDetailPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/admin/accounts' })} label="Back to Accounts" />
+      <BackButton onClick={() => navigate({ to: '/admin/users' })} label="Back to Users" />
       <PageHeader
         title="User Details"
         description="View and manage user information, profiles, and activity"

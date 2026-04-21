@@ -272,7 +272,7 @@ function ProfileDetailPage() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton
-        onClick={() => navigate({ to: '/admin/accounts/$userId', params: { userId } })}
+        onClick={() => navigate({ to: '/admin/users/$userId', params: { userId } })}
         label="Back to User"
       />
       <Suspense fallback={<ProfileDetailSkeleton />}>
