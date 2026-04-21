@@ -17,7 +17,6 @@ import { cn } from '#/lib/utils'
 import { formatLocation } from '#/lib/format'
 import { ReviewForm } from '#/components/ReviewForm'
 import { ReportForm } from '#/components/ReportForm'
-import { ReviewReportForm } from '#/components/ReviewReportForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 
 export function postDetailQueryOptions(postId: string) {
@@ -514,8 +513,17 @@ function PostDetailPage() {
                 )}
                 {!hasReported && showReportForm && (
                   <ReportForm
-                    postId={postId}
-                    onSuccess={() => setShowReportForm(false)}
+                    targetType="POST"
+                    entityName="post"
+                    descriptionRequired
+                    onReport={async (data) => {
+                      const { error } = await api.posts({ id: postId }).reports.post(data)
+                      if (error) throw error
+                    }}
+                    onSuccess={() => {
+                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', postId] })
+                      setShowReportForm(false)
+                    }}
                     onCancel={() => setShowReportForm(false)}
                   />
                 )}
@@ -567,9 +575,17 @@ function PostDetailPage() {
             <DialogTitle>Report Review</DialogTitle>
           </DialogHeader>
           {reportingReviewId && (
-            <ReviewReportForm
-              reviewId={reportingReviewId}
-              onSuccess={() => setReportingReviewId(null)}
+            <ReportForm
+              targetType="REVIEW"
+              entityName="review"
+              onReport={async (data) => {
+                const { error } = await api.reviews({ id: reportingReviewId }).reports.post(data)
+                if (error) throw error
+              }}
+              onSuccess={() => {
+                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'review', reportingReviewId] })
+                setReportingReviewId(null)
+              }}
               onCancel={() => setReportingReviewId(null)}
             />
           )}

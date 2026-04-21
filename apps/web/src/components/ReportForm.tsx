@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,65 +14,74 @@ import {
 } from '#/components/ui/select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { api } from '#/api'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
-const reportSchema = z.object({
+const baseSchema = z.object({
   categoryId: z.string().uuid('Please select a category'),
-  description: z.string().min(1, 'Description is required').max(1000),
+  description: z.string().max(1000).optional(),
 })
 
-type ReportFormData = z.infer<typeof reportSchema>
+type FormData = z.infer<typeof baseSchema>
 
 interface ReportFormProps {
-  postId: string
+  targetType: 'POST' | 'MESSAGE' | 'REVIEW'
+  entityName: string
+  descriptionRequired?: boolean
+  onReport: (data: { categoryId: string; description?: string }) => Promise<void>
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
-  const queryClient = useQueryClient()
+export function ReportForm({
+  targetType,
+  entityName,
+  descriptionRequired = false,
+  onReport,
+  onSuccess,
+  onCancel,
+}: ReportFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const schema = useMemo(
+    () =>
+      descriptionRequired
+        ? baseSchema.superRefine((data, ctx) => {
+            if (!data.description?.trim()) {
+              ctx.addIssue({ code: 'custom', message: 'Description is required', path: ['description'] })
+            }
+          })
+        : baseSchema,
+    [descriptionRequired],
+  )
+
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['report-categories', 'POST'],
+    queryKey: ['report-categories', targetType],
     queryFn: async () => {
-      const { data, error } = await api['report-categories'].get({ query: { targetType: 'POST' } })
+      const { data, error } = await api['report-categories'].get({ query: { targetType } })
       if (error) throw error
       return data!
     },
   })
 
-  const {
-    control,
-    handleSubmit,
-  } = useForm<ReportFormData>({
-    resolver: zodResolver(reportSchema),
+  const { control, handleSubmit } = useForm<FormData>({
+    resolver: zodResolver(schema),
     mode: 'onTouched',
-    defaultValues: { description: '' },
+    defaultValues: { categoryId: undefined, description: '' },
   })
 
   const mutation = useMutation({
-    mutationFn: async (data: ReportFormData) => {
-      const { error } = await api.posts({ id: postId }).reports.post({
-        categoryId: data.categoryId,
-        description: data.description,
-      })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports', 'check', postId] })
-      onSuccess()
-    },
+    mutationFn: (data: FormData) => onReport(data),
+    onSuccess,
     onError: (err: { message?: string; status?: number }) => {
       if (err.status === 409) {
-        setServerError('You have already reported this post')
+        setServerError(`You have already reported this ${entityName}`)
       } else {
         setServerError(err.message || 'Failed to submit report')
       }
     },
   })
 
-  const onSubmit: SubmitHandler<ReportFormData> = (data) => {
+  const onSubmit: SubmitHandler<FormData> = (data) => {
     setServerError(null)
     mutation.mutate(data)
   }
@@ -87,34 +96,34 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
           name="categoryId"
           control={control}
           render={({ field, fieldState }) => {
-            const selectedLabel = categories.find(c => c.categoryId === field.value)?.label
+            const selectedLabel = categories.find((c) => c.categoryId === field.value)?.label
             return (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Report Category *</FieldLabel>
-              <Select
-                value={field.value}
-                onValueChange={(v) => {
-                  field.onChange(v)
-                  field.onBlur()
-                }}
-                disabled={mutation.isPending || categoriesLoading}
-              >
-                <SelectTrigger aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
-                    {selectedLabel}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError errors={[fieldState.error]} />
-            </Field>
-          )
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Report Category *</FieldLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => {
+                    field.onChange(v)
+                    field.onBlur()
+                  }}
+                  disabled={mutation.isPending || categoriesLoading}
+                >
+                  <SelectTrigger aria-invalid={fieldState.invalid}>
+                    <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
+                      {selectedLabel}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError errors={[fieldState.error]} />
+              </Field>
+            )
           }}
         />
 
@@ -123,11 +132,11 @@ export function ReportForm({ postId, onSuccess, onCancel }: ReportFormProps) {
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Description *</FieldLabel>
+              <FieldLabel>{descriptionRequired ? 'Description *' : 'Description'}</FieldLabel>
               <Textarea
-                placeholder="Please provide details about why you're reporting this post..."
+                placeholder="Provide any additional details..."
                 maxLength={1000}
-                rows={4}
+                rows={3}
                 aria-invalid={fieldState.invalid}
                 disabled={mutation.isPending}
                 {...field}

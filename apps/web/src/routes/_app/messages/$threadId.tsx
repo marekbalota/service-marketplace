@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/u
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
-import { MessageReportForm } from '#/components/MessageReportForm'
+import { ReportForm } from '#/components/ReportForm'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { getInitials } from './route'
 
@@ -288,10 +288,17 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
             <DialogTitle>Report Message</DialogTitle>
           </DialogHeader>
           {reportingMessageId && (
-            <MessageReportForm
-              threadId={threadId}
-              messageId={reportingMessageId}
-              onSuccess={() => setReportingMessageId(null)}
+            <ReportForm
+              targetType="MESSAGE"
+              entityName="message"
+              onReport={async (data) => {
+                const { error } = await api.threads({ threadId }).messages({ messageId: reportingMessageId }).reports.post(data)
+                if (error) throw error
+              }}
+              onSuccess={() => {
+                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'message', reportingMessageId] })
+                setReportingMessageId(null)
+              }}
               onCancel={() => setReportingMessageId(null)}
             />
           )}
