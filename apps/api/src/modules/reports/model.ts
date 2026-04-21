@@ -1,6 +1,6 @@
 import { t, type UnwrapSchema } from 'elysia'
 
-export const REPORT_REASONS = [
+export const POST_REPORT_REASONS = [
   'spam',
   'harmful-language',
   'inappropriate-content',
@@ -9,22 +9,54 @@ export const REPORT_REASONS = [
   'other',
 ] as const
 
-export type ReportReason = (typeof REPORT_REASONS)[number]
+export const MESSAGE_REPORT_REASONS = [
+  'spam',
+  'harassment',
+  'harmful-language',
+  'inappropriate',
+  'scam',
+  'other',
+] as const
+
+export const REVIEW_REPORT_REASONS = [
+  'spam',
+  'misleading',
+  'inappropriate',
+  'fake-review',
+  'other',
+] as const
+
+function reasonUnion<T extends readonly string[]>(reasons: T) {
+  return t.Union(reasons.map((r) => t.Literal(r)) as [ReturnType<typeof t.Literal>, ...ReturnType<typeof t.Literal>[]])
+}
+
+const createResponseShape = t.Object({
+  reportId: t.String(),
+  reporterId: t.String(),
+  postId: t.Union([t.String(), t.Null()]),
+  messageId: t.Union([t.String(), t.Null()]),
+  reviewId: t.Union([t.String(), t.Null()]),
+  reason: t.String(),
+  description: t.Union([t.String(), t.Null()]),
+  createdAt: t.Date(),
+})
 
 export const ReportsModel = {
-  createBody: t.Object({
-    reason: t.Union(REPORT_REASONS.map((r) => t.Literal(r)) as [ReturnType<typeof t.Literal>, ...ReturnType<typeof t.Literal>[]]),
-    description: t.String({ minLength: 1, maxLength: 1000 }),
+  postCreateBody: t.Object({
+    reason: reasonUnion(POST_REPORT_REASONS),
+    description: t.Optional(t.String({ maxLength: 1000 })),
+  }),
+  messageCreateBody: t.Object({
+    reason: reasonUnion(MESSAGE_REPORT_REASONS),
+    description: t.Optional(t.String({ maxLength: 1000 })),
+  }),
+  reviewCreateBody: t.Object({
+    reason: reasonUnion(REVIEW_REPORT_REASONS),
+    description: t.Optional(t.String({ maxLength: 1000 })),
   }),
   createParams: t.Object({ id: t.String() }),
-  createResponse: t.Object({
-    reportId: t.String(),
-    reporterId: t.String(),
-    postId: t.String(),
-    reason: t.String(),
-    description: t.String(),
-    createdAt: t.Date(),
-  }),
+  messageReportParams: t.Object({ threadId: t.String(), messageId: t.String() }),
+  createResponse: createResponseShape,
   checkParams: t.Object({ id: t.String() }),
   checkResponse: t.Object({ hasReported: t.Boolean() }),
 } as const

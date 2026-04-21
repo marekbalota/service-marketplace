@@ -4,6 +4,8 @@ import { ReviewsService } from './service'
 import { authRoutes } from '../auth'
 import { AuthModel } from '../auth/model'
 import { errorResponse } from '../../lib/errors'
+import { ReportsModel } from '../reports/model'
+import { ReportsService } from '../reports/service'
 
 export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
   .use(authRoutes)
@@ -23,5 +25,46 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
         404: errorResponse,
       },
       detail: { summary: 'Delete a review', operationId: 'deleteReview', tags: ['Reviews'] },
+    },
+  )
+
+  // Report a review
+  .post(
+    '/:id/reports',
+    async ({ params, body, user, set }) => {
+      const report = await ReportsService.createForReviewForAccount(user.id, params.id, body)
+      set.status = 201
+      return report
+    },
+    {
+      auth: true,
+      params: ReportsModel.createParams,
+      body: ReportsModel.reviewCreateBody,
+      response: {
+        201: ReportsModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Report a review', operationId: 'createReviewReport', tags: ['Reports'] },
+    },
+  )
+
+  // Check if current user has reported a review
+  .get(
+    '/:id/reports/check',
+    async ({ params, user }) => {
+      const hasReported = await ReportsService.hasReportedReviewForAccount(user.id, params.id)
+      return { hasReported }
+    },
+    {
+      auth: true,
+      params: ReportsModel.checkParams,
+      response: {
+        200: ReportsModel.checkResponse,
+        401: AuthModel.unauthorizedResponse,
+      },
+      detail: { summary: 'Check if current user has reported a review', operationId: 'checkReviewReport', tags: ['Reports'] },
     },
   )

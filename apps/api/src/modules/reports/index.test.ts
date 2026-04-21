@@ -3,7 +3,7 @@ import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { and, isNull, eq, ne } from 'drizzle-orm'
 import { db } from '../../db'
-import { posts } from '../../db/schema'
+import { posts, reports } from '../../db/schema'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
 import { profilesRoutes } from '../profiles'
@@ -39,6 +39,9 @@ beforeAll(async () => {
     await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))
   ).json() as { profiles: { userProfileId: string }[] }
   const aliceProfileId = meData.profiles[0]?.userProfileId ?? ''
+
+  // Clean up any leftover reports from alice to avoid 409 in the 201 test
+  await db.delete(reports).where(eq(reports.reporterId, aliceProfileId))
 
   // Find a post alice authored
   const [alicePost] = await db

@@ -109,14 +109,14 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .post(
     '/:id/reports',
     async ({ params, body, user, set }) => {
-      const report = await ReportsService.createForAccount(user.id, params.id, body)
+      const report = await ReportsService.createForPostForAccount(user.id, params.id, body)
       set.status = 201
       return report
     },
     {
       auth: true,
       params: ReportsModel.createParams,
-      body: ReportsModel.createBody,
+      body: ReportsModel.postCreateBody,
       response: {
         201: ReportsModel.createResponse,
         401: AuthModel.unauthorizedResponse,
@@ -130,7 +130,7 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .get(
     '/:id/reports/check',
     async ({ params, user }) => {
-      const hasReported = await ReportsService.hasReportedForAccount(user.id, params.id)
+      const hasReported = await ReportsService.hasReportedPostForAccount(user.id, params.id)
       return { hasReported }
     },
     {

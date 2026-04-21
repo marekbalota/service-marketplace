@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/u
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
-import { ReportForm } from '#/components/ReportForm'
+import { MessageReportForm } from '#/components/MessageReportForm'
 import { useActiveUser } from '#/contexts/ActiveUserContext'
 import { getInitials } from './route'
 
@@ -285,13 +285,16 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Report Post</DialogTitle>
+            <DialogTitle>Report Message</DialogTitle>
           </DialogHeader>
-          <ReportForm
-            postId={thread.postId}
-            onSuccess={() => setReportingMessageId(null)}
-            onCancel={() => setReportingMessageId(null)}
-          />
+          {reportingMessageId && (
+            <MessageReportForm
+              threadId={threadId}
+              messageId={reportingMessageId}
+              onSuccess={() => setReportingMessageId(null)}
+              onCancel={() => setReportingMessageId(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </main>

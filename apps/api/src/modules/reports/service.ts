@@ -1,21 +1,17 @@
 import { db } from '../../db'
-import { reports, posts } from '../../db/schema'
+import { reports, posts, messages, reviews } from '../../db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import type { ReportsModel } from './model'
 import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 
 export abstract class ReportsService {
-  /**
-   * Create a report for a post.
-   * @throws NotFoundError if post doesn't exist or is deleted
-   * @throws ForbiddenError if reporter is the post author
-   * @throws ConflictError if reporter already has an active report for this post
-   */
-  static async create(
+  // ── Posts ──────────────────────────────────────────────────────────────
+
+  static async createForPost(
     postId: string,
     reporterId: string,
-    body: ReportsModel['createBody'],
+    body: ReportsModel['postCreateBody'],
   ): Promise<ReportsModel['createResponse']> {
     return db.transaction(async (tx) => {
       const [post] = await tx
@@ -30,65 +26,163 @@ export abstract class ReportsService {
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
-        .where(
-          and(
-            eq(reports.postId, postId),
-            eq(reports.reporterId, reporterId),
-            isNull(reports.deletedAt),
-          ),
-        )
+        .where(and(eq(reports.postId, postId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
         .limit(1)
 
       if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
 
       const [report] = await tx
         .insert(reports)
-        .values({ postId, reporterId, reason: String(body.reason), description: body.description })
+        .values({ postId, reporterId, reason: String(body.reason), description: body.description ?? null })
         .returning()
 
       return report!
     })
   }
 
-  /**
-   * Check if a user has already reported a post.
-   */
-  static async hasReported(postId: string, reporterId: string): Promise<boolean> {
+  static async hasReportedPost(postId: string, reporterId: string): Promise<boolean> {
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(
-        and(
-          eq(reports.postId, postId),
-          eq(reports.reporterId, reporterId),
-          isNull(reports.deletedAt),
-        ),
-      )
+      .where(and(eq(reports.postId, postId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
       .limit(1)
 
     return !!report
   }
 
-  /**
-   * Create a report on behalf of the account's primary profile.
-   * @throws ForbiddenError if account has no profile
-   */
-  static async createForAccount(
+  static async createForPostForAccount(
     accountId: string,
     postId: string,
-    body: ReportsModel['createBody'],
+    body: ReportsModel['postCreateBody'],
   ): Promise<ReportsModel['createResponse']> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
-    return this.create(postId, profiles[0]!.userProfileId, body)
+    return this.createForPost(postId, profiles[0]!.userProfileId, body)
   }
 
-  /**
-   * Check if an account's primary profile has already reported a post.
-   */
-  static async hasReportedForAccount(accountId: string, postId: string): Promise<boolean> {
+  static async hasReportedPostForAccount(accountId: string, postId: string): Promise<boolean> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) return false
-    return this.hasReported(postId, profiles[0]!.userProfileId)
+    return this.hasReportedPost(postId, profiles[0]!.userProfileId)
+  }
+
+  // ── Messages ───────────────────────────────────────────────────────────
+
+  static async createForMessage(
+    messageId: string,
+    reporterId: string,
+    body: ReportsModel['messageCreateBody'],
+  ): Promise<ReportsModel['createResponse']> {
+    return db.transaction(async (tx) => {
+      const [message] = await tx
+        .select({ messageId: messages.messageId, senderId: messages.senderId })
+        .from(messages)
+        .where(and(eq(messages.messageId, messageId), isNull(messages.deletedAt)))
+        .limit(1)
+
+      if (!message) throw new NotFoundError(ErrorMessages.messageNotFound)
+      if (message.senderId === reporterId) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+      const [existing] = await tx
+        .select({ reportId: reports.reportId })
+        .from(reports)
+        .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+        .limit(1)
+
+      if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
+
+      const [report] = await tx
+        .insert(reports)
+        .values({ messageId, reporterId, reason: String(body.reason), description: body.description ?? null })
+        .returning()
+
+      return report!
+    })
+  }
+
+  static async hasReportedMessage(messageId: string, reporterId: string): Promise<boolean> {
+    const [report] = await db
+      .select({ reportId: reports.reportId })
+      .from(reports)
+      .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+      .limit(1)
+
+    return !!report
+  }
+
+  static async createForMessageForAccount(
+    accountId: string,
+    messageId: string,
+    body: ReportsModel['messageCreateBody'],
+  ): Promise<ReportsModel['createResponse']> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.createForMessage(messageId, profiles[0]!.userProfileId, body)
+  }
+
+  static async hasReportedMessageForAccount(accountId: string, messageId: string): Promise<boolean> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) return false
+    return this.hasReportedMessage(messageId, profiles[0]!.userProfileId)
+  }
+
+  // ── Reviews ────────────────────────────────────────────────────────────
+
+  static async createForReview(
+    reviewId: string,
+    reporterId: string,
+    body: ReportsModel['reviewCreateBody'],
+  ): Promise<ReportsModel['createResponse']> {
+    return db.transaction(async (tx) => {
+      const [review] = await tx
+        .select({ reviewId: reviews.reviewId, reviewerId: reviews.reviewerId })
+        .from(reviews)
+        .where(and(eq(reviews.reviewId, reviewId), isNull(reviews.deletedAt)))
+        .limit(1)
+
+      if (!review) throw new NotFoundError(ErrorMessages.reviewNotFound)
+      if (review.reviewerId === reporterId) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+      const [existing] = await tx
+        .select({ reportId: reports.reportId })
+        .from(reports)
+        .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+        .limit(1)
+
+      if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
+
+      const [report] = await tx
+        .insert(reports)
+        .values({ reviewId, reporterId, reason: String(body.reason), description: body.description ?? null })
+        .returning()
+
+      return report!
+    })
+  }
+
+  static async hasReportedReview(reviewId: string, reporterId: string): Promise<boolean> {
+    const [report] = await db
+      .select({ reportId: reports.reportId })
+      .from(reports)
+      .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+      .limit(1)
+
+    return !!report
+  }
+
+  static async createForReviewForAccount(
+    accountId: string,
+    reviewId: string,
+    body: ReportsModel['reviewCreateBody'],
+  ): Promise<ReportsModel['createResponse']> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.createForReview(reviewId, profiles[0]!.userProfileId, body)
+  }
+
+  static async hasReportedReviewForAccount(accountId: string, reviewId: string): Promise<boolean> {
+    const profiles = await ProfilesService.findByAccountId(accountId)
+    if (!profiles.length) return false
+    return this.hasReportedReview(reviewId, profiles[0]!.userProfileId)
   }
 }
