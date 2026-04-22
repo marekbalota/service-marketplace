@@ -1,18 +1,5 @@
 import { t, type UnwrapSchema } from 'elysia'
 
-const profileItemWithAccount = t.Object({
-  userProfileId: t.String(),
-  accountId:     t.String(),
-  name:          t.String(),
-  email:         t.String(),
-  bio:           t.Nullable(t.String()),
-  phoneNumber:   t.Nullable(t.String()),
-  fax:           t.Nullable(t.String()),
-  createdAt:     t.Date(),
-  updatedAt:     t.Nullable(t.Date()),
-  accountName:   t.String(),
-})
-
 const profileItemPublic = t.Object({
   userProfileId: t.String(),
   name:          t.String(),
@@ -37,7 +24,6 @@ export const ProfilesModel = {
   }),
   updateResponse:     profileItemPublic,
   profilePostsParams: t.Object({ id: t.String() }),
-  meResponse:         t.Array(profileItemWithAccount),
   createBody: t.Object({
     name:        t.String({ minLength: 1 }),
     email:       t.String({ format: 'email' }),

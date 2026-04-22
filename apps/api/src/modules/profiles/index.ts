@@ -12,18 +12,6 @@ import { unauthorizedResponse, forbiddenResponse, notFoundResponse, conflictResp
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
   .get(
-    '/me',
-    async ({ user }) => ProfilesService.findByAccountId(user.id),
-    {
-      auth: true,
-      response: {
-        200: ProfilesModel.meResponse,
-        ...unauthorizedResponse,
-      },
-      detail: { summary: 'List my profiles', operationId: 'listMyProfiles', tags: ['Profiles'] },
-    },
-  )
-  .get(
     '/:id',
     async ({ params }) => ProfilesService.findById(params.id),
     {

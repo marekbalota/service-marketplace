@@ -2,11 +2,12 @@ import { describe, it, expect, beforeAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { profilesRoutes } from '.'
+import { usersRoutes } from '../users'
 import { authRoutes } from '../auth'
 import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
 
-const app = new Elysia().use(errorsPlugin).use(authRoutes).use(profilesRoutes)
+const app = new Elysia().use(errorsPlugin).use(authRoutes).use(profilesRoutes).use(usersRoutes)
 const client = treaty(app)
 
 let aliceCookie: string
@@ -23,8 +24,8 @@ beforeAll(async () => {
   })
   aliceCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  const { data } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-  const aliceProfile = data?.find(p => p.name === 'Alice Johnson') ?? data?.[0]
+  const { data } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+  const aliceProfile = data?.profiles.find(p => p.name === 'Alice Johnson') ?? data?.profiles[0]
   aliceProfileId = aliceProfile?.userProfileId ?? ''
 })
 
@@ -172,23 +173,6 @@ describe('GET /profiles/:id/locations', () => {
   })
 })
 
-describe('GET /profiles/me', () => {
-  it('returns 401 without a session cookie', async () => {
-    const { error } = await client.profiles.me.get()
-    expect(error?.status).toBe(401)
-  })
-
-  it('returns profiles belonging to the logged-in user', async () => {
-    const { data, error } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-    expect(error).toBeNull()
-    expect(Array.isArray(data)).toBe(true)
-    expect(data!.length).toBeGreaterThan(0)
-    for (const p of data!) {
-      expect(p.accountId).toBe(data![0]!.accountId)
-    }
-  })
-})
-
 describe('POST /profiles', () => {
   it('returns 401 without a session cookie', async () => {
     const { error } = await client.profiles.post({ name: 'New Profile', email: 'new@example.com' })
@@ -231,8 +215,8 @@ describe('POST /profiles', () => {
       { headers: { Cookie: aliceCookie } },
     )
     testCreatedProfileIds.push(data!.userProfileId)
-    const { data: me } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-    const found = me!.find(p => p.userProfileId === data!.userProfileId)
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    const found = me!.profiles.find(p => p.userProfileId === data!.userProfileId)
     expect(found).toBeDefined()
   })
 })
@@ -275,8 +259,8 @@ describe('DELETE /profiles/:id', () => {
     )
     expect(error).toBeNull()
 
-    const { data: me } = await client.profiles.me.get({ headers: { Cookie: aliceCookie } })
-    const found = me!.find(p => p.userProfileId === created!.userProfileId)
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    const found = me!.profiles.find(p => p.userProfileId === created!.userProfileId)
     expect(found).toBeUndefined()
   })
 

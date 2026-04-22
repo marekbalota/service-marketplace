@@ -14,8 +14,13 @@ export const UsersModel = {
     profiles: t.Array(
       t.Object({
         userProfileId: t.String(),
-        name: t.String(),
-        email: t.String()
+        name:          t.String(),
+        email:         t.String(),
+        bio:           t.Nullable(t.String()),
+        phoneNumber:   t.Nullable(t.String()),
+        fax:           t.Nullable(t.String()),
+        createdAt:     t.Date(),
+        updatedAt:     t.Nullable(t.Date()),
       }),
     )
   })
