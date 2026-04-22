@@ -30,12 +30,9 @@ beforeAll(async () => {
   });
   userCookie = userRes.headers.get('set-cookie') ?? '';
 
-  // Get alice's user ID from /users/me
-  const meRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: userCookie },
-  }));
-  const meData = await meRes.json() as { userId: string };
-  regularUserId = meData.userId;
+  // Get alice's user ID from /users/me using Eden Treaty
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: userCookie } });
+  regularUserId = meData!.userId;
 
   // Sign in as bob — used as the ban/unban target so alice's session is never invalidated
   const bobRes = await auth.api.signInEmail({
@@ -43,11 +40,8 @@ beforeAll(async () => {
     asResponse: true,
   });
   const bobCookie = bobRes.headers.get('set-cookie') ?? '';
-  const bobMeRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: bobCookie },
-  }));
-  const bobData = await bobMeRes.json() as { userId: string };
-  banTargetUserId = bobData.userId;
+  const { data: bobData } = await client.users.me.get({ headers: { Cookie: bobCookie } });
+  banTargetUserId = bobData!.userId;
 });
 
 describe('GET /admin/users', () => {

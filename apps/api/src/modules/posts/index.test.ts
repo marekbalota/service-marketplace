@@ -70,7 +70,6 @@ describe("GET /posts", () => {
   });
 
   it("returns 422 for an invalid type value", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await client.posts.get({ query: { type: "INVALID" as any } });
     expect(error?.status).toBe(422);
   });
@@ -113,9 +112,10 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data, error } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data, error } = await client.posts({ id: postId }).get();
     expect(error).toBeNull();
-    expect(data!.postId).toBe(all.items[0]!.postId);
+    expect(data!.postId).toBe(postId);
     expect(typeof data!.authorName).toBe("string");
     expect(Array.isArray(data!.categories)).toBe(true);
   });
@@ -124,7 +124,8 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data } = await client.posts({ id: postId }).get();
     expect(data!.location === null || typeof data!.location === "object").toBe(true);
     expect(Array.isArray(data!.reviews)).toBe(true);
     expect(typeof data!.reviewCount).toBe("number");
@@ -135,7 +136,8 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data } = await client.posts({ id: postId }).get();
 
     if (data!.reviewCount > 0) {
       for (const review of data!.reviews) {
@@ -172,10 +174,8 @@ describe("POST /posts", () => {
       { headers: { Cookie: sessionCookie } },
     );
     expect(error).toBeNull();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const post = data as any;
-    expect(typeof post?.postId).toBe("string");
-    expect(post?.postTitle).toBe("Test post title");
+    expect(typeof data?.postId).toBe("string");
+    expect(data?.postTitle).toBe("Test post title");
   });
 
   it("returns 422 when postTitle is too short", async () => {
@@ -261,7 +261,8 @@ describe("PATCH /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { error } = await client.posts({ id: all.items[0]!.postId }).patch({
+    const postId = all.items[0]!.postId;
+    const { error } = await client.posts({ id: postId }).patch({
       postTitle: "Updated title",
     });
     expect(error?.status).toBe(401);
@@ -343,8 +344,7 @@ describe("DELETE /posts/:id", () => {
       },
       { headers: { Cookie: sessionCookie } },
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const postId = (created as any)?.postId as string;
+    const postId = created?.postId ?? '';
 
     const { error } = await client.posts({ id: postId }).delete(undefined, {
       headers: { Cookie: sessionCookie },
