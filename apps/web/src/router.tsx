@@ -3,7 +3,6 @@ import { QueryClient, QueryCache } from '@tanstack/react-query'
 import { routeTree } from './routeTree.gen'
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
 import { NotFound } from './components/NotFound'
-import type { User } from '#/types/api'
 
 // Module-level ref — populated inside getRouter() so QueryCache error
 // handlers can perform soft navigation without a full page reload.
@@ -40,7 +39,7 @@ export const queryClient = new QueryClient({
 export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
-    context: { queryClient, user: null as User | null },
+    context: { queryClient },
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,

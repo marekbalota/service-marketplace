@@ -1,4 +1,7 @@
-import { routerRef } from '#/router'
+import { queryClient, routerRef } from '#/router'
+import { currentUserQueryOptions } from '#/lib/userQueries'
+
+const STORAGE_KEY = 'activeProfileId'
 
 interface BanError {
   message: string
@@ -13,7 +16,10 @@ export function handleBanError(error: unknown): boolean {
       reason: banInfo.reason,
       expiresAt: banInfo.expiresAt,
     }))
+    queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
+    localStorage.removeItem(STORAGE_KEY)
     if (routerRef) {
+      void routerRef.invalidate()
       void routerRef.navigate({ to: '/banned' })
     } else {
       window.location.href = '/banned'
