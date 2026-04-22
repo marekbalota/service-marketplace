@@ -7,17 +7,16 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { AccountSettingsPage } from './index'
+import { useCurrentUser } from '#/lib/userQueries'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
 const mockUseActiveProfile = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
     useMutation: vi.fn(() => ({
       mutate: vi.fn(),
       isPending: false,
@@ -34,8 +33,12 @@ vi.mock('#/auth', () => ({
   },
 }))
 
-vi.mock('#/lib/profileQueries', () => ({
-  profilesQueryOptions: { queryKey: ['profiles', 'me'] },
+vi.mock('#/lib/userQueries', () => ({
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
+  useCurrentUser: vi.fn(),
+}))
+
+vi.mock('#/hooks/useActiveProfile', () => ({
   useActiveProfile: mockUseActiveProfile,
 }))
 
@@ -43,16 +46,22 @@ vi.mock('#/api', () => ({
   api: {
     profiles: Object.assign(
       vi.fn(() => ({ patch: vi.fn(), delete: vi.fn() })),
-      { me: { get: vi.fn() }, post: vi.fn() },
+      { post: vi.fn() },
     ),
   },
 }))
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
+const baseUser = {
+  userId: 'user-1',
+  name: 'Alice',
+  email: 'alice@example.com',
+  role: null,
+}
+
 const alice = {
   userProfileId: 'profile-1',
-  accountId: 'user-1',
   name: 'Alice Johnson',
   email: 'alice@example.com',
   bio: 'Software engineer',
@@ -60,13 +69,10 @@ const alice = {
   fax: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: null,
-  accountName: 'Alice',
-  roleName: 'user',
 }
 
 const bob = {
   userProfileId: 'profile-2',
-  accountId: 'user-1',
   name: 'Bob Builder',
   email: 'bob@example.com',
   bio: null,
@@ -74,8 +80,6 @@ const bob = {
   fax: null,
   createdAt: new Date('2024-02-01'),
   updatedAt: new Date('2024-03-01'),
-  accountName: 'Alice',
-  roleName: 'user',
 }
 
 // ── Render helper ─────────────────────────────────────────────────────────────
@@ -95,7 +99,9 @@ async function renderPage() {
 
 describe('AccountSettingsPage', () => {
   beforeEach(() => {
-    mockUseSuspenseQuery.mockReturnValue({ data: [alice, bob] })
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { ...baseUser, profiles: [alice, bob] },
+    } as ReturnType<typeof useCurrentUser>)
     mockUseActiveProfile.mockReturnValue({
       activeProfile: alice,
       allProfiles: [alice, bob],

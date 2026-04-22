@@ -1,20 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
 import { api } from '#/api'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
-
-export const profilesQueryOptions = queryOptions({
-  queryKey: ['profiles', 'me'],
-  queryFn: async () => {
-    const { data, error } = await api.profiles.me.get()
-    if (error) throw error
-    return data!
-  },
-})
-
-export function useActiveProfile() {
-  const { activeProfile } = useActiveUser()
-  return { activeProfile }
-}
 
 export function profileQueryOptions(profileId: string) {
   return queryOptions({

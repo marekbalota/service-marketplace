@@ -8,7 +8,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { authClient } from '#/auth'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 export const favouritesQueryOptions = queryOptions({
   queryKey: ['favourites'],
@@ -20,11 +20,8 @@ export const favouritesQueryOptions = queryOptions({
 })
 
 export const Route = createFileRoute('/_app/favourites')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(favouritesQueryOptions)
@@ -109,7 +106,7 @@ function FavouritesGrid() {
 
 function FavouritesPage() {
   const { data: session } = authClient.useSession()
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">

@@ -14,7 +14,7 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
 import { MultiSelect } from '#/components/ui/multi-select'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useCurrentUser } from '#/lib/userQueries'
 import {
   Select,
   SelectContent,
@@ -460,7 +460,7 @@ function RatingSelect() {
 function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1, favourites = false, rating } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { user } = useActiveUser()
+  const { data: user } = useCurrentUser()
   const isAuthenticated = user !== null
 
   const [inputValue, setInputValue] = useState(q)

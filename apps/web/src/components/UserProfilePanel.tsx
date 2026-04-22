@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { currentUserQueryOptions, useActiveUser } from '#/contexts/ActiveUserContext'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -38,7 +39,8 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { user, activeProfile, setActiveProfileId } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
   const navigate = useNavigate()
   const allProfiles = user?.profiles ?? []
@@ -186,8 +188,9 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              router.invalidate()
               queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
+              localStorage.removeItem('activeProfileId')
+              router.invalidate()
               onClose()
               navigate({ to: '/' })
             }}

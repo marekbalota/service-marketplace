@@ -34,7 +34,7 @@ import { Label } from '#/components/ui/label';
 import { Checkbox } from '#/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { useCurrentUser } from '#/lib/userQueries';
 import { Permissions, hasPermissions } from '@marketplace/shared';
 
 import type { AdminRolesModel } from 'api';
@@ -71,7 +71,7 @@ export const Route = createFileRoute('/_app/admin/roles')({
 
 function ManageRoles() {
   const navigate = useNavigate();
-  const { user } = useActiveUser();
+  const { data: user } = useCurrentUser();
   const userPriority = user?.role?.priority ?? 0;
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

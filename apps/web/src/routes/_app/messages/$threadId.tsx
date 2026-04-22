@@ -2,14 +2,13 @@ import { createFileRoute, redirect, Link, useRouter } from '@tanstack/react-rout
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { ArrowLeft, ExternalLink, Send, Trash2 } from 'lucide-react'
-import { authClient } from '#/auth'
 import { api } from '#/api'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { getInitials } from './route'
 
 export function threadDetailQueryOptions(threadId: string, profileId: string) {
@@ -24,11 +23,8 @@ export function threadDetailQueryOptions(threadId: string, profileId: string) {
 }
 
 export const Route = createFileRoute('/_app/messages/$threadId')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   component: ThreadPage,
 })
@@ -245,7 +241,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
 
 function ThreadPage() {
   const { threadId } = Route.useParams()
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
 
   if (!activeProfile) {
     return <ThreadPageSkeleton />

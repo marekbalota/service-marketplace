@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Suspense, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions, useActiveProfile } from '#/lib/profileQueries'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
+import type { UserProfile } from '#/types/api'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -11,15 +13,11 @@ import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(profilesQueryOptions)
+    await queryClient.ensureQueryData(currentUserQueryOptions)
   },
   pendingComponent: AccountSettingsSkeleton,
   component: AccountSettingsPage,
 })
-
-type UserProfile = NonNullable<
-  Awaited<ReturnType<typeof api.profiles.me.get>>['data']
->[number]
 
 function AccountSettingsSkeleton() {
   return (
@@ -59,7 +57,7 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+      queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
     },
     onError: (err) => {
       const msg = (err as { value?: { message?: string } }).value?.message ?? (err as Error).message
@@ -157,24 +155,11 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
   )
 }
 
-function ProfilesList() {
-  const { data: profiles } = useSuspenseQuery(profilesQueryOptions)
-  const { activeProfile } = useActiveProfile()
-
-  return (
-    <div className="space-y-4">
-      {profiles?.map((profile) => (
-        <ProfileCard
-          key={profile.userProfileId}
-          profile={profile}
-          isActive={profile.userProfileId === activeProfile?.userProfileId}
-        />
-      ))}
-    </div>
-  )
-}
-
 export function AccountSettingsPage() {
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
+  const profiles = user?.profiles ?? []
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-start justify-between">
@@ -191,9 +176,15 @@ export function AccountSettingsPage() {
         </Link>
       </div>
 
-      <Suspense fallback={<AccountSettingsSkeleton />}>
-        <ProfilesList />
-      </Suspense>
+      <div className="space-y-4">
+        {profiles.map((profile) => (
+          <ProfileCard
+            key={profile.userProfileId}
+            profile={profile}
+            isActive={profile.userProfileId === activeProfile?.userProfileId}
+          />
+        ))}
+      </div>
     </main>
   )
 }

@@ -1,8 +1,8 @@
 import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions } from '#/lib/profileQueries'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
 import { buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -15,8 +15,8 @@ import { imagesQueryOptions, profileQueryOptions } from '#/lib/profileQueries'
 
 export const Route = createFileRoute('/_app/account-settings/$profileId/edit')({
   loader: async ({ context: { queryClient }, params }) => {
-    const profiles = await queryClient.ensureQueryData(profilesQueryOptions)
-    const isOwner = profiles?.some(p => p.userProfileId === params.profileId)
+    const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+    const isOwner = user?.profiles.some(p => p.userProfileId === params.profileId)
     if (!isOwner) throw redirect({ to: '/account-settings' })
   },
   pendingComponent: EditSkeleton,
@@ -46,8 +46,8 @@ export function EditProfilePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: profiles } = useSuspenseQuery(profilesQueryOptions)
-  const profile = profiles!.find(p => p.userProfileId === profileId)!
+  const { data: user } = useCurrentUser()
+  const profile = user?.profiles.find(p => p.userProfileId === profileId)!
 
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
 
@@ -63,7 +63,7 @@ export function EditProfilePage() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+      queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       queryClient.invalidateQueries({ queryKey: profileQueryOptions(profileId).queryKey })
       navigate({ to: '/account-settings' })
     },

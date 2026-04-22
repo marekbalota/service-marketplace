@@ -8,7 +8,7 @@ import { Textarea } from '#/components/ui/textarea'
 import { Label } from '#/components/ui/label'
 import { api } from '#/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Rating is required').max(5),
@@ -25,7 +25,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   const queryClient = useQueryClient()
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
   const [error, setError] = useState<string | null>(null)
 
   const {

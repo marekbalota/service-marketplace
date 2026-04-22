@@ -31,7 +31,7 @@ import {
   FieldLabel,
   FieldError,
 } from '#/components/ui/field'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { Permissions, hasPermissions } from '@marketplace/shared'
 
 // --- Query options ---
@@ -87,7 +87,7 @@ function CreatePostPage() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
   const [isManualLocation, setIsManualLocation] = useState(false)
 
   const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions)

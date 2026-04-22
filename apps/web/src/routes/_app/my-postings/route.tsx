@@ -8,7 +8,7 @@ import { PostCard } from '#/components/PostCard'
 import { PostCardSkeleton } from '#/components/PostCardSkeleton'
 import { EmptyState } from '#/components/EmptyState'
 import { PageHeader } from '#/components/PageHeader'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import {
@@ -155,7 +155,7 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
 }
 
 function MyPostingsPage() {
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
   const { page = 1 } = Route.useSearch()
 
   return (

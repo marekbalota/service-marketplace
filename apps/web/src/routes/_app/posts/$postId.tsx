@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { authClient } from '#/auth'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { BackButton } from '#/components/BackButton'
 import { EmptyState } from '#/components/EmptyState'
 import { Badge } from '#/components/ui/badge'
@@ -249,7 +250,8 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { activeProfile, user } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
   const router = useRouter()
   const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
