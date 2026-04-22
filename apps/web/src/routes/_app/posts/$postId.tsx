@@ -341,13 +341,17 @@ function PostDetailPage() {
 
           {/* Details grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="flex items-center gap-2">
+            <Link
+              to="/profiles/$profileId"
+              params={{ profileId: post.authorId }}
+              className="group flex items-center gap-2 rounded-lg px-1 py-1 -mx-1 transition-colors hover:bg-accent no-underline"
+            >
               <User className="size-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Posted by</p>
-                <p className="font-medium">{post.authorName}</p>
+                <p className="font-medium group-hover:text-nav-browse-fg">{post.authorName}</p>
               </div>
-            </div>
+            </Link>
             {locationText && (
               <div className="flex items-center gap-2">
                 <MapPin className="size-5 text-muted-foreground" />
