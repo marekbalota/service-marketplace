@@ -98,12 +98,12 @@ describe('DELETE /images/:id', () => {
     expect(error?.status).toBe(401)
   })
 
-  it('returns 403 when deleting an image not owned by the user', async () => {
+  it('returns 404 when deleting a non-existent image', async () => {
     const { error } = await client.images({ id: '00000000-0000-0000-0000-000000000000' }).delete(
       undefined,
       { headers: { Cookie: aliceCookie } },
     )
-    expect(error?.status).toBe(403)
+    expect(error?.status).toBe(404)
   })
 
   it('returns 204 and soft-deletes the image', async () => {

@@ -3,7 +3,7 @@ import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { Suspense, useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions, useActiveProfile } from '#/contexts/ActiveProfileContext'
+import { profilesQueryOptions, useActiveProfile } from '#/lib/profileQueries'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'

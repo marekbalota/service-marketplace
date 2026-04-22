@@ -2,6 +2,9 @@ import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
 import type { PostsModel } from "./model";
+import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
+import { Permissions } from "@marketplace/shared";
+import { ProfilesService } from "../profiles/service";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -37,19 +40,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery']) {
-    const { search, type, categoryId, sort, offset, size, ratingFilter } = query;
-    const effectiveOffset = offset ?? 0;
-
-    // Parse rating filters
-    const ratingRanges: Array<{ min: number; max: number }> = []
-    if (ratingFilter) {
-      try {
-        const parsed = JSON.parse(ratingFilter) as Array<{ min: number; max: number }>
-        ratingRanges.push(...parsed)
-      } catch {
-        // Ignore invalid JSON
-      }
-    }
+    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax } = query;
 
     const orderBy =
       sort === 'price-low'  ? asc(posts.price)     :
@@ -67,14 +58,12 @@ export abstract class PostsService {
         WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL
       )`;
 
-      // Build rating filter conditions (OR across multiple ranges)
-      const ratingConditions = ratingRanges.length > 0
-        ? or(...ratingRanges.map(range =>
-            and(
-              gte(avgRatingSubquery, sql`${range.min}`),
-              lte(avgRatingSubquery, sql`${range.max}`)
-            )
-          ))
+      // Build rating filter condition
+      const ratingConditions = (ratingMin !== undefined || ratingMax !== undefined)
+        ? and(
+            ratingMin !== undefined ? gte(avgRatingSubquery, sql`${ratingMin}`) : undefined,
+            ratingMax !== undefined ? lte(avgRatingSubquery, sql`${ratingMax}`) : undefined,
+          )
         : undefined;
 
       const conditions = and(
@@ -88,7 +77,8 @@ export abstract class PostsService {
               ilike(locations.country, `%${search}%`),
             )
           : undefined,
-        type       ? eq(posts.postType, type)      : undefined,
+        type       
+          ? eq(posts.postType, type) : undefined,
         categoryId
           ? exists(
               tx.select().from(postCategories).where(
@@ -113,7 +103,7 @@ export abstract class PostsService {
       const q = postSelect(tx)
         .where(conditions)
         .orderBy(orderBy)
-        .offset(effectiveOffset);
+        .offset(offset);
 
       const rows = await (size !== undefined ? q.limit(size) : q);
 
@@ -131,8 +121,7 @@ export abstract class PostsService {
   }
 
   static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
-    const { offset, size } = query
-    const effectiveOffset = offset ?? 0
+    const { offset = 0, size } = query
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
@@ -145,7 +134,7 @@ export abstract class PostsService {
       const q = postSelect(tx)
         .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
         .orderBy(desc(posts.createdAt))
-        .offset(effectiveOffset)
+        .offset(offset)
 
       const rows = await (size !== undefined ? q.limit(size) : q)
 
@@ -215,7 +204,7 @@ export abstract class PostsService {
       .limit(1);
 
     if (!row) {
-      return null;
+      throw new NotFoundError(ErrorMessages.postNotFound);
     }
 
     const location = row.locationId ? {
@@ -279,11 +268,13 @@ export abstract class PostsService {
         .update(posts)
         .set(updateValues)
         .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
-        .returning({ postId: posts.postId });
+        .returning();
 
       if (!updated) {
-        return null;
+        throw new NotFoundError(ErrorMessages.postNotFound);
       }
+
+      let updatedCategories: string[];
 
       if (categoryIds !== undefined) {
         await tx
@@ -291,13 +282,31 @@ export abstract class PostsService {
           .where(eq(postCategories.postId, id));
 
         if (categoryIds.length > 0) {
-          await tx.insert(postCategories).values(
-            categoryIds.map((categoryId) => ({ postId: id, categoryId })),
-          );
+          updatedCategories = await tx
+            .insert(postCategories)
+            .values(categoryIds.map((categoryId) => ({ postId: id, categoryId })))
+            .returning({ categoryId: postCategories.categoryId })
+            .then(rows => rows.map(r => r.categoryId));
+        } else {
+          updatedCategories = [];
         }
+      } else {
+        updatedCategories = await tx
+          .select({ categoryId: postCategories.categoryId })
+          .from(postCategories)
+          .where(eq(postCategories.postId, id))
+          .then(rows => rows.map(r => r.categoryId));
       }
 
-      return updated;
+      return {
+        postId:      updated.postId,
+        postTitle:   updated.postTitle,
+        description: updated.description,
+        postType:    updated.postType,
+        price:       updated.price,
+        rateType:    updated.rateType,
+        categoryIds: updatedCategories,
+      };
     });
   }
 
@@ -308,19 +317,72 @@ export abstract class PostsService {
       .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
       .returning({ postId: posts.postId });
 
-    return deleted ? true : null;
+    if (!deleted) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    return true;
   }
 
-  static async checkPostOwnership(postId: string, accountId: string): Promise<'not_found' | 'forbidden' | 'ok'> {
-    const [row] = await db
-      .select({ accountId: userProfiles.accountId })
-      .from(posts)
-      .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
-      .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
-      .limit(1)
+  static async createWithPermissionCheck(
+    accountId: string,
+    body: PostsModel['createBody']
+  ) {
+    // Verify the account owns the profile they're posting as
+    const owned = await ProfilesService.isProfileOwnedByAccount(body.authorId, accountId);
+    if (!owned) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
 
-    if (!row) return 'not_found'
-    if (row.accountId !== accountId) return 'forbidden'
-    return 'ok'
+    return this.create(body);
+  }
+
+  static async updateWithPermissionCheck(
+    accountId: string,
+    permissions: string[],
+    id: string,
+    body: PostsModel['updateBody']
+  ) {
+    const post = await db.query.posts.findFirst({
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      columns: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    const profileIds = await ProfilesService.getProfileIdsByAccount(accountId);
+    const isOwner = profileIds.includes(post.authorId);
+
+    if (!isOwner) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    return this.update(id, body);
+  }
+
+  static async deleteWithPermissionCheck(
+    accountId: string,
+    permissions: string[],
+    id: string
+  ) {
+    const post = await db.query.posts.findFirst({
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      columns: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundError(ErrorMessages.postNotFound);
+    }
+
+    const profileIds = await ProfilesService.getProfileIdsByAccount(accountId);
+    const isOwner = profileIds.includes(post.authorId);
+
+    if (!isOwner) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    await this.delete(id);
   }
 }

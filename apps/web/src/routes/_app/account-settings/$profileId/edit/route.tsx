@@ -2,7 +2,7 @@ import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-ro
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
+import { profilesQueryOptions } from '#/lib/profileQueries'
 import { buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'

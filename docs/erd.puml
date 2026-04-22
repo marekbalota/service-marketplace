@@ -24,6 +24,9 @@ entity User {
     email : text <<NOT NULL>> <<UNIQUE>>
     email_verified : boolean <<NOT NULL>>
     image : text
+    is_banned : boolean <<NOT NULL>>
+    ban_reason : text
+    ban_expiration : timestamp
     created_at : timestamp <<NOT NULL>>
     updated_at : timestamp <<NOT NULL>>
 }
@@ -72,6 +75,8 @@ entity Role {
     ---
     name : text <<NOT NULL>> <<UNIQUE>>
     description : text
+    priority : integer <<NOT NULL>>
+    is_default : boolean <<NOT NULL>>
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
 }
@@ -88,8 +93,6 @@ entity Permission {
 entity RolePermission {
     role_id : uuid <<PK>> <<FK>>
     permission_id : uuid <<PK>> <<FK>>
-    ---
-    deleted_at : timestamp
 }
 
 entity UserProfile {

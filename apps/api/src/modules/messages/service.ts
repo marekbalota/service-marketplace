@@ -3,6 +3,9 @@ import { messageThreads, messages, posts, userProfiles } from '../../db/schema'
 import { eq, or, and, isNull, desc, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { MessagesModel } from './model'
+import { ForbiddenError, ConflictError, AuthErrorMessages } from '../../lib/errors'
+import { ProfilesService } from '../profiles/service'
+import { PostsService } from '../posts/service'
 
 type Role = 'initiator' | 'post_owner'
 type Label = 'provider' | 'client'
@@ -35,10 +38,18 @@ export abstract class MessagesService {
     return { role, postDeleted: row.postDeletedAt !== null }
   }
 
+  /**
+   * List threads for a profile. Verifies the caller owns the profile.
+   * @throws ForbiddenError if accountId does not own profileId
+   */
   static async findAllThreads(
     profileId: string,
+    accountId: string,
     postId?: string,
   ): Promise<MessagesModel['findAllResponse']> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     const initiatorProfile = alias(userProfiles, 'initiator_profile')
     const authorProfile = alias(userProfiles, 'author_profile')
 
@@ -121,10 +132,18 @@ export abstract class MessagesService {
     })
   }
 
+  /**
+   * Get a thread with its messages. Verifies the caller owns the profile and is a participant.
+   * @throws ForbiddenError if accountId does not own profileId, or if profileId is not a participant
+   */
   static async findThreadById(
     threadId: string,
     profileId: string,
-  ): Promise<MessagesModel['findThreadResponse'] | null> {
+    accountId: string,
+  ): Promise<MessagesModel['findThreadResponse']> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     const initiatorProfile = alias(userProfiles, 'initiator_profile')
     const authorProfile = alias(userProfiles, 'author_profile')
 
@@ -147,16 +166,15 @@ export abstract class MessagesService {
       .where(and(eq(messageThreads.threadId, threadId), isNull(messageThreads.deletedAt)))
       .limit(1)
 
-    if (!threadRow) return null
+    if (!threadRow) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const myRole: Role | null =
       threadRow.initiatorId === profileId ? 'initiator' :
       threadRow.authorId === profileId    ? 'post_owner' :
       null
 
-    if (!myRole) return null
+    if (!myRole) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
-    // Mark unread messages (sent by the other party) as read
     await db
       .update(messages)
       .set({ readAt: new Date() })
@@ -201,35 +219,75 @@ export abstract class MessagesService {
     }
   }
 
+  /**
+   * Create a new thread and send the first message.
+   * @throws ForbiddenError if accountId does not own body.profileId, or if the profile owns the post
+   * @throws NotFoundError if body.postId does not exist (thrown by PostsService.findById)
+   * @throws ConflictError if a thread for this post already exists for this profile
+   */
   static async createThread(
-    postId: string,
-    initiatorProfileId: string,
-    content: string,
+    body: MessagesModel['createThreadBody'],
+    accountId: string,
   ): Promise<{ threadId: string }> {
-    return db.transaction(async (tx) => {
-      const [thread] = await tx
-        .insert(messageThreads)
-        .values({ postId, initiatorId: initiatorProfileId })
-        .returning({ threadId: messageThreads.threadId })
+    const owned = await ProfilesService.isProfileOwnedByAccount(body.profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
-      await tx.insert(messages).values({
-        threadId: thread!.threadId,
-        senderId: initiatorProfileId,
-        content,
+    const post = await PostsService.findById(body.postId)
+    if (post.authorId === body.profileId) {
+      throw new ForbiddenError('Cannot start a thread on your own post')
+    }
+
+    try {
+      return await db.transaction(async (tx) => {
+        const [thread] = await tx
+          .insert(messageThreads)
+          .values({ postId: body.postId, initiatorId: body.profileId })
+          .returning({ threadId: messageThreads.threadId })
+
+        await tx.insert(messages).values({
+          threadId: thread!.threadId,
+          senderId: body.profileId,
+          content:  body.content,
+        })
+
+        return { threadId: thread!.threadId }
       })
+    } catch (err: unknown) {
+      const pgCode =
+        (err && typeof err === 'object' && 'code' in err
+          ? (err as { code: string }).code
+          : undefined) ??
+        (err && typeof err === 'object' && 'cause' in err &&
+         err.cause && typeof err.cause === 'object' && 'code' in err.cause
+          ? (err.cause as { code: string }).code
+          : undefined)
 
-      return { threadId: thread!.threadId }
-    })
+      if (pgCode === '23505') throw new ConflictError('A thread for this post already exists')
+      throw err
+    }
   }
 
+  /**
+   * Send a message to an existing thread.
+   * @throws ForbiddenError if accountId does not own body.profileId, or if the profile is not a participant, or if the post is deleted
+   */
   static async addMessage(
     threadId: string,
-    senderProfileId: string,
-    content: string,
+    body: MessagesModel['sendMessageBody'],
+    accountId: string,
   ): Promise<MessagesModel['sendMessageResponse']> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(body.profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const roleResult = await this.getRole(threadId, body.profileId)
+    if (!roleResult) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    if (roleResult.postDeleted) {
+      throw new ForbiddenError('This thread is archived because the post has been deleted')
+    }
+
     const [inserted] = await db
       .insert(messages)
-      .values({ threadId, senderId: senderProfileId, content })
+      .values({ threadId, senderId: body.profileId, content: body.content })
       .returning()
 
     return {

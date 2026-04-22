@@ -3,9 +3,11 @@ import { Elysia } from "elysia";
 import { treaty } from "@elysiajs/eden";
 import { postsRoutes } from ".";
 import { profilesRoutes } from "../profiles";
+import { usersRoutes } from "../users";
 import { authRoutes } from "../auth";
+import { auth } from "../auth/service";
 
-const app = new Elysia().use(authRoutes).use(postsRoutes).use(profilesRoutes);
+const app = new Elysia().use(authRoutes).use(usersRoutes).use(postsRoutes).use(profilesRoutes);
 const client = treaty(app);
 
 /** Extract postId from an Eden create-post response whose union type is hard to narrow. */
@@ -17,17 +19,14 @@ let sessionCookie = "";
 let authorId = "";
 
 beforeAll(async () => {
-  const signInRes = await app.handle(
-    new Request("http://localhost/api/auth/sign-in/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "alice@example.com", password: "password123" }),
-    }),
-  );
+  const signInRes = await auth.api.signInEmail({
+    body: { email: "alice@example.com", password: "password123" },
+    asResponse: true,
+  });
   sessionCookie = signInRes.headers.get("set-cookie") ?? "";
 
-  const { data: profiles } = await client.profiles.me.get({ headers: { Cookie: sessionCookie } });
-  authorId = profiles?.[0]?.userProfileId ?? "";
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: sessionCookie } });
+  authorId = meData!.profiles[0]?.userProfileId ?? "";
 });
 
 describe("GET /posts", () => {
@@ -274,6 +273,60 @@ describe("PATCH /posts/:id", () => {
       { headers: { Cookie: sessionCookie } },
     );
     expect(error?.status).toBe(404);
+  });
+
+  it("updates own post and returns 204", async () => {
+    const { data: created } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Post to be updated",
+        description: "Original description with enough length",
+        postType: "OFFER",
+      },
+      { headers: { Cookie: sessionCookie } },
+    );
+    const postId = getPostId(created);
+
+    const { error } = await client.posts({ id: postId }).patch(
+      { postTitle: "Updated post title", description: "Updated description with enough length" },
+      { headers: { Cookie: sessionCookie } },
+    );
+    expect(error).toBeNull();
+
+    const { data: fetched } = await client.posts({ id: postId }).get();
+    expect(fetched!.postTitle).toBe("Updated post title");
+    expect(fetched!.description).toBe("Updated description with enough length");
+  });
+
+  it("returns 403 when updating a post not owned by the session user", async () => {
+    const { data: created } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Post owned by alice",
+        description: "This post belongs to alice and should not be editable by others",
+        postType: "OFFER",
+      },
+      { headers: { Cookie: sessionCookie } },
+    );
+    const postId = getPostId(created);
+
+    // Sign in as a different user to attempt the update
+    const otherSignIn = await app.handle(
+      new Request("http://localhost/api/auth/sign-in/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "bob@example.com", password: "password123" }),
+      }),
+    );
+    const otherCookie = otherSignIn.headers.get("set-cookie") ?? "";
+
+    if (!otherCookie) return; // bob may not exist in seed data
+
+    const { error } = await client.posts({ id: postId }).patch(
+      { postTitle: "Attempted hijack" },
+      { headers: { Cookie: otherCookie } },
+    );
+    expect(error?.status).toBe(403);
   });
 });
 

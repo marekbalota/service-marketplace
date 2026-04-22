@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions } from '#/contexts/ActiveProfileContext'
+import { profilesQueryOptions } from '#/lib/profileQueries'
 import { buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import {

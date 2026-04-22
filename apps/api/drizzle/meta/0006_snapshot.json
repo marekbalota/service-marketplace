@@ -1,5 +1,5 @@
 {
-  "id": "edbdf0f1-e493-46c1-9344-8e9b792ccffb",
+  "id": "f1320176-4760-461a-a9eb-a88da1e30451",
   "prevId": "d81a36b8-ee9d-4796-9d0f-0345006c77db",
   "version": "7",
   "dialect": "postgresql",
@@ -933,12 +933,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -1019,6 +1013,20 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
@@ -1174,12 +1182,6 @@
           "notNull": true,
           "default": "now()"
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp",
@@ -1259,6 +1261,25 @@
         "role_id": {
           "name": "role_id",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_banned": {
+          "name": "is_banned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ban_reason": {
+          "name": "ban_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ban_expiration": {
+          "name": "ban_expiration",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         }

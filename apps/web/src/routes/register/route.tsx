@@ -1,9 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { RegisterForm } from "./-components/RegisterForm";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
+  beforeLoad: async ({ context : { user } }) => {
+    if (user) {
+      throw redirect({ to: "/" });
+    }
+  },
 });
 
 function RegisterPage() {

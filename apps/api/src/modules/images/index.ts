@@ -1,9 +1,8 @@
 import { Elysia, t } from 'elysia'
 import { ImagesModel } from './model'
 import { ImagesService } from './service'
-import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
-import { ErrorMessages, errorResponse } from '../../errors'
+import { ForbiddenError, NotFoundError, ErrorMessages, AuthErrorMessages, unauthorizedResponse, forbiddenResponse, notFoundResponse } from '../../lib/errors'
 
 export const imagesRoutes = new Elysia({ prefix: '/images' })
   .use(authRoutes)
@@ -11,20 +10,12 @@ export const imagesRoutes = new Elysia({ prefix: '/images' })
     '/:id',
     async ({ params, user, set }) => {
       const image = await ImagesService.findById(params.id)
-      if (!image) {
-        set.status = 404
-        return { message: ErrorMessages.imageNotFound }
-      }
+      if (!image) throw new NotFoundError(ErrorMessages.imageNotFound)
+
       const isOwner = await ImagesService.isImageOwnedByAccount(params.id, user.id)
-      if (!isOwner) {
-        set.status = 403
-        return { message: AuthModel.messages.forbidden }
-      }
-      const deleted = await ImagesService.delete(params.id)
-      if (!deleted) {
-        set.status = 404
-        return { message: ErrorMessages.imageNotFound }
-      }
+      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+      await ImagesService.delete(params.id)
       set.status = 204
     },
     {
@@ -32,9 +23,9 @@ export const imagesRoutes = new Elysia({ prefix: '/images' })
       params:   ImagesModel.deleteParams,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        403: errorResponse,
-        404: errorResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Delete an image', operationId: 'deleteImage', tags: ['Images'] },
     },

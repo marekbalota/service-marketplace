@@ -33,7 +33,7 @@ vi.mock('#/api', () => ({
   },
 }))
 
-vi.mock('#/contexts/ActiveProfileContext', () => ({
+vi.mock('#/lib/profileQueries', () => ({
   profilesQueryOptions: { queryKey: ['profiles', 'me'] },
 }))
 

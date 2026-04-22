@@ -2,6 +2,7 @@ import { db } from '../../db'
 import { userProfiles, users, roles } from '../../db/schema'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
+import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
@@ -23,11 +24,12 @@ export abstract class ProfilesService {
       .select(profileSelect)
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .innerJoin(roles, eq(users.roleId, roles.roleId))
+      .leftJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
-    return row ?? null
+    if (!row) throw new NotFoundError(ErrorMessages.profileNotFound)
+    return row
   }
 
   static async findByAccountId(accountId: string) {
@@ -35,7 +37,7 @@ export abstract class ProfilesService {
       .select(profileSelect)
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .innerJoin(roles, eq(users.roleId, roles.roleId))
+      .leftJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
   }
 
@@ -49,6 +51,14 @@ export abstract class ProfilesService {
     return row !== undefined
   }
 
+  static async getProfileIdsByAccount(accountId: string): Promise<string[]> {
+    const rows = await db
+      .select({ userProfileId: userProfiles.userProfileId })
+      .from(userProfiles)
+      .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
+    return rows.map(p => p.userProfileId)
+  }
+
   static async update(id: string, body: ProfilesModel['updateBody']) {
     const [updated] = await db
       .update(userProfiles)
@@ -56,7 +66,14 @@ export abstract class ProfilesService {
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .returning({ userProfileId: userProfiles.userProfileId })
 
-    return updated ?? null
+    if (!updated) throw new NotFoundError(ErrorMessages.profileNotFound)
+    return ProfilesService.findById(updated.userProfileId)
+  }
+
+  static async updateWithOwnershipCheck(accountId: string, id: string, body: ProfilesModel['updateBody']) {
+    const isOwner = await this.isProfileOwnedByAccount(id, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.update(id, body)
   }
 
   static async create(body: ProfilesModel['createBody'] & { accountId: string }) {
@@ -73,7 +90,6 @@ export abstract class ProfilesService {
       .returning({ userProfileId: userProfiles.userProfileId })
 
     if (!inserted) return null
-
     return ProfilesService.findById(inserted.userProfileId)
   }
 

@@ -14,6 +14,18 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
 }))
 
+const mockQueryClientClear = vi.hoisted(() => vi.fn())
+
+vi.mock('#/router', () => ({
+  queryClient: { clear: mockQueryClientClear },
+}))
+
+const mockHandleBanError = vi.hoisted(() => vi.fn().mockReturnValue(false))
+
+vi.mock('#/lib/ban-handler', () => ({
+  handleBanError: mockHandleBanError,
+}))
+
 describe("LoginForm", () => {
   it("renders email and password inputs and a submit button", () => {
     render(<LoginForm />)
@@ -69,5 +81,43 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
     })
+  })
+
+  it('calls handleBanError when sign-in onError fires with a banned error', async () => {
+    const { authClient } = await import('#/auth')
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: 'Account banned' } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: 'Account banned' } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'banned@example.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockHandleBanError).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 403, message: 'Account banned' })
+      )
+    })
+  })
+
+  it('does not show a form error when handleBanError returns true', async () => {
+    mockHandleBanError.mockReturnValueOnce(true)
+    const { authClient } = await import('#/auth')
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: 'Account banned' } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: 'Account banned' } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'banned@example.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockHandleBanError).toHaveBeenCalled()
+    })
+    expect(screen.queryByText(/account banned/i)).not.toBeInTheDocument()
   })
 })

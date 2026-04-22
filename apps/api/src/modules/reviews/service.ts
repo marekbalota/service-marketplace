@@ -1,13 +1,15 @@
 import { db } from '../../db'
-import { reviews, userProfiles, posts } from '../../db/schema'
-import { eq, and, isNull, sql } from 'drizzle-orm'
+import { reviews, posts } from '../../db/schema'
+import { eq, and, isNull } from 'drizzle-orm'
 import type { ReviewsModel } from './model'
+import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { ProfilesService } from '../profiles/service'
 
 export abstract class ReviewsService {
   /**
    * Create a new review for a post.
-   * @throws Error with code 'ALREADY_REVIEWED' if user already has an active review for this post
-   * @throws Error with code 'POST_NOT_FOUND' if post doesn't exist or is deleted
+   * @throws NotFoundError if post doesn't exist or is deleted
+   * @throws ConflictError if reviewer already has an active review for this post
    */
   static async create(
     postId: string,
@@ -15,20 +17,14 @@ export abstract class ReviewsService {
     body: ReviewsModel['createBody'],
   ): Promise<ReviewsModel['createResponse']> {
     return db.transaction(async (tx) => {
-      // Check if post exists and is not deleted
       const [post] = await tx
         .select({ postId: posts.postId })
         .from(posts)
         .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
         .limit(1)
 
-      if (!post) {
-        const error = new Error('Post not found')
-        ;(error as Error & { code: string }).code = 'POST_NOT_FOUND'
-        throw error
-      }
+      if (!post) throw new NotFoundError(ErrorMessages.postNotFound)
 
-      // Check if user already has an active review for this post
       const [existingReview] = await tx
         .select({ reviewId: reviews.reviewId })
         .from(reviews)
@@ -41,11 +37,7 @@ export abstract class ReviewsService {
         )
         .limit(1)
 
-      if (existingReview) {
-        const error = new Error('User already has an active review for this post')
-        ;(error as Error & { code: string }).code = 'ALREADY_REVIEWED'
-        throw error
-      }
+      if (existingReview) throw new ConflictError(ErrorMessages.alreadyReviewed)
 
       const [review] = await tx
         .insert(reviews)
@@ -63,35 +55,56 @@ export abstract class ReviewsService {
 
   /**
    * Soft delete a review.
-   * @returns true if deleted, false if not found or already deleted
-   * @throws Error with code 'FORBIDDEN' if review doesn't belong to user
+   * @throws NotFoundError if review doesn't exist or is already deleted
+   * @throws ForbiddenError if review doesn't belong to the reviewer
    */
-  static async delete(reviewId: string, reviewerId: string): Promise<boolean> {
-    return db.transaction(async (tx) => {
+  static async delete(reviewId: string, reviewerId: string): Promise<void> {
+    await db.transaction(async (tx) => {
       const [review] = await tx
         .select({ reviewerId: reviews.reviewerId, deletedAt: reviews.deletedAt })
         .from(reviews)
         .where(eq(reviews.reviewId, reviewId))
         .limit(1)
 
-      if (!review) return false
+      if (!review || review.deletedAt !== null) throw new NotFoundError(ErrorMessages.reviewNotFound)
+      if (review.reviewerId !== reviewerId) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
-      if (review.reviewerId !== reviewerId) {
-        const error = new Error('Review does not belong to user')
-        ;(error as Error & { code: string }).code = 'FORBIDDEN'
-        throw error
-      }
-
-      if (review.deletedAt !== null) return false
-
-      const [updated] = await tx
+      await tx
         .update(reviews)
         .set({ deletedAt: new Date() })
         .where(eq(reviews.reviewId, reviewId))
-        .returning({ reviewId: reviews.reviewId })
-
-      return !!updated
     })
+  }
+
+  /**
+   * Create a review on behalf of the specified profile.
+   * @throws ForbiddenError if profile doesn't belong to the account
+   * @throws NotFoundError if post doesn't exist or is deleted
+   * @throws ConflictError if the profile already has an active review for this post
+   */
+  static async createWithOwnerShipCheck(
+    accountId: string,
+    postId: string,
+    body: ReviewsModel['createBody'],
+  ): Promise<ReviewsModel['createResponse']> {
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(body.profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.create(postId, body.profileId, body)
+  }
+
+  /**
+   * Delete a review on behalf of the account.
+   * @throws ForbiddenError if review doesn't belong to any profile owned by the account
+   * @throws NotFoundError if review doesn't exist or is already deleted
+   */
+  static async deleteForAccount(accountId: string, reviewId: string): Promise<void> {
+    const review = await this.findById(reviewId)
+    if (!review || review.deletedAt !== null) throw new NotFoundError(ErrorMessages.reviewNotFound)
+
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(review.reviewerId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    await this.delete(reviewId, review.reviewerId)
   }
 
   /**

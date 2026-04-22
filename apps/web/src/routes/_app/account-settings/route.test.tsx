@@ -34,7 +34,7 @@ vi.mock('#/auth', () => ({
   },
 }))
 
-vi.mock('#/contexts/ActiveProfileContext', () => ({
+vi.mock('#/lib/profileQueries', () => ({
   profilesQueryOptions: { queryKey: ['profiles', 'me'] },
   useActiveProfile: mockUseActiveProfile,
 }))

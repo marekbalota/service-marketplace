@@ -11,7 +11,7 @@ const profileItem = t.Object({
   createdAt:     t.Date(),
   updatedAt:     t.Nullable(t.Date()),
   accountName:   t.String(),
-  roleName:      t.String(),
+  roleName:      t.Nullable(t.String()),
 })
 
 export const ProfilesModel = {
@@ -25,6 +25,7 @@ export const ProfilesModel = {
     phoneNumber: t.Optional(t.Union([t.String(), t.Null()])),
     fax:         t.Optional(t.Union([t.String(), t.Null()])),
   }),
+  updateResponse:     profileItem,
   profilePostsParams: t.Object({ id: t.String() }),
   meResponse:         t.Array(profileItem),
   createBody: t.Object({

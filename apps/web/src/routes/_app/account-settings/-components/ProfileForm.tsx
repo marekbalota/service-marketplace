@@ -1,20 +1,12 @@
 import { useRef } from 'react'
-import { useForm, type SubmitHandler } from 'react-hook-form'
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, X } from 'lucide-react'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { Button } from '#/components/ui/button'
-import { Label } from '#/components/ui/label'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '#/components/ui/form'
+import { Field, FieldGroup, FieldLabel, FieldError } from '#/components/ui/field'
 
 export const profileSchema = z.object({
   name:        z.string().min(1, 'Name is required'),
@@ -49,7 +41,7 @@ export function ImageInputSection({
 
   return (
     <div className="space-y-2">
-      <Label>Images</Label>
+      <FieldLabel>Images</FieldLabel>
       <input
         ref={inputRef}
         type="file"
@@ -110,93 +102,103 @@ export function ProfileForm({
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues,
-    mode: 'onChange',
+    mode: 'onTouched',
   })
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <FieldGroup>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
+          <Controller
             control={form.control}
             name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel >Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., John Smith" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Name *</FieldLabel>
+                <Input
+                  placeholder="e.g., John Smith"
+                  aria-invalid={fieldState.invalid}
+                  {...field}
+                />
+                <FieldError errors={[fieldState.error]} />
+              </Field>
             )}
           />
-          <FormField
+          <Controller
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel >Email *</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Email *</FieldLabel>
+                <Input
+                  type="email"
+                  placeholder="email@example.com"
+                  aria-invalid={fieldState.invalid}
+                  {...field}
+                />
+                <FieldError errors={[fieldState.error]} />
+              </Field>
             )}
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
+          <Controller
             control={form.control}
             name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel >Phone Number</FormLabel>
-                <FormControl>
-                  <Input type="tel" placeholder="+1 (555) 123-4567" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="fax"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel >Fax</FormLabel>
-                <FormControl>
-                  <Input type="tel" placeholder="+1 (555) 123-4568" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="bio"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel >Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell others about yourself or your business..."
-                  rows={3}
-                  className="resize-none break-words [field-sizing:fixed]"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Phone Number</FieldLabel>
+                <Input
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  aria-invalid={fieldState.invalid}
                   {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+                <FieldError errors={[fieldState.error]} />
+              </Field>
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="fax"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Fax</FieldLabel>
+                <Input
+                  type="tel"
+                  placeholder="+1 (555) 123-4568"
+                  aria-invalid={fieldState.invalid}
+                  {...field}
+                />
+                <FieldError errors={[fieldState.error]} />
+              </Field>
+            )}
+          />
+        </div>
+        <Controller
+          control={form.control}
+          name="bio"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Bio</FieldLabel>
+              <Textarea
+                placeholder="Tell others about yourself or your business..."
+                rows={3}
+                className="resize-none break-words [field-sizing:fixed]"
+                aria-invalid={fieldState.invalid}
+                {...field}
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
           )}
         />
-        {children}
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" className="flex-1" disabled={isPending}>
-            {isPending ? 'Saving…' : submitLabel}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      </FieldGroup>
+      {children}
+      <div className="flex gap-3 pt-2">
+        <Button type="submit" className="flex-1" disabled={isPending}>
+          {isPending ? 'Saving…' : submitLabel}
+        </Button>
+      </div>
+    </form>
   )
 }

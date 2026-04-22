@@ -1,18 +1,27 @@
+// Export admin model types for frontend consumption
+export type { AdminRolesModel } from './modules/admin/roles/model';
+export type { AdminUsersModel } from './modules/admin/users/model';
+
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import { authRoutes } from "./modules/auth";
 import { swagger } from "@elysiajs/swagger";
-import { logger } from "./logger";
+import { authRoutes } from "./modules/auth";
+import { logger } from "./lib/logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
 import { imagesRoutes } from "./modules/images";
-import { initBucket } from "./storage";
+import { usersRoutes } from "./modules/users";
+import { adminRolesRoutes } from "./modules/admin/roles";
+import { adminUsersRoutes } from "./modules/admin/users";
+import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
-import { reviewsRoutes, reviewsDeleteRoutes } from "./modules/reviews";
+import { reviewsRoutes } from "./modules/reviews";
+import { initBucket } from "./storage";
 
 export const app = new Elysia()
+  .use(errorsPlugin)
   .use(cors({
     origin: "http://localhost:3000",
     credentials: true,
@@ -33,6 +42,7 @@ export const app = new Elysia()
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
         { name: "Images",     description: "Profile images" },
+        { name: "Admin",      description: "Admin operations" },
         { name: "Favourites", description: "User's favourite posts" },
         { name: "Messages",   description: "Message threads and chat messages" },
         { name: "Reviews",    description: "Post reviews and ratings" },
@@ -42,12 +52,14 @@ export const app = new Elysia()
   .use(logger)
   .get("/", () => "Marketplace API")
   .use(authRoutes)
+  .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
-  .use(reviewsDeleteRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(imagesRoutes)
+  .use(adminRolesRoutes)
+  .use(adminUsersRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
   .listen(3001);
