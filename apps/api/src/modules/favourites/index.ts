@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia'
 import { FavouritesModel } from './model'
 import { FavouritesService } from './service'
 import { authRoutes } from '../auth'
-import { notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import { notFoundResponse, unauthorizedResponse, conflictResponse } from '../../lib/errors'
 
 export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
@@ -44,6 +44,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
         201: FavouritesModel.addResponse,
         ...unauthorizedResponse,
         ...notFoundResponse,
+        ...conflictResponse,
       },
       detail: { summary: 'Add post to favourites', operationId: 'addFavourite', tags: ['Favourites'] },
     },

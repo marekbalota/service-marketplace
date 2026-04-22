@@ -8,6 +8,7 @@ export const ErrorMessages = {
   cannotDeleteLastProfile: 'Cannot delete your only profile. Create a new profile first.',
   imageNotFound:           'Image not found',
   favouriteNotFound:       'Favourite not found',
+  alreadyFavourited:       'Post is already favourited',
   reviewNotFound:          'Review not found',
   alreadyReviewed:         'You have already reviewed this post',
   userNotFound:            'User not found',

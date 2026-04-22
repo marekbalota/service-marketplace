@@ -2,7 +2,7 @@ import { db } from '../../db'
 import { favourites, posts, userProfiles, postCategories, categories, locations } from '../../db/schema'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import type { FavouritesModel } from './model'
-import { NotFoundError, ErrorMessages } from '../../lib/errors'
+import { NotFoundError, ConflictError, ErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 
 export abstract class FavouritesService {
@@ -77,16 +77,7 @@ export abstract class FavouritesService {
 
     if (existing) {
       if (existing.deletedAt === null) {
-        const [row] = await db
-          .select({
-            userProfileId: favourites.userProfileId,
-            postId:        favourites.postId,
-            createdAt:     favourites.createdAt,
-          })
-          .from(favourites)
-          .where(and(eq(favourites.userProfileId, userProfileId), eq(favourites.postId, postId)))
-          .limit(1)
-        return row!
+        throw new ConflictError(ErrorMessages.alreadyFavourited)
       }
 
       const [restored] = await db
