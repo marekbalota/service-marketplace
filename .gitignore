@@ -65,8 +65,3 @@ docs/superpowers/
 
 # Git worktrees
 .worktrees/
-
-# Superpowers
-docs/superpowers
-# Git worktrees
-.worktrees/

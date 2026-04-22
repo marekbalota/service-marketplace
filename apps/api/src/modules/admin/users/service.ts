@@ -1,6 +1,6 @@
 import { db } from '../../../db';
-import { users, roles, sessions } from '../../../db/schema';
-import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm';
+import { users, roles, sessions, userProfiles } from '../../../db/schema';
+import { eq, and, isNull, ilike, or, desc, count } from 'drizzle-orm';
 import type { AdminUsersModel } from './model';
 import { RBACService } from '../../../lib/rbac/rbac-helper';
 import { ForbiddenError, NotFoundError, AuthErrorMessages, ErrorMessages } from '../../../lib/errors';
@@ -205,5 +205,53 @@ export abstract class AdminUsersService {
       .returning({ userId: users.id });
 
     return user ? true : null;
+  }
+
+  static async findById(userId: string) {
+    const [row] = await db
+      .select({
+        userId: users.id,
+        name: users.name,
+        email: users.email,
+        roleId: users.roleId,
+        roleName: roles.name,
+        rolePriority: roles.priority,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        banExpiration: users.banExpiration,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.roleId))
+      .where(eq(users.id, userId));
+
+    if (!row) throw new NotFoundError(ErrorMessages.userNotFound);
+
+    const { roleId, roleName, rolePriority, ...rest } = row;
+    return {
+      ...rest,
+      role: roleId && roleName && rolePriority !== null
+        ? { roleId, name: roleName, priority: rolePriority }
+        : null,
+    };
+  }
+
+  static async findProfiles(userId: string) {
+    return db
+      .select({
+        userProfileId: userProfiles.userProfileId,
+        accountId: userProfiles.accountId,
+        name: userProfiles.name,
+        email: userProfiles.email,
+        bio: userProfiles.bio,
+        phoneNumber: userProfiles.phoneNumber,
+        fax: userProfiles.fax,
+        createdAt: userProfiles.createdAt,
+      })
+      .from(userProfiles)
+      .where(and(
+        eq(userProfiles.accountId, userId),
+        isNull(userProfiles.deletedAt),
+      ));
   }
 }

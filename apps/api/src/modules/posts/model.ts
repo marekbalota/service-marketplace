@@ -59,12 +59,11 @@ const postWithLocation = t.Object({
   })),
 })
 
-const paginatedResponse = (itemSchema: ReturnType<typeof t.Array>) =>
-  t.Object({
-    items:      itemSchema,
-    total:      t.Number(),
-    totalPages: t.Number(),
-  })
+const paginatedResponse = t.Object({
+  items:      t.Array(postWithLocation),
+  total:      t.Number(),
+  totalPages: t.Number(),
+})
 
 export const PostsModel = {
   findAllQuery: t.Object({
@@ -77,7 +76,7 @@ export const PostsModel = {
     offset:     t.Optional(t.Numeric()),
     size:       t.Optional(t.Numeric()),
   }),
-  findAllResponse: paginatedResponse(t.Array(postWithLocation)),
+  findAllResponse: paginatedResponse,
   findByIdParams: t.Object({ id: t.String() }),
   findByIdResponse: t.Object({
     postId:        t.String(),
@@ -139,7 +138,7 @@ export const PostsModel = {
     offset: t.Optional(t.Numeric()),
     size:   t.Optional(t.Numeric()),
   }),
-  findByProfileResponse: paginatedResponse(t.Array(postWithLocation)),
+  findByProfileResponse: paginatedResponse,
 } as const
 
 export type PostsModel = {

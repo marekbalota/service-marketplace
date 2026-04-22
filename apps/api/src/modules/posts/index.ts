@@ -48,8 +48,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .patch(
     "/:id",
-    async ({ params, body, user, permissions, set }) => {
-      const updated = await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
+    async ({ params, body, user, set }) => {
+      const updated = await PostsService.updateWithPermissionCheck(user.id, params.id, body);
       set.status = 200;
       return updated;
     },
@@ -68,8 +68,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .delete(
     "/:id",
-    async ({ params, user, permissions, set }) => {
-      await PostsService.deleteWithPermissionCheck(user.id, permissions, params.id);
+    async ({ params, user, set }) => {
+      await PostsService.deleteWithPermissionCheck(user.id, params.id);
       set.status = 204;
     },
     {

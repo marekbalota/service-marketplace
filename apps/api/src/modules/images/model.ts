@@ -13,14 +13,15 @@ const imageItem = t.Object({
 export const ImagesModel = {
   profileImagesParams:   t.Object({ id: t.String() }),
   profileImagesResponse: t.Array(imageItem),
-  createBody:            t.Object({
+  createBody: t.Object({
     file: t.File({
       maxSize: '5m',
       type:    ALLOWED_TYPES,
     }),
+    profileId: t.String(),
   }),
-  createResponse:        imageItem,
-  deleteParams:          t.Object({ id: t.String() }),
+  createResponse: imageItem,
+  deleteParams:   t.Object({ id: t.String() }),
 } as const
 
 export type ImagesModel = {

@@ -6,6 +6,7 @@ import { postsRoutes } from '../posts'
 import { profilesRoutes } from '../profiles'
 import { usersRoutes } from '../users'
 import { authRoutes } from '../auth'
+import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
 import { messageThreads, messages } from '../../db/schema'
@@ -29,32 +30,27 @@ let bobProfile   = ''
 let alicePostId  = ''
 
 beforeAll(async () => {
-  const aliceRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'alice@example.com', password: 'password123' }),
-    }),
-  )
+  const aliceRes = await auth.api.signInEmail({
+    body: { email: 'alice@example.com', password: 'password123' },
+    asResponse: true,
+  })
   aliceCookie = aliceRes.headers.get('set-cookie') ?? ''
 
-  const bobRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'bob@example.com', password: 'password123' }),
-    }),
-  )
+  const bobRes = await auth.api.signInEmail({
+    body: { email: 'bob@example.com', password: 'password123' },
+    asResponse: true,
+  })
   bobCookie = bobRes.headers.get('set-cookie') ?? ''
 
-  const aliceMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: aliceCookie } }))).json() as { profiles: { userProfileId: string }[] }
-  aliceProfile = aliceMeData.profiles[0]?.userProfileId ?? ''
+  const { data: aliceMeData } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+  aliceProfile = aliceMeData!.profiles[0]?.userProfileId ?? ''
 
-  const bobMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: bobCookie } }))).json() as { profiles: { userProfileId: string }[] }
-  bobProfile = bobMeData.profiles[0]?.userProfileId ?? ''
+  const { data: bobMeData } = await client.users.me.get({ headers: { Cookie: bobCookie } })
+  bobProfile = bobMeData!.profiles[0]?.userProfileId ?? ''
 
   const { data: alicePosts } = await client.profiles({ id: aliceProfile }).posts.get({ headers: { Cookie: aliceCookie } })
-  alicePostId = alicePosts?.items?.[0]?.postId ?? ''
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  alicePostId = (alicePosts?.items?.[0] as any)?.postId ?? ''
 
   // Clean up threads from previous test runs so the tests are idempotent
   if (bobProfile) {
@@ -199,16 +195,13 @@ describe('GET /threads/:threadId', () => {
   })
 
   it('returns 403 for a non-participant', async () => {
-    const carolRes = await app.handle(
-      new Request('http://localhost/api/auth/sign-in/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'carol@example.com', password: 'password123' }),
-      }),
-    )
+    const carolRes = await auth.api.signInEmail({
+      body: { email: 'carol@example.com', password: 'password123' },
+      asResponse: true,
+    })
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
-    const carolMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: carolCookie } }))).json() as { profiles: { userProfileId: string }[] }
-    const carolProfile = carolMeData.profiles[0]?.userProfileId ?? ''
+    const { data: carolMeData } = await client.users.me.get({ headers: { Cookie: carolCookie } })
+    const carolProfile = carolMeData!.profiles[0]?.userProfileId ?? ''
 
     const { error } = await client.threads({ threadId }).get({
       query:   { profileId: carolProfile },
@@ -272,16 +265,13 @@ describe('POST /threads/:threadId/messages', () => {
   })
 
   it('returns 403 for a non-participant', async () => {
-    const carolRes = await app.handle(
-      new Request('http://localhost/api/auth/sign-in/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'carol@example.com', password: 'password123' }),
-      }),
-    )
+    const carolRes = await auth.api.signInEmail({
+      body: { email: 'carol@example.com', password: 'password123' },
+      asResponse: true,
+    })
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
-    const carolMeData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: carolCookie } }))).json() as { profiles: { userProfileId: string }[] }
-    const carolProfile = carolMeData.profiles[0]?.userProfileId ?? ''
+    const { data: carolMeData } = await client.users.me.get({ headers: { Cookie: carolCookie } })
+    const carolProfile = carolMeData!.profiles[0]?.userProfileId ?? ''
 
     const { error } = await client.threads({ threadId }).messages.post(
       { profileId: carolProfile, content: 'Intruder!' },

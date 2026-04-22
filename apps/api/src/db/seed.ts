@@ -155,40 +155,53 @@ async function seed() {
 
   // Create roles with priorities
   const userRole = await upsertRole("User", "Regular user with basic permissions", 0, true);
+  console.log(`  Created role: User (default: ${userRole.isDefault})`);
   const adminRole = await upsertRole("Admin", "Administrator with full access", 1, false);
+  console.log(`  Created role: Admin`);
   const superAdminRole = await upsertRole("SuperAdmin", "Super administrator with access to all features", 2, false);
+  console.log(`  Created role: SuperAdmin`);
 
+  console.log("\n  Creating user accounts...");
   const { profile: aliceProfile } = await upsertUser("Alice Johnson", "alice@example.com");
+  console.log(`  Created: Alice Johnson (alice@example.com) - profileId: ${aliceProfile.userProfileId}`);
   const { profile: bobProfile }   = await upsertUser("Bob Smith",     "bob@example.com");
+  console.log(`  Created: Bob Smith (bob@example.com) - profileId: ${bobProfile.userProfileId}`);
   const { profile: carolProfile } = await upsertUser("Carol White",   "carol@example.com");
+  console.log(`  Created: Carol White (carol@example.com) - profileId: ${carolProfile.userProfileId}`);
   const { profile: davidProfile } = await upsertUser("David Brown",   "david@example.com");
+  console.log(`  Created: David Brown (david@example.com) - profileId: ${davidProfile.userProfileId}`);
   const { profile: elenaProfile } = await upsertUser("Elena Novak",   "elena@example.com");
+  console.log(`  Created: Elena Novak (elena@example.com) - profileId: ${elenaProfile.userProfileId}`);
   const { profile: frankProfile } = await upsertUser("Frank Müller",  "frank@example.com");
+  console.log(`  Created: Frank Müller (frank@example.com) - profileId: ${frankProfile.userProfileId}`);
 
   // Create admin SuperAdmin account
   console.log("\n  Creating admin accounts...");
   await upsertAdminUser("Super Admin", "admin@example.com", "admin123", "SuperAdmin");
+  console.log(`  Created: Super Admin (admin@example.com) - password: admin123`);
 
+  console.log("\n  Creating categories...");
   const tutoring = await upsertCategory("Tutoring", "Academic tutoring and coaching");
   const plumbing = await upsertCategory("Plumbing", "Plumbing installation and repairs");
   const design = await upsertCategory("Design", "Graphic, web, and UX design");
   const homeRepair = await upsertCategory("Home Repair", "General home maintenance and repairs");
   const cleaning = await upsertCategory("Cleaning", "Home and office cleaning services");
   const techSupport = await upsertCategory("Tech Support", "IT help and computer repairs");
-  const marketing = await upsertCategory("Marketing & Business", "Marketing, branding, and business support");
-  const writing = await upsertCategory("Writing & Translation", "Copywriting, content writing, and translation services");
-  const admin = await upsertCategory("Admin & Virtual Assistance", "Administrative help and virtual assistant services");
-  const transport = await upsertCategory("Transport & Delivery", "Delivery, moving, and transportation services");
-  const construction = await upsertCategory("Construction & Trades", "Building, carpentry, and skilled trades");
-  const automotive = await upsertCategory("Automotive", "Car repair and maintenance services");
-  const personal = await upsertCategory("Personal Services", "Personal assistance and everyday services");
-  const beauty = await upsertCategory("Beauty & Wellness", "Hair, makeup, fitness, and wellness services");
-  const events = await upsertCategory("Events & Entertainment", "Event planning, music, and entertainment");
-  const photoVideo = await upsertCategory("Photography & Video", "Photography, videography, and editing");
-  const pet = await upsertCategory("Pet Services", "Pet care, sitting, and training");
-  const childcare = await upsertCategory("Childcare & Elderly Care", "Babysitting and elderly care services");
-  const legalFinance = await upsertCategory("Legal & Finance", "Legal advice, accounting, and financial services");
-  const other = await upsertCategory("Others", "Services that do not fit into other categories");
+  await upsertCategory("Marketing & Business", "Marketing, branding, and business support");
+  await upsertCategory("Writing & Translation", "Copywriting, content writing, and translation services");
+  await upsertCategory("Admin & Virtual Assistance", "Administrative help and virtual assistant services");
+  await upsertCategory("Transport & Delivery", "Delivery, moving, and transportation services");
+  await upsertCategory("Construction & Trades", "Building, carpentry, and skilled trades");
+  await upsertCategory("Automotive", "Car repair and maintenance services");
+  await upsertCategory("Personal Services", "Personal assistance and everyday services");
+  await upsertCategory("Beauty & Wellness", "Hair, makeup, fitness, and wellness services");
+  await upsertCategory("Events & Entertainment", "Event planning, music, and entertainment");
+  await upsertCategory("Photography & Video", "Photography, videography, and editing");
+  await upsertCategory("Pet Services", "Pet care, sitting, and training");
+  await upsertCategory("Childcare & Elderly Care", "Babysitting and elderly care services");
+  await upsertCategory("Legal & Finance", "Legal advice, accounting, and financial services");
+  await upsertCategory("Others", "Services that do not fit into other categories");
+  console.log(`  Created 20 categories total`);
 
   const postsData: {
     authorId: string;
@@ -570,6 +583,7 @@ async function seed() {
   const insertedPosts: { postId: string }[] = [];
   let locationCount = 0;
 
+  console.log("\n  Creating posts...");
   for (const post of postsData) {
     const { categories: postCategories, location: locationData, ...postValues } = post;
 
@@ -597,6 +611,7 @@ async function seed() {
         .onConflictDoNothing();
     }
   }
+  console.log(`  Created ${insertedPosts.length} posts (${locationCount} with locations)`);
 
   // Reviews — reviewers must not be the post author
   // postsData indices: 0=Alice math tutoring, 2=Elena python, 10=Bob plumbing,
@@ -657,7 +672,7 @@ async function seed() {
   console.log(`   ${permissionDefinitions.length} permissions`);
   console.log("   3 roles (User, Admin, SuperAdmin)");
   console.log("   6 users + profiles (password: password123)");
-  console.log("   6 categories (3 posts with all categories included)");
+  console.log("   20 categories");
   console.log(`   ${postsData.length} posts (${locationCount} with locations)`);
   console.log(`   ${reviewsData.length} reviews`);
 
