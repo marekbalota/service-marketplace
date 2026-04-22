@@ -71,7 +71,7 @@ export function EditProfilePage() {
 
   const addImageMutation = useMutation({
     mutationFn: async (file: File) => {
-      const { error } = await api.profiles({ id: profileId }).images.post({ file })
+      const { error } = await api.images.post({ file, profileId })
       if (error) throw error
     },
     onSuccess: () => {
@@ -110,6 +110,9 @@ export function EditProfilePage() {
           <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>
           {patchMutation.isError && (
             <p className="text-sm text-destructive">{(patchMutation.error as Error).message}</p>
+          )}
+          {addImageMutation.isError && (
+            <p className="text-sm text-destructive">{(addImageMutation.error as Error).message}</p>
           )}
           <ProfileForm
             defaultValues={defaultValues}

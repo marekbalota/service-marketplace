@@ -72,10 +72,19 @@ export class ConflictError extends Error {
   }
 }
 
+export class InternalServerError extends Error {
+  status = 500;
+  constructor(message: string) {
+    super(message);
+    this.name = 'InternalServerError';
+  }
+}
+
 export const errorsPlugin = new Elysia({ name: 'errors' })
-  .error({ ForbiddenError, NotFoundError, ConflictError })
+  .error({ ForbiddenError, NotFoundError, ConflictError, InternalServerError })
   .onError(({ code, error, status }) => {
     if (code === 'ForbiddenError') return status(403, { message: error.message })
     if (code === 'NotFoundError')  return status(404, { message: error.message })
     if (code === 'ConflictError')  return status(409, { message: error.message })
+    if (code === 'InternalServerError') return status(500, { message: error.message })
   })

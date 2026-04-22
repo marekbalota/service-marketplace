@@ -2,20 +2,32 @@ import { Elysia, t } from 'elysia'
 import { ImagesModel } from './model'
 import { ImagesService } from './service'
 import { authRoutes } from '../auth'
-import { ForbiddenError, NotFoundError, ErrorMessages, AuthErrorMessages, unauthorizedResponse, forbiddenResponse, notFoundResponse } from '../../lib/errors'
+import { unauthorizedResponse, forbiddenResponse, notFoundResponse } from '../../lib/errors'
 
 export const imagesRoutes = new Elysia({ prefix: '/images' })
   .use(authRoutes)
+  .post(
+    '/',
+    async ({ body, user, set }) => {
+      const created = await ImagesService.createForProfile(body.profileId, user.id, body.file)
+      set.status = 201
+      return created
+    },
+    {
+      auth: true,
+      body: ImagesModel.createBody,
+      response: {
+        201: ImagesModel.createResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Upload an image', operationId: 'createImage', tags: ['Images'] },
+    },
+  )
   .delete(
     '/:id',
     async ({ params, user, set }) => {
-      const image = await ImagesService.findById(params.id)
-      if (!image) throw new NotFoundError(ErrorMessages.imageNotFound)
-
-      const isOwner = await ImagesService.isImageOwnedByAccount(params.id, user.id)
-      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
-
-      await ImagesService.delete(params.id)
+      await ImagesService.deleteWithOwnershipCheck(params.id, user.id)
       set.status = 204
     },
     {

@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { ProfilesModel } from './model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
@@ -7,8 +7,7 @@ import { LocationsModel, LocationsService } from '../locations'
 import { ImagesModel } from '../images/model'
 import { ImagesService } from '../images/service'
 import { authRoutes } from '../auth'
-import { ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages, unauthorizedResponse, forbiddenResponse, notFoundResponse, conflictResponse } from '../../lib/errors'
-import { uploadImage, deleteUploadedImage } from '../../storage'
+import { unauthorizedResponse, forbiddenResponse, notFoundResponse, conflictResponse } from '../../lib/errors'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
@@ -39,7 +38,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .post(
     '/',
     async ({ body, user, set }) => {
-      const created = await ProfilesService.create({ ...body, accountId: user.id })
+      const created = await ProfilesService.create(user.id, body)
       set.status = 201
       return created
     },
@@ -72,13 +71,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .delete(
     '/:id',
     async ({ params, user, set }) => {
-      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
-      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
-
-      const activeCount = await ProfilesService.countActiveByAccountId(user.id)
-      if (activeCount <= 1) throw new ConflictError(ErrorMessages.cannotDeleteLastProfile)
-
-      await ProfilesService.delete(params.id)
+      await ProfilesService.deleteWithOwnershipCheck(params.id, user.id)
       set.status = 204
     },
     {
@@ -127,32 +120,5 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       params:   ImagesModel.profileImagesParams,
       response: { 200: ImagesModel.profileImagesResponse },
       detail:   { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
-    },
-  )
-  .post(
-    '/:id/images',
-    async ({ params, body, user, set }) => {
-      const isOwner = await ProfilesService.isProfileOwnedByAccount(params.id, user.id)
-      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
-
-      const link = await uploadImage(body.file, params.id)
-      const created = await ImagesService.create(params.id, { link, name: body.file.name })
-      if (!created) {
-        await deleteUploadedImage(link).catch(() => {})
-        throw new Error('Failed to save image')
-      }
-      set.status = 201
-      return created
-    },
-    {
-      auth:   true,
-      params: ImagesModel.profileImagesParams,
-      body:   ImagesModel.createBody,
-      response: {
-        201: ImagesModel.createResponse,
-        ...unauthorizedResponse,
-        ...forbiddenResponse,
-      },
-      detail: { summary: 'Upload image to profile', operationId: 'createProfileImage', tags: ['Images'] },
     },
   )

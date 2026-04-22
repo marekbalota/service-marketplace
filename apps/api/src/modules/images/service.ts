@@ -1,6 +1,9 @@
 import { db } from '../../db'
 import { images, userProfiles } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
+import { ForbiddenError, NotFoundError, InternalServerError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { uploadImage, deleteUploadedImage } from '../../storage'
+import { ProfilesService } from '../profiles/service'
 
 const imageSelect = {
   imageId:       images.imageId,
@@ -60,5 +63,28 @@ export abstract class ImagesService {
       .where(and(eq(images.imageId, imageId), isNull(images.deletedAt)))
       .returning({ imageId: images.imageId })
     return deleted ?? null
+  }
+
+  static async deleteWithOwnershipCheck(imageId: string, accountId: string) {
+    const image = await this.findById(imageId)
+    if (!image) throw new NotFoundError(ErrorMessages.imageNotFound)
+
+    const isOwner = await this.isImageOwnedByAccount(imageId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    await this.delete(imageId)
+  }
+
+  static async createForProfile(profileId: string, accountId: string, file: File) {
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const link = await uploadImage(file, profileId)
+    const created = await this.create(profileId, { link, name: file.name })
+    if (!created) {
+      await deleteUploadedImage(link).catch(() => {})
+      throw new InternalServerError('Failed to save image')
+    }
+    return created
   }
 }

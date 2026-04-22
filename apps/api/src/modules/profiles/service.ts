@@ -1,12 +1,11 @@
 import { db } from '../../db'
-import { userProfiles, users, roles } from '../../db/schema'
+import { userProfiles, users } from '../../db/schema'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
-import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
-  accountId:     userProfiles.accountId,
   name:          userProfiles.name,
   email:         userProfiles.email,
   bio:           userProfiles.bio,
@@ -14,8 +13,6 @@ const profileSelect = {
   fax:           userProfiles.fax,
   createdAt:     userProfiles.createdAt,
   updatedAt:     userProfiles.updatedAt,
-  accountName:   users.name,
-  roleName:      roles.name,
 }
 
 export abstract class ProfilesService {
@@ -23,8 +20,6 @@ export abstract class ProfilesService {
     const [row] = await db
       .select(profileSelect)
       .from(userProfiles)
-      .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .leftJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
@@ -34,10 +29,20 @@ export abstract class ProfilesService {
 
   static async findByAccountId(accountId: string) {
     return db
-      .select(profileSelect)
+      .select({
+        userProfileId: userProfiles.userProfileId,
+        accountId:     userProfiles.accountId,
+        name:          userProfiles.name,
+        email:         userProfiles.email,
+        bio:           userProfiles.bio,
+        phoneNumber:   userProfiles.phoneNumber,
+        fax:           userProfiles.fax,
+        createdAt:     userProfiles.createdAt,
+        updatedAt:     userProfiles.updatedAt,
+        accountName:   users.name,
+      })
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
-      .leftJoin(roles, eq(users.roleId, roles.roleId))
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
   }
 
@@ -64,10 +69,10 @@ export abstract class ProfilesService {
       .update(userProfiles)
       .set(body)
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
-      .returning({ userProfileId: userProfiles.userProfileId })
+      .returning(profileSelect)
 
     if (!updated) throw new NotFoundError(ErrorMessages.profileNotFound)
-    return ProfilesService.findById(updated.userProfileId)
+    return updated
   }
 
   static async updateWithOwnershipCheck(accountId: string, id: string, body: ProfilesModel['updateBody']) {
@@ -76,21 +81,20 @@ export abstract class ProfilesService {
     return this.update(id, body)
   }
 
-  static async create(body: ProfilesModel['createBody'] & { accountId: string }) {
+  static async create(accountId: string, body: ProfilesModel['createBody']) {
     const [inserted] = await db
       .insert(userProfiles)
       .values({
-        accountId:   body.accountId,
+        accountId,
         name:        body.name,
         email:       body.email,
         bio:         body.bio ?? null,
         phoneNumber: body.phoneNumber ?? null,
         fax:         body.fax ?? null,
       })
-      .returning({ userProfileId: userProfiles.userProfileId })
+      .returning(profileSelect)
 
-    if (!inserted) return null
-    return ProfilesService.findById(inserted.userProfileId)
+    return inserted ?? null
   }
 
   static async countActiveByAccountId(accountId: string) {
@@ -110,5 +114,15 @@ export abstract class ProfilesService {
       .returning({ userProfileId: userProfiles.userProfileId })
 
     return deleted ?? null
+  }
+
+  static async deleteWithOwnershipCheck(profileId: string, accountId: string) {
+    const isOwner = await this.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const activeCount = await this.countActiveByAccountId(accountId)
+    if (activeCount <= 1) throw new ConflictError(ErrorMessages.cannotDeleteLastProfile)
+
+    await this.delete(profileId)
   }
 }

@@ -36,7 +36,7 @@ export function CreateProfilePage() {
       let failedCount = 0
       if (data && 'userProfileId' in data) {
         for (const { file } of pendingFiles) {
-          const { error: uploadError } = await api.profiles({ id: data.userProfileId }).images.post({ file })
+          const { error: uploadError } = await api.images.post({ file, profileId: data.userProfileId })
           if (uploadError) failedCount++
         }
       }
