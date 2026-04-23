@@ -16,7 +16,6 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
 import { Route as AppMessagesRouteRouteImport } from './routes/_app/messages/route'
-import { Route as AppFavouritesRouteRouteImport } from './routes/_app/favourites/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAccountSettingsRouteRouteImport } from './routes/_app/account-settings/route'
@@ -68,11 +67,6 @@ const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
 const AppMessagesRouteRoute = AppMessagesRouteRouteImport.update({
   id: '/messages',
   path: '/messages',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppFavouritesRouteRoute = AppFavouritesRouteRouteImport.update({
-  id: '/favourites',
-  path: '/favourites',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppCreatePostRouteRoute = AppCreatePostRouteRouteImport.update({
@@ -180,7 +174,6 @@ export interface FileRoutesByFullPath {
   '/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/create-post': typeof AppCreatePostRouteRoute
-  '/favourites': typeof AppFavouritesRouteRoute
   '/messages': typeof AppMessagesRouteRouteWithChildren
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
@@ -204,7 +197,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRouteRoute
   '/register': typeof RegisterRouteRoute
   '/create-post': typeof AppCreatePostRouteRoute
-  '/favourites': typeof AppFavouritesRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/': typeof AppIndexRoute
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
@@ -230,7 +222,6 @@ export interface FileRoutesById {
   '/_app/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/create-post': typeof AppCreatePostRouteRoute
-  '/_app/favourites': typeof AppFavouritesRouteRoute
   '/_app/messages': typeof AppMessagesRouteRouteWithChildren
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_app/': typeof AppIndexRoute
@@ -260,7 +251,6 @@ export interface FileRouteTypes {
     | '/account-settings'
     | '/admin'
     | '/create-post'
-    | '/favourites'
     | '/messages'
     | '/my-postings'
     | '/account-settings/create'
@@ -284,7 +274,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/create-post'
-    | '/favourites'
     | '/my-postings'
     | '/'
     | '/account-settings/create'
@@ -309,7 +298,6 @@ export interface FileRouteTypes {
     | '/_app/account-settings'
     | '/_app/admin'
     | '/_app/create-post'
-    | '/_app/favourites'
     | '/_app/messages'
     | '/_app/my-postings'
     | '/_app/'
@@ -386,13 +374,6 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof AppMessagesRouteRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/_app/favourites': {
-      id: '/_app/favourites'
-      path: '/favourites'
-      fullPath: '/favourites'
-      preLoaderRoute: typeof AppFavouritesRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/create-post': {
@@ -606,7 +587,6 @@ interface AppRouteRouteChildren {
   AppAccountSettingsRouteRoute: typeof AppAccountSettingsRouteRouteWithChildren
   AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
-  AppFavouritesRouteRoute: typeof AppFavouritesRouteRoute
   AppMessagesRouteRoute: typeof AppMessagesRouteRouteWithChildren
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -619,7 +599,6 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAccountSettingsRouteRoute: AppAccountSettingsRouteRouteWithChildren,
   AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppCreatePostRouteRoute: AppCreatePostRouteRoute,
-  AppFavouritesRouteRoute: AppFavouritesRouteRoute,
   AppMessagesRouteRoute: AppMessagesRouteRouteWithChildren,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,

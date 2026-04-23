@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
-import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Plus, Heart } from 'lucide-react'
 import { api } from '#/api'
@@ -32,6 +32,7 @@ import {
 } from '#/components/ui/pagination'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
+
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
 
 const ratingRangeSchema = z.enum(['5-4', '4-3', '3-2', '2-1', 'none'])
@@ -67,6 +68,14 @@ const SORT_LABELS: Record<SortOption, string> = {
   'reviews-least': 'Reviews: Fewest First',
 }
 
+const RATING_MIN: Record<RatingRange, number> = { '5-4': 4, '4-3': 3, '3-2': 2, '2-1': 1, 'none': 0 }
+const RATING_MAX: Record<RatingRange, number> = { '5-4': 5, '4-3': 4, '3-2': 3, '2-1': 2, 'none': 0 }
+
+function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): RatingRange[] {
+  if (!rating) return []
+  return Array.isArray(rating) ? rating : [rating]
+}
+
 // --- Query options ---
 
 export const categoriesQueryOptions = queryOptions({
@@ -77,14 +86,6 @@ export const categoriesQueryOptions = queryOptions({
     return data
   },
 })
-
-const RATING_MIN: Record<RatingRange, number> = { '5-4': 4, '4-3': 3, '3-2': 2, '2-1': 1, 'none': 0 }
-const RATING_MAX: Record<RatingRange, number> = { '5-4': 5, '4-3': 4, '3-2': 3, '2-1': 2, 'none': 0 }
-
-function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): RatingRange[] {
-  if (!rating) return []
-  return Array.isArray(rating) ? rating : [rating]
-}
 
 export function postsQueryOptions(deps: {
   type?: PostTypeFilter
@@ -232,10 +233,26 @@ function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
     enabled: isAuthenticated && !favouritesOnly && !!activeProfileId,
   })
 
+  const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
 
   const setPage = (value: number) =>
     navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
+
+  const profileIdPostsPredicate = (query: { queryKey: unknown }) =>
+    Array.isArray(query.queryKey) &&
+    query.queryKey[0] === 'posts' &&
+    (query.queryKey[1] as { profileId?: string } | undefined)?.profileId != null
+
+  const handleFavouriteToggle = () => {
+    if (favouritesOnly) {
+      // Active favourites view — invalidate so the list refetches and removes the toggled post
+      queryClient.invalidateQueries({ predicate: profileIdPostsPredicate })
+    } else {
+      // Normal view — remove so next switch to favourites view fetches fresh data via skeleton
+      queryClient.removeQueries({ predicate: profileIdPostsPredicate })
+    }
+  }
 
   const favouritePostIds = useMemo(() => {
     if (!isAuthenticated) return new Set<string>()
@@ -276,6 +293,7 @@ function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
               key={post.postId}
               post={post}
               isFavourite={favouritePostIds.has(post.postId)}
+              onFavouriteToggle={handleFavouriteToggle}
             />
           ))}
         </div>
@@ -511,6 +529,7 @@ function HomePage() {
       </div>
 
       {/* Posts — Suspense boundary only covers this area */}
+      {/* key resets the boundary when toggling favourites so the skeleton shows instead of stale all-posts data */}
       <Suspense fallback={<PostsSkeleton />}>
         <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} />
       </Suspense>

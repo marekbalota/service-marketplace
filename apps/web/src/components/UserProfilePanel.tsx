@@ -7,7 +7,6 @@ import {
   Search,
   LogOut,
   User,
-  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -112,22 +111,6 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 <FileText className="size-5 text-[var(--nav-postings-fg)]" />
               </div>
               <span>My Postings</span>
-            </SheetClose>
-
-            <SheetClose
-              nativeButton={false}
-              render={
-                <Link
-                  to="/favourites"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
-                />
-              }
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
-                <Heart className="size-5 text-rose-600" />
-              </div>
-              <span>My Favourites</span>
             </SheetClose>
 
             <SheetClose
