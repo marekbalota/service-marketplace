@@ -20,25 +20,22 @@ const app = new Elysia()
 const client = treaty(app)
 
 let sessionCookie: string
-let authorId: string
+let profileId: string
 let postId: string
 
 beforeAll(async () => {
-  // Sign in as test user
   const signInRes = await auth.api.signInEmail({
     body: { email: 'alice@example.com', password: 'password123' },
     asResponse: true,
   })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  // Get user profile
   const meData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))).json() as { profiles: { userProfileId: string }[] }
-  authorId = meData.profiles[0]?.userProfileId ?? ''
+  profileId = meData.profiles[0]?.userProfileId ?? ''
 
-  // Create a test post to favourite
   const { data: post } = await client.posts.post(
     {
-      authorId,
+      authorId: profileId,
       postTitle: 'Post to favourite',
       description: 'This post will be favourited in tests',
       postType: 'OFFER',
@@ -51,13 +48,14 @@ beforeAll(async () => {
 
 describe('GET /favourites', () => {
   it('returns 401 when not authenticated', async () => {
-    const { error } = await client.favourites.get()
+    const { error } = await client.favourites.get({ query: { profileId } })
     expect(error?.status).toBe(401)
   })
 
   it('returns 200 with items and total when authenticated', async () => {
     const { data, error } = await client.favourites.get({
       headers: { Cookie: sessionCookie },
+      query: { profileId },
     })
     expect(error).toBeNull()
     expect(Array.isArray(data!.items)).toBe(true)
@@ -67,13 +65,13 @@ describe('GET /favourites', () => {
 
 describe('POST /favourites/:postId', () => {
   it('returns 401 when not authenticated', async () => {
-    const { error } = await client.favourites({ postId }).post()
+    const { error } = await client.favourites({ postId }).post({ profileId })
     expect(error?.status).toBe(401)
   })
 
   it('returns 404 for non-existent post', async () => {
     const { error } = await client.favourites({ postId: '00000000-0000-0000-0000-000000000000' }).post(
-      undefined,
+      { profileId },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error?.status).toBe(404)
@@ -81,7 +79,7 @@ describe('POST /favourites/:postId', () => {
 
   it('adds a favourite and returns 201', async () => {
     const { data, error } = await client.favourites({ postId }).post(
-      undefined,
+      { profileId },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
@@ -91,7 +89,7 @@ describe('POST /favourites/:postId', () => {
 
   it('returns 409 for duplicate favourite', async () => {
     const { error } = await client.favourites({ postId }).post(
-      undefined,
+      { profileId },
       { headers: { Cookie: sessionCookie } },
     )
     expect((error?.status as number)).toBe(409)
@@ -100,20 +98,20 @@ describe('POST /favourites/:postId', () => {
 
 describe('DELETE /favourites/:postId', () => {
   it('returns 401 when not authenticated', async () => {
-    const { error } = await client.favourites({ postId }).delete()
+    const { error } = await client.favourites({ postId }).delete({ profileId })
     expect(error?.status).toBe(401)
   })
 
   it('removes a favourite and returns 204', async () => {
     const { error } = await client.favourites({ postId }).delete(
-      undefined,
+      { profileId },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error).toBeNull()
 
-    // Verify favourite was removed
     const { data } = await client.favourites.get({
       headers: { Cookie: sessionCookie },
+      query: { profileId },
     })
     const found = data!.items.find((f: { postId: string }) => f.postId === postId)
     expect(found).toBeUndefined()
@@ -121,44 +119,10 @@ describe('DELETE /favourites/:postId', () => {
 
   it('returns 404 for non-existent favourite', async () => {
     const { error } = await client.favourites({ postId: '00000000-0000-0000-0000-000000000000' }).delete(
-      undefined,
+      { profileId },
       { headers: { Cookie: sessionCookie } },
     )
     expect(error?.status).toBe(404)
   })
 })
 
-describe('GET /favourites/:postId', () => {
-  beforeAll(async () => {
-    // Re-add the favourite for this test
-    await client.favourites({ postId }).post(
-      undefined,
-      { headers: { Cookie: sessionCookie } },
-    )
-  })
-
-  it('returns 401 when not authenticated', async () => {
-    const { error } = await client.favourites({ postId }).get()
-    expect(error?.status).toBe(401)
-  })
-
-  it('returns 200 with isFavourite: true for an existing favourite', async () => {
-    const { data, error } = await client.favourites({ postId }).get({
-      headers: { Cookie: sessionCookie },
-    })
-    expect(error).toBeNull()
-    expect(data!.isFavourite).toBe(true)
-  })
-
-  it('returns 200 with isFavourite: false for a non-favourited post', async () => {
-    const { data: allPosts } = await client.posts.get({ query: { size: 1 } })
-    const otherPostId = (allPosts?.items?.[0] as { postId?: string })?.postId
-    if (!otherPostId || otherPostId === postId) return
-
-    const { data, error } = await client.favourites({ postId: otherPostId }).get({
-      headers: { Cookie: sessionCookie },
-    })
-    expect(error).toBeNull()
-    expect(data!.isFavourite).toBe(false)
-  })
-})

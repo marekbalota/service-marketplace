@@ -20,6 +20,7 @@ const favouriteItem = t.Object({
 
 export const FavouritesModel = {
   postIdParams: t.Object({ postId: t.String() }),
+  profileIdQuery: t.Object({ profileId: t.String() }),
   findAllResponse: t.Object({
     items: t.Array(favouriteItem),
     total: t.Number(),
@@ -28,9 +29,6 @@ export const FavouritesModel = {
     userProfileId: t.String(),
     postId:        t.String(),
     createdAt:     t.Date(),
-  }),
-  isFavouriteResponse: t.Object({
-    isFavourite: t.Boolean(),
   }),
 } as const
 
