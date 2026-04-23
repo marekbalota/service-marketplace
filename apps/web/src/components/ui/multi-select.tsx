@@ -99,7 +99,7 @@ export function MultiSelect({
         }}
         data-disabled={disabled || undefined}
         className={cn(
-          'flex h-8 w-full cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm outline-none select-none transition-colors dark:bg-input/30',
+          'flex min-h-8 w-full cursor-pointer items-start gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm outline-none select-none transition-colors dark:bg-input/30',
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50',
           'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
           'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
@@ -107,7 +107,7 @@ export function MultiSelect({
         )}
       >
         {displayMode === 'tags' && value.length > 0 ? (
-          <span className="flex flex-1 flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+          <span className="flex flex-1 flex-wrap items-center gap-1">
             {visibleItems.map((item) => (
               <Badge key={item.value} variant="secondary" className="shrink-0 gap-1 pr-1">
                 {item.label}
@@ -139,7 +139,7 @@ export function MultiSelect({
           )}
         />
       </PopoverTrigger>
-      <PopoverContent className="w-(--anchor-width) p-0" align="start">
+      <PopoverContent className="w-(--anchor-width) p-0" align="start" collisionAvoidance={{ side: 'none' }}>
         <Command shouldFilter={false} className='p-0'>
           {searchable && <CommandInput placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />}
           {searchable && <div className="mt-1 h-px bg-border" />}
