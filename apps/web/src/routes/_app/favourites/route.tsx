@@ -5,26 +5,25 @@ import { Heart, ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { Skeleton } from '#/components/ui/skeleton'
-import { authClient } from '#/auth'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
+import { useCurrentUser } from '#/lib/userQueries'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 
-export const favouritesQueryOptions = queryOptions({
-  queryKey: ['favourites'],
-  queryFn: async () => {
-    const { data, error } = await api.favourites.get()
-    if (error) throw error
-    return data
-  },
-})
+export function favouritesQueryOptions(profileId: string) {
+  return queryOptions({
+    queryKey: ['favourites', profileId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites.get({ query: { profileId } })
+      if (error) throw error
+      return data
+    },
+  })
+}
 
 export const Route = createFileRoute('/_app/favourites')({
   beforeLoad: ({ context: { user } }) => {
     if (!user) throw redirect({ to: '/login' })
-  },
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(favouritesQueryOptions)
   },
   pendingComponent: FavouritesPageSkeleton,
   component: FavouritesPage,
@@ -59,17 +58,18 @@ function FavouritesPageSkeleton() {
 
 function FavouritesGrid() {
   const queryClient = useQueryClient()
-  const { data } = useSuspenseQuery(favouritesQueryOptions)
+  const { activeProfile } = useActiveProfile()
+  const profileId = activeProfile!.userProfileId
+  const { data } = useSuspenseQuery(favouritesQueryOptions(profileId))
   const favouritePosts = data?.items ?? []
 
   const removeMutation = useMutation({
     mutationFn: async (postId: string) => {
-      const { error } = await api.favourites({ postId }).delete()
+      const { error } = await api.favourites({ postId }).delete({ profileId })
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
-      queryClient.invalidateQueries({ queryKey: ['favourites', 'check'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
     },
   })
 
@@ -105,7 +105,7 @@ function FavouritesGrid() {
 }
 
 function FavouritesPage() {
-  const { data: session } = authClient.useSession()
+  const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
 
   return (
@@ -121,7 +121,7 @@ function FavouritesPage() {
         </div>
       </div>
 
-      {session && activeProfile ? (
+      {user && activeProfile ? (
         <Suspense fallback={<FavouritesPageSkeleton />}>
           <FavouritesGrid />
         </Suspense>

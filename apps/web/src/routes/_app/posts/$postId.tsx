@@ -3,7 +3,6 @@ import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient }
 import { useState } from 'react'
 import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
 import { api } from '#/api'
-import { authClient } from '#/auth'
 import { useCurrentUser } from '#/lib/userQueries'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { BackButton } from '#/components/BackButton'
@@ -81,40 +80,40 @@ const RATE_LABELS: Record<string, string> = {
 
 function FavouriteButton({ postId }: { postId: string }) {
   const queryClient = useQueryClient()
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
+  const isAuthenticated = user != null
+  const profileId = activeProfile?.userProfileId
 
-  const { data: checkData } = useQuery({
-    queryKey: ['favourites', postId],
+  const { data: favouritesList } = useQuery({
+    queryKey: ['favourites', profileId],
     queryFn: async () => {
-      const { data, error } = await api.favourites({ postId }).get()
+      const { data, error } = await api.favourites.get({ query: { profileId: profileId! } })
       if (error) throw error
       return data
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!profileId,
   })
 
-  const isFavourite = checkData?.isFavourite ?? false
+  const isFavourite = favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ?? false
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await api.favourites({ postId }).post()
+      const { error } = await api.favourites({ postId }).post({ profileId: profileId! })
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
     },
   })
 
   const removeMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await api.favourites({ postId }).delete()
+      const { error } = await api.favourites({ postId }).delete({ profileId: profileId! })
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
     },
   })
 

@@ -17,8 +17,8 @@ vi.mock('#/lib/userQueries', () => ({
 import { handleBanError } from './ban-handler'
 import { routerRef, queryClient } from '#/router'
 
-const mockRouterRef = routerRef as { invalidate: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> }
-const mockQueryClient = queryClient as { removeQueries: ReturnType<typeof vi.fn> }
+const mockRouterRef = routerRef as unknown as { invalidate: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> }
+const mockQueryClient = queryClient as unknown as { removeQueries: ReturnType<typeof vi.fn> }
 
 describe('handleBanError', () => {
   beforeEach(() => {
