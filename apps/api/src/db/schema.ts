@@ -17,6 +17,7 @@ import { relations, sql } from "drizzle-orm";
 
 export const postTypeEnum = pgEnum("post_type", ["REQUEST", "OFFER"]);
 export const rateTypeEnum = pgEnum("rate_type", ["HOURLY", "DAILY", "FIXED"]);
+export const reportTargetTypeEnum = pgEnum("report_target_type", ["POST", "MESSAGE", "REVIEW"]);
 
 // Tables
 
@@ -247,19 +248,46 @@ export const messages = pgTable("messages", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const reports = pgTable("reports", {
-  reportId: uuid("report_id").primaryKey().defaultRandom(),
-  reporterId: uuid("reporter_id")
-    .notNull()
-    .references(() => userProfiles.userProfileId),
-  postId: uuid("post_id")
-    .notNull()
-    .references(() => posts.postId),
-  description: text("description").notNull(),
-  reason: text("reason").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
+export const reportCategories = pgTable(
+  "report_categories",
+  {
+    categoryId: uuid("category_id").primaryKey().defaultRandom(),
+    targetType: reportTargetTypeEnum("target_type").notNull(),
+    value: text("value").notNull(),
+    label: text("label").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    unique("report_categories_target_value_unique").on(table.targetType, table.value),
+  ],
+);
+
+export const reports = pgTable(
+  "reports",
+  {
+    reportId: uuid("report_id").primaryKey().defaultRandom(),
+    reporterId: uuid("reporter_id")
+      .notNull()
+      .references(() => userProfiles.userProfileId),
+    postId: uuid("post_id").references(() => posts.postId),
+    messageId: uuid("message_id").references(() => messages.messageId),
+    reviewId: uuid("review_id").references(() => reviews.reviewId),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => reportCategories.categoryId),
+    description: text("description"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    check(
+      "reports_exactly_one_target",
+      sql`(${table.postId} IS NOT NULL)::int + (${table.messageId} IS NOT NULL)::int + (${table.reviewId} IS NOT NULL)::int = 1`,
+    ),
+  ],
+);
+
 
 // Relations
 
@@ -407,6 +435,10 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
+export const reportCategoriesRelations = relations(reportCategories, ({ many }) => ({
+  reports: many(reports),
+}));
+
 export const reportsRelations = relations(reports, ({ one }) => ({
   reporter: one(userProfiles, {
     fields: [reports.reporterId],
@@ -416,4 +448,17 @@ export const reportsRelations = relations(reports, ({ one }) => ({
     fields: [reports.postId],
     references: [posts.postId],
   }),
+  message: one(messages, {
+    fields: [reports.messageId],
+    references: [messages.messageId],
+  }),
+  review: one(reviews, {
+    fields: [reports.reviewId],
+    references: [reviews.reviewId],
+  }),
+  category: one(reportCategories, {
+    fields: [reports.categoryId],
+    references: [reportCategories.categoryId],
+  }),
 }));
+

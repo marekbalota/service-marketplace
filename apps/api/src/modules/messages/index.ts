@@ -1,8 +1,12 @@
 import { Elysia } from 'elysia'
 import { MessagesModel } from './model'
 import { MessagesService } from './service'
+import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
-import { conflictResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import { conflictResponse, errorResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse, ForbiddenError, AuthErrorMessages } from '../../lib/errors'
+import { ReportsModel } from '../reports/model'
+import { ReportsService } from '../reports/service'
+import { ProfilesService } from '../profiles/service'
 
 export const messagesRoutes = new Elysia({ prefix: '/threads' })
   .use(authRoutes)
@@ -83,3 +87,54 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       detail: { summary: 'Send a message', operationId: 'sendMessage', tags: ['Messages'] },
     },
   )
+
+  // Report a message
+  .post(
+    '/:threadId/messages/:messageId/reports',
+    async ({ params, body, user, set }) => {
+      const profiles = await ProfilesService.findByAccountId(user.id)
+      if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
+      const roleResult = await MessagesService.getRole(params.threadId, profiles[0]!.userProfileId)
+      if (!roleResult) throw new ForbiddenError(AuthErrorMessages.forbidden)
+      const report = await ReportsService.createForMessageForAccount(user.id, params.messageId, body)
+      set.status = 201
+      return report
+    },
+    {
+      auth: true,
+      params: ReportsModel.messageReportParams,
+      body: ReportsModel.createBody,
+      response: {
+        201: ReportsModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Report a message', operationId: 'createMessageReport', tags: ['Reports'] },
+    },
+  )
+
+  // Check if current user has reported a message
+  .get(
+    '/:threadId/messages/:messageId/reports/check',
+    async ({ params, user }) => {
+      const profiles = await ProfilesService.findByAccountId(user.id)
+      if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
+      const roleResult = await MessagesService.getRole(params.threadId, profiles[0]!.userProfileId)
+      if (!roleResult) throw new ForbiddenError(AuthErrorMessages.forbidden)
+      const hasReported = await ReportsService.hasReportedMessageForAccount(user.id, params.messageId)
+      return { hasReported }
+    },
+    {
+      auth: true,
+      params: ReportsModel.messageReportParams,
+      response: {
+        200: ReportsModel.checkResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+      },
+      detail: { summary: 'Check if current user has reported a message', operationId: 'checkMessageReport', tags: ['Reports'] },
+    },
+  )
+

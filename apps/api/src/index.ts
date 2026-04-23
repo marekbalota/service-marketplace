@@ -19,6 +19,7 @@ import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
+import { reportCategoriesRoutes } from "./modules/reports";
 import { initBucket } from "./storage";
 
 export const app = new Elysia()
@@ -47,6 +48,7 @@ export const app = new Elysia()
         { name: "Favourites", description: "User's favourite posts" },
         { name: "Messages",   description: "Message threads and chat messages" },
         { name: "Reviews",    description: "Post reviews and ratings" },
+        { name: "Reports",    description: "Post reports" },
       ],
     },
   }))
@@ -64,6 +66,7 @@ export const app = new Elysia()
   .use(adminPostsRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
+  .use(reportCategoriesRoutes)
   .listen(3001);
 
 initBucket().catch((err) => console.error('[MinIO] bucket init failed:', err))
