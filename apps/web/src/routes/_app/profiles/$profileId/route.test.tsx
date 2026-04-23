@@ -1,0 +1,93 @@
+import { render, screen, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
+
+// ── Hoisted mocks ─────────────────────────────────────────────────────────────
+
+const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return {
+    ...actual,
+    useSuspenseQuery: mockUseSuspenseQuery,
+    useQuery: vi.fn(() => ({ data: [] })),
+  }
+})
+
+vi.mock('#/lib/profileQueries', () => ({
+  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+}))
+
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+
+const profile = {
+  userProfileId: 'profile-1',
+  accountId:     'user-1',
+  name:          'Alice Johnson',
+  email:         'alice@example.com',
+  bio:           'Software engineer',
+  phoneNumber:   '+1 555 0001',
+  fax:           null,
+  createdAt:     new Date('2024-01-01'),
+  updatedAt:     null,
+  accountName:   'Alice',
+  roleName:      'user',
+}
+
+// ── Render helper ─────────────────────────────────────────────────────────────
+
+import { ProfileViewPage } from './route'
+
+async function renderPage() {
+  const rootRoute = createRootRoute({ component: ProfileViewPage })
+  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
+  await act(async () => {
+    render(<RouterProvider router={router} />)
+  })
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('ProfileViewPage', () => {
+  beforeEach(() => {
+    mockUseSuspenseQuery.mockReturnValue({ data: profile })
+  })
+
+  it('renders the profile name', async () => {
+    await renderPage()
+    expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
+  })
+
+  it('renders the profile email', async () => {
+    await renderPage()
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument()
+  })
+
+  it('renders the phone number when present', async () => {
+    await renderPage()
+    expect(screen.getByText('+1 555 0001')).toBeInTheDocument()
+  })
+
+  it('renders the bio when present', async () => {
+    await renderPage()
+    expect(screen.getByText('Software engineer')).toBeInTheDocument()
+  })
+
+  it('renders a Back button', async () => {
+    await renderPage()
+    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
+  })
+
+  it('shows em dash for missing fax', async () => {
+    await renderPage()
+    // fax is null — the component renders an em-dash span
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
+})

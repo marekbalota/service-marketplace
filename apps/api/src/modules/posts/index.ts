@@ -3,8 +3,8 @@ import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
 import { Permissions } from "@marketplace/shared";
-import { authErrorResponses, notFoundResponse, AuthModel } from "../auth/model";
-import { errorResponse } from "../../lib/errors";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse, errorResponse } from "../../lib/errors";
+import { AuthModel } from "../auth/model";
 import { ReviewsModel } from "../reviews/model";
 import { ReviewsService } from "../reviews/service";
 import { ReportsModel } from "../reports/model";
@@ -36,51 +36,55 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .post(
     "/",
     async ({ body, user, set }) => {
-      const role = await PostsService.createWithPermissionCheck(user.id, body);
+      const post = await PostsService.createWithPermissionCheck(user.id, body);
       set.status = 201;
-      return role;
+      return post;
     },
     {
       authWithPermissions: Permissions.PostsCreate,
       body: PostsModel.createBody,
       response: {
         201: PostsModel.createResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: "Create a post", operationId: "createPost", tags: ["Posts"] },
     },
   )
   .patch(
     "/:id",
-    async ({ params, body, user, permissions, set }) => {
-      await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
-      set.status = 204;
+    async ({ params, body, user, set }) => {
+      const updated = await PostsService.updateWithPermissionCheck(user.id, params.id, body);
+      set.status = 200;
+      return updated;
     },
     {
-      authWithPermissions: [Permissions.PostsEditOwn, Permissions.PostsEditAny],
+      authWithPermissions: Permissions.PostsEditOwn,
       params: PostsModel.updateParams,
       body: PostsModel.updateBody,
       response: {
-        204: t.Void(),
-        404: errorResponse,
-        ...authErrorResponses,
+        200: PostsModel.updateResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: "Update a post", operationId: "updatePost", tags: ["Posts"] },
     },
   )
   .delete(
     "/:id",
-    async ({ params, user, permissions, set }) => {
-      await PostsService.deleteWithPermissionCheck(user.id, permissions, params.id);
+    async ({ params, user, set }) => {
+      await PostsService.deleteWithPermissionCheck(user.id, params.id);
       set.status = 204;
     },
     {
-      authWithPermissions: [Permissions.PostsDeleteOwn, Permissions.PostsDeleteAny],
+      authWithPermissions: Permissions.PostsDeleteOwn,
       params: PostsModel.deleteParams,
       response: {
         204: t.Void(),
-        404: errorResponse,
-        ...authErrorResponses,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
     },

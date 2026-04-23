@@ -3,11 +3,10 @@ import { MessagesModel } from './model'
 import { MessagesService } from './service'
 import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
-import { errorResponse } from '../../lib/errors'
+import { conflictResponse, errorResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse, ForbiddenError, AuthErrorMessages } from '../../lib/errors'
 import { ReportsModel } from '../reports/model'
 import { ReportsService } from '../reports/service'
 import { ProfilesService } from '../profiles/service'
-import { ForbiddenError, AuthErrorMessages } from '../../lib/errors'
 
 export const messagesRoutes = new Elysia({ prefix: '/threads' })
   .use(authRoutes)
@@ -21,8 +20,8 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       query: MessagesModel.findAllQuery,
       response: {
         200: MessagesModel.findAllResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List threads', operationId: 'listThreads', tags: ['Messages'] },
     },
@@ -41,10 +40,10 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       body: MessagesModel.createThreadBody,
       response: {
         201: MessagesModel.createThreadResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
-        409: errorResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
       },
       detail: { summary: 'Create a thread', operationId: 'createThread', tags: ['Messages'] },
     },
@@ -61,8 +60,8 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       query: MessagesModel.threadProfileQuery,
       response: {
         200: MessagesModel.findThreadResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'Get thread by ID', operationId: 'getThread', tags: ['Messages'] },
     },
@@ -82,8 +81,8 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       body: MessagesModel.sendMessageBody,
       response: {
         201: MessagesModel.sendMessageResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'Send a message', operationId: 'sendMessage', tags: ['Messages'] },
     },

@@ -4,6 +4,7 @@ import { treaty } from '@elysiajs/eden'
 import { reviewsRoutes } from '.'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
+import { auth } from '../auth/service'
 import { profilesRoutes } from '../profiles'
 import { usersRoutes } from '../users'
 import { categoriesRoutes } from '../categories'
@@ -27,18 +28,15 @@ let reviewId = ''
 
 beforeAll(async () => {
   // Sign in as test user
-  const signInRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'alice@example.com', password: 'password123' }),
-    }),
-  )
+  const signInRes = await auth.api.signInEmail({
+    body: { email: 'alice@example.com', password: 'password123' },
+    asResponse: true,
+  })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  // Get user profile
-  const meData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))).json() as { profiles: { userProfileId: string }[] }
-  authorId = meData.profiles[0]?.userProfileId ?? ''
+  // Get user profile using Eden Treaty
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: sessionCookie } })
+  authorId = meData!.profiles[0]?.userProfileId ?? ''
 
   // Create a test post
   const { data: post } = await client.posts.post(
@@ -54,21 +52,19 @@ beforeAll(async () => {
   postId = (post as any)?.postId
 })
 
-describe('POST /posts/:id/reviews', () => {
+describe('POST /reviews', () => {
   it('returns 401 when not authenticated', async () => {
-    const res = await app.handle(
-      new Request(`http://localhost/posts/${postId}/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: 5 }),
-      }),
-    )
-    expect(res.status).toBe(401)
+    const { error } = await client.reviews.post({
+      rating: 5,
+      postId,
+      profileId: authorId,
+    })
+    expect(error?.status).toBe(401)
   })
 
   it('creates a review with valid data (201)', async () => {
-    const { data, error } = await client.posts({ id: postId }).reviews.post(
-      { rating: 5, reviewDescription: 'Excellent service!' },
+    const { data, error } = await client.reviews.post(
+      { rating: 5, reviewDescription: 'Excellent service!', postId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -81,8 +77,8 @@ describe('POST /posts/:id/reviews', () => {
   })
 
   it('returns 409 for duplicate review', async () => {
-    const { error } = await client.posts({ id: postId }).reviews.post(
-      { rating: 4 },
+    const { error } = await client.reviews.post(
+      { rating: 4, postId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -90,8 +86,8 @@ describe('POST /posts/:id/reviews', () => {
   })
 
   it('returns 404 for non-existent post', async () => {
-    const { error } = await client.posts({ id: '00000000-0000-0000-0000-000000000000' }).reviews.post(
-      { rating: 5 },
+    const { error } = await client.reviews.post(
+      { rating: 5, postId: '00000000-0000-0000-0000-000000000000', profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
 
@@ -101,12 +97,8 @@ describe('POST /posts/:id/reviews', () => {
 
 describe('DELETE /reviews/:id', () => {
   it('returns 401 when not authenticated', async () => {
-    const res = await app.handle(
-      new Request(`http://localhost/reviews/${reviewId}`, {
-        method: 'DELETE',
-      }),
-    )
-    expect(res.status).toBe(401)
+    const { error } = await client.reviews({ id: reviewId }).delete()
+    expect(error?.status).toBe(401)
   })
 
   it('returns 404 for non-existent review', async () => {
@@ -132,8 +124,8 @@ describe('DELETE /reviews/:id', () => {
     const newPostId = (newPost as any)?.postId
 
     // Create another review
-    const { data: newReview } = await client.posts({ id: newPostId }).reviews.post(
-      { rating: 3 },
+    const { data: newReview } = await client.reviews.post(
+      { rating: 3, postId: newPostId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
     )
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

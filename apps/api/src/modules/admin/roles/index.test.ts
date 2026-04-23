@@ -250,3 +250,25 @@ describe('PATCH /admin/roles/:id/default', () => {
     expect(error?.status).toBe(403);
   });
 });
+
+describe('GET /admin/roles/assignable', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client['admin'].roles.assignable.get();
+    expect(error?.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin user', async () => {
+    const { error } = await client['admin'].roles.assignable.get({
+      headers: { Cookie: userCookie },
+    });
+    expect(error?.status).toBe(403);
+  });
+
+  it('returns 200 with roles for admin', async () => {
+    const { data, error } = await client['admin'].roles.assignable.get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(Array.isArray(data)).toBe(true);
+  });
+});

@@ -8,11 +8,11 @@ import { useActiveUser } from '#/contexts/ActiveUserContext';
 
 const adminOptions = [
   {
-    id: 'accounts',
+    id: 'users',
     title: 'Manage Accounts',
     description: 'View and manage user accounts, permissions, and profiles',
     icon: Users,
-    path: '/admin/accounts',
+    path: '/admin/users',
   },
   {
     id: 'roles',
@@ -77,7 +77,7 @@ function AdminOptions() {
   ]);
 
   const visibleOptions = adminOptions.filter(option => {
-    if (option.id === 'accounts') return canManageUsers;
+    if (option.id === 'users') return canManageUsers;
     if (option.id === 'roles') return canManageRoles;
     if (option.id === 'reports') return canManageUsers;
     return true;

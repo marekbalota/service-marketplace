@@ -1,19 +1,18 @@
 import { db } from '../../db'
 import { userProfiles, users } from '../../db/schema'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
-import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
-  accountId:     userProfiles.accountId,
   name:          userProfiles.name,
   email:         userProfiles.email,
   bio:           userProfiles.bio,
   phoneNumber:   userProfiles.phoneNumber,
   fax:           userProfiles.fax,
   createdAt:     userProfiles.createdAt,
-  accountName:   users.name,
+  updatedAt:     userProfiles.updatedAt,
 }
 
 export abstract class ProfilesService {
@@ -21,20 +20,27 @@ export abstract class ProfilesService {
     const [row] = await db
       .select(profileSelect)
       .from(userProfiles)
-      .innerJoin(users, eq(userProfiles.accountId, users.id))
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)
 
-    if (!row) {
-      throw new NotFoundError(ErrorMessages.profileNotFound);
-    }
-
-    return row;
+    if (!row) throw new NotFoundError(ErrorMessages.profileNotFound)
+    return row
   }
 
   static async findByAccountId(accountId: string) {
     return db
-      .select(profileSelect)
+      .select({
+        userProfileId: userProfiles.userProfileId,
+        accountId:     userProfiles.accountId,
+        name:          userProfiles.name,
+        email:         userProfiles.email,
+        bio:           userProfiles.bio,
+        phoneNumber:   userProfiles.phoneNumber,
+        fax:           userProfiles.fax,
+        createdAt:     userProfiles.createdAt,
+        updatedAt:     userProfiles.updatedAt,
+        accountName:   users.name,
+      })
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
@@ -51,14 +57,11 @@ export abstract class ProfilesService {
   }
 
   static async getProfileIdsByAccount(accountId: string): Promise<string[]> {
-    const profiles = await db
+    const rows = await db
       .select({ userProfileId: userProfiles.userProfileId })
       .from(userProfiles)
-      .where(and(
-        eq(userProfiles.accountId, accountId),
-        isNull(userProfiles.deletedAt)
-      ));
-    return profiles.map(p => p.userProfileId);
+      .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
+    return rows.map(p => p.userProfileId)
   }
 
   static async update(id: string, body: ProfilesModel['updateBody']) {
@@ -66,26 +69,60 @@ export abstract class ProfilesService {
       .update(userProfiles)
       .set(body)
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
-      .returning({ userProfileId: userProfiles.userProfileId })
+      .returning(profileSelect)
 
-    if (!updated) {
-      throw new NotFoundError(ErrorMessages.profileNotFound);
-    }
-
-    return updated;
+    if (!updated) throw new NotFoundError(ErrorMessages.profileNotFound)
+    return updated
   }
 
-  static async updateWithOwnershipCheck(
-    accountId: string,
-    id: string,
-    body: ProfilesModel['updateBody']
-  ) {
-    // Verify ownership
-    const isOwner = await this.isProfileOwnedByAccount(id, accountId);
-    if (!isOwner) {
-      throw new ForbiddenError(AuthErrorMessages.forbidden);
-    }
+  static async updateWithOwnershipCheck(accountId: string, id: string, body: ProfilesModel['updateBody']) {
+    const isOwner = await this.isProfileOwnedByAccount(id, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.update(id, body)
+  }
 
-    return this.update(id, body);
+  static async create(accountId: string, body: ProfilesModel['createBody']) {
+    const [inserted] = await db
+      .insert(userProfiles)
+      .values({
+        accountId,
+        name:        body.name,
+        email:       body.email,
+        bio:         body.bio ?? null,
+        phoneNumber: body.phoneNumber ?? null,
+        fax:         body.fax ?? null,
+      })
+      .returning(profileSelect)
+
+    return inserted ?? null
+  }
+
+  static async countActiveByAccountId(accountId: string) {
+    const [row] = await db
+      .select({ total: count() })
+      .from(userProfiles)
+      .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
+
+    return row?.total ?? 0
+  }
+
+  static async delete(id: string) {
+    const [deleted] = await db
+      .update(userProfiles)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
+      .returning({ userProfileId: userProfiles.userProfileId })
+
+    return deleted ?? null
+  }
+
+  static async deleteWithOwnershipCheck(profileId: string, accountId: string) {
+    const isOwner = await this.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const activeCount = await this.countActiveByAccountId(accountId)
+    if (activeCount <= 1) throw new ConflictError(ErrorMessages.cannotDeleteLastProfile)
+
+    await this.delete(profileId)
   }
 }

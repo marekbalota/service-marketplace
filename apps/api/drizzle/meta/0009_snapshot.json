@@ -1,6 +1,6 @@
 {
-  "id": "aac35c6e-4c8e-4d7d-8359-0fa60a62409f",
-  "prevId": "9c8d04a7-55df-465a-904f-da31adbbf1f5",
+  "id": "9c8d04a7-55df-465a-904f-da31adbbf1f5",
+  "prevId": "a138c228-2840-49c9-97a7-50a782275e79",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -766,31 +766,19 @@
           "name": "post_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
-        },
-        "message_id": {
-          "name": "message_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "review_id": {
-          "name": "review_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
           "notNull": true
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -833,43 +821,12 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "reports_message_id_messages_message_id_fk": {
-          "name": "reports_message_id_messages_message_id_fk",
-          "tableFrom": "reports",
-          "tableTo": "messages",
-          "columnsFrom": [
-            "message_id"
-          ],
-          "columnsTo": [
-            "message_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "reports_review_id_reviews_review_id_fk": {
-          "name": "reports_review_id_reviews_review_id_fk",
-          "tableFrom": "reports",
-          "tableTo": "reviews",
-          "columnsFrom": [
-            "review_id"
-          ],
-          "columnsTo": [
-            "review_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "reports_exactly_one_target": {
-          "name": "reports_exactly_one_target",
-          "value": "(\"reports\".\"post_id\" IS NOT NULL)::int + (\"reports\".\"message_id\" IS NOT NULL)::int + (\"reports\".\"review_id\" IS NOT NULL)::int = 1"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.reviews": {

@@ -54,10 +54,21 @@ export const AdminUsersModel = {
     roleId: t.String(),
   }),
 
-  // List roles for assignment
-  assignableRoleResponse: t.Array(t.Object({
-    roleId: t.String(),
+  // Get single user
+  findByIdParams: t.Object({ id: t.String() }),
+  findByIdResponse: userRow,
+
+  // List profiles for a user
+  userProfilesParams: t.Object({ id: t.String() }),
+  userProfilesResponse: t.Array(t.Object({
+    userProfileId: t.String(),
+    accountId: t.String(),
     name: t.String(),
+    email: t.String(),
+    bio: t.Nullable(t.String()),
+    phoneNumber: t.Nullable(t.String()),
+    fax: t.Nullable(t.String()),
+    createdAt: t.Date(),
   })),
 } as const;
 

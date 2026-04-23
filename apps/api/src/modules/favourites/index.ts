@@ -1,9 +1,8 @@
 import { Elysia, t } from 'elysia'
 import { FavouritesModel } from './model'
 import { FavouritesService } from './service'
-import { AuthModel } from '../auth/model'
 import { authRoutes } from '../auth'
-import { errorResponse } from '../../lib/errors'
+import { notFoundResponse, unauthorizedResponse } from '../../lib/errors'
 
 export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
@@ -14,7 +13,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
       auth: true,
       response: {
         200: FavouritesModel.findAllResponse,
-        401: AuthModel.unauthorizedResponse,
+        ...unauthorizedResponse,
       },
       detail: { summary: 'List user favourites', operationId: 'listFavourites', tags: ['Favourites'] },
     },
@@ -27,7 +26,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
       params: FavouritesModel.postIdParams,
       response: {
         200: FavouritesModel.isFavouriteResponse,
-        401: AuthModel.unauthorizedResponse,
+        ...unauthorizedResponse,
       },
       detail: { summary: 'Check if post is favourited', operationId: 'checkFavourite', tags: ['Favourites'] },
     },
@@ -43,8 +42,8 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
       params: FavouritesModel.postIdParams,
       response: {
         201: FavouritesModel.addResponse,
-        401: AuthModel.unauthorizedResponse,
-        404: errorResponse,
+        ...unauthorizedResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Add post to favourites', operationId: 'addFavourite', tags: ['Favourites'] },
     },
@@ -60,8 +59,8 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
       params: FavouritesModel.postIdParams,
       response: {
         204: t.Void(),
-        401: AuthModel.unauthorizedResponse,
-        404: errorResponse,
+        ...unauthorizedResponse,
+        ...notFoundResponse,
       },
       detail: { summary: 'Remove post from favourites', operationId: 'removeFavourite', tags: ['Favourites'] },
     },

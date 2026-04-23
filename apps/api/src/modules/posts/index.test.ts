@@ -70,7 +70,6 @@ describe("GET /posts", () => {
   });
 
   it("returns 422 for an invalid type value", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await client.posts.get({ query: { type: "INVALID" as any } });
     expect(error?.status).toBe(422);
   });
@@ -113,9 +112,10 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data, error } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data, error } = await client.posts({ id: postId }).get();
     expect(error).toBeNull();
-    expect(data!.postId).toBe(all.items[0]!.postId);
+    expect(data!.postId).toBe(postId);
     expect(typeof data!.authorName).toBe("string");
     expect(Array.isArray(data!.categories)).toBe(true);
   });
@@ -124,7 +124,8 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data } = await client.posts({ id: postId }).get();
     expect(data!.location === null || typeof data!.location === "object").toBe(true);
     expect(Array.isArray(data!.reviews)).toBe(true);
     expect(typeof data!.reviewCount).toBe("number");
@@ -135,7 +136,8 @@ describe("GET /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { data } = await client.posts({ id: all.items[0]!.postId }).get();
+    const postId = all.items[0]!.postId;
+    const { data } = await client.posts({ id: postId }).get();
 
     if (data!.reviewCount > 0) {
       for (const review of data!.reviews) {
@@ -172,10 +174,8 @@ describe("POST /posts", () => {
       { headers: { Cookie: sessionCookie } },
     );
     expect(error).toBeNull();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const post = data as any;
-    expect(typeof post?.postId).toBe("string");
-    expect(post?.postTitle).toBe("Test post title");
+    expect(typeof data?.postId).toBe("string");
+    expect(data?.postTitle).toBe("Test post title");
   });
 
   it("returns 422 when postTitle is too short", async () => {
@@ -261,7 +261,8 @@ describe("PATCH /posts/:id", () => {
     const { data: all } = await client.posts.get({ query: { size: 1 } });
     if (!all || all.items.length === 0) return;
 
-    const { error } = await client.posts({ id: all.items[0]!.postId }).patch({
+    const postId = all.items[0]!.postId;
+    const { error } = await client.posts({ id: postId }).patch({
       postTitle: "Updated title",
     });
     expect(error?.status).toBe(401);
@@ -311,14 +312,11 @@ describe("PATCH /posts/:id", () => {
     const postId = getPostId(created);
 
     // Sign in as a different user to attempt the update
-    const otherSignIn = await app.handle(
-      new Request("http://localhost/api/auth/sign-in/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "bob@example.com", password: "password123" }),
-      }),
-    );
-    const otherCookie = otherSignIn.headers.get("set-cookie") ?? "";
+    const otherSignInRes = await auth.api.signInEmail({
+      body: { email: "bob@example.com", password: "password123" },
+      asResponse: true,
+    });
+    const otherCookie = otherSignInRes.headers.get("set-cookie") ?? "";
 
     if (!otherCookie) return; // bob may not exist in seed data
 
@@ -346,8 +344,7 @@ describe("DELETE /posts/:id", () => {
       },
       { headers: { Cookie: sessionCookie } },
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const postId = (created as any)?.postId as string;
+    const postId = created?.postId ?? '';
 
     const { error } = await client.posts({ id: postId }).delete(undefined, {
       headers: { Cookie: sessionCookie },
@@ -356,5 +353,32 @@ describe("DELETE /posts/:id", () => {
 
     const { error: getError } = await client.posts({ id: postId }).get();
     expect(getError?.status).toBe(404);
+  });
+
+  it("returns 403 when trying to delete another user's post", async () => {
+    // Create a post as alice
+    const { data: created } = await client.posts.post(
+      {
+        authorId,
+        postTitle: "Alice post for 403 test",
+        description: "This post belongs to alice and bob cannot delete it",
+        postType: "OFFER",
+      },
+      { headers: { Cookie: sessionCookie } },
+    );
+    const postId = getPostId(created);
+
+    // Sign in as bob using Eden Treaty client
+    const bobSignInRes = await auth.api.signInEmail({
+      body: { email: "bob@example.com", password: "password123" },
+      asResponse: true,
+    });
+    const bobCookie = bobSignInRes.headers.get("set-cookie") ?? "";
+    if (!bobCookie) return;
+
+    const { error } = await client.posts({ id: postId }).delete(undefined, {
+      headers: { Cookie: bobCookie },
+    });
+    expect(error?.status).toBe(403);
   });
 });

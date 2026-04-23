@@ -77,30 +77,34 @@ export abstract class ReviewsService {
   }
 
   /**
-   * Create a review on behalf of the account's primary profile.
-   * @throws ForbiddenError if account has no profile
+   * Create a review on behalf of the specified profile.
+   * @throws ForbiddenError if profile doesn't belong to the account
    * @throws NotFoundError if post doesn't exist or is deleted
    * @throws ConflictError if the profile already has an active review for this post
    */
-  static async createForAccount(
+  static async createWithOwnerShipCheck(
     accountId: string,
     postId: string,
     body: ReviewsModel['createBody'],
   ): Promise<ReviewsModel['createResponse']> {
-    const profiles = await ProfilesService.findByAccountId(accountId)
-    if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
-    return this.create(postId, profiles[0]!.userProfileId, body)
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(body.profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.create(postId, body.profileId, body)
   }
 
   /**
-   * Delete a review on behalf of the account's primary profile.
-   * @throws ForbiddenError if account has no profile or review doesn't belong to the profile
+   * Delete a review on behalf of the account.
+   * @throws ForbiddenError if review doesn't belong to any profile owned by the account
    * @throws NotFoundError if review doesn't exist or is already deleted
    */
   static async deleteForAccount(accountId: string, reviewId: string): Promise<void> {
-    const profiles = await ProfilesService.findByAccountId(accountId)
-    if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
-    await this.delete(reviewId, profiles[0]!.userProfileId)
+    const review = await this.findById(reviewId)
+    if (!review || review.deletedAt !== null) throw new NotFoundError(ErrorMessages.reviewNotFound)
+
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(review.reviewerId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    await this.delete(reviewId, review.reviewerId)
   }
 
   /**

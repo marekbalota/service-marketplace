@@ -59,6 +59,12 @@ export const AdminRolesModel = {
     name: t.String(),
     description: t.Nullable(t.String()),
   })),
+
+  // List assignable roles
+  assignableRoleResponse: t.Array(t.Object({
+    roleId: t.String(),
+    name: t.String(),
+  })),
 } as const;
 
 export type AdminRolesModel = {

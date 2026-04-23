@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Suspense, useState } from 'react';
 import { useSuspenseQuery, useQuery, useQueryClient, queryOptions, keepPreviousData, useMutation } from '@tanstack/react-query';
 import { Ban, Eye, Loader2 } from 'lucide-react';
@@ -89,7 +89,7 @@ export const usersQueryOptions = (params: {
 export const assignableRolesQueryOptions = queryOptions({
   queryKey: ['admin', 'users', 'assignable-roles'],
   queryFn: async () => {
-    const { data, error } = await api.admin.users['roles'].assignable.get();
+    const { data, error } = await api.admin.roles.assignable.get();
     if (error) throw error;
     return data ?? [];
   },
@@ -145,14 +145,8 @@ function buildPageNumbers(current: number, total: number): (number | 'ellipsis')
   return result;
 }
 
-export const Route = createFileRoute('/_app/admin/accounts')({
+export const Route = createFileRoute('/_app/admin/users/')({
   validateSearch: searchSchema,
-  beforeLoad: ({ context }) => {
-    const user = context.user
-    const permissions = user?.role?.permissions ?? []
-    const hasAdminAccess = hasPermissions(permissions, [Permissions.AdminUsersView])
-    if (!hasAdminAccess) throw redirect({ to: '/' })
-  },
   component: ManageAccounts,
 });
 
@@ -338,6 +332,9 @@ function UserCard({
   const permissions = currentUser?.role?.permissions ?? [];
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole]);
   const canBan = hasPermissions(permissions, [Permissions.AdminUsersBan]);
+  const canViewUser = hasPermissions(permissions, [Permissions.AdminUsersView]);
+
+  const navigate = useNavigate();
 
   const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions);
 
@@ -403,10 +400,17 @@ function UserCard({
               </div>
             )}
 
-            <Button variant="outline" size="sm" className="gap-2">
-              <Eye className="size-4" />
-              View
-            </Button>
+            {canViewUser && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => navigate({ to: '/admin/users/$userId', params: { userId: user.userId } })}
+              >
+                <Eye className="size-4" />
+                View
+              </Button>
+            )}
 
             {canBan && (
               user.isBanned ? (

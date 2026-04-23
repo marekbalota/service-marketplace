@@ -1,6 +1,6 @@
 {
-  "id": "a138c228-2840-49c9-97a7-50a782275e79",
-  "prevId": "f1320176-4760-461a-a9eb-a88da1e30451",
+  "id": "f1320176-4760-461a-a9eb-a88da1e30451",
+  "prevId": "d81a36b8-ee9d-4796-9d0f-0345006c77db",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -254,99 +254,6 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.message_reports": {
-      "name": "message_reports",
-      "schema": "",
-      "columns": {
-        "report_id": {
-          "name": "report_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "reporter_id": {
-          "name": "reporter_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "message_id": {
-          "name": "message_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "message_reports_reporter_id_user_profiles_user_profile_id_fk": {
-          "name": "message_reports_reporter_id_user_profiles_user_profile_id_fk",
-          "tableFrom": "message_reports",
-          "tableTo": "user_profiles",
-          "columnsFrom": [
-            "reporter_id"
-          ],
-          "columnsTo": [
-            "user_profile_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "message_reports_message_id_messages_message_id_fk": {
-          "name": "message_reports_message_id_messages_message_id_fk",
-          "tableFrom": "message_reports",
-          "tableTo": "messages",
-          "columnsFrom": [
-            "message_id"
-          ],
-          "columnsTo": [
-            "message_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "message_reports_reporter_message_unique": {
-          "name": "message_reports_reporter_message_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "reporter_id",
-            "message_id"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1280,6 +1187,13 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},

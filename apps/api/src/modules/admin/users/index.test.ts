@@ -30,12 +30,9 @@ beforeAll(async () => {
   });
   userCookie = userRes.headers.get('set-cookie') ?? '';
 
-  // Get alice's user ID from /users/me
-  const meRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: userCookie },
-  }));
-  const meData = await meRes.json() as { userId: string };
-  regularUserId = meData.userId;
+  // Get alice's user ID from /users/me using Eden Treaty
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: userCookie } });
+  regularUserId = meData!.userId;
 
   // Sign in as bob — used as the ban/unban target so alice's session is never invalidated
   const bobRes = await auth.api.signInEmail({
@@ -43,11 +40,8 @@ beforeAll(async () => {
     asResponse: true,
   });
   const bobCookie = bobRes.headers.get('set-cookie') ?? '';
-  const bobMeRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: bobCookie },
-  }));
-  const bobData = await bobMeRes.json() as { userId: string };
-  banTargetUserId = bobData.userId;
+  const { data: bobData } = await client.users.me.get({ headers: { Cookie: bobCookie } });
+  banTargetUserId = bobData!.userId;
 });
 
 describe('GET /admin/users', () => {
@@ -174,28 +168,6 @@ describe('GET /admin/users', () => {
   });
 });
 
-describe('GET /admin/users/roles/assignable', () => {
-  it('returns 401 without a session', async () => {
-    const { error } = await client['admin'].users.roles.assignable.get();
-    expect(error?.status).toBe(401);
-  });
-
-  it('returns 403 for non-admin user', async () => {
-    const { error } = await client['admin'].users.roles.assignable.get({
-      headers: { Cookie: userCookie },
-    });
-    expect(error?.status).toBe(403);
-  });
-
-  it('returns 200 with roles for admin', async () => {
-    const { data, error } = await client['admin'].users.roles.assignable.get({
-      headers: { Cookie: adminCookie },
-    });
-    expect(error).toBeNull();
-    expect(Array.isArray(data)).toBe(true);
-  });
-});
-
 describe('PATCH /admin/users/:id/ban', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client['admin'].users({ id: regularUserId }).ban.patch({
@@ -228,7 +200,10 @@ describe('PATCH /admin/users/:id/ban', () => {
     );
     expect(error).toBeNull();
 
-    const { data } = await client['admin'].users.get({ headers: { Cookie: adminCookie } });
+    const { data } = await client['admin'].users.get({
+      query: { size: 100 },
+      headers: { Cookie: adminCookie },
+    });
     const bannedUser = data!.items.find((u) => u.userId === banTargetUserId);
     expect(bannedUser!.isBanned).toBe(true);
     expect(bannedUser!.banReason).toBe('Integration test ban');
@@ -260,7 +235,10 @@ describe('PATCH /admin/users/:id/unban', () => {
     });
     expect(error).toBeNull();
 
-    const { data } = await client['admin'].users.get({ headers: { Cookie: adminCookie } });
+    const { data } = await client['admin'].users.get({
+      query: { size: 100 },
+      headers: { Cookie: adminCookie },
+    });
     const unbannedUser = data!.items.find((u) => u.userId === banTargetUserId);
     expect(unbannedUser!.isBanned).toBe(false);
   });
@@ -298,5 +276,60 @@ describe('PATCH /admin/users/:id/role', () => {
     );
     expect(error).toBeTruthy();
     expect(error!.status).toBe(404);
+  });
+});
+
+describe('GET /admin/users/:id', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).get();
+    expect(error?.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin user', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).get({
+      headers: { Cookie: userCookie },
+    });
+    expect(error?.status).toBe(403);
+  });
+
+  it('returns 200 with user details for admin', async () => {
+    const { data, error } = await client['admin'].users({ id: regularUserId }).get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(data).toBeTruthy();
+    expect(data!.userId).toBe(regularUserId);
+    expect(typeof data!.name).toBe('string');
+    expect(typeof data!.email).toBe('string');
+    expect(typeof data!.isBanned).toBe('boolean');
+  });
+
+  it('returns 404 for unknown user id', async () => {
+    const { error } = await client['admin'].users({ id: '00000000-0000-0000-0000-000000000000' }).get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error?.status).toBe(404);
+  });
+});
+
+describe('GET /admin/users/:id/profiles', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).profiles.get();
+    expect(error?.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin user', async () => {
+    const { error } = await client['admin'].users({ id: regularUserId }).profiles.get({
+      headers: { Cookie: userCookie },
+    });
+    expect(error?.status).toBe(403);
+  });
+
+  it('returns 200 with profiles array for admin', async () => {
+    const { data, error } = await client['admin'].users({ id: regularUserId }).profiles.get({
+      headers: { Cookie: adminCookie },
+    });
+    expect(error).toBeNull();
+    expect(Array.isArray(data)).toBe(true);
   });
 });

@@ -93,16 +93,26 @@ export function postsQueryOptions(deps: {
   rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
   const ratingRanges = normalizeRating(deps.rating)
-  // Build rating filter params - multiple ranges will be sent as comma-separated min-max pairs
-  const ratingFilter = ratingRanges.length > 0
-    ? ratingRanges.map(r => {
-        if (r === '5-4') return { min: 4, max: 5 }
-        if (r === '4-3') return { min: 3, max: 4 }
-        if (r === '3-2') return { min: 2, max: 3 }
-        if (r === '2-1') return { min: 1, max: 2 }
-        if (r === 'none') return { min: 0, max: 0 }
-        return null
-      }).filter(Boolean)
+  // Convert rating ranges to min/max - use the widest range from selected options
+  const ratingMin = ratingRanges.length > 0
+    ? Math.min(...ratingRanges.map(r => {
+        if (r === '5-4') return 4
+        if (r === '4-3') return 3
+        if (r === '3-2') return 2
+        if (r === '2-1') return 1
+        if (r === 'none') return 0
+        return 0
+      }).filter(Boolean))
+    : undefined
+  const ratingMax = ratingRanges.length > 0
+    ? Math.max(...ratingRanges.map(r => {
+        if (r === '5-4') return 5
+        if (r === '4-3') return 4
+        if (r === '3-2') return 3
+        if (r === '2-1') return 2
+        if (r === 'none') return 0
+        return 0
+      }).filter(Boolean))
     : undefined
 
   const query = {
@@ -110,7 +120,8 @@ export function postsQueryOptions(deps: {
     categoryId: deps.category !== 'all' ? deps.category : undefined,
     search:     deps.q,
     sort:       deps.sort,
-    ratingFilter: ratingFilter ? JSON.stringify(ratingFilter) : undefined,
+    ratingMin,
+    ratingMax,
     offset:     (deps.page - 1) * PAGE_SIZE,
     size:       PAGE_SIZE,
   }

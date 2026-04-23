@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import type { UsersModel } from "./model";
 import { NotFoundError, ErrorMessages } from "../../lib/errors";
 
@@ -45,7 +45,8 @@ export abstract class UsersService {
               'email', ${userProfiles.email}
             ))
             from ${userProfiles}
-            where ${userProfiles.accountId} = ${users.id}),
+            where ${userProfiles.accountId} = ${users.id}
+              and ${userProfiles.deletedAt} is null),
             '[]'::json
           )
         `,

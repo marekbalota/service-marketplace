@@ -308,4 +308,23 @@ export abstract class AdminRolesService {
       return true;
     });
   }
+
+  static async listAssignableRoles(requesterRoleId: string) {
+    const requesterPriority = await RBACService.getRolePriority(requesterRoleId);
+    if (requesterPriority === null) {
+      throw new ForbiddenError(AuthErrorMessages.forbidden);
+    }
+
+    return db
+      .select({
+        roleId: roles.roleId,
+        name: roles.name,
+      })
+      .from(roles)
+      .where(and(
+        sql`${roles.priority} < ${requesterPriority}`,
+        isNull(roles.deletedAt)
+      ))
+      .orderBy(desc(roles.priority));
+  }
 }

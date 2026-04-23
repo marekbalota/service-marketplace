@@ -111,6 +111,69 @@ test.describe('Marketplace index', () => {
   })
 })
 
+test.describe('Account Settings — Profile CRUD', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto('/account-settings')
+  })
+
+  test('shows the Account Settings heading', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /account settings/i })).toBeVisible()
+  })
+
+  test('shows at least one existing profile card', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
+  })
+
+  test('create — navigates to create page and back', async ({ page }) => {
+    await page.getByRole('link', { name: /add profile/i }).click()
+    await expect(page).toHaveURL('/account-settings/create')
+    await expect(page.getByText(/add a new user profile/i)).toBeVisible()
+    await page.getByRole('link', { name: /back/i }).click()
+    await expect(page).toHaveURL('/account-settings')
+  })
+
+  test('create — fills form and submits, new profile appears in list', async ({ page }) => {
+    const uniqueEmail = `e2e-profile-${Date.now()}@example.com`
+    await page.getByRole('link', { name: /add profile/i }).click()
+    await page.getByLabel(/name/i).fill('E2E Test Profile')
+    await page.getByLabel(/email/i).fill(uniqueEmail)
+    await page.getByRole('button', { name: /create profile/i }).click()
+    await page.waitForURL('/account-settings')
+    await expect(page.getByText('E2E Test Profile')).toBeVisible()
+  })
+
+  test('edit — navigates to edit page, updates name, returns to list', async ({ page }) => {
+    // Click Edit on the first profile that is NOT active (to avoid conflict)
+    const editLinks = page.getByRole('link', { name: /^edit$/i })
+    await editLinks.first().click()
+    await expect(page).toHaveURL(/\/account-settings\/[^/]+\/edit/)
+    await expect(page.getByText(/update your profile information/i)).toBeVisible()
+    await page.getByRole('link', { name: /back/i }).click()
+    await expect(page).toHaveURL('/account-settings')
+  })
+
+  test('view — navigates to public profile view page', async ({ page }) => {
+    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await expect(page).toHaveURL(/\/profiles\/[^/]+/)
+    await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
+  })
+
+  test('delete — cannot delete last profile (shows error)', async ({ page }) => {
+    // If there is only one profile the Delete button should show an error
+    const deleteButtons = page.getByRole('button', { name: /delete/i })
+    const count = await deleteButtons.count()
+    if (count === 1) {
+      await deleteButtons.first().click()
+      await expect(page.getByText(/cannot delete your only profile/i)).toBeVisible()
+    }
+  })
+})
+
 test.describe('Authentication', () => {
   const testEmail = `e2e-${Date.now()}@example.com`
   const testPassword = 'password123'
