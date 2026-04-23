@@ -2,17 +2,31 @@ import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
+import { auth } from "../auth/service";
+import { ProfilesService } from "../profiles/service";
 import { Permissions } from "@marketplace/shared";
-import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from "../../lib/errors";
+import { ForbiddenError, forbiddenResponse, notFoundResponse, unauthorizedResponse, AuthErrorMessages } from "../../lib/errors";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
   .get(
     "/",
-    async ({ query }) => await PostsService.findAll(query),
+    async ({ query, request: { headers }, status }) => {
+      if (query.profileId) {
+        const session = await auth.api.getSession({ headers });
+        if (!session) return status(401, { message: AuthErrorMessages.unauthorized });
+        const owned = await ProfilesService.isProfileOwnedByAccount(query.profileId, session.user.id);
+        if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden);
+      }
+      return PostsService.findAll(query);
+    },
     {
       query: PostsModel.findAllQuery,
-      response: { 200: PostsModel.findAllResponse },
+      response: {
+        200: PostsModel.findAllResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
       detail: { summary: "List posts", operationId: "listPosts", tags: ["Posts"] },
     },
   )

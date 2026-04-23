@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
@@ -39,7 +39,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery']) {
-    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax } = query;
+    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
 
     const orderBy =
       sort === 'price-low'  ? asc(posts.price)     :
@@ -89,6 +89,16 @@ export abstract class PostsService {
             )
           : undefined,
         ratingConditions,
+        profileId
+          ? exists(
+              tx.select().from(favourites).where(
+                and(
+                  eq(favourites.postId, posts.postId),
+                  eq(favourites.userProfileId, profileId),
+                ),
+              ),
+            )
+          : undefined,
       );
 
       const [countRow] = await tx
