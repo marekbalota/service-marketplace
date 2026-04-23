@@ -210,7 +210,6 @@ export const favourites = pgTable(
       .notNull()
       .references(() => posts.postId),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    deletedAt: timestamp("deleted_at"),
   },
   (table) => [primaryKey({ columns: [table.userProfileId, table.postId] })],
 );
