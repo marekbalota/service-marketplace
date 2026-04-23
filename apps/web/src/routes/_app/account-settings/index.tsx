@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
 import { api } from '#/api'
 import { profilesQueryOptions, useActiveProfile } from '#/lib/profileQueries'
+import { currentUserQueryOptions } from '#/contexts/ActiveUserContext'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -60,6 +61,7 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
+      queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
     },
     onError: (err) => {
       const msg = (err as { value?: { message?: string } }).value?.message ?? (err as Error).message
