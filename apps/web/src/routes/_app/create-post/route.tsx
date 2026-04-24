@@ -12,6 +12,7 @@ import { BackButton } from '#/components/BackButton'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
+import { MultiSelect } from '#/components/ui/multi-select'
 import {
   Select,
   SelectContent,
@@ -54,7 +55,7 @@ const schema = z.object({
   postType:    z.enum(['OFFER', 'REQUEST']),
   postTitle:   z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  categoryId:  z.string().min(1, 'Please select a category'),
+  categoryIds: z.array(z.string()),
   price:       z.string().optional(),
   rateType:    z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
   locationId:  z.string().optional(),
@@ -102,7 +103,7 @@ function CreatePostPage() {
       postType:    'OFFER',
       postTitle:   '',
       description: '',
-      categoryId:  '',
+      categoryIds: [],
       price:       '',
       rateType:    undefined,
       locationId:  '',
@@ -137,7 +138,7 @@ function CreatePostPage() {
         postTitle:   values.postTitle,
         description: values.description,
         postType:    values.postType,
-        categoryIds: values.categoryId ? [values.categoryId] : undefined,
+        categoryIds: values.categoryIds.length ? values.categoryIds : undefined,
         price:       values.price || undefined,
         rateType:    values.rateType,
         ...(hasManualLocation
@@ -282,35 +283,28 @@ function CreatePostPage() {
               )}
             />
 
-            {/* Category */}
+            {/* Categories */}
             <Controller
               control={form.control}
-              name="categoryId"
+              name="categoryIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
                       <Tag className="size-5 text-green-600" />
                     </div>
-                    <FieldLabel className="text-base font-semibold">Category *</FieldLabel>
+                    <FieldLabel className="text-base font-semibold">Categories (Optional)</FieldLabel>
                   </div>
-                  {/* !h-11: override Base UI's data-[size=default]:h-8 which has higher CSS specificity */}
-                  <Select value={field.value} onValueChange={(v) => { field.onChange(v); field.onBlur() }}>
-                    <SelectTrigger className="!h-11 w-full" aria-invalid={fieldState.invalid}>
-                      <SelectValue placeholder="Select a category">
-                        {field.value
-                          ? categories.find((c) => c.categoryId === field.value)?.name
-                          : undefined}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60 overflow-y-auto">
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.categoryId} value={cat.categoryId}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelect
+                    options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
+                    value={field.value}
+                    onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                    placeholder="Select categories"
+                    searchPlaceholder="Search categories..."
+                    searchable
+                    displayMode="tags"
+                    aria-invalid={fieldState.invalid}
+                  />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}

@@ -6,6 +6,12 @@ import { auth } from "../auth/service";
 import { ProfilesService } from "../profiles/service";
 import { Permissions } from "@marketplace/shared";
 import { ForbiddenError, forbiddenResponse, notFoundResponse, unauthorizedResponse, AuthErrorMessages } from "../../lib/errors";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse, errorResponse } from "../../lib/errors";
+import { AuthModel } from "../auth/model";
+import { ReviewsModel } from "../reviews/model";
+import { ReviewsService } from "../reviews/service";
+import { ReportsModel } from "../reports/model";
+import { ReportsService } from "../reports/service";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
@@ -96,5 +102,63 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
         ...notFoundResponse,
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
+    },
+  )
+  .post(
+    '/:id/reviews',
+    async ({ params, body, user, set }) => {
+      const review = await ReviewsService.createForAccount(user.id, params.id, body)
+      set.status = 201
+      return review
+    },
+    {
+      auth: true,
+      params: ReviewsModel.createParams,
+      body: ReviewsModel.createBody,
+      response: {
+        201: ReviewsModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
+    },
+  )
+  .post(
+    '/:id/reports',
+    async ({ params, body, user, set }) => {
+      const report = await ReportsService.createForPostForAccount(user.id, params.id, body)
+      set.status = 201
+      return report
+    },
+    {
+      auth: true,
+      params: ReportsModel.createParams,
+      body: ReportsModel.createBody,
+      response: {
+        201: ReportsModel.createResponse,
+        401: AuthModel.unauthorizedResponse,
+        403: AuthModel.forbiddenResponse,
+        404: errorResponse,
+        409: errorResponse,
+      },
+      detail: { summary: 'Report a post', operationId: 'createReport', tags: ['Reports'] },
+    },
+  )
+  .get(
+    '/:id/reports/check',
+    async ({ params, user }) => {
+      const hasReported = await ReportsService.hasReportedPostForAccount(user.id, params.id)
+      return { hasReported }
+    },
+    {
+      auth: true,
+      params: ReportsModel.checkParams,
+      response: {
+        200: ReportsModel.checkResponse,
+        401: AuthModel.unauthorizedResponse,
+      },
+      detail: { summary: 'Check if current user has reported a post', operationId: 'checkReport', tags: ['Reports'] },
     },
   );

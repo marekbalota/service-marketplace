@@ -4,6 +4,7 @@ const errorResponse = t.Object({ message: t.String() })
 
 export const ErrorMessages = {
   postNotFound:            'Post not found',
+  messageNotFound:         'Message not found',
   profileNotFound:         'Profile not found',
   cannotDeleteLastProfile: 'Cannot delete your only profile. Create a new profile first.',
   imageNotFound:           'Image not found',
@@ -11,6 +12,8 @@ export const ErrorMessages = {
   alreadyFavourited:       'Post is already favourited',
   reviewNotFound:          'Review not found',
   alreadyReviewed:         'You have already reviewed this post',
+  alreadyReported:         'You have already reported this',
+  reportNotFound:          'Report not found',
   userNotFound:            'User not found',
   userRoleNotFound:        'User role not found',
   roleNotFound:            'Role not found',

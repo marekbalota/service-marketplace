@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2 } from 'lucide-react'
+import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2, Flag } from 'lucide-react'
 import { api } from '#/api'
 import { useCurrentUser } from '#/lib/userQueries'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
@@ -16,6 +16,8 @@ import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
 import { formatLocation } from '#/lib/format'
 import { ReviewForm } from '#/components/ReviewForm'
+import { ReportForm } from '#/components/ReportForm'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 
 export function postDetailQueryOptions(postId: string) {
   return queryOptions({
@@ -246,6 +248,85 @@ function SendMessageSection({ postId, profileId }: { postId: string; profileId: 
   )
 }
 
+type ReviewType = { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }
+
+function ReviewCard({
+  review,
+  myProfileId,
+  onDelete,
+  isDeleting,
+  onReport,
+  isAuthenticated,
+}: {
+  review: ReviewType
+  myProfileId: string | null
+  onDelete: (id: string) => void
+  isDeleting: boolean
+  onReport: (id: string) => void
+  isAuthenticated: boolean
+}) {
+  const [hovered, setHovered] = useState(false)
+  const isMyReview = review.reviewerId === myProfileId
+  const canReport = isAuthenticated && !isMyReview
+
+  return (
+    <Card
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <CardContent className="pt-6">
+        <div className="mb-2 flex items-start justify-between">
+          <div>
+            <p className="font-medium">{review.reviewerName}</p>
+            <p className="text-sm text-muted-foreground">
+              {new Date(review.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
+                />
+              ))}
+            </div>
+            {canReport && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'size-7 shrink-0 text-muted-foreground transition-opacity',
+                  hovered ? 'opacity-100' : 'opacity-0',
+                )}
+                onClick={() => onReport(review.reviewId)}
+                aria-label="Report review"
+                tabIndex={-1}
+              >
+                <Flag className="size-3.5" />
+              </Button>
+            )}
+            {isMyReview && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-destructive"
+                onClick={() => onDelete(review.reviewId)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        {review.reviewDescription && (
+          <p className="text-muted-foreground">{review.reviewDescription}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
@@ -256,11 +337,24 @@ function PostDetailPage() {
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user !== null
   const [showReviewForm, setShowReviewForm] = useState(false)
+  const [showReportForm, setShowReportForm] = useState(false)
+  const [reportingReviewId, setReportingReviewId] = useState<string | null>(null)
 
   // Check if user has already reviewed this post
   const hasReviewed = post.reviews.some(
     (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
   )
+
+  const { data: reportCheck } = useQuery({
+    queryKey: ['reports', 'check', postId],
+    queryFn: async () => {
+      const { data, error } = await api.posts({ id: postId }).reports.check.get()
+      if (error) throw error
+      return data!
+    },
+    enabled: isAuthenticated && !isOwner,
+  })
+  const hasReported = reportCheck?.hasReported ?? false
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -412,6 +506,37 @@ function PostDetailPage() {
                     You have already reviewed this post
                   </p>
                 )}
+                {!hasReported && !showReportForm && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                    onClick={() => setShowReportForm(true)}
+                  >
+                    <Flag className="size-4" />
+                    Report Post
+                  </Button>
+                )}
+                {!hasReported && showReportForm && (
+                  <ReportForm
+                    targetType="POST"
+                    entityName="post"
+                    descriptionRequired
+                    onReport={async (data) => {
+                      const { error } = await api.posts({ id: postId }).reports.post(data)
+                      if (error) throw error
+                    }}
+                    onSuccess={() => {
+                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', postId] })
+                      setShowReportForm(false)
+                    }}
+                    onCancel={() => setShowReportForm(false)}
+                  />
+                )}
+                {hasReported && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reported this post
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -426,52 +551,51 @@ function PostDetailPage() {
             ) : (
               <div className="space-y-4">
                 {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
-                  <Card key={review.reviewId}>
-                    <CardContent className="pt-6">
-                      <div className="mb-2 flex items-start justify-between">
-                        <div>
-                          <p className="font-medium">{review.reviewerName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
-                              />
-                            ))}
-                          </div>
-                          {review.reviewerId === activeProfile?.userProfileId && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-destructive"
-                              onClick={() => {
-                                if (confirm('Are you sure you want to delete your review?')) {
-                                  deleteMutation.mutate(review.reviewId)
-                                }
-                              }}
-                              disabled={deleteMutation.isPending}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      {review.reviewDescription && (
-                        <p className="text-muted-foreground">{review.reviewDescription}</p>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <ReviewCard
+                    key={review.reviewId}
+                    review={review}
+                    myProfileId={activeProfile?.userProfileId ?? null}
+                    onDelete={(id) => {
+                      if (confirm('Are you sure you want to delete your review?')) {
+                        deleteMutation.mutate(id)
+                      }
+                    }}
+                    isDeleting={deleteMutation.isPending}
+                    onReport={(id) => setReportingReviewId(id)}
+                    isAuthenticated={isAuthenticated}
+                  />
                 ))}
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={reportingReviewId !== null}
+        onOpenChange={(open) => { if (!open) setReportingReviewId(null) }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Report Review</DialogTitle>
+          </DialogHeader>
+          {reportingReviewId && (
+            <ReportForm
+              targetType="REVIEW"
+              entityName="review"
+              onReport={async (data) => {
+                const { error } = await api.reviews({ id: reportingReviewId }).reports.post(data)
+                if (error) throw error
+              }}
+              onSuccess={() => {
+                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'review', reportingReviewId] })
+                setReportingReviewId(null)
+              }}
+              onCancel={() => setReportingReviewId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
