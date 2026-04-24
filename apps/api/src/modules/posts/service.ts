@@ -38,8 +38,13 @@ const postSelect = (tx: DbOrTx) => tx
   .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId);
 
 export abstract class PostsService {
-  static async findAll(query: PostsModel['findAllQuery']) {
+  static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
     const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+
+    if (profileId && accountId !== undefined) {
+      const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+      if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    }
 
     const orderBy =
       sort === 'price-low'  ? asc(posts.price)     :

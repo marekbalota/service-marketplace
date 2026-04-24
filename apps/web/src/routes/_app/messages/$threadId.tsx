@@ -72,20 +72,17 @@ export function MessageBubble({
   otherPartyName: string
   onReport?: () => void
 }) {
-  const [hovered, setHovered] = useState(false)
   const d = typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt
   const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   return (
     <div
-      className={cn('flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={cn('group flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}
     >
       {!message.sentByMe && (
         <span className="px-1 text-xs text-muted-foreground">{otherPartyName}</span>
       )}
-      <div className={cn('flex items-center gap-1', message.sentByMe ? 'flex-row-reverse' : 'flex-row')}>
+      <div className={cn('flex w-full items-center gap-1', message.sentByMe ? 'flex-row-reverse' : 'flex-row')}>
         <div
           className={cn(
             'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
@@ -100,10 +97,7 @@ export function MessageBubble({
           <Button
             variant="ghost"
             size="icon"
-            className={cn(
-              'size-7 shrink-0 text-muted-foreground transition-opacity',
-              hovered ? 'opacity-100' : 'opacity-0',
-            )}
+            className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
             onClick={onReport}
             aria-label="Report message"
             tabIndex={-1}
@@ -236,7 +230,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
             key={msg.messageId}
             message={msg}
             otherPartyName={thread.otherPartyName}
-            onReport={!msg.sentByMe && !isPostOwner ? () => setReportingMessageId(msg.messageId) : undefined}
+            onReport={!msg.sentByMe ? () => setReportingMessageId(msg.messageId) : undefined}
           />
         ))}
       </div>

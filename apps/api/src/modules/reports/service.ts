@@ -4,6 +4,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 import type { ReportsModel } from './model'
 import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
+import { MessagesService } from '../messages/service'
 
 type TargetType = 'POST' | 'MESSAGE' | 'REVIEW'
 
@@ -71,11 +72,14 @@ export abstract class ReportsService {
     })
   }
 
-  static async hasReportedPost(postId: string, reporterId: string): Promise<boolean> {
+  static async hasReportedPost(accountId: string, profileId: string, postId: string): Promise<boolean> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.postId, postId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+      .where(and(eq(reports.postId, postId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
       .limit(1)
 
     return !!report
@@ -89,12 +93,6 @@ export abstract class ReportsService {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
     return this.createForPost(postId, profiles[0]!.userProfileId, body)
-  }
-
-  static async hasReportedPostForAccount(accountId: string, postId: string): Promise<boolean> {
-    const profiles = await ProfilesService.findByAccountId(accountId)
-    if (!profiles.length) return false
-    return this.hasReportedPost(postId, profiles[0]!.userProfileId)
   }
 
   // ── Messages ───────────────────────────────────────────────────────────
@@ -133,11 +131,14 @@ export abstract class ReportsService {
     })
   }
 
-  static async hasReportedMessage(messageId: string, reporterId: string): Promise<boolean> {
+  static async hasReportedMessage(accountId: string, profileId: string, messageId: string): Promise<boolean> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+      .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
       .limit(1)
 
     return !!report
@@ -145,18 +146,16 @@ export abstract class ReportsService {
 
   static async createForMessageForAccount(
     accountId: string,
+    threadId: string,
     messageId: string,
     body: ReportsModel['createBody'],
   ): Promise<ReportsModel['createResponse']> {
     const profiles = await ProfilesService.findByAccountId(accountId)
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
-    return this.createForMessage(messageId, profiles[0]!.userProfileId, body)
-  }
-
-  static async hasReportedMessageForAccount(accountId: string, messageId: string): Promise<boolean> {
-    const profiles = await ProfilesService.findByAccountId(accountId)
-    if (!profiles.length) return false
-    return this.hasReportedMessage(messageId, profiles[0]!.userProfileId)
+    const profileId = profiles[0]!.userProfileId
+    const roleResult = await MessagesService.getRole(threadId, profileId)
+    if (!roleResult) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    return this.createForMessage(messageId, profileId, body)
   }
 
   // ── Reviews ────────────────────────────────────────────────────────────
@@ -195,11 +194,14 @@ export abstract class ReportsService {
     })
   }
 
-  static async hasReportedReview(reviewId: string, reporterId: string): Promise<boolean> {
+  static async hasReportedReview(accountId: string, profileId: string, reviewId: string): Promise<boolean> {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+      .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
       .limit(1)
 
     return !!report
@@ -215,9 +217,4 @@ export abstract class ReportsService {
     return this.createForReview(reviewId, profiles[0]!.userProfileId, body)
   }
 
-  static async hasReportedReviewForAccount(accountId: string, reviewId: string): Promise<boolean> {
-    const profiles = await ProfilesService.findByAccountId(accountId)
-    if (!profiles.length) return false
-    return this.hasReportedReview(reviewId, profiles[0]!.userProfileId)
-  }
 }

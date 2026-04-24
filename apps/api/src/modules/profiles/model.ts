@@ -32,7 +32,10 @@ export const ProfilesModel = {
     fax:         t.Optional(t.Union([t.String(), t.Null()])),
   }),
   createResponse: profileItemPublic,
-  deleteParams:   t.Object({ id: t.String() }),
+  deleteParams:          t.Object({ id: t.String() }),
+  reportedPostParams:    t.Object({ id: t.String(), postId: t.String() }),
+  reportedReviewParams:  t.Object({ id: t.String(), reviewId: t.String() }),
+  reportedMessageParams: t.Object({ id: t.String(), messageId: t.String() }),
 } as const
 
 export type ProfilesModel = {

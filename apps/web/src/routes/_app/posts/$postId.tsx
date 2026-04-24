@@ -345,16 +345,14 @@ function PostDetailPage() {
     (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
   )
 
-  const { data: reportCheck } = useQuery({
-    queryKey: ['reports', 'check', postId],
+  const { data: hasReported } = useQuery({
+    queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId],
     queryFn: async () => {
-      const { data, error } = await api.posts({ id: postId }).reports.check.get()
-      if (error) throw error
-      return data!
+      const { status } = await api.profiles({ id: activeProfile!.userProfileId }).reported.posts({ postId }).get()
+      return status === 204
     },
-    enabled: isAuthenticated && !isOwner,
+    enabled: isAuthenticated && !isOwner && !!activeProfile?.userProfileId,
   })
-  const hasReported = reportCheck?.hasReported ?? false
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -526,7 +524,7 @@ function PostDetailPage() {
                       if (error) throw error
                     }}
                     onSuccess={() => {
-                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', postId] })
+                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId] })
                       setShowReportForm(false)
                     }}
                     onCancel={() => setShowReportForm(false)}
