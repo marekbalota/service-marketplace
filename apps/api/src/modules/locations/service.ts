@@ -1,9 +1,14 @@
 import { db } from '../../db'
 import { locations, posts } from '../../db/schema'
 import { eq, isNull, and } from 'drizzle-orm'
+import { ForbiddenError, AuthErrorMessages } from '../../lib/errors'
+import { ProfilesService } from '../profiles/service'
 
 export abstract class LocationsService {
-  static async findByProfileId(profileId: string) {
+  static async findByProfileId(profileId: string, accountId: string) {
+    const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
     return db
       .selectDistinct({
         locationId:  locations.locationId,

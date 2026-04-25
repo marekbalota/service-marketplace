@@ -3,8 +3,8 @@ import { queryOptions, useSuspenseQuery, useQuery, useMutation, useQueryClient }
 import { useState } from 'react'
 import { DollarSign, MapPin, User, Star, MessageSquare, Pencil, Heart, Trash2, Flag } from 'lucide-react'
 import { api } from '#/api'
-import { authClient } from '#/auth'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { BackButton } from '#/components/BackButton'
 import { EmptyState } from '#/components/EmptyState'
 import { Badge } from '#/components/ui/badge'
@@ -82,40 +82,40 @@ const RATE_LABELS: Record<string, string> = {
 
 function FavouriteButton({ postId }: { postId: string }) {
   const queryClient = useQueryClient()
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
+  const isAuthenticated = user != null
+  const profileId = activeProfile?.userProfileId
 
-  const { data: checkData } = useQuery({
-    queryKey: ['favourites', postId],
+  const { data: favouritesList } = useQuery({
+    queryKey: ['favourites', profileId],
     queryFn: async () => {
-      const { data, error } = await api.favourites({ postId }).get()
+      const { data, error } = await api.favourites.get({ query: { profileId: profileId! } })
       if (error) throw error
       return data
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!profileId,
   })
 
-  const isFavourite = checkData?.isFavourite ?? false
+  const isFavourite = favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ?? false
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await api.favourites({ postId }).post()
+      const { error } = await api.favourites({ postId }).post({ profileId: profileId! })
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
     },
   })
 
   const removeMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await api.favourites({ postId }).delete()
+      const { error } = await api.favourites({ postId }).delete({ profileId: profileId! })
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
     },
   })
 
@@ -330,7 +330,8 @@ function ReviewCard({
 function PostDetailPage() {
   const { postId } = Route.useParams()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { activeProfile, user } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
   const router = useRouter()
   const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
@@ -344,16 +345,14 @@ function PostDetailPage() {
     (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
   )
 
-  const { data: reportCheck } = useQuery({
-    queryKey: ['reports', 'check', postId],
+  const { data: hasReported } = useQuery({
+    queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId],
     queryFn: async () => {
-      const { data, error } = await api.posts({ id: postId }).reports.check.get()
-      if (error) throw error
-      return data!
+      const { status } = await api.profiles({ id: activeProfile!.userProfileId }).reported.posts({ postId }).get()
+      return status === 204
     },
-    enabled: isAuthenticated && !isOwner,
+    enabled: isAuthenticated && !isOwner && !!activeProfile?.userProfileId,
   })
-  const hasReported = reportCheck?.hasReported ?? false
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -525,7 +524,7 @@ function PostDetailPage() {
                       if (error) throw error
                     }}
                     onSuccess={() => {
-                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', postId] })
+                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId] })
                       setShowReportForm(false)
                     }}
                     onCancel={() => setShowReportForm(false)}

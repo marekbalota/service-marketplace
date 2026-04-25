@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 
-export const errorResponse = t.Object({ message: t.String() })
+const errorResponse = t.Object({ message: t.String() })
 
 export const ErrorMessages = {
   postNotFound:            'Post not found',
@@ -9,6 +9,7 @@ export const ErrorMessages = {
   cannotDeleteLastProfile: 'Cannot delete your only profile. Create a new profile first.',
   imageNotFound:           'Image not found',
   favouriteNotFound:       'Favourite not found',
+  alreadyFavourited:       'Post is already favourited',
   reviewNotFound:          'Review not found',
   alreadyReviewed:         'You have already reviewed this post',
   alreadyReported:         'You have already reported this',

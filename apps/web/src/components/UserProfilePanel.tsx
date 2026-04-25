@@ -7,7 +7,6 @@ import {
   Search,
   LogOut,
   User,
-  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -18,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { currentUserQueryOptions, useActiveUser } from '#/contexts/ActiveUserContext'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -38,7 +38,8 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { user, activeProfile, setActiveProfileId } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
   const navigate = useNavigate()
   const allProfiles = user?.profiles ?? []
@@ -116,22 +117,6 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               nativeButton={false}
               render={
                 <Link
-                  to="/favourites"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
-                />
-              }
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
-                <Heart className="size-5 text-rose-600" />
-              </div>
-              <span>My Favourites</span>
-            </SheetClose>
-
-            <SheetClose
-              nativeButton={false}
-              render={
-                <Link
                   to="/messages"
                   onClick={onClose}
                   className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
@@ -186,8 +171,9 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              router.invalidate()
               queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
+              localStorage.removeItem('activeProfileId')
+              router.invalidate()
               onClose()
               navigate({ to: '/' })
             }}

@@ -1,9 +1,9 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, User } from 'lucide-react'
-import { Button } from '#/components/ui/button'
+import { User } from 'lucide-react'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
+import { BackButton } from '#/components/BackButton'
 import { profileQueryOptions, imagesQueryOptions } from '#/lib/profileQueries'
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
@@ -49,16 +49,7 @@ export function ProfileViewPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.history.back()}
-        >
-          <ArrowLeft className="mr-1 size-4" />
-          Back
-        </Button>
-      </div>
+      <BackButton onClick={() => router.history.back()} />
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center gap-4">

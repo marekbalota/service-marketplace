@@ -4,12 +4,16 @@ import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } fr
 import { Header } from './Header'
 import type { User } from '#/types/api'
 
-const mockUser = vi.hoisted(() => ({ current: null as User | null }))
-const mockUseActiveUser = vi.hoisted(() => vi.fn())
-
-vi.mock('#/contexts/ActiveUserContext', () => ({
-  useActiveUser: mockUseActiveUser,
+vi.mock('#/lib/userQueries', () => ({
+  useCurrentUser: vi.fn(),
 }))
+
+vi.mock('#/hooks/useActiveProfile', () => ({
+  useActiveProfile: vi.fn(),
+}))
+
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 async function renderHeader() {
   const rootRoute = createRootRoute({ component: Header })
@@ -21,8 +25,8 @@ async function renderHeader() {
 
 describe('Header', () => {
   beforeEach(() => {
-    mockUser.current = null
-    mockUseActiveUser.mockReturnValue({ user: null, activeProfile: null, setActiveProfileId: vi.fn(), isLoading: false })
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
   })
 
   it('shows Log in and Register links when user is null', async () => {
@@ -32,12 +36,11 @@ describe('Header', () => {
   })
 
   it('shows profile button and hides auth links when user is not null', async () => {
-    mockUser.current = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
-    mockUseActiveUser.mockReturnValue({
-      user: { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] },
-      activeProfile: { userProfileId: 'p1', name: 'Alice', email: 'alice@example.com' },
+    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: { userProfileId: 'p1', name: 'Alice', email: 'alice@example.com' } as User['profiles'][number],
       setActiveProfileId: vi.fn(),
-      isLoading: false,
     })
     await renderHeader()
     expect(screen.queryByRole('link', { name: /log in/i })).not.toBeInTheDocument()
@@ -45,13 +48,9 @@ describe('Header', () => {
   })
 
   it('falls back to "Profile" in the button label when no active profile name is set', async () => {
-    mockUser.current = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
-    mockUseActiveUser.mockReturnValue({
-      user: { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] },
-      activeProfile: null,
-      setActiveProfileId: vi.fn(),
-      isLoading: false,
-    })
+    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderHeader()
     expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument()
   })

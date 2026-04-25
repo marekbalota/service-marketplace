@@ -9,10 +9,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
-import { currentUserQueryOptions } from '#/contexts/ActiveUserContext'
-import type { User } from '#/types/api'
 import appCss from '../styles.css?url'
-import { ActiveUserProvider } from '#/contexts/ActiveUserContext'
 import { DefaultCatchBoundary } from '#/components/DefaultCatchBoundary'
 import { NotFound } from '#/components/NotFound'
 
@@ -20,7 +17,6 @@ const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getIte
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
-  user: User | null
 }>()({
   head: () => ({
     meta: [
@@ -39,10 +35,6 @@ export const Route = createRootRouteWithContext<{
       { rel: 'stylesheet', href: appCss }
     ],
   }),
-  beforeLoad: async () => {
-    const user = await queryClient.fetchQuery(currentUserQueryOptions)
-    return { user }
-  },
   notFoundComponent: NotFound,
   errorComponent: DefaultCatchBoundary,
   component: RootComponent,
@@ -65,14 +57,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
-          <ActiveUserProvider>
-            {children}
-            <ReactQueryDevtools buttonPosition="bottom-left" />
-            <TanStackDevtools
-              config={{ position: 'bottom-right' }}
-              plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
-            />
-          </ActiveUserProvider>
+          {children}
+          <ReactQueryDevtools buttonPosition="bottom-left" />
+          <TanStackDevtools
+            config={{ position: 'bottom-right' }}
+            plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
+          />
         </QueryClientProvider>
         <Scripts />
       </body>

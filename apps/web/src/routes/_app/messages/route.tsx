@@ -3,9 +3,8 @@ import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { useRouterState } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { MessageSquare } from 'lucide-react'
-import { authClient } from '#/auth'
 import { api } from '#/api'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { Badge } from '#/components/ui/badge'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
@@ -151,7 +150,7 @@ function ThreadSidebar({ profileId, activeThreadId }: { profileId: string; activ
 }
 
 function MessagesLayout() {
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
   const routerState = useRouterState()
 
   const threadMatch = routerState.matches.find((m) => m.routeId === '/_app/messages/$threadId')
@@ -193,11 +192,8 @@ function MessagesLayout() {
 }
 
 export const Route = createFileRoute('/_app/messages')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   component: MessagesLayout,
 })

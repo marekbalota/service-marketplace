@@ -75,6 +75,7 @@ export const PostsModel = {
     ratingMax:  t.Optional(t.Numeric()),
     offset:     t.Optional(t.Numeric()),
     size:       t.Optional(t.Numeric()),
+    profileId:  t.Optional(t.String()),
   }),
   findAllResponse: paginatedResponse,
   findByIdParams: t.Object({ id: t.String() }),

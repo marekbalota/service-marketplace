@@ -32,7 +32,7 @@ import {
   PaginationPrevious,
 } from '#/components/ui/pagination';
 import { hasPermissions, Permissions } from '@marketplace/shared';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { useCurrentUser } from '#/lib/userQueries';
 import { buildPageNumbers } from '#/routes/_app/posts/index';
 
 const PAGE_SIZE = 12;
@@ -265,7 +265,7 @@ function ProfileDetailSkeleton() {
 function ProfileDetailPage() {
   const { userId, profileId } = Route.useParams();
   const navigate = Route.useNavigate();
-  const { user } = useActiveUser();
+  const { data: user } = useCurrentUser();
   const permissions = user?.role?.permissions ?? [];
   const canDeletePost = hasPermissions(permissions, [Permissions.PostsDeleteAny]);
 

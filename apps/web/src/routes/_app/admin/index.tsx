@@ -4,7 +4,7 @@ import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { PageHeader } from '#/components/PageHeader';
 import { Permissions, hasAnyPermission } from '@marketplace/shared';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { useCurrentUser } from '#/lib/userQueries';
 
 const adminOptions = [
   {
@@ -64,7 +64,7 @@ function AdminDashboard() {
 
 function AdminOptions() {
   const navigate = useNavigate();
-  const { user } = useActiveUser();
+  const { data: user } = useCurrentUser();
   const permissions = user?.role?.permissions ?? [];
 
   const canManageUsers = hasAnyPermission(permissions, [

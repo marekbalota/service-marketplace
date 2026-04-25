@@ -1,6 +1,6 @@
 {
   "id": "a138c228-2840-49c9-97a7-50a782275e79",
-  "prevId": "f1320176-4760-461a-a9eb-a88da1e30451",
+  "prevId": "404a32d7-96c0-46ce-904a-adfdfce71ebc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1274,6 +1274,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "deleted_at": {
           "name": "deleted_at",

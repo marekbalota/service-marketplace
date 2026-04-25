@@ -6,35 +6,37 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { useCurrentUser } from '#/lib/userQueries'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
-const mockUseMutation      = vi.hoisted(() => vi.fn())
+const mockUseMutation = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery:         vi.fn(() => ({ data: [] })),
-    useMutation:      mockUseMutation,
-    useQueryClient:   vi.fn(() => ({ invalidateQueries: vi.fn() })),
+    useQuery:       vi.fn(() => ({ data: [] })),
+    useMutation:    mockUseMutation,
+    useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
 
 vi.mock('#/api', () => ({
   api: {
     profiles: vi.fn(() => ({
-      patch:  vi.fn(),
-      images: { post: vi.fn() },
+      patch: vi.fn(),
     })),
-    images: vi.fn(() => ({ delete: vi.fn() })),
+    images: Object.assign(
+      vi.fn(() => ({ delete: vi.fn() })),
+      { post: vi.fn() },
+    ),
   },
 }))
 
-vi.mock('#/lib/profileQueries', () => ({
-  profilesQueryOptions: { queryKey: ['profiles', 'me'] },
+vi.mock('#/lib/userQueries', () => ({
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
+  useCurrentUser: vi.fn(),
 }))
 
 vi.mock('#/lib/profileQueries', () => ({
@@ -42,11 +44,21 @@ vi.mock('#/lib/profileQueries', () => ({
   profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
 }))
 
+// ── Import component and route after mocks ────────────────────────────────────
+
+import { EditProfilePage, Route } from './route'
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
+
+const baseUser = {
+  userId: 'user-1',
+  name: 'Alice',
+  email: 'alice@example.com',
+  role: null,
+}
 
 const alice = {
   userProfileId: 'profile-1',
-  accountId:     'user-1',
   name:          'Alice Johnson',
   email:         'alice@example.com',
   bio:           'Engineer',
@@ -54,13 +66,9 @@ const alice = {
   fax:           null,
   createdAt:     new Date('2024-01-01'),
   updatedAt:     null,
-  accountName:   'Alice',
-  roleName:      'user',
 }
 
 // ── Render helper ─────────────────────────────────────────────────────────────
-
-import { EditProfilePage } from './route'
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: EditProfilePage })
@@ -74,7 +82,12 @@ async function renderPage() {
 
 describe('EditProfilePage', () => {
   beforeEach(() => {
-    mockUseSuspenseQuery.mockReturnValue({ data: [alice] })
+    // Route.useParams() uses TanStack Router's internal context, not the exported
+    // useParams hook, so we spy directly on the Route object.
+    vi.spyOn(Route, 'useParams').mockReturnValue({ profileId: 'profile-1' })
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { ...baseUser, profiles: [alice] },
+    } as ReturnType<typeof useCurrentUser>)
     mockUseMutation.mockReturnValue({
       mutate:    vi.fn(),
       isPending: false,
@@ -106,6 +119,6 @@ describe('EditProfilePage', () => {
       error:     new Error('Update failed'),
     })
     await renderPage()
-    expect(screen.getByText('Update failed')).toBeInTheDocument()
+    expect(screen.getAllByText('Update failed').length).toBeGreaterThan(0)
   })
 })

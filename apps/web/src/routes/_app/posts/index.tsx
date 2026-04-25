@@ -1,20 +1,19 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { authClient } from '#/auth'
 import { Suspense, useState, useEffect, useMemo } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
-import { queryOptions, useSuspenseQuery, useQuery, keepPreviousData } from '@tanstack/react-query'
+import { queryOptions, useSuspenseQuery, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Plus, Heart } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
 import { PostCardSkeleton } from '#/components/PostCardSkeleton'
-import { EmptyState } from '#/components/EmptyState'
 import { SearchFilterBar, type FilterItem } from '#/components/SearchFilterBar'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
 import { MultiSelect } from '#/components/ui/multi-select'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import {
   Select,
   SelectContent,
@@ -33,6 +32,7 @@ import {
 } from '#/components/ui/pagination'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
+
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
 
 const ratingRangeSchema = z.enum(['5-4', '4-3', '3-2', '2-1', 'none'])
@@ -68,6 +68,14 @@ const SORT_LABELS: Record<SortOption, string> = {
   'reviews-least': 'Reviews: Fewest First',
 }
 
+const RATING_MIN: Record<RatingRange, number> = { '5-4': 4, '4-3': 3, '3-2': 2, '2-1': 1, 'none': 0 }
+const RATING_MAX: Record<RatingRange, number> = { '5-4': 5, '4-3': 4, '3-2': 3, '2-1': 2, 'none': 0 }
+
+function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): RatingRange[] {
+  if (!rating) return []
+  return Array.isArray(rating) ? rating : [rating]
+}
+
 // --- Query options ---
 
 export const categoriesQueryOptions = queryOptions({
@@ -79,11 +87,6 @@ export const categoriesQueryOptions = queryOptions({
   },
 })
 
-function normalizeRating(rating: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[] | undefined): string[] {
-  if (!rating) return []
-  return Array.isArray(rating) ? rating : [rating]
-}
-
 export function postsQueryOptions(deps: {
   type?: PostTypeFilter
   category?: string
@@ -91,29 +94,11 @@ export function postsQueryOptions(deps: {
   sort: SortOption
   page: number
   rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
+  profileId?: string
 }) {
   const ratingRanges = normalizeRating(deps.rating)
-  // Convert rating ranges to min/max - use the widest range from selected options
-  const ratingMin = ratingRanges.length > 0
-    ? Math.min(...ratingRanges.map(r => {
-        if (r === '5-4') return 4
-        if (r === '4-3') return 3
-        if (r === '3-2') return 2
-        if (r === '2-1') return 1
-        if (r === 'none') return 0
-        return 0
-      }).filter(Boolean))
-    : undefined
-  const ratingMax = ratingRanges.length > 0
-    ? Math.max(...ratingRanges.map(r => {
-        if (r === '5-4') return 5
-        if (r === '4-3') return 4
-        if (r === '3-2') return 3
-        if (r === '2-1') return 2
-        if (r === 'none') return 0
-        return 0
-      }).filter(Boolean))
-    : undefined
+  const ratingMin = ratingRanges.length > 0 ? Math.min(...ratingRanges.map(r => RATING_MIN[r])) : undefined
+  const ratingMax = ratingRanges.length > 0 ? Math.max(...ratingRanges.map(r => RATING_MAX[r])) : undefined
 
   const query = {
     type:       deps.type && deps.type !== 'all' ? deps.type.toUpperCase() as 'OFFER' | 'REQUEST' : undefined,
@@ -124,6 +109,7 @@ export function postsQueryOptions(deps: {
     ratingMax,
     offset:     (deps.page - 1) * PAGE_SIZE,
     size:       PAGE_SIZE,
+    profileId:  deps.profileId,
   }
 
   return queryOptions({
@@ -137,14 +123,16 @@ export function postsQueryOptions(deps: {
   })
 }
 
-export const favouritesQueryOptions = queryOptions({
-  queryKey: ['favourites'],
-  queryFn: async () => {
-    const { data, error } = await api.favourites.get()
-    if (error) throw error
-    return data
-  },
-})
+export function favouritesQueryOptions(profileId: string) {
+  return queryOptions({
+    queryKey: ['favourites', profileId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites.get({ query: { profileId } })
+      if (error) throw error
+      return data
+    },
+  })
+}
 
 // --- Route ---
 
@@ -231,46 +219,60 @@ function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
   favouritesOnly: boolean
   rating?: z.infer<typeof ratingRangeSchema> | z.infer<typeof ratingRangeSchema>[]
 }) {
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating }))
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { data: user } = useCurrentUser()
+  const isAuthenticated = user != null
+  const { activeProfile } = useActiveProfile()
 
-  // Prefetch favourites if authenticated
+  const activeProfileId = activeProfile?.userProfileId
+  const profileId = favouritesOnly ? activeProfileId : undefined
+  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating, profileId }))
+
+  // Fetch favourites list for heart icons when not in favourites-only mode
   const { data: favouritesData } = useQuery({
-    ...favouritesQueryOptions,
-    enabled: isAuthenticated,
+    ...(activeProfileId ? favouritesQueryOptions(activeProfileId) : favouritesQueryOptions('')),
+    enabled: isAuthenticated && !favouritesOnly && !!activeProfileId,
   })
 
+  const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
 
   const setPage = (value: number) =>
     navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
 
-  // Build set of favourite post IDs (only for authenticated users)
+  const profileIdPostsPredicate = (query: { queryKey: unknown }) =>
+    Array.isArray(query.queryKey) &&
+    query.queryKey[0] === 'posts' &&
+    (query.queryKey[1] as { profileId?: string } | undefined)?.profileId != null
+
+  const handleFavouriteToggle = () => {
+    if (favouritesOnly) {
+      // Active favourites view — invalidate so the list refetches and removes the toggled post
+      queryClient.invalidateQueries({ predicate: profileIdPostsPredicate })
+    } else {
+      // Normal view — remove so next switch to favourites view fetches fresh data via skeleton
+      queryClient.removeQueries({ predicate: profileIdPostsPredicate })
+    }
+  }
+
   const favouritePostIds = useMemo(() => {
-    if (!isAuthenticated || !favouritesData?.items) return new Set<string>()
+    if (!isAuthenticated) return new Set<string>()
+    if (favouritesOnly) return new Set(data.items.map(p => p.postId))
+    if (!favouritesData?.items) return new Set<string>()
     return new Set(favouritesData.items.map((f: { postId: string }) => f.postId))
-  }, [isAuthenticated, favouritesData])
+  }, [isAuthenticated, favouritesData, favouritesOnly, data.items])
 
-  // Filter posts if favouritesOnly mode
-  const displayPosts = useMemo(() => {
-    if (!favouritesOnly) return data.items
-    return data.items.filter((post: { postId: string }) => favouritePostIds.has(post.postId))
-  }, [data.items, favouritePostIds, favouritesOnly])
-
-  const totalItems = favouritesOnly ? displayPosts.length : data.total
-  const totalPages = favouritesOnly
-    ? Math.ceil(displayPosts.length / PAGE_SIZE)
-    : data.totalPages
+  const totalItems = data.total
+  const totalPages = data.totalPages
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <p className="mb-4 text-muted-foreground">
-        {totalItems} service{totalItems !== 1 ? 's' : ''} available
-        {favouritesOnly && ' (favourites only)'}
+        {favouritesOnly
+          ? `${totalItems} favourite${totalItems !== 1 ? 's' : ''}`
+          : `${totalItems} service${totalItems !== 1 ? 's' : ''} available`}
       </p>
 
-      {displayPosts.length === 0 ? (
+      {data.items.length === 0 ? (
         <div className="py-12 text-center">
           {favouritesOnly ? (
             <>
@@ -286,17 +288,18 @@ function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {displayPosts.map((post: { postId: string }) => (
+          {data.items.map((post) => (
             <PostCard
               key={post.postId}
               post={post}
               isFavourite={favouritePostIds.has(post.postId)}
+              onFavouriteToggle={handleFavouriteToggle}
             />
           ))}
         </div>
       )}
 
-      {totalPages > 1 && !favouritesOnly && (
+      {totalPages > 1 && (
         <div className="mt-8 flex justify-center">
           <Pagination>
             <PaginationContent>
@@ -460,7 +463,7 @@ function RatingSelect() {
 function HomePage() {
   const { q = '', type = 'all', category = 'all', sort = 'newest', page = 1, favourites = false, rating } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { user } = useActiveUser()
+  const { data: user } = useCurrentUser()
   const isAuthenticated = user !== null
 
   const [inputValue, setInputValue] = useState(q)
@@ -526,6 +529,7 @@ function HomePage() {
       </div>
 
       {/* Posts — Suspense boundary only covers this area */}
+      {/* key resets the boundary when toggling favourites so the skeleton shows instead of stale all-posts data */}
       <Suspense fallback={<PostsSkeleton />}>
         <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} />
       </Suspense>

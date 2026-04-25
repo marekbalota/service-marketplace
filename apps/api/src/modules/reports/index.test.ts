@@ -149,29 +149,3 @@ describe('POST /posts/:id/reports', () => {
   })
 })
 
-describe('GET /posts/:id/reports/check', () => {
-  it('returns 401 when not authenticated', async () => {
-    const res = await app.handle(
-      new Request(`http://localhost/posts/${otherPostId}/reports/check`),
-    )
-    expect(res.status).toBe(401)
-  })
-
-  it('returns hasReported: true after reporting', async () => {
-    const { data, error } = await client.posts({ id: otherPostId }).reports.check.get(
-      { headers: { Cookie: sessionCookie } },
-    )
-    expect(error).toBeNull()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((data as any)?.hasReported).toBe(true)
-  })
-
-  it('returns hasReported: false for an unreported post', async () => {
-    const { data, error } = await client.posts({ id: ownPostId }).reports.check.get(
-      { headers: { Cookie: sessionCookie } },
-    )
-    expect(error).toBeNull()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((data as any)?.hasReported).toBe(false)
-  })
-})

@@ -26,11 +26,15 @@ vi.mock('#/api', () => ({
       vi.fn(() => ({ images: { post: vi.fn() } })),
       { post: vi.fn() },
     ),
+    images: Object.assign(
+      vi.fn(() => ({ delete: vi.fn() })),
+      { post: vi.fn() },
+    ),
   },
 }))
 
-vi.mock('#/lib/profileQueries', () => ({
-  profilesQueryOptions: { queryKey: ['profiles', 'me'] },
+vi.mock('#/lib/userQueries', () => ({
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 
 // ── Import component after mocks ───────────────────────────────────────────────
@@ -59,7 +63,7 @@ describe('CreateProfilePage', () => {
 
   it('renders the page heading', async () => {
     await renderPage()
-    expect(screen.getByText(/add a new user profile/i)).toBeInTheDocument()
+    expect(screen.getByText(/add a new profile to your account/i)).toBeInTheDocument()
   })
 
   it('renders the Back link', async () => {

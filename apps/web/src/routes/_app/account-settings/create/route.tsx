@@ -3,8 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { profilesQueryOptions } from '#/lib/profileQueries'
-import { currentUserQueryOptions } from '#/contexts/ActiveUserContext'
+import { currentUserQueryOptions } from '#/lib/userQueries'
 import { buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import {
@@ -44,7 +43,6 @@ export function CreateProfilePage() {
       return { failedCount }
     },
     onSuccess: ({ failedCount }) => {
-      queryClient.invalidateQueries({ queryKey: profilesQueryOptions.queryKey })
       queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       cleanup()
       if (failedCount > 0) {

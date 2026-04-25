@@ -8,21 +8,10 @@ import { ImagesModel } from '../images/model'
 import { ImagesService } from '../images/service'
 import { authRoutes } from '../auth'
 import { unauthorizedResponse, forbiddenResponse, notFoundResponse, conflictResponse } from '../../lib/errors'
+import { ReportsService } from '../reports/service'
 
 export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .use(authRoutes)
-  .get(
-    '/me',
-    async ({ user }) => ProfilesService.findByAccountId(user.id),
-    {
-      auth: true,
-      response: {
-        200: ProfilesModel.meResponse,
-        ...unauthorizedResponse,
-      },
-      detail: { summary: 'List my profiles', operationId: 'listMyProfiles', tags: ['Profiles'] },
-    },
-  )
   .get(
     '/:id',
     async ({ params }) => ProfilesService.findById(params.id),
@@ -102,13 +91,14 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   )
   .get(
     '/:id/locations',
-    async ({ params }) => LocationsService.findByProfileId(params.id),
+    async ({ params, user }) => LocationsService.findByProfileId(params.id, user.id),
     {
       auth: true,
       params: LocationsModel.profileLocationsParams,
       response: {
         200: LocationsModel.profileLocationsResponse,
         ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
     },
@@ -120,5 +110,59 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       params:   ImagesModel.profileImagesParams,
       response: { 200: ImagesModel.profileImagesResponse },
       detail:   { summary: 'List images by profile', operationId: 'listProfileImages', tags: ['Images'] },
+    },
+  )
+  .get(
+    '/:id/reported/posts/:postId',
+    async ({ params, user, set }) => {
+      const reported = await ReportsService.hasReportedPost(user.id, params.id, params.postId)
+      set.status = reported ? 204 : 404
+    },
+    {
+      auth: true,
+      params: ProfilesModel.reportedPostParams,
+      response: {
+        204: t.Void(),
+        404: t.Void(),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Check if profile has reported a post', operationId: 'checkProfileReportedPost', tags: ['Profiles'] },
+    },
+  )
+  .get(
+    '/:id/reported/reviews/:reviewId',
+    async ({ params, user, set }) => {
+      const reported = await ReportsService.hasReportedReview(user.id, params.id, params.reviewId)
+      set.status = reported ? 204 : 404
+    },
+    {
+      auth: true,
+      params: ProfilesModel.reportedReviewParams,
+      response: {
+        204: t.Void(),
+        404: t.Void(),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Check if profile has reported a review', operationId: 'checkProfileReportedReview', tags: ['Profiles'] },
+    },
+  )
+  .get(
+    '/:id/reported/messages/:messageId',
+    async ({ params, user, set }) => {
+      const reported = await ReportsService.hasReportedMessage(user.id, params.id, params.messageId)
+      set.status = reported ? 204 : 404
+    },
+    {
+      auth: true,
+      params: ProfilesModel.reportedMessageParams,
+      response: {
+        204: t.Void(),
+        404: t.Void(),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Check if profile has reported a message', operationId: 'checkProfileReportedMessage', tags: ['Profiles'] },
     },
   )

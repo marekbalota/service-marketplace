@@ -52,7 +52,7 @@ import { Field, FieldError } from '#/components/ui/field';
 import { Textarea } from '#/components/ui/textarea';
 import { Input } from '#/components/ui/input';
 import { Permissions, hasPermissions } from '@marketplace/shared';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { useCurrentUser } from '#/lib/userQueries';
 
 import type { AdminUsersModel } from 'api';
 
@@ -328,7 +328,7 @@ function UserCard({
   onBan: (userId: string, reason: string, expiresAt?: Date) => Promise<void>;
   onUnban: (userId: string) => Promise<void>;
 }) {
-  const { user: currentUser } = useActiveUser();
+  const { data: currentUser } = useCurrentUser();
   const permissions = currentUser?.role?.permissions ?? [];
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole]);
   const canBan = hasPermissions(permissions, [Permissions.AdminUsersBan]);

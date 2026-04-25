@@ -2,11 +2,9 @@ import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
+import { auth } from "../auth/service";
 import { Permissions } from "@marketplace/shared";
-import { forbiddenResponse, notFoundResponse, unauthorizedResponse, errorResponse } from "../../lib/errors";
-import { AuthModel } from "../auth/model";
-import { ReviewsModel } from "../reviews/model";
-import { ReviewsService } from "../reviews/service";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse, conflictResponse, AuthErrorMessages } from "../../lib/errors";
 import { ReportsModel } from "../reports/model";
 import { ReportsService } from "../reports/service";
 
@@ -14,10 +12,21 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
   .get(
     "/",
-    async ({ query }) => await PostsService.findAll(query),
+    async ({ query, request: { headers }, status }) => {
+      if (query.profileId) {
+        const session = await auth.api.getSession({ headers });
+        if (!session) return status(401, { message: AuthErrorMessages.unauthorized });
+        return PostsService.findAll(query, session.user.id);
+      }
+      return PostsService.findAll(query);
+    },
     {
       query: PostsModel.findAllQuery,
-      response: { 200: PostsModel.findAllResponse },
+      response: {
+        200: PostsModel.findAllResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
       detail: { summary: "List posts", operationId: "listPosts", tags: ["Posts"] },
     },
   )
@@ -90,27 +99,6 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
     },
   )
   .post(
-    '/:id/reviews',
-    async ({ params, body, user, set }) => {
-      const review = await ReviewsService.createForAccount(user.id, params.id, body)
-      set.status = 201
-      return review
-    },
-    {
-      auth: true,
-      params: ReviewsModel.createParams,
-      body: ReviewsModel.createBody,
-      response: {
-        201: ReviewsModel.createResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
-        409: errorResponse,
-      },
-      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
-    },
-  )
-  .post(
     '/:id/reports',
     async ({ params, body, user, set }) => {
       const report = await ReportsService.createForPostForAccount(user.id, params.id, body)
@@ -123,27 +111,12 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       body: ReportsModel.createBody,
       response: {
         201: ReportsModel.createResponse,
-        401: AuthModel.unauthorizedResponse,
-        403: AuthModel.forbiddenResponse,
-        404: errorResponse,
-        409: errorResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
       },
-      detail: { summary: 'Report a post', operationId: 'createReport', tags: ['Reports'] },
+      detail: { summary: 'Report a post', operationId: 'createPostReport', tags: ['Reports'] },
     },
   )
-  .get(
-    '/:id/reports/check',
-    async ({ params, user }) => {
-      const hasReported = await ReportsService.hasReportedPostForAccount(user.id, params.id)
-      return { hasReported }
-    },
-    {
-      auth: true,
-      params: ReportsModel.checkParams,
-      response: {
-        200: ReportsModel.checkResponse,
-        401: AuthModel.unauthorizedResponse,
-      },
-      detail: { summary: 'Check if current user has reported a post', operationId: 'checkReport', tags: ['Reports'] },
-    },
-  );
+  ;
