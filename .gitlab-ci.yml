@@ -91,7 +91,7 @@ e2e-tests:
   before_script:
     - apk add --no-cache curl
   script:
-    - docker compose -f docker-compose.e2e.yml --profile e2e up --build --abort-on-container-exit --exit-code-from playwright
+    - docker compose -f docker-compose.e2e.yml --profile e2e up --build --exit-code-from playwright
   artifacts:
     when: always
     paths:
