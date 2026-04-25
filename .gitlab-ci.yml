@@ -1,0 +1,102 @@
+stages:
+  - install
+  - test
+  - e2e
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+variables:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: marketplace_ci
+
+default:
+  image: oven/bun:latest
+
+.bun-cache: &bun-cache
+  key:
+    files:
+      - bun.lock
+      - package.json
+  paths:
+    - node_modules/
+    - apps/api/node_modules/
+    - apps/web/node_modules/
+    - ~/.bun/install/cache
+
+install:
+  stage: install
+  tags:
+    - shared-fi
+  cache:
+    <<: *bun-cache
+  script:
+    - bun install --frozen-lockfile
+
+frontend-unit-tests:
+  stage: test
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - cd apps/web && bun run test
+
+backend-integration-tests:
+  stage: test
+  image: docker:cli
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  services:
+    - docker:24-dind-rootless
+  variables:
+    DOCKER_HOST: "unix:///runner/services/docker/docker.sock"
+    DATABASE_URL: "postgresql://postgres:postgres@db:5432/marketplace_ci"
+    BETTER_AUTH_URL: "http://localhost:3001"
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - docker compose -f docker-compose.test.yml --profile integration up --build --abort-on-container-exit --exit-code-from integration-tests
+  artifacts:
+    when: always
+    paths:
+      - apps/api/coverage/
+    expire_in: 10 minutes
+
+e2e-tests:
+  stage: e2e
+  image: docker:cli
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  services:
+    - docker:24-dind-rootless
+  variables:
+    DOCKER_HOST: "unix:///runner/services/docker/docker.sock"
+    CI: "true"
+    PLAYWRIGHT_BASE_URL: "http://web:3000"
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - docker compose -f docker-compose.e2e.yml --profile e2e up --build --abort-on-container-exit --exit-code-from playwright
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - test-results/
+    expire_in: 10 minutes
+  rules:
+    - when: manual

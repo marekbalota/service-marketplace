@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
   },
   projects: [
@@ -16,18 +16,22 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: [
-    {
-      command: 'bun run dev',
-      cwd: './apps/api',
-      url: 'http://localhost:3001',
-      reuseExistingServer: !process.env.CI,
-    },
-    {
-      command: 'bun run dev',
-      cwd: './apps/web',
-      url: 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
-    },
-  ],
+  ...(process.env.CI
+    ? {}
+    : {
+        webServer: [
+          {
+            command: 'bun run dev',
+            cwd: './apps/api',
+            url: 'http://localhost:3001',
+            reuseExistingServer: false,
+          },
+          {
+            command: 'bun run dev',
+            cwd: './apps/web',
+            url: 'http://localhost:3000',
+            reuseExistingServer: false,
+          },
+        ],
+      }),
 })
