@@ -382,3 +382,48 @@ describe("DELETE /posts/:id", () => {
     expect(error?.status).toBe(403);
   });
 });
+
+describe("GET /posts — categoryIds filter", () => {
+  it("filters by a single categoryId — every result contains that category", async () => {
+    const { data: all } = await client.posts.get({ query: { size: 50 } });
+    const postWithCat = all!.items.find((p) => p.categories.length > 0);
+    if (!postWithCat) return; // no seeded posts with categories — skip
+
+    const catId = postWithCat.categories[0]!.categoryId;
+    const { data, error } = await client.posts.get({ query: { categoryIds: [catId] } });
+
+    expect(error).toBeNull();
+    expect(data!.items.length).toBeGreaterThan(0);
+    for (const item of data!.items) {
+      expect(item.categories.some((c) => c.categoryId === catId)).toBe(true);
+    }
+  });
+
+  it("filters by two categoryIds — every result contains at least one", async () => {
+    const { data: all } = await client.posts.get({ query: { size: 50 } });
+    const withCats = all!.items.filter((p) => p.categories.length > 0);
+    if (withCats.length < 1) return; // not enough seeded data — skip
+
+    const catId1 = withCats[0]!.categories[0]!.categoryId;
+    const secondPost = withCats.find((p) =>
+      !p.categories.some((c) => c.categoryId === catId1),
+    );
+    const catId2 = (secondPost ?? withCats[0]!).categories[0]!.categoryId;
+
+    const { data, error } = await client.posts.get({
+      query: { categoryIds: [catId1, catId2] },
+    });
+
+    expect(error).toBeNull();
+    for (const item of data!.items) {
+      const ids = item.categories.map((c) => c.categoryId);
+      expect(ids.includes(catId1) || ids.includes(catId2)).toBe(true);
+    }
+  });
+
+  it("returns all posts when no categoryIds are sent", async () => {
+    const { data: all } = await client.posts.get({ query: { size: 50 } });
+    const { data: unfiltered } = await client.posts.get({});
+    expect(all!.total).toBe(unfiltered!.total);
+  });
+});

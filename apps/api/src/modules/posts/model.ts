@@ -69,7 +69,7 @@ export const PostsModel = {
   findAllQuery: t.Object({
     search:     t.Optional(t.String()),
     type:       t.Optional(postType),
-    categoryId: t.Optional(t.String()),
+    categoryIds: t.Optional(t.Array(t.String())),
     sort:       t.Optional(sortOptions),
     ratingMin:  t.Optional(t.Numeric()),
     ratingMax:  t.Optional(t.Numeric()),
