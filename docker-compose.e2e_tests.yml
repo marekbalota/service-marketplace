@@ -21,6 +21,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-marketplace_ci}
       BETTER_AUTH_URL: http://api:3001
+      CORS_ORIGIN: http://web:3000
     healthcheck:
       test: ["CMD-SHELL", "bun run -e \"try { const r = await fetch('http://localhost:3001/'); process.exit(r.ok ? 0 : 1); } catch { process.exit(1); }\""]
       interval: 5s
