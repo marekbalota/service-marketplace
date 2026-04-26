@@ -1,3 +1,4 @@
+// apps/web/src/lib/queries/users.ts
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { api } from '#/api'
 
