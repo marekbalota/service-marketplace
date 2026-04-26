@@ -1,113 +1,14 @@
-import { createFileRoute, redirect, Outlet, Link } from '@tanstack/react-router'
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
-import { useRouterState } from '@tanstack/react-router'
+// apps/web/src/routes/_app/messages/route.tsx
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { useMatch } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { MessageSquare } from 'lucide-react'
-import { api } from '#/api'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
-import { Badge } from '#/components/ui/badge'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
-
-export function threadsQueryOptions(profileId: string) {
-  return queryOptions({
-    queryKey: ['threads', profileId],
-    queryFn: async () => {
-      const { data, error } = await api.threads.get({ query: { profileId } })
-      if (error) throw error
-      return data ?? []
-    },
-    staleTime: 0,
-  })
-}
-
-export function formatRelativeTime(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  const seconds = Math.floor((Date.now() - d.getTime()) / 1000)
-  if (seconds < 60)    return 'just now'
-  if (seconds < 3600)  return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
-}
-
-export function getInitials(name: string): string {
-  return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
-export type Thread = {
-  threadId: string
-  postId: string
-  postTitle: string
-  otherPartyName: string
-  lastMessage: { content: string; createdAt: Date | string; sentByMe: boolean } | null
-  unreadCount: number
-  myRole: 'initiator' | 'post_owner'
-  postDeleted: boolean
-}
-
-export function ThreadItem({ thread, isActive }: { thread: Thread; isActive?: boolean }) {
-  return (
-    <Link
-      to="/messages/$threadId"
-      params={{ threadId: thread.threadId }}
-      className="block no-underline"
-    >
-      <div
-        className={cn(
-          'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-accent/60',
-          isActive && 'bg-accent',
-          thread.postDeleted && 'opacity-60',
-        )}
-      >
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
-          {getInitials(thread.otherPartyName)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-0.5 flex items-center justify-between gap-1">
-            <p className={cn('truncate text-sm font-medium', thread.unreadCount > 0 && 'font-semibold')}>
-              {thread.otherPartyName}
-            </p>
-            {thread.lastMessage && (
-              <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
-                {formatRelativeTime(thread.lastMessage.createdAt)}
-              </span>
-            )}
-          </div>
-          <div className="mb-1 flex items-center gap-1.5">
-            <p className="truncate text-xs text-muted-foreground">{thread.postTitle}</p>
-            {thread.myRole === 'post_owner' && (
-              <Badge
-                variant="outline"
-                className="h-4 shrink-0 border-muted-foreground/40 px-1 text-[10px] text-muted-foreground"
-              >
-                Your post
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {thread.postDeleted ? (
-              <Badge variant="outline" className="h-4 px-1 text-[10px] text-muted-foreground">
-                Post deleted
-              </Badge>
-            ) : thread.lastMessage ? (
-              <p className="truncate text-xs text-muted-foreground">
-                {thread.lastMessage.sentByMe ? 'You: ' : ''}
-                {thread.lastMessage.content}
-              </p>
-            ) : (
-              <p className="text-xs italic text-muted-foreground">No messages yet</p>
-            )}
-            {thread.unreadCount > 0 && (
-              <span className="ml-auto inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  )
-}
+import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { threadsQueryOptions } from './-queries/threads'
+import { ThreadItem } from './-components/ThreadItem'
 
 function ThreadListSkeleton() {
   return (
@@ -151,15 +52,12 @@ function ThreadSidebar({ profileId, activeThreadId }: { profileId: string; activ
 
 function MessagesLayout() {
   const { activeProfile } = useActiveProfile()
-  const routerState = useRouterState()
-
-  const threadMatch = routerState.matches.find((m) => m.routeId === '/_app/messages/$threadId')
-  const activeThreadId = (threadMatch?.params as Record<string, string> | undefined)?.threadId
+  const threadMatch = useMatch({ from: '/_app/messages/$threadId', shouldThrow: false })
+  const activeThreadId = threadMatch?.params.threadId
   const isInThread = !!threadMatch
 
   return (
     <div className="flex h-[calc(100svh-4rem)] overflow-hidden">
-      {/* Thread list sidebar */}
       <aside
         className={cn(
           'flex w-full flex-col border-r bg-card md:w-80 lg:w-96',
@@ -183,7 +81,6 @@ function MessagesLayout() {
         </div>
       </aside>
 
-      {/* Right panel */}
       <div className={cn('flex flex-1 flex-col overflow-hidden', !isInThread && 'hidden md:flex')}>
         <Outlet />
       </div>
