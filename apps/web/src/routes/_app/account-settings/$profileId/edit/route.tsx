@@ -1,9 +1,8 @@
-import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
-import { buttonVariants } from '#/components/ui/button'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { BackButton } from '#/components/BackButton'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
@@ -11,7 +10,7 @@ import {
   ImageInputSection,
   type ProfileFormValues,
 } from '../../-components/ProfileForm'
-import { imagesQueryOptions, profileQueryOptions } from '#/lib/profileQueries'
+import { imagesQueryOptions, profileQueryOptions } from '#/lib/queries/profiles'
 
 export const Route = createFileRoute('/_app/account-settings/$profileId/edit')({
   loader: async ({ context: { queryClient }, params }) => {
@@ -41,7 +40,7 @@ function EditSkeleton() {
   )
 }
 
-export function EditProfilePage() {
+function EditProfilePage() {
   const { profileId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -99,12 +98,7 @@ export function EditProfilePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-          <ArrowLeft className="mr-1 size-4" />
-          Back
-        </Link>
-      </div>
+      <BackButton onClick={() => navigate({ to: '/account-settings' })} />
       <Card>
         <CardContent className="p-6 space-y-4">
           <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>

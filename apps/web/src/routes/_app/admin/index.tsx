@@ -4,7 +4,7 @@ import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { PageHeader } from '#/components/PageHeader';
 import { Permissions, hasAnyPermission } from '@marketplace/shared';
-import { useCurrentUser } from '#/lib/userQueries';
+import { useCurrentUser } from '#/lib/queries/users';
 
 const adminOptions = [
   {

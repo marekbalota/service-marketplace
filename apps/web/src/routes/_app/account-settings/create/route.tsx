@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { currentUserQueryOptions } from '#/lib/userQueries'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 import { buttonVariants } from '#/components/ui/button'
+import { BackButton } from '#/components/BackButton'
 import { Card, CardContent } from '#/components/ui/card'
 import {
   ProfileForm,
@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_app/account-settings/create')({
   component: CreateProfilePage,
 })
 
-export function CreateProfilePage() {
+function CreateProfilePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
@@ -77,12 +77,7 @@ export function CreateProfilePage() {
   if (uploadWarning) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <div className="mb-6">
-          <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-            <ArrowLeft className="mr-1 size-4" />
-            Back
-          </Link>
-        </div>
+        <BackButton onClick={() => navigate({ to: '/account-settings' })} />
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
@@ -100,12 +95,7 @@ export function CreateProfilePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-          <ArrowLeft className="mr-1 size-4" />
-          Back
-        </Link>
-      </div>
+      <BackButton onClick={() => navigate({ to: '/account-settings' })} />
       <Card>
         <CardContent className="p-6 space-y-4">
           <h1 className="text-lg font-semibold text-nav-browse-fg">Add a new profile to your account</h1>

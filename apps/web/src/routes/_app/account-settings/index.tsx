@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { api } from '#/api'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 import type { UserProfile } from '#/types/api'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -90,9 +91,7 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-1 items-start gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] shadow-md">
-              <User className="size-7 text-white" />
-            </div>
+            <ProfileAvatar name={profile.name} className="size-14 shrink-0 shadow-md" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold">{profile.name}</h3>
@@ -155,7 +154,7 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
   )
 }
 
-export function AccountSettingsPage() {
+function AccountSettingsPage() {
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const profiles = user?.profiles ?? []

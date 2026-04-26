@@ -6,8 +6,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { AccountSettingsPage } from './index'
-import { useCurrentUser } from '#/lib/userQueries'
+import { Route } from './index'
+import { useCurrentUser } from '#/lib/queries/users'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ vi.mock('#/auth', () => ({
   },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
 }))
@@ -85,7 +85,7 @@ const bob = {
 // ── Render helper ─────────────────────────────────────────────────────────────
 
 async function renderPage() {
-  const rootRoute = createRootRoute({ component: AccountSettingsPage })
+  const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory(),
