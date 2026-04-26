@@ -8,7 +8,7 @@ import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
-import { currentUserQueryOptions } from "#/lib/userQueries"
+import { currentUserQueryOptions } from "#/lib/queries/users"
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email"),
