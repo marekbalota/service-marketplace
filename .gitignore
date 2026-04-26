@@ -54,16 +54,14 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Claude Code local files
 .claude/*.local.json
 
+# Superpowers AI-generated plans and specs
+docs/superpowers/
+
 # IntelliJ based IDEs
 .idea
 
 # Finder (MacOS) folder config
 .DS_Store
 
-# Git worktrees
-.worktrees/
-
-# Superpowers
-docs/superpowers
 # Git worktrees
 .worktrees/

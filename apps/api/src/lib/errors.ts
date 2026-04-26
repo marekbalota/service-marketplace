@@ -3,16 +3,22 @@ import { Elysia, t } from 'elysia'
 const errorResponse = t.Object({ message: t.String() })
 
 export const ErrorMessages = {
-  postNotFound:    'Post not found',
-  profileNotFound: 'Profile not found',
-  favouriteNotFound: 'Favourite not found',
-  reviewNotFound:  'Review not found',
-  alreadyReviewed: 'You have already reviewed this post',
-  userNotFound: 'User not found',
-  userRoleNotFound: 'User role not found',
-  roleNotFound: 'Role not found',
+  postNotFound:            'Post not found',
+  messageNotFound:         'Message not found',
+  profileNotFound:         'Profile not found',
+  cannotDeleteLastProfile: 'Cannot delete your only profile. Create a new profile first.',
+  imageNotFound:           'Image not found',
+  favouriteNotFound:       'Favourite not found',
+  alreadyFavourited:       'Post is already favourited',
+  reviewNotFound:          'Review not found',
+  alreadyReviewed:         'You have already reviewed this post',
+  alreadyReported:         'You have already reported this',
+  reportNotFound:          'Report not found',
+  userNotFound:            'User not found',
+  userRoleNotFound:        'User role not found',
+  roleNotFound:            'Role not found',
   cannotDeleteDefaultRole: 'Cannot delete the default role',
-  noDefaultRoleFound: 'No default role found',
+  noDefaultRoleFound:      'No default role found',
 } as const
 
 export const AuthErrorMessages = {
@@ -70,10 +76,19 @@ export class ConflictError extends Error {
   }
 }
 
+export class InternalServerError extends Error {
+  status = 500;
+  constructor(message: string) {
+    super(message);
+    this.name = 'InternalServerError';
+  }
+}
+
 export const errorsPlugin = new Elysia({ name: 'errors' })
-  .error({ ForbiddenError, NotFoundError, ConflictError })
+  .error({ ForbiddenError, NotFoundError, ConflictError, InternalServerError })
   .onError(({ code, error, status }) => {
     if (code === 'ForbiddenError') return status(403, { message: error.message })
     if (code === 'NotFoundError')  return status(404, { message: error.message })
     if (code === 'ConflictError')  return status(409, { message: error.message })
+    if (code === 'InternalServerError') return status(500, { message: error.message })
   })

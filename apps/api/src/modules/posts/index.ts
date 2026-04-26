@@ -2,17 +2,31 @@ import { Elysia, t } from "elysia";
 import { PostsModel } from "./model";
 import { PostsService } from "./service";
 import { authRoutes } from "../auth";
+import { auth } from "../auth/service";
 import { Permissions } from "@marketplace/shared";
-import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from "../../lib/errors";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse, conflictResponse, AuthErrorMessages } from "../../lib/errors";
+import { ReportsModel } from "../reports/model";
+import { ReportsService } from "../reports/service";
 
 export const postsRoutes = new Elysia({ prefix: "/posts" })
   .use(authRoutes)
   .get(
     "/",
-    async ({ query }) => await PostsService.findAll(query),
+    async ({ query, request: { headers }, status }) => {
+      if (query.profileId) {
+        const session = await auth.api.getSession({ headers });
+        if (!session) return status(401, { message: AuthErrorMessages.unauthorized });
+        return PostsService.findAll(query, session.user.id);
+      }
+      return PostsService.findAll(query);
+    },
     {
       query: PostsModel.findAllQuery,
-      response: { 200: PostsModel.findAllResponse },
+      response: {
+        200: PostsModel.findAllResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
       detail: { summary: "List posts", operationId: "listPosts", tags: ["Posts"] },
     },
   )
@@ -48,8 +62,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .patch(
     "/:id",
-    async ({ params, body, user, permissions, set }) => {
-      const updated = await PostsService.updateWithPermissionCheck(user.id, permissions, params.id, body);
+    async ({ params, body, user, set }) => {
+      const updated = await PostsService.updateWithPermissionCheck(user.id, params.id, body);
       set.status = 200;
       return updated;
     },
@@ -68,8 +82,8 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
   )
   .delete(
     "/:id",
-    async ({ params, user, permissions, set }) => {
-      await PostsService.deleteWithPermissionCheck(user.id, permissions, params.id);
+    async ({ params, user, set }) => {
+      await PostsService.deleteWithPermissionCheck(user.id, params.id);
       set.status = 204;
     },
     {
@@ -83,4 +97,26 @@ export const postsRoutes = new Elysia({ prefix: "/posts" })
       },
       detail: { summary: "Delete a post", operationId: "deletePost", tags: ["Posts"] },
     },
-  );
+  )
+  .post(
+    '/:id/reports',
+    async ({ params, body, user, set }) => {
+      const report = await ReportsService.createForPostForAccount(user.id, params.id, body)
+      set.status = 201
+      return report
+    },
+    {
+      auth: true,
+      params: ReportsModel.createParams,
+      body: ReportsModel.createBody,
+      response: {
+        201: ReportsModel.createResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
+      },
+      detail: { summary: 'Report a post', operationId: 'createPostReport', tags: ['Reports'] },
+    },
+  )
+  ;

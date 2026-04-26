@@ -10,13 +10,17 @@ import { logger } from "./lib/logger";
 import { postsRoutes } from "./modules/posts";
 import { categoriesRoutes } from "./modules/categories";
 import { profilesRoutes } from "./modules/profiles";
+import { imagesRoutes } from "./modules/images";
 import { usersRoutes } from "./modules/users";
 import { adminRolesRoutes } from "./modules/admin/roles";
 import { adminUsersRoutes } from "./modules/admin/users";
+import { adminPostsRoutes } from "./modules/admin/posts";
 import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
+import { reportCategoriesRoutes } from "./modules/reports";
+import { initBucket } from "./storage";
 
 export const app = new Elysia()
   .use(errorsPlugin)
@@ -39,10 +43,12 @@ export const app = new Elysia()
         { name: "Posts",      description: "Service post listings (offers and requests)" },
         { name: "Profiles",   description: "User profiles" },
         { name: "Categories", description: "Post categories" },
+        { name: "Images",     description: "Profile images" },
         { name: "Admin",      description: "Admin operations" },
         { name: "Favourites", description: "User's favourite posts" },
         { name: "Messages",   description: "Message threads and chat messages" },
         { name: "Reviews",    description: "Post reviews and ratings" },
+        { name: "Reports",    description: "Post reports" },
       ],
     },
   }))
@@ -54,11 +60,16 @@ export const app = new Elysia()
   .use(reviewsRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
+  .use(imagesRoutes)
   .use(adminRolesRoutes)
   .use(adminUsersRoutes)
+  .use(adminPostsRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
+  .use(reportCategoriesRoutes)
   .listen(3001);
+
+initBucket().catch((err) => console.error('[MinIO] bucket init failed:', err))
 
 console.log(
   `Elysia is running at ${app.server?.hostname}:${app.server?.port}`,

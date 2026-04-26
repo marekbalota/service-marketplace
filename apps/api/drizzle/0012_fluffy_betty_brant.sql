@@ -1,0 +1,1 @@
+ALTER TABLE "favourites" DROP COLUMN "deleted_at";

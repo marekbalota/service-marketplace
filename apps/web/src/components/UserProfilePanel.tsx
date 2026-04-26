@@ -7,7 +7,6 @@ import {
   Search,
   LogOut,
   User,
-  Heart,
 } from 'lucide-react'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -18,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { currentUserQueryOptions, useActiveUser } from '#/contexts/ActiveUserContext'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -38,7 +38,8 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
-  const { user, activeProfile, setActiveProfileId } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
   const navigate = useNavigate()
   const allProfiles = user?.profiles ?? []
@@ -90,8 +91,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
-                <Search className="size-5 text-blue-600" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-browse-bg)]">
+                <Search className="size-5 text-[var(--nav-browse-fg)]" />
               </div>
               <span>Browse Postings</span>
             </SheetClose>
@@ -106,26 +107,10 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
-                <FileText className="size-5 text-green-600" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-postings-bg)]">
+                <FileText className="size-5 text-[var(--nav-postings-fg)]" />
               </div>
               <span>My Postings</span>
-            </SheetClose>
-
-            <SheetClose
-              nativeButton={false}
-              render={
-                <Link
-                  to="/favourites"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
-                />
-              }
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rose-50">
-                <Heart className="size-5 text-rose-600" />
-              </div>
-              <span>My Favourites</span>
             </SheetClose>
 
             <SheetClose
@@ -138,8 +123,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50">
-                <MessageSquare className="size-5 text-purple-600" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-messages-bg)]">
+                <MessageSquare className="size-5 text-[var(--nav-messages-fg)]" />
               </div>
               <span>Messages</span>
             </SheetClose>
@@ -168,20 +153,27 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
 
         {/* Account Actions */}
         <div className="space-y-1">
-          <Button
-            variant="ghost"
-            className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-foreground hover:text-foreground"
+          <SheetClose
+            nativeButton={false}
+            render={
+              <Link
+                to="/account-settings"
+                onClick={onClose}
+                className="flex h-auto w-full items-center justify-start gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
+              />
+            }
           >
             <Settings className="size-5 text-muted-foreground" />
             <span>Account Settings</span>
-          </Button>
+          </SheetClose>
           <Button
             variant="ghost"
-            className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-50 hover:text-destructive"
+            className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              router.invalidate()
               queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
+              localStorage.removeItem('activeProfileId')
+              router.invalidate()
               onClose()
               navigate({ to: '/' })
             }}

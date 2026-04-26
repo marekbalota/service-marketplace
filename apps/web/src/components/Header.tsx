@@ -12,11 +12,13 @@ import {
 } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 export function Header() {
   const [open, setOpen] = useState(false)
-  const { user, activeProfile } = useActiveUser()
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
 
   return (
     <header className="sticky top-0 z-10 border-b bg-card shadow-sm">
@@ -39,7 +41,7 @@ export function Header() {
                 </Link>
               </>
             )}
-            {user !== null && (
+            {user != null && (
               <>
                 <Sheet open={open} onOpenChange={setOpen}>
                   <SheetTrigger

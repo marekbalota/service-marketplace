@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import type { UsersModel } from "./model";
 import { NotFoundError, ErrorMessages } from "../../lib/errors";
 
@@ -37,15 +37,26 @@ export abstract class UsersService {
           userProfileId: string;
           name: string;
           email: string;
+          bio: string | null;
+          phoneNumber: string | null;
+          fax: string | null;
+          createdAt: Date;
+          updatedAt: Date | null;
         }[]>`
           coalesce(
             (select json_agg(json_build_object(
               'userProfileId', ${userProfiles.userProfileId},
               'name', ${userProfiles.name},
-              'email', ${userProfiles.email}
+              'email', ${userProfiles.email},
+              'bio', ${userProfiles.bio},
+              'phoneNumber', ${userProfiles.phoneNumber},
+              'fax', ${userProfiles.fax},
+              'createdAt', ${userProfiles.createdAt},
+              'updatedAt', ${userProfiles.updatedAt}
             ))
             from ${userProfiles}
-            where ${userProfiles.accountId} = ${users.id}),
+            where ${userProfiles.accountId} = ${users.id}
+              and ${userProfiles.deletedAt} is null),
             '[]'::json
           )
         `,

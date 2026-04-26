@@ -1,10 +1,12 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { LoginForm } from "./-components/LoginForm";
+import { currentUserQueryOptions } from "#/lib/userQueries";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  beforeLoad: async ({ context : { user } }) => {
+  beforeLoad: async ({ context : { queryClient } }) => {
+    const user = await queryClient.fetchQuery(currentUserQueryOptions)
     if (user) {
       throw redirect({ to: "/" });
     }

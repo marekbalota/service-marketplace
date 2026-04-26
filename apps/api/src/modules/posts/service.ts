@@ -1,9 +1,8 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
-import { Permissions } from "@marketplace/shared";
 import { ProfilesService } from "../profiles/service";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -39,8 +38,13 @@ const postSelect = (tx: DbOrTx) => tx
   .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId);
 
 export abstract class PostsService {
-  static async findAll(query: PostsModel['findAllQuery']) {
-    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax } = query;
+  static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
+    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+
+    if (profileId && accountId !== undefined) {
+      const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+      if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    }
 
     const orderBy =
       sort === 'price-low'  ? asc(posts.price)     :
@@ -90,6 +94,16 @@ export abstract class PostsService {
             )
           : undefined,
         ratingConditions,
+        profileId
+          ? exists(
+              tx.select().from(favourites).where(
+                and(
+                  eq(favourites.postId, posts.postId),
+                  eq(favourites.userProfileId, profileId),
+                ),
+              ),
+            )
+          : undefined,
       );
 
       const [countRow] = await tx
@@ -339,7 +353,6 @@ export abstract class PostsService {
 
   static async updateWithPermissionCheck(
     accountId: string,
-    permissions: string[],
     id: string,
     body: PostsModel['updateBody']
   ) {
@@ -364,7 +377,6 @@ export abstract class PostsService {
 
   static async deleteWithPermissionCheck(
     accountId: string,
-    permissions: string[],
     id: string
   ) {
     const post = await db.query.posts.findFirst({

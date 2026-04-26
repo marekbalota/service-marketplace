@@ -19,12 +19,9 @@ beforeAll(async () => {
   });
   userCookie = userRes.headers.get('set-cookie') ?? '';
 
-  // Get the user's ID from /users/me
-  const meRes = await app.handle(new Request('http://localhost/users/me', {
-    headers: { Cookie: userCookie },
-  }));
-  const meData = await meRes.json() as { userId: string };
-  userId = meData.userId;
+  // Get the user's ID from /users/me using Eden Treaty
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: userCookie } });
+  userId = meData!.userId;
 });
 
 describe('GET /users/me', () => {

@@ -4,15 +4,15 @@ import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { PageHeader } from '#/components/PageHeader';
 import { Permissions, hasAnyPermission } from '@marketplace/shared';
-import { useActiveUser } from '#/contexts/ActiveUserContext';
+import { useCurrentUser } from '#/lib/userQueries';
 
 const adminOptions = [
   {
-    id: 'accounts',
+    id: 'users',
     title: 'Manage Accounts',
     description: 'View and manage user accounts, permissions, and profiles',
     icon: Users,
-    path: '/admin/accounts',
+    path: '/admin/users',
   },
   {
     id: 'roles',
@@ -64,7 +64,7 @@ function AdminDashboard() {
 
 function AdminOptions() {
   const navigate = useNavigate();
-  const { user } = useActiveUser();
+  const { data: user } = useCurrentUser();
   const permissions = user?.role?.permissions ?? [];
 
   const canManageUsers = hasAnyPermission(permissions, [
@@ -77,7 +77,7 @@ function AdminOptions() {
   ]);
 
   const visibleOptions = adminOptions.filter(option => {
-    if (option.id === 'accounts') return canManageUsers;
+    if (option.id === 'users') return canManageUsers;
     if (option.id === 'roles') return canManageRoles;
     if (option.id === 'reports') return canManageUsers;
     return true;

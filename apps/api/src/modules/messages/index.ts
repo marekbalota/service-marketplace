@@ -3,6 +3,8 @@ import { MessagesModel } from './model'
 import { MessagesService } from './service'
 import { authRoutes } from '../auth'
 import { conflictResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import { ReportsModel } from '../reports/model'
+import { ReportsService } from '../reports/service'
 
 export const messagesRoutes = new Elysia({ prefix: '/threads' })
   .use(authRoutes)
@@ -83,3 +85,28 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       detail: { summary: 'Send a message', operationId: 'sendMessage', tags: ['Messages'] },
     },
   )
+
+  // Report a message
+  .post(
+    '/:threadId/messages/:messageId/reports',
+    async ({ params, body, user, set }) => {
+      const report = await ReportsService.createForMessageForAccount(user.id, params.threadId, params.messageId, body)
+      set.status = 201
+      return report
+    },
+    {
+      auth: true,
+      params: ReportsModel.messageReportParams,
+      body: ReportsModel.createBody,
+      response: {
+        201: ReportsModel.createResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
+      },
+      detail: { summary: 'Report a message', operationId: 'createMessageReport', tags: ['Reports'] },
+    },
+  )
+
+

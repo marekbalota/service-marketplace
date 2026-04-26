@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { authClient } from '#/auth'
+import { useCurrentUser } from '#/lib/userQueries'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { api } from '#/api'
 import type { api as ApiType } from '#/api'
 
@@ -39,24 +40,26 @@ function FavouriteButton({
   disabled?: boolean
 }) {
   const queryClient = useQueryClient()
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
+  const isAuthenticated = user != null
+  const profileId = activeProfile?.userProfileId
 
-  const { data: checkData } = useQuery({
-    queryKey: ['favourites', postId],
+  const { data: favouritesList } = useQuery({
+    queryKey: ['favourites', profileId],
     queryFn: async () => {
-      const { data, error } = await api.favourites({ postId }).get()
+      const { data, error } = await api.favourites.get({ query: { profileId: profileId! } })
       if (error) throw error
       return data
     },
-    enabled: isAuthenticated && initialIsFavourite === undefined,
+    enabled: isAuthenticated && !!profileId && initialIsFavourite === undefined,
   })
 
-  const isFavourite = initialIsFavourite ?? checkData?.isFavourite ?? false
+  const isFavourite = initialIsFavourite ?? (favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ?? false)
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { data, error, response } = await api.favourites({ postId }).post()
+      const { data, error, response } = await api.favourites({ postId }).post({ profileId: profileId! })
       if (error) {
         console.error('Add favourite error:', error, 'Status:', response?.status)
         throw error
@@ -64,8 +67,7 @@ function FavouriteButton({
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
       onToggle?.()
     },
     onError: (error) => {
@@ -75,15 +77,14 @@ function FavouriteButton({
 
   const removeMutation = useMutation({
     mutationFn: async () => {
-      const { error, response } = await api.favourites({ postId }).delete()
+      const { error, response } = await api.favourites({ postId }).delete({ profileId: profileId! })
       if (error) {
         console.error('Remove favourite error:', error, 'Status:', response?.status)
         throw error
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', postId] })
-      queryClient.invalidateQueries({ queryKey: ['favourites'] })
+      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
       onToggle?.()
     },
     onError: (error) => {
@@ -137,8 +138,8 @@ export function PostCard({
   favouriteDisabled,
   showFavouriteButton = true,
 }: PostCardProps) {
-  const { data: session } = authClient.useSession()
-  const isAuthenticated = !!session?.user
+  const { data: user } = useCurrentUser()
+  const isAuthenticated = user != null
   const isOffer = post.postType === 'OFFER'
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null

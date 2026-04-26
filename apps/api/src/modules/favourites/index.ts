@@ -2,64 +2,59 @@ import { Elysia, t } from 'elysia'
 import { FavouritesModel } from './model'
 import { FavouritesService } from './service'
 import { authRoutes } from '../auth'
-import { notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import { notFoundResponse, unauthorizedResponse, conflictResponse, forbiddenResponse } from '../../lib/errors'
 
 export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ user }) => FavouritesService.findAllForAccount(user.id),
+    async ({ user, query }) => FavouritesService.findAllForProfile(user.id, query.profileId),
     {
       auth: true,
+      query: FavouritesModel.profileIdQuery,
       response: {
         200: FavouritesModel.findAllResponse,
         ...unauthorizedResponse,
+        ...forbiddenResponse,
       },
       detail: { summary: 'List user favourites', operationId: 'listFavourites', tags: ['Favourites'] },
     },
   )
-  .get(
-    '/:postId',
-    async ({ params, user }) => FavouritesService.isFavouriteForAccount(user.id, params.postId),
-    {
-      auth: true,
-      params: FavouritesModel.postIdParams,
-      response: {
-        200: FavouritesModel.isFavouriteResponse,
-        ...unauthorizedResponse,
-      },
-      detail: { summary: 'Check if post is favourited', operationId: 'checkFavourite', tags: ['Favourites'] },
-    },
-  )
   .post(
     '/:postId',
-    async ({ params, user, set }) => {
+    async ({ params, user, body, set }) => {
+      const result = await FavouritesService.addFavouriteForProfile(user.id, body.profileId, params.postId)
       set.status = 201
-      return FavouritesService.addFavouriteForAccount(user.id, params.postId)
+      return result;
     },
     {
       auth: true,
       params: FavouritesModel.postIdParams,
+      body: FavouritesModel.profileIdQuery,
       response: {
         201: FavouritesModel.addResponse,
         ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
+        ...conflictResponse,
       },
       detail: { summary: 'Add post to favourites', operationId: 'addFavourite', tags: ['Favourites'] },
     },
   )
   .delete(
     '/:postId',
-    async ({ params, user, set }) => {
-      await FavouritesService.removeFavouriteForAccount(user.id, params.postId)
+    async ({ params, user, body, set }) => {
+      await FavouritesService.removeFavouriteForProfile(user.id, body.profileId, params.postId)
       set.status = 204
     },
     {
       auth: true,
       params: FavouritesModel.postIdParams,
+      body: FavouritesModel.profileIdQuery,
       response: {
         204: t.Void(),
         ...unauthorizedResponse,
+        ...forbiddenResponse,
         ...notFoundResponse,
       },
       detail: { summary: 'Remove post from favourites', operationId: 'removeFavourite', tags: ['Favourites'] },

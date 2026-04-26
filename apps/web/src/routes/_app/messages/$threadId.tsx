@@ -1,15 +1,16 @@
 import { createFileRoute, redirect, Link, useRouter } from '@tanstack/react-router'
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, Suspense } from 'react'
-import { ArrowLeft, ExternalLink, Send, Trash2 } from 'lucide-react'
-import { authClient } from '#/auth'
+import { ArrowLeft, ExternalLink, Flag, Send, Trash2 } from 'lucide-react'
 import { api } from '#/api'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Textarea } from '#/components/ui/textarea'
 import { cn } from '#/lib/utils'
-import { useActiveUser } from '#/contexts/ActiveUserContext'
+import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { ReportForm } from '#/components/ReportForm'
 import { getInitials } from './route'
 
 export function threadDetailQueryOptions(threadId: string, profileId: string) {
@@ -24,11 +25,8 @@ export function threadDetailQueryOptions(threadId: string, profileId: string) {
 }
 
 export const Route = createFileRoute('/_app/messages/$threadId')({
-  beforeLoad: async () => {
-    const session = await authClient.getSession()
-    if (!session.data) {
-      throw redirect({ to: '/login' })
-    }
+  beforeLoad: ({ context: { user } }) => {
+    if (!user) throw redirect({ to: '/login' })
   },
   component: ThreadPage,
 })
@@ -64,24 +62,49 @@ type Message = {
   readAt: Date | string | null
 }
 
-export function MessageBubble({ message, otherPartyName }: { message: Message; otherPartyName: string }) {
+
+export function MessageBubble({
+  message,
+  otherPartyName,
+  onReport,
+}: {
+  message: Message
+  otherPartyName: string
+  onReport?: () => void
+}) {
   const d = typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt
   const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className={cn('flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}>
+    <div
+      className={cn('group flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}
+    >
       {!message.sentByMe && (
         <span className="px-1 text-xs text-muted-foreground">{otherPartyName}</span>
       )}
-      <div
-        className={cn(
-          'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
-          message.sentByMe
-            ? 'rounded-br-sm bg-primary text-primary-foreground'
-            : 'rounded-bl-sm bg-muted text-foreground',
+      <div className={cn('flex w-full items-center gap-1', message.sentByMe ? 'flex-row-reverse' : 'flex-row')}>
+        <div
+          className={cn(
+            'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
+            message.sentByMe
+              ? 'rounded-br-sm bg-primary text-primary-foreground'
+              : 'rounded-bl-sm bg-muted text-foreground',
+          )}
+        >
+          {message.content}
+        </div>
+        {!message.sentByMe && onReport && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+            onClick={onReport}
+            aria-label="Report message"
+            tabIndex={-1}
+          >
+            <Flag className="size-3.5" />
+          </Button>
         )}
-      >
-        {message.content}
       </div>
       <span className="px-1 text-xs text-muted-foreground">{timeLabel}</span>
     </div>
@@ -92,6 +115,7 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
   const router = useRouter()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState('')
+  const [reportingMessageId, setReportingMessageId] = useState<string | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -202,7 +226,12 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
           </p>
         )}
         {thread.messages.map((msg) => (
-          <MessageBubble key={msg.messageId} message={msg} otherPartyName={thread.otherPartyName} />
+          <MessageBubble
+            key={msg.messageId}
+            message={msg}
+            otherPartyName={thread.otherPartyName}
+            onReport={!msg.sentByMe ? () => setReportingMessageId(msg.messageId) : undefined}
+          />
         ))}
       </div>
 
@@ -239,13 +268,39 @@ function ChatInterface({ threadId, profileId }: { threadId: string; profileId: s
           </>
         )}
       </div>
+
+      <Dialog
+        open={reportingMessageId !== null}
+        onOpenChange={(open) => { if (!open) setReportingMessageId(null) }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Report Message</DialogTitle>
+          </DialogHeader>
+          {reportingMessageId && (
+            <ReportForm
+              targetType="MESSAGE"
+              entityName="message"
+              onReport={async (data) => {
+                const { error } = await api.threads({ threadId }).messages({ messageId: reportingMessageId }).reports.post(data)
+                if (error) throw error
+              }}
+              onSuccess={() => {
+                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'message', reportingMessageId] })
+                setReportingMessageId(null)
+              }}
+              onCancel={() => setReportingMessageId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
 
 function ThreadPage() {
   const { threadId } = Route.useParams()
-  const { activeProfile } = useActiveUser()
+  const { activeProfile } = useActiveProfile()
 
   if (!activeProfile) {
     return <ThreadPageSkeleton />
