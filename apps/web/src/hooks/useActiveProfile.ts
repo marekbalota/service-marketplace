@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 import type { UserProfile } from '#/types/api'
 
 const STORAGE_KEY = 'activeProfileId'

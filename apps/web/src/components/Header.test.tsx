@@ -4,7 +4,7 @@ import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } fr
 import { Header } from './Header'
 import type { User } from '#/types/api'
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
@@ -12,7 +12,7 @@ vi.mock('#/hooks/useActiveProfile', () => ({
   useActiveProfile: vi.fn(),
 }))
 
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 async function renderHeader() {

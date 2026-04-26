@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from './useActiveProfile'
 
 const mockUseCurrentUser = vi.mocked(useCurrentUser)

@@ -12,7 +12,7 @@ import {
 } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 export function Header() {
