@@ -126,6 +126,96 @@ routes/
 
 **Preferred structure for new routes:** always use the folder form so route-specific files can be co-located later.
 
+## File Organisation
+
+### Query options — shared vs. route-specific
+
+**Tier A — `lib/queries/<resource>.ts`** (shared across routes)
+
+Put a query option here when:
+- Two or more routes use it, OR
+- The same `queryKey` appears in two or more files (split-cache risk — both files write to the same cache slot but neither knows about the other's stale data).
+
+```
+apps/web/src/lib/queries/
+  users.ts        # currentUserQueryOptions, ...
+  profiles.ts     # profileQueryOptions, profilePostsQueryOptions, imagesQueryOptions, ...
+  posts.ts        # categoriesQueryOptions, ...
+  admin.ts        # rolesQueryOptions, permissionsQueryOptions (shared admin/roles + admin/users)
+```
+
+**Tier B — `<route>/-queries/<name>.ts`** (route-specific)
+
+Put a query option here when it has exactly one consumer. The `-` prefix on the folder name excludes it from TanStack Router's route generation.
+
+```
+routes/_app/posts/$postId/
+  -queries/
+    posts.ts      # postDetailQueryOptions
+    threads.ts    # existingThreadQueryOptions
+```
+
+Rule: never import from another route's `-queries/` folder. If two routes need the same query, promote it to `lib/queries/`.
+
+### Route-specific components — `-components/` folder
+
+Co-locate components that are only relevant to one route:
+
+```
+routes/_app/create-post/
+  -components/
+    LocationField.tsx
+    PricingField.tsx
+  route.tsx
+```
+
+Components that are reused across two or more routes always live in `components/` at the top of `src/`.
+
+### Converting a flat route file to a directory
+
+When a route file grows and needs its own `-components/` or `-queries/` folder, convert it:
+
+```
+# Before
+routes/_app/posts/$postId.tsx
+
+# After
+routes/_app/posts/$postId/
+  -queries/
+    posts.ts
+  -components/
+    ReviewCard.tsx
+  route.tsx      ← same module as $postId.tsx was
+```
+
+TanStack Router treats `$postId.tsx` and `$postId/route.tsx` identically at runtime. After moving, update `routeTree.gen.ts` — it imports from the old path and the dev server regenerates it automatically, but committed state needs a manual fix.
+
+Use `route.tsx` for standalone routes; use `index.tsx` only for an index child of a layout route (e.g. `admin/users/index.tsx` is the `/admin/users/` child under the `admin/users` layout).
+
+### Skeleton rule
+
+| Skeleton scope | Location |
+|----------------|----------|
+| Used by two or more routes | `components/PostsGridSkeleton.tsx`, `components/PostCardSkeleton.tsx`, etc. |
+| Used only within one route | Inline function in the route file (e.g. `function ProfileDetailSkeleton()`) |
+
+Do not place single-use skeletons in `-components/` — they belong in the route file itself.
+
+### Test co-location
+
+Tests live next to their source file in the same directory:
+
+```
+-components/
+  ReviewCard.tsx
+  ReviewCard.test.tsx
+lib/queries/
+  profiles.ts
+  profiles.test.ts
+```
+
+Route-level tests (loader, search params, navigation) live in the route's directory alongside `route.tsx` or `index.tsx`.
+
 ## Data Fetching Pattern (TanStack Query + Router)
 
 ### 1. Define query options
