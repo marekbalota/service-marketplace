@@ -1,5 +1,5 @@
 import { queryClient, routerRef } from '#/router'
-import { currentUserQueryOptions } from '#/lib/userQueries'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 
 const STORAGE_KEY = 'activeProfileId'
 
