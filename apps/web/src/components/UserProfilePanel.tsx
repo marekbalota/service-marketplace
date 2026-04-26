@@ -6,8 +6,8 @@ import {
   Shield,
   Search,
   LogOut,
-  User,
 } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
 import {
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
@@ -27,9 +27,7 @@ import { queryClient } from '#/router'
 function ProfileOption({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
-        <User className="size-4 text-white" />
-      </div>
+      <ProfileAvatar name={name} className="size-8 shrink-0" />
       <div className="flex flex-col items-start">
         <span className="font-medium">{name}</span>
       </div>

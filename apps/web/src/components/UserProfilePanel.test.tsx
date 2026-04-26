@@ -14,7 +14,7 @@ vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
@@ -44,13 +44,18 @@ vi.mock('#/components/ui/sheet', async (importOriginal) => {
   }
 })
 
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/hooks/useActiveProfile'
 
 const baseProfile: User['profiles'][number] = {
   userProfileId: 'profile-1',
   name: 'Alice',
   email: 'alice@example.com',
+  bio: null,
+  phoneNumber: null,
+  fax: null,
+  createdAt: new Date(),
+  updatedAt: null,
 }
 
 const baseUser: User = {
@@ -74,7 +79,7 @@ describe('UserProfilePanel', () => {
     mockSignOut.mockResolvedValue(undefined)
     mockInvalidate.mockReset()
     mockRemoveQueries.mockReset()
-    vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: baseProfile, setActiveProfileId: vi.fn() })
   })
 
@@ -104,7 +109,7 @@ describe('UserProfilePanel', () => {
   it('hides the profile switcher when there are no profiles', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, profiles: [] },
-    } as ReturnType<typeof useCurrentUser>)
+    } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderPanel()
     expect(screen.queryByText('Switch Profile')).not.toBeInTheDocument()
