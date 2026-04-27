@@ -1,12 +1,13 @@
 import { renderHook, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import type { ReactNode } from 'react'
 
 vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
 import { useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from './useActiveProfile'
+import { useActiveProfile, ActiveProfileProvider } from './useActiveProfile'
 
 const mockUseCurrentUser = vi.mocked(useCurrentUser)
 
@@ -16,6 +17,10 @@ function makeQueryResult(profiles: { userProfileId: string; name: string }[] | n
   } as ReturnType<typeof useCurrentUser>
 }
 
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <ActiveProfileProvider>{children}</ActiveProfileProvider>
+)
+
 describe('useActiveProfile', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -24,13 +29,13 @@ describe('useActiveProfile', () => {
   })
 
   it('returns null activeProfile when user is null', () => {
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile).toBeNull()
   })
 
   it('returns null activeProfile when user has no profiles', () => {
     mockUseCurrentUser.mockReturnValue(makeQueryResult([]))
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile).toBeNull()
   })
 
@@ -41,7 +46,7 @@ describe('useActiveProfile', () => {
         { userProfileId: 'p2', name: 'Bob' },
       ])
     )
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
   })
 
@@ -53,7 +58,7 @@ describe('useActiveProfile', () => {
         { userProfileId: 'p2', name: 'Bob' },
       ])
     )
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p2')
   })
 
@@ -62,7 +67,7 @@ describe('useActiveProfile', () => {
     mockUseCurrentUser.mockReturnValue(
       makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }])
     )
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
     expect(localStorage.getItem('activeProfileId')).toBe('p1')
   })
@@ -71,7 +76,7 @@ describe('useActiveProfile', () => {
     mockUseCurrentUser.mockReturnValue(
       makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }])
     )
-    const { result, rerender } = renderHook(() => useActiveProfile())
+    const { result, rerender } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
 
     mockUseCurrentUser.mockReturnValue(makeQueryResult(null))
@@ -88,7 +93,7 @@ describe('useActiveProfile', () => {
         { userProfileId: 'p2', name: 'Bob' },
       ])
     )
-    const { result } = renderHook(() => useActiveProfile())
+    const { result } = renderHook(() => useActiveProfile(), { wrapper })
 
     act(() => result.current.setActiveProfileId('p2'))
 
