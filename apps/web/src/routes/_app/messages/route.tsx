@@ -6,7 +6,7 @@ import { Suspense } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { threadsQueryOptions } from './-queries/threads'
 import { ThreadItem } from './-components/ThreadItem'
 

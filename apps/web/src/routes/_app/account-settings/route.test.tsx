@@ -38,7 +38,7 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: mockUseActiveProfile,
 }))
 

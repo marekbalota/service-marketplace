@@ -9,7 +9,7 @@ import { Label } from '#/components/ui/label'
 import { FieldError } from '#/components/ui/field'
 import { api } from '#/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Rating is required').max(5),

@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   }
 })
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(() => ({ activeProfile: { userProfileId: 'profile-1' } })),
 }))
 

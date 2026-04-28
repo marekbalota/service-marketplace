@@ -3,7 +3,7 @@ import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { api } from '#/api'
 
 export function FavouriteButton({

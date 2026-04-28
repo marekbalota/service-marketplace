@@ -21,7 +21,7 @@ import {
   CardDescription,
 } from '#/components/ui/card'
 import { Field, FieldLabel, FieldError } from '#/components/ui/field'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { Permissions, hasPermissions } from '@marketplace/shared'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { LocationField } from './-components/LocationField'

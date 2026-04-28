@@ -19,7 +19,7 @@ vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(),
 }))
 
@@ -45,7 +45,7 @@ vi.mock('#/components/ui/sheet', async (importOriginal) => {
 })
 
 import { useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 
 const baseProfile: User['profiles'][number] = {
   userProfileId: 'profile-1',

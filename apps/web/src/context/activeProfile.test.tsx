@@ -7,7 +7,7 @@ vi.mock('#/lib/queries/users', () => ({
 }))
 
 import { useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile, ActiveProfileProvider } from './useActiveProfile'
+import { useActiveProfile, ActiveProfileProvider } from './activeProfile'
 
 const mockUseCurrentUser = vi.mocked(useCurrentUser)
 

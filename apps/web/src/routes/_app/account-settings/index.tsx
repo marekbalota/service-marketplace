@@ -5,7 +5,7 @@ import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-re
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { api } from '#/api'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import type { UserProfile } from '#/types/api'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'

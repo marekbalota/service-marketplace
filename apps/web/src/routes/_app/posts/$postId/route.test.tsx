@@ -35,7 +35,7 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(() => ({ activeProfile: null })),
 }))
 
@@ -111,7 +111,7 @@ describe('PostDetailPage', () => {
   })
 
   it('shows Edit button when active profile is the post owner', async () => {
-    const { useActiveProfile } = await import('#/hooks/useActiveProfile')
+    const { useActiveProfile } = await import('#/context/activeProfile')
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-author', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
@@ -123,7 +123,7 @@ describe('PostDetailPage', () => {
   })
 
   it('does not show Edit button for non-owner', async () => {
-    const { useActiveProfile } = await import('#/hooks/useActiveProfile')
+    const { useActiveProfile } = await import('#/context/activeProfile')
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
     } as ReturnType<typeof useActiveProfile>)

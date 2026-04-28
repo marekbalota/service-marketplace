@@ -20,7 +20,7 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(() => ({ data: { userId: 'u1' } })),
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(() => ({ activeProfile: { userProfileId: 'profile-1' } })),
 }))
 

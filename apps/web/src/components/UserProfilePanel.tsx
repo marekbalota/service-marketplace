@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'

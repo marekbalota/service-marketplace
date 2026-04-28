@@ -3,7 +3,7 @@ import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { Heart } from 'lucide-react'
 import { PostCard } from '#/components/PostCard'
 import { useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { PaginationBar } from '#/components/PaginationBar'
 import { Route } from '../index'
 import { postsQueryOptions, favouritesQueryOptions, type RatingRange } from '../-queries/posts'

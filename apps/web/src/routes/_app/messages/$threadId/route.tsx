@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { Skeleton } from '#/components/ui/skeleton'
 import { EmptyState } from '#/components/EmptyState'
 import { cn } from '#/lib/utils'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useActiveProfile } from '#/context/activeProfile'
 import { ChatInterface } from './-components/ChatInterface'
 
 function ThreadPageSkeleton() {
