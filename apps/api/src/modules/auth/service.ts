@@ -10,7 +10,10 @@ import { AuthErrorMessages } from "../../lib/errors";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+  ],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {

@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('My Postings', () => {
+  test.use({ storageState: 'e2e/.auth/alice.json' })
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
-    await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
     await page.goto('/my-postings')
   })
 
@@ -112,12 +109,9 @@ test.describe('Marketplace index', () => {
 })
 
 test.describe('Account Settings — Profile CRUD', () => {
+  test.use({ storageState: 'e2e/.auth/alice.json' })
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
-    await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
     await page.goto('/account-settings')
   })
 
