@@ -1,5 +1,6 @@
 stages:
   - install
+  - lint
   - unit & integration tests
   - e2e tests
 
@@ -36,6 +37,34 @@ install:
   script:
     - bun install --frozen-lockfile
 
+eslint:
+  stage: lint
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - bun run lint
+
+prettier:
+  stage: lint
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - bun run format:check
+
 frontend-unit-tests:
   stage: unit & integration tests
   tags:
@@ -61,9 +90,9 @@ backend-integration-tests:
   services:
     - docker:24-dind-rootless
   variables:
-    DOCKER_HOST: "unix:///runner/services/docker/docker.sock"
-    DATABASE_URL: "postgresql://postgres:postgres@db:5432/marketplace_ci"
-    BETTER_AUTH_URL: "http://localhost:3001"
+    DOCKER_HOST: 'unix:///runner/services/docker/docker.sock'
+    DATABASE_URL: 'postgresql://postgres:postgres@db:5432/marketplace_ci'
+    BETTER_AUTH_URL: 'http://localhost:3001'
   before_script:
     - apk add --no-cache curl
   script:
@@ -85,9 +114,9 @@ e2e-tests:
   services:
     - docker:24-dind-rootless
   variables:
-    DOCKER_HOST: "unix:///runner/services/docker/docker.sock"
-    CI: "true"
-    PLAYWRIGHT_BASE_URL: "http://web:3000"
+    DOCKER_HOST: 'unix:///runner/services/docker/docker.sock'
+    CI: 'true'
+    PLAYWRIGHT_BASE_URL: 'http://web:3000'
   before_script:
     - apk add --no-cache curl
   script:
