@@ -10,7 +10,7 @@ import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
 import { SearchFilterBar, type FilterItem } from '#/components/SearchFilterBar'
 import { useCurrentUser } from '#/lib/queries/users'
 import { categoriesQueryOptions } from '#/lib/queries/posts'
-import { postsQueryOptions } from './-queries/posts'
+import { postsQueryOptions, PAGE_SIZE } from './-queries/posts'
 import { PostsList } from './-components/PostsList'
 import { PostTypeSelect } from './-components/PostTypeSelect'
 import { CategorySelect } from './-components/CategorySelect'
@@ -48,7 +48,7 @@ function PostsSkeleton() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <Skeleton className="mb-4 h-4 w-40" />
-      <PostsGridSkeleton count={12} />
+      <PostsGridSkeleton count={PAGE_SIZE} />
     </main>
   )
 }
