@@ -55,9 +55,6 @@ export function Header() {
                   </SheetTrigger>
                   <SheetContent side="right" showCloseButton className="sm:max-w-sm">
                     <SheetHeader className="flex-row items-center gap-4 border-b px-6 pb-6 pt-10 space-y-0">
-                      <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] shadow-lg">
-                        <User className="size-8 text-white" />
-                      </div>
                       <div className="min-w-0">
                         <SheetTitle className="truncate text-lg font-semibold text-foreground">
                           {user.name ?? activeProfile?.name ?? '—'}
