@@ -14,7 +14,7 @@ export function postDetailQueryOptions(postId: string) {
 
 export function hasReportedPostQueryOptions(postId: string, profileId: string) {
   return queryOptions({
-    queryKey: ['reports', 'check', 'posts', postId, profileId],
+    queryKey: ['profiles', profileId, 'reported', 'posts', postId],
     queryFn: async () => {
       const { status } = await api.profiles({ id: profileId }).reported.posts({ postId }).get()
       return status === 204
@@ -24,7 +24,7 @@ export function hasReportedPostQueryOptions(postId: string, profileId: string) {
 
 export function hasReportedReviewQueryOptions(reviewId: string, profileId: string) {
   return queryOptions({
-    queryKey: ['reports', 'check', 'reviews', reviewId, profileId],
+    queryKey: ['profiles', profileId, 'reported', 'reviews', reviewId],
     queryFn: async () => {
       const { status } = await api.profiles({ id: profileId }).reported.reviews({ reviewId }).get()
       return status === 204

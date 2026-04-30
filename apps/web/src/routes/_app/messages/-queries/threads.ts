@@ -37,7 +37,7 @@ export function threadDetailQueryOptions(threadId: string, profileId: string) {
 
 export function hasReportedMessageQueryOptions(messageId: string, profileId: string) {
   return queryOptions({
-    queryKey: ['reports', 'check', 'messages', messageId, profileId],
+    queryKey: ['profiles', profileId, 'reported', 'messages', messageId],
     queryFn: async () => {
       const { status } = await api.profiles({ id: profileId }).reported.messages({ messageId }).get()
       return status === 204
