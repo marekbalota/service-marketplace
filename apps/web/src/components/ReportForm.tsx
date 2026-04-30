@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,12 +13,18 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
-import { api } from '#/api'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { reportCategoriesQueryOptions } from '#/lib/queries/reports'
 
 const baseSchema = z.object({
-  categoryId: z.string().uuid('Please select a category'),
+  categoryId: z.uuid('Please select a category'),
   description: z.string().max(1000).optional(),
+})
+
+const schemaWithRequiredDescription = baseSchema.superRefine((data, ctx) => {
+  if (!data.description?.trim()) {
+    ctx.addIssue({ code: 'custom', message: 'Description is required', path: ['description'] })
+  }
 })
 
 type FormData = z.infer<typeof baseSchema>
@@ -42,26 +48,11 @@ export function ReportForm({
 }: ReportFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
 
-  const schema = useMemo(
-    () =>
-      descriptionRequired
-        ? baseSchema.superRefine((data, ctx) => {
-            if (!data.description?.trim()) {
-              ctx.addIssue({ code: 'custom', message: 'Description is required', path: ['description'] })
-            }
-          })
-        : baseSchema,
-    [descriptionRequired],
-  )
+  const schema = descriptionRequired ? schemaWithRequiredDescription : baseSchema
 
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['report-categories', targetType],
-    queryFn: async () => {
-      const { data, error } = await api['report-categories'].get({ query: { targetType } })
-      if (error) throw error
-      return data!
-    },
-  })
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery(
+    reportCategoriesQueryOptions(targetType),
+  )
 
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -148,7 +139,7 @@ export function ReportForm({
         />
       </FieldGroup>
 
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+      <FieldError errors={[{ message: serverError ?? undefined }]} />
 
       <div className="flex gap-2">
         <Button
