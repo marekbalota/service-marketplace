@@ -2,7 +2,7 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useMatch } from '@tanstack/react-router'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
@@ -55,6 +55,16 @@ function MessagesLayout() {
   const threadMatch = useMatch({ from: '/_app/messages/$threadId', shouldThrow: false })
   const activeThreadId = threadMatch?.params.threadId
   const isInThread = !!threadMatch
+  const navigate = Route.useNavigate()
+
+  const prevProfileIdRef = useRef(activeProfile?.userProfileId)
+  useEffect(() => {
+    const prevId = prevProfileIdRef.current
+    prevProfileIdRef.current = activeProfile?.userProfileId
+    if (prevId !== undefined && prevId !== activeProfile?.userProfileId && isInThread) {
+      void navigate({ to: '/messages' })
+    }
+  }, [activeProfile?.userProfileId, isInThread, navigate])
 
   return (
     <div className="flex h-[calc(100svh-4rem)] overflow-hidden">
