@@ -6,7 +6,8 @@ import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { PaginationBar } from '#/components/PaginationBar'
 import { Route } from '../index'
-import { postsQueryOptions, favouritesQueryOptions, type RatingRange } from '../-queries/posts'
+import { favouritesQueryOptions } from '#/lib/queries/posts'
+import { postsQueryOptions, type RatingRange } from '../-queries/posts'
 
 export function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
   type: 'all' | 'offer' | 'request'

@@ -57,13 +57,3 @@ export function postsQueryOptions(deps: {
   })
 }
 
-export function favouritesQueryOptions(profileId: string) {
-  return queryOptions({
-    queryKey: ['favourites', profileId],
-    queryFn: async () => {
-      const { data, error } = await api.favourites.get({ query: { profileId } })
-      if (error) throw error
-      return data
-    },
-  })
-}

@@ -10,3 +10,14 @@ export const categoriesQueryOptions = queryOptions({
     return data
   },
 })
+
+export function favouritesQueryOptions(profileId: string) {
+  return queryOptions({
+    queryKey: ['favourites', profileId],
+    queryFn: async () => {
+      const { data, error } = await api.favourites.get({ query: { profileId } })
+      if (error) throw error
+      return data
+    },
+  })
+}

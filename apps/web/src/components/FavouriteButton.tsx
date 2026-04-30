@@ -3,6 +3,7 @@ import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '#/lib/queries/users'
+import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { useActiveProfile } from '#/context/activeProfile'
 import { api } from '#/api'
 
@@ -24,12 +25,7 @@ export function FavouriteButton({
   const profileId = activeProfile?.userProfileId
 
   const { data: favouritesList } = useQuery({
-    queryKey: ['favourites', profileId],
-    queryFn: async () => {
-      const { data, error } = await api.favourites.get({ query: { profileId: profileId! } })
-      if (error) throw error
-      return data
-    },
+    ...favouritesQueryOptions(profileId ?? ''),
     enabled: isAuthenticated && !!profileId && initialIsFavourite === undefined,
   })
 
@@ -45,7 +41,7 @@ export function FavouriteButton({
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
+      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
       onToggle?.()
     },
     onError: (error) => {
@@ -62,7 +58,7 @@ export function FavouriteButton({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['favourites', profileId] })
+      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
       onToggle?.()
     },
     onError: (error) => {
