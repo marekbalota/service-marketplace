@@ -1,6 +1,9 @@
 import { Flag } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
+import { useActiveProfile } from '#/context/activeProfile'
+import { hasReportedMessageQueryOptions } from '../../-queries/threads'
 
 type Message = {
   messageId: string
@@ -19,8 +22,16 @@ export function MessageBubble({
   otherPartyName: string
   onReport?: () => void
 }) {
+  const { activeProfile } = useActiveProfile()
+  const profileId = activeProfile?.userProfileId
+
   const d = typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt
   const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  const { data: hasReported = false } = useQuery({
+    ...hasReportedMessageQueryOptions(message.messageId, profileId ?? ''),
+    enabled: !message.sentByMe && !!profileId,
+  })
 
   return (
     <div className={cn('group flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}>
@@ -38,7 +49,7 @@ export function MessageBubble({
         >
           {message.content}
         </div>
-        {!message.sentByMe && onReport && (
+        {!message.sentByMe && onReport && !hasReported && (
           <Button
             variant="ghost"
             size="icon"

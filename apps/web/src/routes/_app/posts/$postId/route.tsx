@@ -18,7 +18,7 @@ import { PostTypeBadge } from '#/components/PostTypeBadge'
 import { ReportForm } from '#/components/ReportForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
-import { postDetailQueryOptions, hasReportedPostQueryOptions } from './-queries/posts'
+import { postDetailQueryOptions, hasReportedPostQueryOptions, hasReportedReviewQueryOptions } from './-queries/posts'
 import { SendMessageSection } from './-components/SendMessageSection'
 import { ReviewCard } from './-components/ReviewCard'
 import { ReviewForm } from './-components/ReviewForm'
@@ -81,7 +81,7 @@ function PostDetailPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const isOwner = activeProfile?.userProfileId === post.authorId
-  const isAuthenticated = user !== null
+  const isAuthenticated = user != null
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [showReportForm, setShowReportForm] = useState(false)
   const [reportingReviewId, setReportingReviewId] = useState<string | null>(null)
@@ -253,7 +253,7 @@ function PostDetailPage() {
                       if (error) throw error
                     }}
                     onSuccess={() => {
-                      void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId] })
+                      void queryClient.invalidateQueries({ queryKey: hasReportedPostQueryOptions(postId, activeProfile?.userProfileId ?? '').queryKey })
                       setShowReportForm(false)
                     }}
                     onCancel={() => setShowReportForm(false)}
@@ -280,7 +280,6 @@ function PostDetailPage() {
                   <ReviewCard
                     key={review.reviewId}
                     review={review}
-                    myProfileId={activeProfile?.userProfileId ?? null}
                     onDelete={(id) => setDeletingReviewId(id)}
                     isDeleting={deleteMutation.isPending}
                     onReport={(id) => setReportingReviewId(id)}
@@ -310,7 +309,7 @@ function PostDetailPage() {
                 if (error) throw error
               }}
               onSuccess={() => {
-                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'review', reportingReviewId] })
+                void queryClient.invalidateQueries({ queryKey: hasReportedReviewQueryOptions(reportingReviewId!, activeProfile?.userProfileId ?? '').queryKey })
                 setReportingReviewId(null)
               }}
               onCancel={() => setReportingReviewId(null)}

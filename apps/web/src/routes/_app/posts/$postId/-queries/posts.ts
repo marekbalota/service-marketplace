@@ -21,3 +21,13 @@ export function hasReportedPostQueryOptions(postId: string, profileId: string) {
     },
   })
 }
+
+export function hasReportedReviewQueryOptions(reviewId: string, profileId: string) {
+  return queryOptions({
+    queryKey: ['reports', 'check', 'reviews', reviewId, profileId],
+    queryFn: async () => {
+      const { status } = await api.profiles({ id: profileId }).reported.reviews({ reviewId }).get()
+      return status === 204
+    },
+  })
+}

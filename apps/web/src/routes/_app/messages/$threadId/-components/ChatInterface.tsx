@@ -4,7 +4,7 @@ import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { ReportForm } from '#/components/ReportForm'
 import { api } from '#/api'
-import { threadDetailQueryOptions, threadsQueryOptions } from '../../-queries/threads'
+import { threadDetailQueryOptions, threadsQueryOptions, hasReportedMessageQueryOptions } from '../../-queries/threads'
 import { ThreadHeader } from './ThreadHeader'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
@@ -91,7 +91,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
                 if (error) throw error
               }}
               onSuccess={() => {
-                void queryClient.invalidateQueries({ queryKey: ['reports', 'check', 'message', reportingMessageId] })
+                void queryClient.invalidateQueries({ queryKey: hasReportedMessageQueryOptions(reportingMessageId!, profileId).queryKey })
                 setReportingMessageId(null)
               }}
               onCancel={() => setReportingMessageId(null)}

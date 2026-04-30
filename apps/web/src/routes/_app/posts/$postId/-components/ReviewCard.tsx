@@ -1,7 +1,10 @@
 import { Star, Trash2, Flag } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { cn } from '#/lib/utils'
+import { useActiveProfile } from '#/context/activeProfile'
+import { hasReportedReviewQueryOptions } from '../-queries/posts'
 
 export type ReviewType = {
   reviewId: string
@@ -14,21 +17,27 @@ export type ReviewType = {
 
 export function ReviewCard({
   review,
-  myProfileId,
   onDelete,
   isDeleting,
   onReport,
   isAuthenticated,
 }: {
   review: ReviewType
-  myProfileId: string | null
   onDelete: (id: string) => void
   isDeleting: boolean
   onReport: (id: string) => void
   isAuthenticated: boolean
 }) {
-  const isMyReview = review.reviewerId === myProfileId
+  const { activeProfile } = useActiveProfile()
+  const profileId = activeProfile?.userProfileId
+
+  const isMyReview = review.reviewerId === profileId
   const canReport = isAuthenticated && !isMyReview
+
+  const { data: hasReported = false } = useQuery({
+    ...hasReportedReviewQueryOptions(review.reviewId, profileId ?? ''),
+    enabled: canReport && !!profileId,
+  })
 
   return (
     <Card className="group">
@@ -49,7 +58,7 @@ export function ReviewCard({
                 />
               ))}
             </div>
-            {canReport && (
+            {canReport && !hasReported && (
               <Button
                 variant="ghost"
                 size="icon"
