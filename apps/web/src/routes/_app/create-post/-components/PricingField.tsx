@@ -11,13 +11,19 @@ import {
 } from '#/components/ui/select'
 
 interface PricingFieldProps<T extends FieldValues> {
-  control: Control<T, any, T>
+  control: Control<T, any>
   priceValue: string | undefined
 }
 
+const RATE_TYPES = [
+  { value: 'HOURLY', label: 'Hourly Rate' },
+  { value: 'DAILY',  label: 'Daily Rate'  },
+  { value: 'FIXED',  label: 'Fixed Price' },
+] as const
+
 export function PricingField<T extends FieldValues>({ control: controlProp, priceValue }: PricingFieldProps<T>) {
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
-  const control = controlProp as Control<FieldValues, any, FieldValues>
+  const control = controlProp as Control<FieldValues, any>
   return (
     <Field className="space-y-4">
       <div className="flex items-center gap-3">
@@ -58,19 +64,13 @@ export function PricingField<T extends FieldValues>({ control: controlProp, pric
               >
                 <SelectTrigger className="!h-11 w-full">
                   <SelectValue placeholder="Select rate type">
-                    {field.value === 'HOURLY'
-                      ? 'Hourly Rate'
-                      : field.value === 'DAILY'
-                        ? 'Daily Rate'
-                        : field.value === 'FIXED'
-                          ? 'Fixed Price'
-                          : undefined}
+                    {RATE_TYPES.find(r => r.value === field.value)?.label}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="HOURLY">Hourly Rate</SelectItem>
-                  <SelectItem value="DAILY">Daily Rate</SelectItem>
-                  <SelectItem value="FIXED">Fixed Price</SelectItem>
+                  {RATE_TYPES.map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FieldError errors={[fieldState.error]} />
