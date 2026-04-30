@@ -80,7 +80,7 @@ function HomePage() {
   const { q = '', type = 'all', category, sort = 'newest', page = 1, favourites = false, rating } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
-  const isAuthenticated = user !== null
+  const isAuthenticated = user != null
 
   const [inputValue, setInputValue] = useState(q)
   useEffect(() => { setInputValue(q) }, [q])

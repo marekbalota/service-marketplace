@@ -169,11 +169,11 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
-              localStorage.removeItem('activeProfileId')
+              queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
+              queryClient.clear()
+              await navigate({ to: '/' })
               router.invalidate()
               onClose()
-              navigate({ to: '/' })
             }}
           >
             <LogOut className="size-5" />
