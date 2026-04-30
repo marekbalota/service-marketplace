@@ -11,3 +11,13 @@ export function postDetailQueryOptions(postId: string) {
     },
   })
 }
+
+export function hasReportedPostQueryOptions(postId: string, profileId: string) {
+  return queryOptions({
+    queryKey: ['reports', 'check', 'posts', postId, profileId],
+    queryFn: async () => {
+      const { status } = await api.profiles({ id: profileId }).reported.posts({ postId }).get()
+      return status === 204
+    },
+  })
+}

@@ -18,12 +18,10 @@ import { PostTypeBadge } from '#/components/PostTypeBadge'
 import { ReportForm } from '#/components/ReportForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
-import { postDetailQueryOptions } from './-queries/posts'
+import { postDetailQueryOptions, hasReportedPostQueryOptions } from './-queries/posts'
 import { SendMessageSection } from './-components/SendMessageSection'
 import { ReviewCard } from './-components/ReviewCard'
 import { ReviewForm } from './-components/ReviewForm'
-
-export { postDetailQueryOptions }
 
 export const Route = createFileRoute('/_app/posts/$postId')({
   loader: async ({ context: { queryClient }, params: { postId } }) => {
@@ -94,11 +92,7 @@ function PostDetailPage() {
   )
 
   const { data: hasReported } = useQuery({
-    queryKey: ['reports', 'check', 'posts', postId, activeProfile?.userProfileId],
-    queryFn: async () => {
-      const { status } = await api.profiles({ id: activeProfile!.userProfileId }).reported.posts({ postId }).get()
-      return status === 204
-    },
+    ...hasReportedPostQueryOptions(postId, activeProfile?.userProfileId ?? ''),
     enabled: isAuthenticated && !isOwner && !!activeProfile?.userProfileId,
   })
 
@@ -109,7 +103,6 @@ function PostDetailPage() {
     },
     onSuccess: () => {
       setDeletingReviewId(null)
-      queryClient.invalidateQueries({ queryKey: ['posts', postId] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
     },
   })

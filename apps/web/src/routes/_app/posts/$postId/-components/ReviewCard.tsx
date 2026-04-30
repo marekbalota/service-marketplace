@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Star, Trash2, Flag } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
@@ -28,12 +27,11 @@ export function ReviewCard({
   onReport: (id: string) => void
   isAuthenticated: boolean
 }) {
-  const [hovered, setHovered] = useState(false)
   const isMyReview = review.reviewerId === myProfileId
   const canReport = isAuthenticated && !isMyReview
 
   return (
-    <Card onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    <Card className="group">
       <CardContent>
         <div className="mb-2 flex items-start justify-between">
           <div>
@@ -57,7 +55,7 @@ export function ReviewCard({
                 size="icon"
                 className={cn(
                   'size-7 shrink-0 text-muted-foreground transition-opacity',
-                  hovered ? 'opacity-100' : 'opacity-0',
+                  'opacity-0 group-hover:opacity-100',
                 )}
                 onClick={() => onReport(review.reviewId)}
                 aria-label="Report review"
