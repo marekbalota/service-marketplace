@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
+import { PageHeader } from '#/components/PageHeader'
 import { api } from '#/api'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -161,19 +162,19 @@ function AccountSettingsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Account Settings</h1>
-          <p className="mt-1 text-muted-foreground">Manage your user profiles and account settings</p>
-        </div>
-        <Link
-          to="/account-settings/create"
-          className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
-        >
-          <Plus className="size-4" />
-          Add Profile
-        </Link>
-      </div>
+      <PageHeader
+        title="Account Settings"
+        description="Manage your user profiles and account settings"
+        action={
+          <Link
+            to="/account-settings/create"
+            className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
+          >
+            <Plus className="size-4" />
+            Add Profile
+          </Link>
+        }
+      />
 
       <div className="space-y-4">
         {profiles.map((profile) => (

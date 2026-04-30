@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
@@ -21,6 +21,11 @@ function CreateProfilePage() {
   const queryClient = useQueryClient()
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const [uploadWarning, setUploadWarning] = useState<string | null>(null)
+  const pendingFilesRef = useRef(pendingFiles)
+  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
+  useEffect(() => () => {
+    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+  }, [])
 
   const mutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
@@ -62,14 +67,14 @@ function CreateProfilePage() {
   }
 
   function addFile(file: File) {
-    setPendingFiles(prev => [...prev, { file, preview: URL.createObjectURL(file) }])
+    const preview = URL.createObjectURL(file)
+    setPendingFiles(prev => [...prev, { file, preview }])
   }
 
   function removeFile(index: number) {
-    setPendingFiles(prev => {
-      URL.revokeObjectURL(prev[index]!.preview)
-      return prev.filter((_, i) => i !== index)
-    })
+    const preview = pendingFiles[index]?.preview
+    if (preview) URL.revokeObjectURL(preview)
+    setPendingFiles(prev => prev.filter((_, i) => i !== index))
   }
 
   const defaultValues: ProfileFormValues = { name: '', email: '', bio: '', phoneNumber: '', fax: '' }
