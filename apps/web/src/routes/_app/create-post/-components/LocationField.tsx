@@ -16,7 +16,7 @@ import {
 import { Card, CardContent } from '#/components/ui/card'
 
 interface LocationFieldProps<T extends FieldValues> {
-  control: Control<T, any, T>
+  control: Control<T, any>
   profileId: string
   isManualLocation: boolean
   onToggle: () => void
@@ -24,7 +24,7 @@ interface LocationFieldProps<T extends FieldValues> {
 
 export function LocationField<T extends FieldValues>({ control: controlProp, profileId, isManualLocation, onToggle }: LocationFieldProps<T>) {
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
-  const control = controlProp as Control<FieldValues, any, FieldValues>
+  const control = controlProp as Control<FieldValues, any>
   const { data: previousLocations = [] } = useQuery(profileLocationsQueryOptions(profileId))
 
   return (
