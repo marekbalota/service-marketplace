@@ -22,12 +22,10 @@ export function ImageInputSection({
   previews,
   onFilePicked,
   onRemove,
-  isUploading,
 }: {
   previews: string[]
   onFilePicked: (file: File) => void
   onRemove: (index: number) => void
-  isUploading?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -71,15 +69,10 @@ export function ImageInputSection({
         <Button
           type="button"
           variant="outline"
-          disabled={isUploading}
           onClick={() => inputRef.current?.click()}
           className="h-24 w-full border-dashed text-muted-foreground hover:border-foreground/40 hover:text-foreground"
         >
-          {isUploading ? (
-            <span className="text-xs">Uploading…</span>
-          ) : (
-            <Plus className="size-6" />
-          )}
+          <Plus className="size-6" />
         </Button>
       </div>
     </div>
@@ -106,7 +99,7 @@ export function ProfileForm({
   })
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <FieldGroup>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Controller

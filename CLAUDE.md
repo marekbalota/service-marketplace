@@ -72,3 +72,11 @@ Schema is defined in `apps/api/src/db/schema.ts`. The ERD (`docs/erd.puml`) is t
   - New user-facing feature → add or extend an e2e scenario in `e2e/marketplace.spec.ts`.
 - Run tests: `bun run test` (unit, all workspaces) · `bun run test:e2e` (Playwright, requires DB + both dev servers).
 - Logging: log to stdout/stderr only — never to files. Works universally across all deployment targets (Kubernetes, Docker, PaaS). The logger plugin (`apps/api/src/logger.ts`) logs all requests (stdout) and errors (stderr) via Elysia lifecycle hooks; `process.on('unhandledRejection')` in `index.ts` catches anything outside the request lifecycle.
+- **File Organisation — routes and queries:**
+  - Shared query options live in `lib/queries/<resource>.ts` (e.g. `users.ts`, `profiles.ts`, `posts.ts`, `admin.ts`). A query option belongs here when it is used by two or more routes, OR when the same query key appears in two or more files (split-cache risk).
+  - Route-specific query options live in `<route>/-queries/<name>.ts`. The `-` prefix excludes the folder from TanStack Router's route generation.
+  - Route-specific components live in `<route>/-components/`. Components reused across routes live in `components/`.
+  - When a route needs a `-components/` folder, convert `routename.tsx` to `routename/route.tsx` (TanStack Router treats them identically at runtime). Use `route.tsx` for standalone routes; `index.tsx` signals an index child of a layout route.
+  - Skeletons used across multiple routes live in `components/`; skeletons used only in one route are inline functions in the route file.
+  - Tests follow their source file: `Foo.tsx` → `Foo.test.tsx` in the same directory.
+  - See the `frontend-patterns` skill for full detail and examples.

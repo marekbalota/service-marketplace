@@ -168,12 +168,11 @@ describe('GET /profiles/:id/locations', () => {
     }
   })
 
-  it('returns empty array for unknown profile', async () => {
-    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get({
+  it('returns 403 for a profile not owned by the caller', async () => {
+    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get({
       headers: { Cookie: aliceCookie }
     })
-    expect(error).toBeNull()
-    expect(data).toEqual([])
+    expect(error?.status).toBe(403)
   })
 })
 
@@ -269,14 +268,18 @@ describe('DELETE /profiles/:id', () => {
   })
 
   it('returns 409 when attempting to delete the last active profile', async () => {
-    // Delete all profiles created by this test suite so only the original seed profile remains
-    for (const id of testCreatedProfileIds) {
-      if (id !== aliceProfileId) {
-        await client.profiles({ id }).delete(undefined, { headers: { Cookie: aliceCookie } })
-      }
+    // Get current profiles to find the last one
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    const profileIds = me?.profiles.map(p => p.userProfileId) ?? []
+
+    // Delete all but one profile
+    for (const id of profileIds.slice(0, -1)) {
+      await client.profiles({ id }).delete(undefined, { headers: { Cookie: aliceCookie } })
     }
-    // Now only aliceProfileId remains — attempting to delete it must return 409
-    const { error } = await client.profiles({ id: aliceProfileId }).delete(
+
+    // Attempting to delete the last profile must return 409
+    const lastProfileId = profileIds[profileIds.length - 1]
+    const { error } = await client.profiles({ id: lastProfileId }).delete(
       undefined,
       { headers: { Cookie: aliceCookie } },
     )
@@ -287,6 +290,7 @@ describe('DELETE /profiles/:id', () => {
 describe('GET /profiles/:id/reported/posts/:postId', () => {
   let reportedPostId = ''
   let unreportedPostId = ''
+  let reportingProfileId = ''
 
   beforeAll(async () => {
     const [otherPost] = await db
@@ -309,7 +313,12 @@ describe('GET /profiles/:id/reported/posts/:postId', () => {
       .where(and(eq(reportCategories.targetType, 'POST'), isNull(reportCategories.deletedAt)))
       .limit(1)
 
-    await db.delete(reports).where(eq(reports.reporterId, aliceProfileId))
+    // Get the first profile that will be used for reporting (matches what createForPostForAccount uses)
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    reportingProfileId = me?.profiles[0]?.userProfileId ?? aliceProfileId
+
+    // Clean up all reports by alice's profiles
+    await db.delete(reports).where(eq(reports.reporterId, reportingProfileId))
     await client.posts({ id: reportedPostId }).reports.post(
       { categoryId: spamCat!.categoryId },
       { headers: { Cookie: aliceCookie } },
@@ -317,7 +326,7 @@ describe('GET /profiles/:id/reported/posts/:postId', () => {
   })
 
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.posts({ postId: reportedPostId }).get()
+    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: reportedPostId }).get()
     expect(error?.status).toBe(401)
   })
 
@@ -329,14 +338,14 @@ describe('GET /profiles/:id/reported/posts/:postId', () => {
   })
 
   it('returns 204 when the profile has reported the post', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.posts({ postId: reportedPostId }).get(
+    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: reportedPostId }).get(
       { headers: { Cookie: aliceCookie } },
     )
     expect(error).toBeNull()
   })
 
   it('returns 404 when the profile has not reported the post', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.posts({ postId: unreportedPostId }).get(
+    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: unreportedPostId }).get(
       { headers: { Cookie: aliceCookie } },
     )
     expect(error?.status).toBe(404)
@@ -344,8 +353,15 @@ describe('GET /profiles/:id/reported/posts/:postId', () => {
 })
 
 describe('GET /profiles/:id/reported/reviews/:reviewId', () => {
+  let testProfileId = ''
+
+  beforeAll(async () => {
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    testProfileId = me?.profiles[0]?.userProfileId ?? aliceProfileId
+  })
+
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get()
+    const { error } = await client.profiles({ id: testProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get()
     expect(error?.status).toBe(401)
   })
 
@@ -357,7 +373,7 @@ describe('GET /profiles/:id/reported/reviews/:reviewId', () => {
   })
 
   it('returns 404 when the profile has not reported the review', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get(
+    const { error } = await client.profiles({ id: testProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get(
       { headers: { Cookie: aliceCookie } },
     )
     expect(error?.status).toBe(404)
@@ -365,8 +381,15 @@ describe('GET /profiles/:id/reported/reviews/:reviewId', () => {
 })
 
 describe('GET /profiles/:id/reported/messages/:messageId', () => {
+  let testProfileId = ''
+
+  beforeAll(async () => {
+    const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
+    testProfileId = me?.profiles[0]?.userProfileId ?? aliceProfileId
+  })
+
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get()
+    const { error } = await client.profiles({ id: testProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get()
     expect(error?.status).toBe(401)
   })
 
@@ -378,7 +401,7 @@ describe('GET /profiles/:id/reported/messages/:messageId', () => {
   })
 
   it('returns 404 when the profile has not reported the message', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get(
+    const { error } = await client.profiles({ id: testProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get(
       { headers: { Cookie: aliceCookie } },
     )
     expect(error?.status).toBe(404)

@@ -142,13 +142,6 @@ describe('ImageInputSection', () => {
     expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
-  it('disables the add button when isUploading', () => {
-    render(
-      <ImageInputSection previews={[]} onFilePicked={vi.fn()} onRemove={vi.fn()} isUploading />,
-    )
-    expect(screen.getByRole('button', { name: /uploading/i })).toBeDisabled()
-  })
-
   it('renders an img element for each preview', () => {
     render(
       <ImageInputSection

@@ -1,4 +1,4 @@
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
@@ -8,7 +8,7 @@ import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
-import { currentUserQueryOptions } from "#/lib/userQueries"
+import { currentUserQueryOptions } from "#/lib/queries/users"
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email"),
@@ -17,18 +17,19 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>
 
-export function LoginForm() {
+export function LoginForm({ redirect }: { redirect?: string }) {
   const navigate = useNavigate()
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
+    mode: "onTouched",
   })
 
-  const onSubmit = async (values: LoginValues) => {
+  const onSubmit: SubmitHandler<LoginValues> = async (values) => {
     await authClient.signIn.email(values, {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-        navigate({ to: "/" })
+        void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
       },
       onError: (ctx) => {
         if (handleBanError(ctx.error)) return

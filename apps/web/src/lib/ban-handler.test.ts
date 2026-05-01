@@ -10,7 +10,7 @@ vi.mock('#/router', () => ({
   },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 

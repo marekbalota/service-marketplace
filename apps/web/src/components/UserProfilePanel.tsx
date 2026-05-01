@@ -6,8 +6,8 @@ import {
   Shield,
   Search,
   LogOut,
-  User,
 } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
 import {
@@ -17,8 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { useActiveProfile } from '#/context/activeProfile'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
@@ -27,9 +27,7 @@ import { queryClient } from '#/router'
 function ProfileOption({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)]">
-        <User className="size-4 text-white" />
-      </div>
+      <ProfileAvatar name={name} className="size-8 shrink-0" />
       <div className="flex flex-col items-start">
         <span className="font-medium">{name}</span>
       </div>
@@ -171,11 +169,11 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
               await authClient.signOut()
-              queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
-              localStorage.removeItem('activeProfileId')
+              queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
+              queryClient.clear()
+              await navigate({ to: '/' })
               router.invalidate()
               onClose()
-              navigate({ to: '/' })
             }}
           >
             <LogOut className="size-5" />

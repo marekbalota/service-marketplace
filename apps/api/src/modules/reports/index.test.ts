@@ -43,16 +43,30 @@ beforeAll(async () => {
   ).json() as { profiles: { userProfileId: string }[] }
   const aliceProfileId = meData.profiles[0]?.userProfileId ?? ''
 
-  // Clean up any leftover reports from alice to avoid 409 in the 201 test
-  await db.delete(reports).where(eq(reports.reporterId, aliceProfileId))
+  // Clean up any leftover reports from all of alice's profiles to avoid 409 in the 201 test
+  for (const profile of meData.profiles) {
+    await db.delete(reports).where(eq(reports.reporterId, profile.userProfileId))
+  }
 
-  // Find a post alice authored
+  // Find a post authored by alice's first profile (the one that will be used for reporting)
   const [alicePost] = await db
     .select({ postId: posts.postId })
     .from(posts)
     .where(and(eq(posts.authorId, aliceProfileId), isNull(posts.deletedAt)))
     .limit(1)
   ownPostId = alicePost?.postId ?? ''
+
+  // Ensure we have a valid post for the self-report test
+  if (!ownPostId) {
+    // Create a post for alice if none exists
+    const { data: createdPost } = await client.posts.post({
+      authorId: aliceProfileId,
+      postTitle: 'Test post for report test',
+      description: 'This is a test post for the self-report test',
+      postType: 'OFFER',
+    }, { headers: { Cookie: sessionCookie } })
+    ownPostId = createdPost?.postId ?? ''
+  }
 
   // Find a post NOT authored by alice
   const [otherPost] = await db

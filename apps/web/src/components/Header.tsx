@@ -12,8 +12,8 @@ import {
 } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
-import { useCurrentUser } from '#/lib/userQueries'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { useCurrentUser } from '#/lib/queries/users'
+import { useActiveProfile } from '#/context/activeProfile'
 
 export function Header() {
   const [open, setOpen] = useState(false)
@@ -48,16 +48,13 @@ export function Header() {
                     render={<Button variant="outline" className="gap-2" data-testid="profile-menu-trigger" />}
                   >
                     <User className="size-4" />
-                    <span className="hidden sm:inline">
-                      {activeProfile?.name ?? 'Profile'}
-                    </span>
+                    {activeProfile && (
+                      <span className="hidden sm:inline">{activeProfile.name}</span>
+                    )}
                     <ChevronDown className="size-4" />
                   </SheetTrigger>
                   <SheetContent side="right" showCloseButton className="sm:max-w-sm">
                     <SheetHeader className="flex-row items-center gap-4 border-b px-6 pb-6 pt-10 space-y-0">
-                      <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] shadow-lg">
-                        <User className="size-8 text-white" />
-                      </div>
                       <div className="min-w-0">
                         <SheetTitle className="truncate text-lg font-semibold text-foreground">
                           {user.name ?? activeProfile?.name ?? '—'}

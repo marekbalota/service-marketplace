@@ -20,7 +20,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   }
 })
 
-vi.mock('#/lib/profileQueries', () => ({
+vi.mock('#/lib/queries/profiles', () => ({
   profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
   imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
 }))
@@ -43,10 +43,10 @@ const profile = {
 
 // ── Render helper ─────────────────────────────────────────────────────────────
 
-import { ProfileViewPage } from './route'
+import { Route } from './route'
 
 async function renderPage() {
-  const rootRoute = createRootRoute({ component: ProfileViewPage })
+  const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
     render(<RouterProvider router={router} />)

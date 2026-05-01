@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { RegisterForm } from "./-components/RegisterForm";
-import { currentUserQueryOptions } from "#/lib/userQueries";
+import { currentUserQueryOptions } from "#/lib/queries/users";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,

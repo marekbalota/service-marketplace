@@ -10,9 +10,17 @@ vi.mock("#/auth", () => ({
   },
 }))
 
-vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => vi.fn(),
+vi.mock("#/router", () => ({
+  queryClient: { invalidateQueries: vi.fn() },
 }))
+
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>()
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+  }
+})
 
 describe("RegisterForm", () => {
   it("renders name, email, password inputs and a submit button", () => {

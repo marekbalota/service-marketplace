@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { profileLocationsQueryOptions } from './route'
+import { profileLocationsQueryOptions } from '#/lib/queries/profiles'
 
 // --- profileLocationsQueryOptions ---
 
