@@ -48,9 +48,9 @@ export function Header() {
                     render={<Button variant="outline" className="gap-2" data-testid="profile-menu-trigger" />}
                   >
                     <User className="size-4" />
-                    <span className="hidden sm:inline">
-                      {activeProfile?.name ?? 'Profile'}
-                    </span>
+                    {activeProfile && (
+                      <span className="hidden sm:inline">{activeProfile.name}</span>
+                    )}
                     <ChevronDown className="size-4" />
                   </SheetTrigger>
                   <SheetContent side="right" showCloseButton className="sm:max-w-sm">

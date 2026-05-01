@@ -57,7 +57,7 @@ export function ReportForm({
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
-    defaultValues: { categoryId: undefined, description: '' },
+    defaultValues: { categoryId: '' as string, description: '' },
   })
 
   const mutation = useMutation({

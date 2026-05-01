@@ -102,11 +102,9 @@ export function SortableRoleCard({
                         }
                       }}
                     >
-                      <DialogTrigger>
-                        <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(role)}>
-                          <Edit className="size-4" />
-                          Edit
-                        </Button>
+                      <DialogTrigger render={<Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(role)} />}>
+                        <Edit className="size-4" />
+                        Edit
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                         <DialogHeader>

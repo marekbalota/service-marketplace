@@ -8,7 +8,8 @@ import type { User } from '#/types/api'
 const mockSignOut = vi.hoisted(() => vi.fn())
 const mockInvalidate = vi.hoisted(() => vi.fn())
 const mockNavigate = vi.hoisted(() => vi.fn())
-const mockRemoveQueries = vi.hoisted(() => vi.fn())
+const mockSetQueryData = vi.hoisted(() => vi.fn())
+const mockClear = vi.hoisted(() => vi.fn())
 
 vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
@@ -24,7 +25,7 @@ vi.mock('#/context/activeProfile', () => ({
 }))
 
 vi.mock('#/router', () => ({
-  queryClient: { removeQueries: mockRemoveQueries },
+  queryClient: { setQueryData: mockSetQueryData, clear: mockClear },
 }))
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -78,7 +79,8 @@ describe('UserProfilePanel', () => {
   beforeEach(() => {
     mockSignOut.mockResolvedValue(undefined)
     mockInvalidate.mockReset()
-    mockRemoveQueries.mockReset()
+    mockSetQueryData.mockReset()
+    mockClear.mockReset()
     vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: baseProfile, setActiveProfileId: vi.fn() })
   })
@@ -96,7 +98,7 @@ describe('UserProfilePanel', () => {
       fireEvent.click(screen.getByRole('button', { name: /log out/i }))
     })
     expect(mockSignOut).toHaveBeenCalled()
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ['users', 'me'] })
+    expect(mockSetQueryData).toHaveBeenCalledWith(['users', 'me'], null)
     expect(mockInvalidate).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
   })

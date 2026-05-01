@@ -332,7 +332,7 @@ test.describe('Authentication', () => {
 
   test('my-postings — redirects to /login when not authenticated', async ({ page }) => {
     await page.goto('/my-postings')
-    await page.waitForURL('/login')
+    await page.waitForURL(/\/login/)
     // CardTitle renders as a <div>, not a heading — use text matcher
     await expect(page.getByText('Welcome Back')).toBeVisible()
   })

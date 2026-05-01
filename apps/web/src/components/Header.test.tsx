@@ -47,11 +47,12 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: /alice/i })).toBeInTheDocument()
   })
 
-  it('falls back to "Profile" in the button label when no active profile name is set', async () => {
+  it('shows profile button without name text when active profile is not yet available', async () => {
     const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderHeader()
-    expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument()
+    expect(screen.getByTestId('profile-menu-trigger')).toBeInTheDocument()
+    expect(screen.queryByText(/^profile$/i)).not.toBeInTheDocument()
   })
 })

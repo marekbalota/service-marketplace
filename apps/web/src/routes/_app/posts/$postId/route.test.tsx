@@ -56,7 +56,7 @@ const basePost = {
   postTitle: 'Expert Lawn Care Service',
   description: 'Professional lawn care for your garden.',
   postType: 'OFFER',
-  categories: [{ name: 'Gardening' }],
+  categories: [{ categoryId: 'cat-1', name: 'Gardening' }],
   price: '50.00',
   rateType: 'HOURLY',
   location: null,

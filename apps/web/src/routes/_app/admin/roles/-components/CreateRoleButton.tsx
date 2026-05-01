@@ -49,11 +49,9 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
-        <Button className="gap-2">
-          <Plus className="size-4" />
-          Create Role
-        </Button>
+      <DialogTrigger render={<Button className="gap-2" />}>
+        <Plus className="size-4" />
+        Create Role
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
