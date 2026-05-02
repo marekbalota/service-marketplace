@@ -11,8 +11,7 @@ import { RolesContent } from './-components/RolesContent'
 import type { Role } from './-components/SortableRoleCard'
 
 export const Route = createFileRoute('/_app/admin/roles')({
-  beforeLoad: ({ context }) => {
-    const user = context.user
+  beforeLoad: ({ context : { user } }) => {
     const permissions = user?.role?.permissions ?? []
     if (!hasPermissions(permissions, [Permissions.AdminRolesManage])) {
       throw redirect({ to: '/admin' })

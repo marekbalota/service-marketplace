@@ -37,15 +37,7 @@ function getStatusColor(isBanned: boolean) {
   return isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
 }
 
-function UserCard({
-  user,
-  onBan,
-  onUnban,
-}: {
-  user: User
-  onBan: (userId: string, reason: string, expiresAt?: Date) => Promise<void>
-  onUnban: (userId: string) => Promise<void>
-}) {
+function UserCard({ user }: { user: User }) {
   const { data: currentUser } = useCurrentUser()
   const permissions = currentUser?.role?.permissions ?? []
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole])
@@ -57,12 +49,35 @@ function UserCard({
   const roleIsAssignable = assignableRoles.some((r) => r.roleId === user.role?.roleId)
 
   const queryClient = useQueryClient()
+
   const roleMutation = useMutation({
     mutationFn: (roleId: string) =>
       api.admin.users({ id: user.userId }).role.patch({ roleId }).then(({ error }) => {
         if (error) throw error
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  })
+
+  const banMutation = useMutation({
+    mutationFn: ({ reason, expiresAt }: { reason: string; expiresAt?: Date }) =>
+      api.admin.users({ id: user.userId }).ban.patch({ reason, expiresAt }).then(({ error }) => {
+        if (error) throw error
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setBanDialogOpen(false)
+    },
+  })
+
+  const unbanMutation = useMutation({
+    mutationFn: () =>
+      api.admin.users({ id: user.userId }).unban.patch().then(({ error }) => {
+        if (error) throw error
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setUnbanDialogOpen(false)
+    },
   })
 
   const [banDialogOpen, setBanDialogOpen] = useState(false)
@@ -120,24 +135,37 @@ function UserCard({
             {canBan && roleIsAssignable && (
               user.isBanned ? (
                 <>
-                  <Button variant="outline" size="sm" onClick={() => setUnbanDialogOpen(true)}>Unban</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={unbanMutation.isPending}
+                    onClick={() => setUnbanDialogOpen(true)}
+                  >
+                    {unbanMutation.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
+                    Unban
+                  </Button>
                   <UnbanDialog
                     open={unbanDialogOpen}
                     userName={user.name}
-                    onConfirm={async () => { await onUnban(user.userId); setUnbanDialogOpen(false) }}
+                    onConfirm={() => unbanMutation.mutateAsync()}
                     onClose={() => setUnbanDialogOpen(false)}
                   />
                 </>
               ) : (
                 <>
-                  <Button variant="destructive" size="sm" onClick={() => setBanDialogOpen(true)}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={banMutation.isPending}
+                    onClick={() => setBanDialogOpen(true)}
+                  >
                     <Ban className="size-4 mr-2" />
                     Ban
                   </Button>
                   <BanDialog
                     open={banDialogOpen}
                     userName={user.name}
-                    onSubmit={async (reason, expiresAt) => { await onBan(user.userId, reason, expiresAt); setBanDialogOpen(false) }}
+                    onSubmit={(reason, expiresAt) => banMutation.mutateAsync({ reason, expiresAt })}
                     onClose={() => setBanDialogOpen(false)}
                   />
                 </>
@@ -153,7 +181,6 @@ function UserCard({
 export function UsersTable() {
   const navigate = Route.useNavigate()
   const { q = '', role = 'all', status = 'all', page = 1 } = Route.useSearch()
-  const queryClient = useQueryClient()
   const { data: usersData, isFetching } = useSuspenseQuery(usersQueryOptions({ search: q, role, status, page }))
 
   const users = usersData?.items ?? []
@@ -163,18 +190,6 @@ export function UsersTable() {
 
   const setPage = (value: number) =>
     navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
-
-  const handleBanUser = async (userId: string, reason: string, expiresAt?: Date) => {
-    const { error } = await api.admin.users({ id: userId }).ban.patch({ reason, expiresAt })
-    if (error) throw error
-    queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
-  }
-
-  const handleActivateUser = async (userId: string) => {
-    const { error } = await api.admin.users({ id: userId }).unban.patch()
-    if (error) throw error
-    queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
-  }
 
   return (
     <>
@@ -194,7 +209,7 @@ export function UsersTable() {
         <CardContent>
           <div className="space-y-4">
             {users.map((user) => (
-              <UserCard key={user.userId} user={user} onBan={handleBanUser} onUnban={handleActivateUser} />
+              <UserCard key={user.userId} user={user} />
             ))}
             {users.length === 0 && <EmptyState message="No accounts found." />}
           </div>

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
+import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { User as UserIcon } from 'lucide-react'
 import { z } from 'zod'
 import { api } from '#/api'
@@ -49,13 +49,14 @@ function ProfilePostsContent({
   const setPage = (p: number) =>
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }) })
 
-  const handleDelete = async (_reason?: string) => {
-    if (!deleteTarget) return
-    const { error } = await api.admin.posts({ id: deleteTarget.postId }).delete({})
-    if (error) throw error
-    queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
-    setDeleteTarget(null)
-  }
+  const deleteMutation = useMutation({
+    mutationFn: (postId: string) =>
+      api.admin.posts({ id: postId }).delete({}).then(({ error }) => { if (error) throw error }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
+      setDeleteTarget(null)
+    },
+  })
 
   return (
     <>
@@ -111,7 +112,7 @@ function ProfilePostsContent({
         confirmLabel="Delete"
         destructive
         reasonLabel="Reason (optional)"
-        onConfirm={handleDelete}
+        onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId).catch(() => {})}
         onClose={() => setDeleteTarget(null)}
       />
     </>

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { Edit, Trash2, GripVertical, Star } from 'lucide-react'
+import { Edit, Trash2, GripVertical, Star, Loader2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '#/components/ui/button'
@@ -30,6 +30,9 @@ interface SortableRoleCardProps {
   togglePermission: (permissionId: string) => void
   getRoleColor: (isDefault: boolean) => string
   canReorder: boolean
+  isPendingUpdate: boolean
+  isPendingDelete: boolean
+  isPendingSetDefault: boolean
 }
 
 export function SortableRoleCard({
@@ -46,6 +49,9 @@ export function SortableRoleCard({
   togglePermission,
   getRoleColor,
   canReorder,
+  isPendingUpdate,
+  isPendingDelete,
+  isPendingSetDefault,
 }: SortableRoleCardProps) {
   const {
     attributes,
@@ -157,14 +163,16 @@ export function SortableRoleCard({
                               variant="outline"
                               onClick={() => { setEditingRole(null); setNewRole({ name: '', description: '', permissionIds: [] }) }}
                               className="flex-1"
+                              disabled={isPendingUpdate}
                             >
                               Cancel
                             </Button>
                             <Button
                               onClick={onUpdateRole}
-                              disabled={!newRole.name || !newRole.description}
+                              disabled={isPendingUpdate || !newRole.name || !newRole.description}
                               className="flex-1"
                             >
+                              {isPendingUpdate && <Loader2 className="size-4 animate-spin mr-2" />}
                               Save Changes
                             </Button>
                           </div>
@@ -177,18 +185,24 @@ export function SortableRoleCard({
                           variant="outline"
                           size="sm"
                           className="gap-2"
+                          disabled={isPendingSetDefault}
                           onClick={() => onSetDefault(role.roleId)}
                         >
-                          <Star className="size-4" />
+                          {isPendingSetDefault
+                            ? <Loader2 className="size-4 animate-spin" />
+                            : <Star className="size-4" />}
                           Set as Default
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           className="gap-2 text-red-600 hover:text-red-700"
+                          disabled={isPendingDelete}
                           onClick={() => onDelete(role.roleId)}
                         >
-                          <Trash2 className="size-4" />
+                          {isPendingDelete
+                            ? <Loader2 className="size-4 animate-spin" />
+                            : <Trash2 className="size-4" />}
                           Delete
                         </Button>
                       </>

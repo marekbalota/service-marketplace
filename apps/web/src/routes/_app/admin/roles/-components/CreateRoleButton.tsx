@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Plus, Loader2 } from 'lucide-react'
 import { api } from '#/api'
 import { Button } from '#/components/ui/button'
 import {
@@ -33,19 +33,19 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
     }))
   }
 
-  const handleCreate = async () => {
-    await api.admin.roles.post({
+  const createMutation = useMutation({
+    mutationFn: () => api.admin.roles.post({
       name: newRole.name,
       description: newRole.description,
       permissionIds: newRole.permissionIds,
-    })
-    setIsOpen(false)
-    setNewRole({ name: '', description: '', permissionIds: [] })
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
-      queryClient.invalidateQueries({ queryKey: ['users', 'me'] }),
-    ])
-  }
+    }),
+    onSuccess: () => {
+      setIsOpen(false)
+      setNewRole({ name: '', description: '', permissionIds: [] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
+      queryClient.invalidateQueries({ queryKey: ['users', 'me'] })
+    },
+  })
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -101,14 +101,16 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
               variant="outline"
               onClick={() => { setIsOpen(false); setNewRole({ name: '', description: '', permissionIds: [] }) }}
               className="flex-1"
+              disabled={createMutation.isPending}
             >
               Cancel
             </Button>
             <Button
-              onClick={handleCreate}
-              disabled={!newRole.name || !newRole.description}
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending || !newRole.name || !newRole.description}
               className="flex-1"
             >
+              {createMutation.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
               Create Role
             </Button>
           </div>
