@@ -28,6 +28,9 @@ export function postsQueryOptions(deps: {
   page: number
   rating?: RatingRange | RatingRange[]
   profileId?: string
+  country?: string
+  region?: string
+  city?: string
 }) {
   const ratingRanges = normalizeRating(deps.rating)
   const ratingMin = ratingRanges.length > 0 ? Math.min(...ratingRanges.map(r => RATING_MIN[r])) : undefined
@@ -41,13 +44,16 @@ export function postsQueryOptions(deps: {
         query: {
           type:        deps.type && deps.type !== 'all' ? deps.type.toUpperCase() as 'OFFER' | 'REQUEST' : undefined,
           categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
-          search:     deps.q,
-          sort:       deps.sort,
+          search:      deps.q,
+          sort:        deps.sort,
           ratingMin,
           ratingMax,
-          offset:     (deps.page - 1) * PAGE_SIZE,
-          size:       PAGE_SIZE,
-          profileId:  deps.profileId,
+          offset:      (deps.page - 1) * PAGE_SIZE,
+          size:        PAGE_SIZE,
+          profileId:   deps.profileId,
+          country:     deps.country,
+          region:      deps.region,
+          city:        deps.city,
         },
       })
       if (error) throw error
