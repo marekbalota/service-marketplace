@@ -137,12 +137,6 @@ export abstract class PostsService {
   static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery'], accountId: string | null = null) {
     const { offset = 0, size, archived = false } = query
 
-    if (archived) {
-      if (!accountId) throw new ForbiddenError(AuthErrorMessages.forbidden)
-      const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
-      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
-    }
-
     const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
 
     return db.transaction(async (tx) => {

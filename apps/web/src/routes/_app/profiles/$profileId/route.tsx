@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Separator } from '#/components/ui/separator'
 import { Button } from '#/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { BackButton } from '#/components/BackButton'
 import { profileQueryOptions, imagesQueryOptions, profilePostsQueryOptions } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
@@ -77,6 +77,17 @@ function ProfileViewPage() {
   const { data: postsData, isLoading: postsLoading } = useQuery({
     ...profilePostsQueryOptions(profileId, page, activeTab === 'archived'),
     enabled: isAuthenticated,
+  })
+
+  const { data: activeTotal } = useQuery({
+    ...profilePostsQueryOptions(profileId, 1, false),
+    enabled: isAuthenticated,
+    select: (d) => d?.total,
+  })
+  const { data: archivedTotal } = useQuery({
+    ...profilePostsQueryOptions(profileId, 1, true),
+    enabled: isAuthenticated,
+    select: (d) => d?.total,
   })
 
   return (
@@ -159,20 +170,18 @@ function ProfileViewPage() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-medium">Posts</h2>
-            {isOwner && (
-              <Tabs
-                value={activeTab}
-                onValueChange={(v) => {
-                  setActiveTab(v as 'active' | 'archived')
-                  setPage(1)
-                }}
-              >
-                <TabsList>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="archived">Archived</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            )}
+            <ToggleGroup
+              value={[activeTab]}
+              onValueChange={(vals) => { const v = vals[vals.length - 1] as 'active' | 'archived'; if (v) { setActiveTab(v); setPage(1) } }}
+              variant="outline"
+            >
+              <ToggleGroupItem value="active">
+                Active{activeTotal !== undefined ? ` (${activeTotal})` : ''}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="archived">
+                Archived{archivedTotal !== undefined ? ` (${archivedTotal})` : ''}
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {!isAuthenticated ? (
@@ -183,7 +192,7 @@ function ProfileViewPage() {
                 <Skeleton key={i} className="h-48 rounded-xl" />
               ))}
             </div>
-          ) : postsData?.items.length === 0 ? (
+          ) : !postsData || postsData.items.length === 0 ? (
             <EmptyState message={`No ${activeTab} posts.`} />
           ) : (
             <>
