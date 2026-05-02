@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { Edit, Trash2, GripVertical } from 'lucide-react'
+import { Edit, Trash2, GripVertical, Star } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '#/components/ui/button'
@@ -25,6 +25,7 @@ interface SortableRoleCardProps {
   setNewRole: Dispatch<SetStateAction<NewRoleState>>
   onEdit: (role: Role) => void
   onDelete: (roleId: string) => void
+  onSetDefault: (roleId: string) => void
   onUpdateRole: () => void
   togglePermission: (permissionId: string) => void
   getRoleColor: (isDefault: boolean) => string
@@ -40,6 +41,7 @@ export function SortableRoleCard({
   setNewRole,
   onEdit,
   onDelete,
+  onSetDefault,
   onUpdateRole,
   togglePermission,
   getRoleColor,
@@ -79,9 +81,9 @@ export function SortableRoleCard({
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle>{role.name}</CardTitle>
-                  <Badge className={getRoleColor(role.isDefault)}>
-                    {role.isDefault ? 'default' : 'custom'}
-                  </Badge>
+                  {role.isDefault && (
+                    <Badge className={getRoleColor(true)}>default</Badge>
+                  )}
                   {role.userCount > 0 && (
                     <Badge variant="outline">
                       {role.userCount} user{role.userCount !== 1 ? 's' : ''}
@@ -170,15 +172,26 @@ export function SortableRoleCard({
                       </DialogContent>
                     </Dialog>
                     {!role.isDefault && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 text-red-600 hover:text-red-700"
-                        onClick={() => onDelete(role.roleId)}
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => onSetDefault(role.roleId)}
+                        >
+                          <Star className="size-4" />
+                          Set as Default
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 text-red-600 hover:text-red-700"
+                          onClick={() => onDelete(role.roleId)}
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </Button>
+                      </>
                     )}
                   </>
                 )}

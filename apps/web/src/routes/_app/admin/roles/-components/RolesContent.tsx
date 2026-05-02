@@ -112,10 +112,15 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     setDeletingRoleId(null)
   }
 
+  const handleSetDefault = async (roleId: string) => {
+    await api.admin.roles({ id: roleId }).default.patch()
+    queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
+  }
+
   const getRoleColor = (isDefault: boolean) =>
     isDefault ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
 
-  const sharedCardProps = { editingRole, setEditingRole, newRole, setNewRole, onEdit: handleEditRole, onDelete: handleDeleteRole, onUpdateRole: handleUpdateRole, togglePermission, getRoleColor }
+  const sharedCardProps = { editingRole, setEditingRole, newRole, setNewRole, onEdit: handleEditRole, onDelete: handleDeleteRole, onSetDefault: handleSetDefault, onUpdateRole: handleUpdateRole, togglePermission, getRoleColor }
 
   return (
     <>
