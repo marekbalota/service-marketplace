@@ -280,6 +280,50 @@ test.describe('Admin', () => {
     await page.goto('/admin/roles')
     await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
   })
+
+  test('Manage Accounts card navigates to /admin/users', async ({ page }) => {
+    await page.goto('/admin')
+    await page.getByRole('link', { name: /manage accounts/i }).click()
+    await expect(page).toHaveURL('/admin/users')
+    await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
+  })
+
+  test('Manage Roles card navigates to /admin/roles', async ({ page }) => {
+    await page.goto('/admin')
+    await page.getByRole('link', { name: /manage roles/i }).click()
+    await expect(page).toHaveURL('/admin/roles')
+    await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
+  })
+
+  test('View button navigates to user detail page', async ({ page }) => {
+    await page.goto('/admin/users')
+    await page.getByRole('button', { name: /^view$/i }).first().click()
+    await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]+$/)
+    await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
+  })
+
+  test('creates a new role via RoleDialog', async ({ page }) => {
+    const roleName = `E2E Role ${Date.now()}`
+    await page.goto('/admin/roles')
+    await page.getByRole('button', { name: /^create role$/i }).click()
+    await page.getByLabel(/role name/i).fill(roleName)
+    await page.getByLabel(/description/i).fill('Created by e2e test')
+    await page.getByRole('button', { name: /^create role$/i }).last().click()
+    await expect(page.getByText(roleName)).toBeVisible()
+  })
+
+  test('bans and unbans a user', async ({ page }) => {
+    await page.goto('/admin/users')
+    const aliceCard = page.getByText('Alice Johnson').first().locator('../../..')
+    await aliceCard.getByRole('button', { name: /^ban$/i }).click()
+    await page.getByPlaceholder(/describe the reason for this ban/i).fill('E2E test ban')
+    await page.getByRole('button', { name: /^ban user$/i }).click()
+    await expect(aliceCard.getByText('banned')).toBeVisible()
+
+    await aliceCard.getByRole('button', { name: /^unban$/i }).click()
+    await page.getByRole('button', { name: /^confirm$/i }).click()
+    await expect(aliceCard.getByText('active')).toBeVisible()
+  })
 })
 
 test.describe('Banned page', () => {
