@@ -77,7 +77,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   )
   .get(
     '/:id/posts',
-    async ({ params, query }) => PostsService.findByProfile(params.id, query),
+    async ({ params, query, user }) => PostsService.findByProfile(params.id, query, user.id),
     {
       auth: true,
       params:   ProfilesModel.profilePostsParams,

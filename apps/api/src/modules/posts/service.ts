@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
-import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
+import { eq, isNull, isNotNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
 import { ProfilesService } from "../profiles/service";
@@ -134,19 +134,27 @@ export abstract class PostsService {
     });
   }
 
-  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
-    const { offset = 0, size } = query
+  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery'], accountId: string | null = null) {
+    const { offset = 0, size, archived = false } = query
+
+    if (archived) {
+      if (!accountId) throw new ForbiddenError(AuthErrorMessages.forbidden)
+      const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+      if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    }
+
+    const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
 
       const total = countRow?.total ?? 0
 
       const q = postSelect(tx)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
         .orderBy(desc(posts.createdAt))
         .offset(offset)
 

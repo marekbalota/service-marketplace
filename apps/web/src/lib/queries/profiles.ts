@@ -26,14 +26,15 @@ export function imagesQueryOptions(profileId: string) {
   })
 }
 
-export function profilePostsQueryOptions(profileId: string, page: number) {
+export function profilePostsQueryOptions(profileId: string, page: number, archived = false) {
   return queryOptions({
-    queryKey: ['profiles', profileId, 'posts', { page }] as const,
+    queryKey: ['profiles', profileId, 'posts', { page, archived }] as const,
     queryFn: async () => {
       const { data, error } = await api.profiles({ id: profileId }).posts.get({
         query: {
           offset: (page - 1) * PAGE_SIZE,
           size: PAGE_SIZE,
+          archived,
         },
       })
       if (error) throw error

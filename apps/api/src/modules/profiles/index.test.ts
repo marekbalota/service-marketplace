@@ -44,6 +44,11 @@ describe('GET /profiles/:id', () => {
     expect(error).toBeNull()
     expect(data!.userProfileId).toBe(aliceProfileId)
   })
+
+  it('includes averageRating as a number or null', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).get()
+    expect(data!.averageRating === null || typeof data!.averageRating === 'number').toBe(true)
+  })
 })
 
 describe('PATCH /profiles/:id', () => {
@@ -142,6 +147,23 @@ describe('GET /profiles/:profileId/posts', () => {
     if (page1!.total > 1) {
       expect(page1!.items[0]!.postId).not.toBe(page2!.items[0]?.postId)
     }
+  })
+
+  it('returns 403 when archived=true and caller does not own the profile', async () => {
+    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).posts.get({
+      query: { archived: 'true' },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(error?.status).toBe(403)
+  })
+
+  it('returns own archived posts when archived=true as owner', async () => {
+    const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { archived: 'true' },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(error).toBeNull()
+    expect(Array.isArray(data!.items)).toBe(true)
   })
 })
 
