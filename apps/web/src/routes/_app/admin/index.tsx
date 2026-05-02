@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Users, Shield, Flag, ChevronRight } from 'lucide-react';
 import { StatCard } from './-components/StatCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { PageHeader } from '#/components/PageHeader';
-import { Permissions, hasAnyPermission } from '@marketplace/shared';
+import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared';
 import { useCurrentUser } from '#/lib/queries/users';
 
 const adminOptions = [
@@ -63,7 +63,6 @@ function AdminDashboard() {
 }
 
 function AdminOptions() {
-  const navigate = useNavigate();
   const { data: user } = useCurrentUser();
   const permissions = user?.role?.permissions ?? [];
 
@@ -72,7 +71,7 @@ function AdminOptions() {
     Permissions.AdminUsersBan,
     Permissions.AdminUsersAssignRole,
   ]);
-  const canManageRoles = hasAnyPermission(permissions, [
+  const canManageRoles = hasPermissions(permissions, [
     Permissions.AdminRolesManage,
   ]);
 
@@ -88,22 +87,20 @@ function AdminOptions() {
       {visibleOptions.map((option) => {
         const Icon = option.icon;
         return (
-          <Card
-            key={option.id}
-            className="hover:shadow-lg transition-shadow cursor-pointer group"
-            onClick={() => navigate({ to: option.path })}
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="p-3 bg-primary/10 rounded-lg mb-4">
-                  <Icon className="size-6 text-primary" />
+          <Link key={option.id} to={option.path} className="block group hover:no-underline">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="p-3 bg-primary/10 rounded-lg mb-4">
+                    <Icon className="size-6 text-primary" />
+                  </div>
+                  <ChevronRight className="size-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
-                <ChevronRight className="size-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-              </div>
-              <CardTitle>{option.title}</CardTitle>
-              <CardDescription>{option.description}</CardDescription>
-            </CardHeader>
-          </Card>
+                <CardTitle>{option.title}</CardTitle>
+                <CardDescription>{option.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         );
       })}
     </div>
