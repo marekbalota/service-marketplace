@@ -28,7 +28,7 @@ export const usersQueryOptions = (params: {
 })
 
 export const assignableRolesQueryOptions = queryOptions({
-  queryKey: ['admin', 'users', 'assignable-roles'],
+  queryKey: ['admin', 'roles', 'assignable'],
   queryFn: async () => {
     const { data, error } = await api.admin.roles.assignable.get()
     if (error) throw error
