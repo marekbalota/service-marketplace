@@ -1,6 +1,6 @@
 import { Suspense, useState } from 'react'
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Plus } from 'lucide-react'
 import { api } from '#/api'
@@ -11,6 +11,7 @@ import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { useActiveProfile } from '#/context/activeProfile'
 import { buttonVariants } from '#/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { cn } from '#/lib/utils'
 import { PaginationBar } from '#/components/PaginationBar'
 import { profilePostsQueryOptions } from '#/lib/queries/profiles'
@@ -29,9 +30,9 @@ export const Route = createFileRoute('/_app/my-postings')({
   component: MyPostingsPage,
 })
 
-function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
+function PostsGrid({ profileId, page, archived }: { profileId: string; page: number; archived: boolean }) {
   const queryClient = useQueryClient()
-  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page))
+  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived))
   const navigate = Route.useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null)
 
@@ -54,7 +55,9 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
   const totalPages = data?.totalPages ?? 1
 
   if (posts.length === 0 && page === 1) {
-    return (
+    return archived ? (
+      <EmptyState message="No archived postings." />
+    ) : (
       <EmptyState message="You haven't created any postings yet.">
         <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
           <Plus className="size-4" />
@@ -98,6 +101,28 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
 function MyPostingsPage() {
   const { activeProfile } = useActiveProfile()
   const { page = 1 } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [archived, setArchived] = useState(false)
+
+  const profileId = activeProfile?.userProfileId ?? ''
+
+  const { data: activeTotal } = useQuery({
+    ...profilePostsQueryOptions(profileId, 1, false),
+    enabled: !!activeProfile,
+    select: (d) => d?.total,
+  })
+  const { data: archivedTotal } = useQuery({
+    ...profilePostsQueryOptions(profileId, 1, true),
+    enabled: !!activeProfile,
+    select: (d) => d?.total,
+  })
+
+  function handleTabChange(vals: string[]) {
+    const v = vals[vals.length - 1]
+    if (!v) return
+    setArchived(v === 'archived')
+    navigate({ search: () => ({}) })
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -112,9 +137,24 @@ function MyPostingsPage() {
         }
       />
 
+      <div className="mb-6 flex justify-end">
+        <ToggleGroup
+          value={[archived ? 'archived' : 'active']}
+          onValueChange={handleTabChange}
+          variant="outline"
+        >
+          <ToggleGroupItem value="active">
+            Active{activeTotal !== undefined ? ` (${activeTotal})` : ''}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="archived">
+            Archived{archivedTotal !== undefined ? ` (${archivedTotal})` : ''}
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
       {activeProfile ? (
         <Suspense fallback={<PostsGridSkeleton />}>
-          <PostsGrid profileId={activeProfile.userProfileId} page={page} />
+          <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={archived} />
         </Suspense>
       ) : (
         <EmptyState message="No profile found." />
