@@ -1,4 +1,4 @@
-import { useNavigate, createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/_app/admin/roles')({
 })
 
 function ManageRoles() {
-  const navigate = useNavigate()
+  const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const userPriority = user?.role?.priority ?? 0
 

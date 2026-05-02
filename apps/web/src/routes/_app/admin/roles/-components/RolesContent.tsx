@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   DndContext,
@@ -77,7 +77,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
     onError: () => setRoles(rolesData),
   })
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -93,16 +93,12 @@ export function RolesContent({ userPriority }: RolesContentProps) {
     const newPriorityInFullList = roles.length - 1 - (nonSortableRoles.length + newIndex)
 
     reorderMutation.mutate({ roleId: targetRole.roleId, newPriority: newPriorityInFullList })
-  }, [sortableRoles, roles, userPriority, reorderMutation])
-
-  const getRoleColor = (isDefault: boolean) =>
-    isDefault ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+  }
 
   const sharedCardProps = {
     permissions,
     onDelete: (roleId: string) => setDeletingRoleId(roleId),
     onSetDefault: (roleId: string) => setSettingDefaultRoleId(roleId),
-    getRoleColor,
   }
 
   return (
@@ -121,7 +117,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
             {...sharedCardProps}
             isPendingDelete={false}
             isPendingSetDefault={false}
-            canReorder={false}
+            canEdit={false}
           />
         ))}
       </div>
@@ -136,7 +132,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
                 {...sharedCardProps}
                 isPendingDelete={deleteRoleMutation.isPending && deleteRoleMutation.variables === role.roleId}
                 isPendingSetDefault={setDefaultMutation.isPending && setDefaultMutation.variables === role.roleId}
-                canReorder={true}
+                canEdit={true}
               />
             ))}
           </div>

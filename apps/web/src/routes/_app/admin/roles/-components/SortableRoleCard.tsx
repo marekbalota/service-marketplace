@@ -17,8 +17,7 @@ interface SortableRoleCardProps {
   permissions: Permission[]
   onDelete: (roleId: string) => void
   onSetDefault: (roleId: string) => void
-  getRoleColor: (isDefault: boolean) => string
-  canReorder: boolean
+  canEdit: boolean
   isPendingDelete: boolean
   isPendingSetDefault: boolean
 }
@@ -28,8 +27,7 @@ export function SortableRoleCard({
   permissions,
   onDelete,
   onSetDefault,
-  getRoleColor,
-  canReorder,
+  canEdit,
   isPendingDelete,
   isPendingSetDefault,
 }: SortableRoleCardProps) {
@@ -54,7 +52,7 @@ export function SortableRoleCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: role.roleId, disabled: !canReorder })
+  } = useSortable({ id: role.roleId, disabled: !canEdit })
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -65,24 +63,25 @@ export function SortableRoleCard({
   return (
     <div ref={setNodeRef} style={style} className="group">
       <Card className="relative overflow-hidden">
-        {canReorder && (
+        {canEdit && (
           <button
+            type="button"
             className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted cursor-grab active:cursor-grabbing transition-all duration-200 ease-out z-10"
+            aria-label="Drag to reorder"
             {...attributes}
             {...listeners}
-            title="Drag to reorder"
           >
             <GripVertical className="size-5 text-muted-foreground" />
           </button>
         )}
-        <div className={canReorder ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
+        <div className={canEdit ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle>{role.name}</CardTitle>
                   {role.isDefault && (
-                    <Badge className={getRoleColor(true)}>default</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">default</Badge>
                   )}
                   {role.userCount > 0 && (
                     <Badge variant="outline">
@@ -93,7 +92,7 @@ export function SortableRoleCard({
                 <CardDescription>{role.description}</CardDescription>
               </div>
               <div className="flex gap-2">
-                {canReorder && (
+                {canEdit && (
                   <>
                     <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditOpen(true)}>
                       <Edit className="size-4" />
@@ -128,9 +127,9 @@ export function SortableRoleCard({
                           Set as Default
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
-                          className="gap-2 text-red-600 hover:text-red-700"
+                          className="gap-2"
                           disabled={isPendingDelete}
                           onClick={() => onDelete(role.roleId)}
                         >
