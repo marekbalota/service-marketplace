@@ -138,14 +138,12 @@ export function BanDialog({
             />
           )}
 
-          {formState.errors.root && (
-            <p className="text-sm text-destructive">{formState.errors.root.message}</p>
-          )}
+          <FieldError errors={[formState.errors.root]} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { reset(); onClose() }}>
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={formState.isSubmitting}>
+            <Button type="submit" variant="destructive" disabled={formState.isSubmitting || !formState.isValid}>
               {formState.isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Ban User
             </Button>
