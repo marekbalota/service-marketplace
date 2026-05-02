@@ -92,6 +92,13 @@
       "when": 1777024127207,
       "tag": "0012_fluffy_betty_brant",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777046400000,
+      "tag": "0013_enable_unaccent",
+      "breakpoints": true
     }
   ]
 }

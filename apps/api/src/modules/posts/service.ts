@@ -39,7 +39,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
-    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId, country, region, city } = query;
 
     if (profileId && accountId !== undefined) {
       const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
@@ -104,6 +104,9 @@ export abstract class PostsService {
               ),
             )
           : undefined,
+        country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
+        region  ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})`  : undefined,
+        city    ? sql`unaccent(${locations.city})    ILIKE unaccent(${city})`    : undefined,
       );
 
       const [countRow] = await tx
