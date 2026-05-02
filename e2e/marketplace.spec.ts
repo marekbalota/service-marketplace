@@ -297,7 +297,7 @@ test.describe('Admin', () => {
 
   test('View button navigates to user detail page', async ({ page }) => {
     await page.goto('/admin/users')
-    await page.getByRole('button', { name: /^view$/i }).first().click()
+    await page.getByRole('link', { name: /^view$/i }).first().click()
     await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]+$/)
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
@@ -314,15 +314,17 @@ test.describe('Admin', () => {
 
   test('bans and unbans a user', async ({ page }) => {
     await page.goto('/admin/users')
-    const aliceCard = page.getByText('Alice Johnson').first().locator('../../..')
-    await aliceCard.getByRole('button', { name: /^ban$/i }).click()
+    // Target the first user with a Ban button (exclude SuperAdmin - no Ban button for higher/equal priority roles)
+    const userName = page.getByRole('heading', { level: 3 }).first()
+    const userCard = userName.locator('..').locator('..').locator('..')
+    await userCard.getByRole('button', { name: /^ban$/i }).click()
     await page.getByPlaceholder(/describe the reason for this ban/i).fill('E2E test ban')
     await page.getByRole('button', { name: /^ban user$/i }).click()
-    await expect(aliceCard.getByText('banned')).toBeVisible()
+    await expect(userCard.getByText('banned')).toBeVisible()
 
-    await aliceCard.getByRole('button', { name: /^unban$/i }).click()
+    await userCard.getByRole('button', { name: /^unban$/i }).click()
     await page.getByRole('button', { name: /^confirm$/i }).click()
-    await expect(aliceCard.getByText('active')).toBeVisible()
+    await expect(userCard.getByText('active')).toBeVisible()
   })
 })
 
