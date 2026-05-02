@@ -51,18 +51,18 @@ function UserCard({ user }: { user: User }) {
   const queryClient = useQueryClient()
 
   const roleMutation = useMutation({
-    mutationFn: (roleId: string) =>
-      api.admin.users({ id: user.userId }).role.patch({ roleId }).then(({ error }) => {
-        if (error) throw error
-      }),
+    mutationFn: async (roleId: string) => {
+      const { error } = await api.admin.users({ id: user.userId }).role.patch({ roleId })
+      if (error) throw error
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   })
 
   const banMutation = useMutation({
-    mutationFn: ({ reason, expiresAt }: { reason: string; expiresAt?: Date }) =>
-      api.admin.users({ id: user.userId }).ban.patch({ reason, expiresAt }).then(({ error }) => {
-        if (error) throw error
-      }),
+    mutationFn: async ({ reason, expiresAt }: { reason: string; expiresAt?: Date }) => {
+      const { error } = await api.admin.users({ id: user.userId }).ban.patch({ reason, expiresAt })
+      if (error) throw error
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       setBanDialogOpen(false)
@@ -70,10 +70,10 @@ function UserCard({ user }: { user: User }) {
   })
 
   const unbanMutation = useMutation({
-    mutationFn: () =>
-      api.admin.users({ id: user.userId }).unban.patch().then(({ error }) => {
-        if (error) throw error
-      }),
+    mutationFn: async () => {
+      const { error } = await api.admin.users({ id: user.userId }).unban.patch()
+      if (error) throw error
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       setUnbanDialogOpen(false)

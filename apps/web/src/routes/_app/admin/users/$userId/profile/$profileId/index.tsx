@@ -50,8 +50,10 @@ function ProfilePostsContent({
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }) })
 
   const deleteMutation = useMutation({
-    mutationFn: (postId: string) =>
-      api.admin.posts({ id: postId }).delete({}).then(({ error }) => { if (error) throw error }),
+    mutationFn: async (postId: string) => {
+      const { error } = await api.admin.posts({ id: postId }).delete({})
+      if (error) throw error
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
       setDeleteTarget(null)

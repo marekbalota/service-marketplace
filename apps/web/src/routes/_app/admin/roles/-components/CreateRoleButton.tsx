@@ -34,11 +34,14 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
   }
 
   const createMutation = useMutation({
-    mutationFn: () => api.admin.roles.post({
-      name: newRole.name,
-      description: newRole.description,
-      permissionIds: newRole.permissionIds,
-    }),
+    mutationFn: async () => {
+      const { error } = await api.admin.roles.post({
+        name: newRole.name,
+        description: newRole.description,
+        permissionIds: newRole.permissionIds,
+      })
+      if (error) throw error
+    },
     onSuccess: () => {
       setIsOpen(false)
       setNewRole({ name: '', description: '', permissionIds: [] })

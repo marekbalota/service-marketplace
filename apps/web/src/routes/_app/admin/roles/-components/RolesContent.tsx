@@ -53,8 +53,10 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
   )
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ roleId, name, description, permissionIds }: { roleId: string; name: string; description: string; permissionIds: string[] }) =>
-      api.admin.roles({ id: roleId }).patch({ name, description, permissionIds }),
+    mutationFn: async ({ roleId, name, description, permissionIds }: { roleId: string; name: string; description: string; permissionIds: string[] }) => {
+      const { error } = await api.admin.roles({ id: roleId }).patch({ name, description, permissionIds })
+      if (error) throw error
+    },
     onSuccess: () => {
       setEditingRole(null)
       setNewRole({ name: '', description: '', permissionIds: [] })
@@ -63,7 +65,10 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
   })
 
   const deleteRoleMutation = useMutation({
-    mutationFn: (roleId: string) => api.admin.roles({ id: roleId }).delete(),
+    mutationFn: async (roleId: string) => {
+      const { error } = await api.admin.roles({ id: roleId }).delete()
+      if (error) throw error
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
       setDeletingRoleId(null)
@@ -71,7 +76,10 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
   })
 
   const setDefaultMutation = useMutation({
-    mutationFn: (roleId: string) => api.admin.roles({ id: roleId }).default.patch(),
+    mutationFn: async (roleId: string) => {
+      const { error } = await api.admin.roles({ id: roleId }).default.patch()
+      if (error) throw error
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
       setSettingDefaultRoleId(null)
@@ -79,8 +87,10 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
   })
 
   const reorderMutation = useMutation({
-    mutationFn: ({ roleId, newPriority }: { roleId: string; newPriority: number }) =>
-      api.admin.roles.reorder.patch({ roleId, newPriority }),
+    mutationFn: async ({ roleId, newPriority }: { roleId: string; newPriority: number }) => {
+      const { error } = await api.admin.roles.reorder.patch({ roleId, newPriority })
+      if (error) throw error
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
     onError: () => setRoles(rolesData),
   })
