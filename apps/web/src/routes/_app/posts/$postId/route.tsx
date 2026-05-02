@@ -196,7 +196,7 @@ function PostDetailPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
-                {showReviewButton && !showReviewForm && (
+                {showReviewButton && (
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowReviewForm(true)}>
                     <Star className="size-4" />
                     Leave a Review
@@ -205,14 +205,7 @@ function PostDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {showReviewForm && (
-                <ReviewForm
-                  postId={postId}
-                  onSuccess={() => setShowReviewForm(false)}
-                  onCancel={() => setShowReviewForm(false)}
-                />
-              )}
-              {hasReviewed && !showReviewForm && (
+              {hasReviewed && (
                 <p className="text-center text-sm text-muted-foreground">
                   You have already reviewed this post
                 </p>
@@ -307,6 +300,25 @@ function PostDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Leave a Review Dialog */}
+      <Dialog
+        open={showReviewForm}
+        onOpenChange={(open) => { if (!open) setShowReviewForm(false) }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Leave a Review</DialogTitle>
+          </DialogHeader>
+          {activeProfile && (
+            <ReviewForm
+              postId={postId}
+              onSuccess={() => setShowReviewForm(false)}
+              onCancel={() => setShowReviewForm(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Report Post Dialog */}
       <Dialog
