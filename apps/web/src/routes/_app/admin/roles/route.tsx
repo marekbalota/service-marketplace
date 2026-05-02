@@ -45,8 +45,6 @@ function ManageRoles() {
             <CreateRoleButton
               isOpen={isCreateDialogOpen}
               setIsOpen={setIsCreateDialogOpen}
-              newRole={newRole}
-              setNewRole={setNewRole}
             />
           </Suspense>
         }

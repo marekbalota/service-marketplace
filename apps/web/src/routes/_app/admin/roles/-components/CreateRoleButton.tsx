@@ -1,5 +1,7 @@
-import type { Dispatch, SetStateAction } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Plus, Loader2 } from 'lucide-react'
 import { api } from '#/api'
 import { Button } from '#/components/ui/button'
@@ -9,49 +11,70 @@ import {
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Checkbox } from '#/components/ui/checkbox'
+import { Field, FieldError } from '#/components/ui/field'
 import { permissionsQueryOptions } from '../-queries/admin'
 
+const createRoleSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().min(1, 'Description is required'),
+  permissionIds: z.array(z.string()).default([]),
+})
+
+type CreateRoleFormValues = z.infer<typeof createRoleSchema>
+
+// Exported for use in the edit dialog (SortableRoleCard / RolesContent)
 export type NewRoleState = { name: string; description: string; permissionIds: string[] }
 
 interface CreateRoleButtonProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
-  newRole: NewRoleState
-  setNewRole: Dispatch<SetStateAction<NewRoleState>>
 }
 
-export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: CreateRoleButtonProps) {
+export function CreateRoleButton({ isOpen, setIsOpen }: CreateRoleButtonProps) {
   const queryClient = useQueryClient()
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
 
-  const togglePermission = (permissionId: string) => {
-    setNewRole((prev) => ({
-      ...prev,
-      permissionIds: prev.permissionIds.includes(permissionId)
-        ? prev.permissionIds.filter((p) => p !== permissionId)
-        : [...prev.permissionIds, permissionId],
-    }))
+  const { register, handleSubmit, watch, setValue, reset, setError, formState } = useForm<CreateRoleFormValues>({
+    resolver: zodResolver(createRoleSchema),
+    mode: 'onTouched',
+    defaultValues: { name: '', description: '', permissionIds: [] },
+  })
+
+  const permissionIds = watch('permissionIds')
+
+  const togglePermission = (id: string) => {
+    setValue('permissionIds',
+      permissionIds.includes(id) ? permissionIds.filter(p => p !== id) : [...permissionIds, id],
+    )
   }
 
   const createMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (values: CreateRoleFormValues) => {
       const { error } = await api.admin.roles.post({
-        name: newRole.name,
-        description: newRole.description,
-        permissionIds: newRole.permissionIds,
+        name: values.name,
+        description: values.description,
+        permissionIds: values.permissionIds,
       })
       if (error) throw error
     },
     onSuccess: () => {
       setIsOpen(false)
-      setNewRole({ name: '', description: '', permissionIds: [] })
+      reset()
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
       queryClient.invalidateQueries({ queryKey: ['users', 'me'] })
     },
   })
 
+  const onSubmit: SubmitHandler<CreateRoleFormValues> = async (values) => {
+    try {
+      await createMutation.mutateAsync(values)
+    } catch {
+      setError('root', { message: 'Failed to create role. Please try again.' })
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset() }}>
       <DialogTrigger render={<Button className="gap-2" />}>
         <Plus className="size-4" />
         Create Role
@@ -61,25 +84,27 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
           <DialogTitle>Create New Role</DialogTitle>
           <DialogDescription>Define a new role with specific permissions</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 mt-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+          <Field data-invalid={!!formState.errors.name}>
             <Label htmlFor="name">Role Name *</Label>
             <Input
               id="name"
               placeholder="e.g., Content Manager"
-              value={newRole.name}
-              onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+              aria-invalid={!!formState.errors.name}
+              {...register('name')}
             />
-          </div>
-          <div className="space-y-2">
+            <FieldError errors={[formState.errors.name]} />
+          </Field>
+          <Field data-invalid={!!formState.errors.description}>
             <Label htmlFor="description">Description *</Label>
             <Input
               id="description"
               placeholder="Brief description of this role"
-              value={newRole.description}
-              onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+              aria-invalid={!!formState.errors.description}
+              {...register('description')}
             />
-          </div>
+            <FieldError errors={[formState.errors.description]} />
+          </Field>
           <div className="space-y-3">
             <Label>Permissions</Label>
             <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
@@ -87,7 +112,7 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
                 <div key={permission.permissionId} className="flex items-start space-x-3">
                   <Checkbox
                     id={permission.permissionId}
-                    checked={newRole.permissionIds.includes(permission.permissionId)}
+                    checked={permissionIds.includes(permission.permissionId)}
                     onCheckedChange={() => togglePermission(permission.permissionId)}
                   />
                   <div className="flex-1">
@@ -99,25 +124,29 @@ export function CreateRoleButton({ isOpen, setIsOpen, newRole, setNewRole }: Cre
               ))}
             </div>
           </div>
+          {formState.errors.root && (
+            <p className="text-sm text-destructive">{formState.errors.root.message}</p>
+          )}
           <div className="flex gap-2 pt-4">
             <Button
+              type="button"
               variant="outline"
-              onClick={() => { setIsOpen(false); setNewRole({ name: '', description: '', permissionIds: [] }) }}
+              onClick={() => { reset(); setIsOpen(false) }}
               className="flex-1"
-              disabled={createMutation.isPending}
+              disabled={formState.isSubmitting}
             >
               Cancel
             </Button>
             <Button
-              onClick={() => createMutation.mutate()}
-              disabled={createMutation.isPending || !newRole.name || !newRole.description}
+              type="submit"
+              disabled={formState.isSubmitting}
               className="flex-1"
             >
-              {createMutation.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
+              {formState.isSubmitting && <Loader2 className="size-4 animate-spin mr-2" />}
               Create Role
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

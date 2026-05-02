@@ -101,22 +101,27 @@ function UserCard({ user }: { user: User }) {
 
           <div className="flex items-center gap-2 flex-wrap">
             {canAssignRole && roleIsAssignable && (
-              <div className="flex items-center gap-1">
-                <Select
-                  value={user.role?.roleId ?? ''}
-                  disabled={roleMutation.isPending}
-                  onValueChange={(roleId) => { if (roleId) roleMutation.mutate(roleId) }}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue>{user.role?.name ?? 'No role'}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignableRoles.map((r) => (
-                      <SelectItem key={r.roleId} value={r.roleId}>{r.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {roleMutation.isPending && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1">
+                  <Select
+                    value={user.role?.roleId ?? ''}
+                    disabled={roleMutation.isPending}
+                    onValueChange={(roleId) => { if (roleId) roleMutation.mutate(roleId) }}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue>{user.role?.name ?? 'No role'}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {assignableRoles.map((r) => (
+                        <SelectItem key={r.roleId} value={r.roleId}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {roleMutation.isPending && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                </div>
+                {roleMutation.isError && (
+                  <p className="text-xs text-destructive">Failed to update role</p>
+                )}
               </div>
             )}
 

@@ -152,6 +152,7 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     togglePermission,
     getRoleColor,
     isPendingUpdate: updateRoleMutation.isPending,
+    hasUpdateError: updateRoleMutation.isError,
   }
 
   return (
@@ -171,6 +172,7 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
             {...sharedCardProps}
             isPendingDelete={false}
             isPendingSetDefault={false}
+            hasUpdateError={false}
             canReorder={false}
           />
         ))}
@@ -200,7 +202,7 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
         description="This will permanently remove this role. This action cannot be undone."
         confirmLabel="Delete"
         destructive
-        onConfirm={() => deleteRoleMutation.mutateAsync(deletingRoleId!).catch(() => {})}
+        onConfirm={() => deleteRoleMutation.mutateAsync(deletingRoleId!)}
         onClose={() => setDeletingRoleId(null)}
       />
 
@@ -209,7 +211,7 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
         title="Set as default role?"
         description="New users will be assigned this role automatically. The current default role will no longer be the default."
         confirmLabel="Set as Default"
-        onConfirm={() => setDefaultMutation.mutateAsync(settingDefaultRoleId!).catch(() => {})}
+        onConfirm={() => setDefaultMutation.mutateAsync(settingDefaultRoleId!)}
         onClose={() => setSettingDefaultRoleId(null)}
       />
     </>

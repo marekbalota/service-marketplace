@@ -36,13 +36,17 @@ export function ConfirmDialog({
 }) {
   const [internalPending, setInternalPending] = useState(false)
   const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const isLoading = isPending ?? internalPending
 
   const handleConfirm = async () => {
     setInternalPending(true)
+    setError(null)
     try {
       await onConfirm(reasonLabel ? reason || undefined : undefined)
+    } catch {
+      setError('Something went wrong. Please try again.')
     } finally {
       setInternalPending(false)
       setReason('')
@@ -50,7 +54,7 @@ export function ConfirmDialog({
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => { if (!o) { setReason(''); onClose() } }}>
+    <AlertDialog open={open} onOpenChange={(o) => { if (!o) { setReason(''); setError(null); onClose() } }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -68,6 +72,7 @@ export function ConfirmDialog({
             />
           </div>
         )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction

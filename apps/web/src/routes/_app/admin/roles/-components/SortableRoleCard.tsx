@@ -33,6 +33,7 @@ interface SortableRoleCardProps {
   isPendingUpdate: boolean
   isPendingDelete: boolean
   isPendingSetDefault: boolean
+  hasUpdateError: boolean
 }
 
 export function SortableRoleCard({
@@ -52,6 +53,7 @@ export function SortableRoleCard({
   isPendingUpdate,
   isPendingDelete,
   isPendingSetDefault,
+  hasUpdateError,
 }: SortableRoleCardProps) {
   const {
     attributes,
@@ -158,6 +160,9 @@ export function SortableRoleCard({
                               ))}
                             </div>
                           </div>
+                          {hasUpdateError && (
+                            <p className="text-sm text-destructive">Failed to update role. Please try again.</p>
+                          )}
                           <div className="flex gap-2 pt-4">
                             <Button
                               variant="outline"

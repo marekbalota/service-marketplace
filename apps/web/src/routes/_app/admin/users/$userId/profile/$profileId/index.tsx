@@ -114,7 +114,7 @@ function ProfilePostsContent({
         confirmLabel="Delete"
         destructive
         reasonLabel="Reason (optional)"
-        onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId).catch(() => {})}
+        onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId)}
         onClose={() => setDeleteTarget(null)}
       />
     </>
