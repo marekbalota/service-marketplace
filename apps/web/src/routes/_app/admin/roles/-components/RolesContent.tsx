@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react'
 import { useState, useEffect, useCallback } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
@@ -23,17 +22,12 @@ import { rolesQueryOptions } from '#/lib/queries/admin'
 import { permissionsQueryOptions } from '../-queries/admin'
 import { SortableRoleCard } from './SortableRoleCard'
 import type { Role } from './SortableRoleCard'
-import type { NewRoleState } from './CreateRoleButton'
 
 interface RolesContentProps {
-  editingRole: Role | null
-  setEditingRole: (role: Role | null) => void
-  newRole: NewRoleState
-  setNewRole: Dispatch<SetStateAction<NewRoleState>>
   userPriority: number
 }
 
-export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole, userPriority }: RolesContentProps) {
+export function RolesContent({ userPriority }: RolesContentProps) {
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
   const queryClient = useQueryClient()
@@ -51,18 +45,6 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
-
-  const updateRoleMutation = useMutation({
-    mutationFn: async ({ roleId, name, description, permissionIds }: { roleId: string; name: string; description: string; permissionIds: string[] }) => {
-      const { error } = await api.admin.roles({ id: roleId }).patch({ name, description, permissionIds })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      setEditingRole(null)
-      setNewRole({ name: '', description: '', permissionIds: [] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
-    },
-  })
 
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
@@ -113,46 +95,14 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     reorderMutation.mutate({ roleId: targetRole.roleId, newPriority: newPriorityInFullList })
   }, [sortableRoles, roles, userPriority, reorderMutation])
 
-  const togglePermission = (permissionId: string) => {
-    setNewRole((prev) => ({
-      ...prev,
-      permissionIds: prev.permissionIds.includes(permissionId)
-        ? prev.permissionIds.filter((p) => p !== permissionId)
-        : [...prev.permissionIds, permissionId],
-    }))
-  }
-
-  const handleEditRole = (role: Role) => {
-    setEditingRole(role)
-    setNewRole({ name: role.name, description: role.description ?? '', permissionIds: role.permissions })
-  }
-
-  const handleUpdateRole = () => {
-    if (!editingRole) return
-    updateRoleMutation.mutate({
-      roleId: editingRole.roleId,
-      name: newRole.name,
-      description: newRole.description,
-      permissionIds: newRole.permissionIds,
-    })
-  }
-
   const getRoleColor = (isDefault: boolean) =>
     isDefault ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
 
   const sharedCardProps = {
-    editingRole,
-    setEditingRole,
-    newRole,
-    setNewRole,
-    onEdit: handleEditRole,
+    permissions,
     onDelete: (roleId: string) => setDeletingRoleId(roleId),
     onSetDefault: (roleId: string) => setSettingDefaultRoleId(roleId),
-    onUpdateRole: handleUpdateRole,
-    togglePermission,
     getRoleColor,
-    isPendingUpdate: updateRoleMutation.isPending,
-    hasUpdateError: updateRoleMutation.isError,
   }
 
   return (
@@ -168,11 +118,9 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
           <SortableRoleCard
             key={role.roleId}
             role={role}
-            permissions={permissions}
             {...sharedCardProps}
             isPendingDelete={false}
             isPendingSetDefault={false}
-            hasUpdateError={false}
             canReorder={false}
           />
         ))}
@@ -185,7 +133,6 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
               <SortableRoleCard
                 key={role.roleId}
                 role={role}
-                permissions={permissions}
                 {...sharedCardProps}
                 isPendingDelete={deleteRoleMutation.isPending && deleteRoleMutation.variables === role.roleId}
                 isPendingSetDefault={setDefaultMutation.isPending && setDefaultMutation.variables === role.roleId}
