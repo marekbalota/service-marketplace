@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('My Postings', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -114,7 +114,7 @@ test.describe('Marketplace index', () => {
 test.describe('Account Settings — Profile CRUD', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -178,7 +178,7 @@ test.describe('Account Settings — Profile CRUD', () => {
 test.describe('Create Post', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -204,7 +204,7 @@ test.describe('Create Post', () => {
 test.describe('Messages', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -260,7 +260,7 @@ test.describe('Messages', () => {
 test.describe('Admin', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.getByLabel(/password/i).fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -354,21 +354,20 @@ test.describe('Authentication', () => {
   const testPassword = 'password123'
   const testName = 'E2E Test User'
 
-  test('register — fills form, submits, lands on home page logged in', async ({ page }) => {
+  test('register — fills form, submits, lands on verify-email page', async ({ page }) => {
     await page.goto('/register')
     await page.getByLabel(/name/i).fill(testName)
-    await page.getByLabel(/email/i).fill(testEmail)
+    await page.getByRole('textbox', { name: /email/i }).fill(testEmail)
     await page.getByLabel(/password/i).fill(testPassword)
     await page.getByRole('button', { name: /register/i }).click()
 
-    await page.waitForURL('/posts')
-    // Profile menu trigger is present — the user is authenticated
-    await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
+    await page.waitForURL(/\/verify-email/)
+    await expect(page.getByText(new RegExp(`We sent a verification link to ${testEmail}`))).toBeVisible()
   })
 
   test('login — fills form, submits, lands on home page logged in', async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
@@ -385,7 +384,7 @@ test.describe('Authentication', () => {
 
   test('logout — clears session, shows login link in header', async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -393,5 +392,47 @@ test.describe('Authentication', () => {
     await page.getByTestId('profile-menu-trigger').click()
     await page.getByRole('button', { name: /log out/i }).click()
     await expect(page.getByRole('link', { name: /log in/i })).toBeVisible()
+  })
+})
+
+test.describe('Email verification', () => {
+  test('register redirects to /verify-email with email shown', async ({ page }) => {
+    const uniqueEmail = `e2e-verify-${Date.now()}@example.com`
+
+    await page.goto('/register')
+    await page.getByLabel(/full name/i).fill('E2E Verify User')
+    await page.getByRole('textbox', { name: /email/i }).fill(uniqueEmail)
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /register/i }).click()
+
+    await page.waitForURL('/verify-email**')
+    await expect(page.getByText(new RegExp(uniqueEmail, 'i')).first()).toBeVisible()
+    await expect(page.getByText(/check your email/i)).toBeVisible()
+  })
+
+  test('invalid verification link shows error state on callback page', async ({ page }) => {
+    await page.goto('/verify-email/callback?error=invalid_token')
+    await expect(
+      page.getByRole('heading', { name: /link expired or invalid/i }),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: /go to sign in/i })).toBeVisible()
+  })
+
+  test('valid callback page shows success state and redirects to home', async ({ page }) => {
+    await page.goto('/verify-email/callback')
+    await expect(page.getByRole('heading', { name: /email verified!/i })).toBeVisible()
+    await expect(page.getByText(/signing you in/i)).toBeVisible()
+    await page.waitForURL('/', { timeout: 5000 })
+  })
+
+  test('login with unverified account redirects to /verify-email', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('unverified@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+
+    await page.waitForURL('/verify-email**')
+    await expect(page.getByText(/check your email/i)).toBeVisible()
+    await expect(page.getByText(/unverified@example\.com/i).first()).toBeVisible()
   })
 })
