@@ -66,6 +66,9 @@
   --active-bg: #dcfce7;
   --active-fg: #166534;
   --active-border: #bbf7d0;
+  --banned-bg: #fee2e2;
+  --banned-fg: #991b1b;
+  --banned-border: #fecaca;
   --nav-browse-bg: #eff6ff;
   --nav-browse-fg: #2563eb;
   --nav-postings-bg: #f0fdf4;
@@ -313,6 +316,9 @@ a {
   --color-active-bg: var(--active-bg);
   --color-active-fg: var(--active-fg);
   --color-active-border: var(--active-border);
+  --color-banned-bg: var(--banned-bg);
+  --color-banned-fg: var(--banned-fg);
+  --color-banned-border: var(--banned-border);
   --color-favourite: var(--favourite);
   --color-nav-browse-fg: var(--nav-browse-fg);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -349,6 +355,9 @@ a {
   --active-bg: #14532d;
   --active-fg: #bbf7d0;
   --active-border: #166534;
+  --banned-bg: #7f1d1d;
+  --banned-fg: #fecaca;
+  --banned-border: #991b1b;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
