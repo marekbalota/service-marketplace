@@ -86,7 +86,8 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
   )
 }
 
-function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
+
+function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isActive: boolean; isOnly: boolean }) {
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
@@ -147,7 +148,7 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
               <Edit className="size-4" />
               Edit
             </Link>
-            <DeleteProfileButton profile={profile} />
+            {!isOnly && <DeleteProfileButton profile={profile} />}
           </div>
         </div>
       </CardContent>
@@ -182,6 +183,7 @@ function AccountSettingsPage() {
             key={profile.userProfileId}
             profile={profile}
             isActive={profile.userProfileId === activeProfile?.userProfileId}
+            isOnly={profiles.length === 1}
           />
         ))}
       </div>

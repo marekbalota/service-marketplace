@@ -149,4 +149,17 @@ describe('AccountSettingsPage', () => {
     expect(editLinks).toHaveLength(2)
     expect(deleteButtons).toHaveLength(2)
   })
+
+  it('hides the Delete button when there is only one profile', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { ...baseUser, profiles: [alice] },
+    } as ReturnType<typeof useCurrentUser>)
+    mockUseActiveProfile.mockReturnValue({
+      activeProfile: alice,
+      allProfiles: [alice],
+      setActiveProfileId: vi.fn(),
+    })
+    await renderPage()
+    expect(screen.queryByRole('button', { name: /delete/i })).toBeNull()
+  })
 })
