@@ -99,6 +99,13 @@
       "when": 1777046400000,
       "tag": "0013_enable_unaccent",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777807675075,
+      "tag": "0014_amused_maelstrom",
+      "breakpoints": true
     }
   ]
 }

@@ -215,6 +215,20 @@ export const favourites = pgTable(
   (table) => [primaryKey({ columns: [table.userProfileId, table.postId] })],
 );
 
+export const profileLocations = pgTable(
+  "profile_locations",
+  {
+    userProfileId: uuid("user_profile_id")
+      .notNull()
+      .references(() => userProfiles.userProfileId),
+    locationId: uuid("location_id")
+      .notNull()
+      .references(() => locations.locationId),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userProfileId, table.locationId] })],
+);
+
 export const messageThreads = pgTable(
   "message_threads",
   {
@@ -336,6 +350,7 @@ export const userProfilesRelations = relations(
     images: many(images),
     favourites: many(favourites),
     reports: many(reports),
+    profileLocations: many(profileLocations),
   }),
 );
 
@@ -387,6 +402,7 @@ export const postCategoriesRelations = relations(
 
 export const locationsRelations = relations(locations, ({ many }) => ({
   posts: many(posts),
+  profileLocations: many(profileLocations),
 }));
 
 export const imagesRelations = relations(images, ({ one }) => ({
@@ -404,6 +420,17 @@ export const favouritesRelations = relations(favourites, ({ one }) => ({
   post: one(posts, {
     fields: [favourites.postId],
     references: [posts.postId],
+  }),
+}));
+
+export const profileLocationsRelations = relations(profileLocations, ({ one }) => ({
+  userProfile: one(userProfiles, {
+    fields: [profileLocations.userProfileId],
+    references: [userProfiles.userProfileId],
+  }),
+  location: one(locations, {
+    fields: [profileLocations.locationId],
+    references: [locations.locationId],
   }),
 }));
 
