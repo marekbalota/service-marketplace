@@ -145,15 +145,28 @@ entity Message {
     deleted_at : timestamp
 }
 
+entity ReportCategory {
+    category_id : uuid <<PK>>
+    ---
+    target_type : enum('POST','MESSAGE','REVIEW') <<NOT NULL>>
+    value : text <<NOT NULL>>
+    label : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
 entity Report {
     report_id : uuid <<PK>>
     ---
     reporter_id : uuid <<FK>> <<NOT NULL>>
-    post_id : uuid <<FK>> <<NOT NULL>>
-    description : text <<NOT NULL>>
-    reason : text <<NOT NULL>>
+    category_id : uuid <<FK>> <<NOT NULL>>
+    post_id : uuid <<FK>>
+    message_id : uuid <<FK>>
+    review_id : uuid <<FK>>
+    description : text
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
+    CHECK: exactly one of (post_id, message_id, review_id) is NOT NULL
 }
 
 entity Category {
@@ -197,7 +210,13 @@ entity Favourites {
     post_id : uuid <<PK>> <<FK>>
     ---
     created_at : timestamp <<NOT NULL>>
-    deleted_at : timestamp
+}
+
+entity ProfileLocation {
+    user_profile_id : uuid <<PK>> <<FK>>
+    location_id : uuid <<PK>> <<FK>>
+    ---
+    created_at : timestamp <<NOT NULL>>
 }
 
 entity MessageThread {
@@ -220,7 +239,11 @@ Message }o--|| UserProfile : sender
 Message }o--|| MessageThread : belongs to
 MessageThread }o--|| Post
 MessageThread }o--|| UserProfile : initiator
-Post ||--o{ Report : reported
+Report }o--|| UserProfile : reporter
+Report }o--|| ReportCategory
+Report }o--o| Post
+Report }o--o| Message
+Report }o--o| Review
 User ||--o{ UserProfile
 User }o--|| Role
 User ||--o{ Session
@@ -228,7 +251,8 @@ User ||--o{ OAuthAccount
 UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
 Post ||--o{ Favourites
-UserProfile ||--o{ Report : reports
 Post }o--o| Location
+UserProfile ||--o{ ProfileLocation
+Location ||--o{ ProfileLocation
 
 @enduml
