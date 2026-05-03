@@ -25,7 +25,6 @@ export abstract class ProfilesService {
           FROM reviews r
           INNER JOIN posts p ON r.post_id = p.post_id
           WHERE p.author_id = ${userProfiles.userProfileId}
-            AND r.deleted_at IS NULL
             AND p.deleted_at IS NULL
         )`,
       })
