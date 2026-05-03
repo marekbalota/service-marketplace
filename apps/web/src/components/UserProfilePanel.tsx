@@ -175,9 +175,9 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               } else {
                 await authClient.signOut()
                 queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
+                await navigate({ to: '/posts' })
                 queryClient.clear()
                 router.invalidate()
-                await navigate({ to: '/' })
                 onClose()
               }
             }}

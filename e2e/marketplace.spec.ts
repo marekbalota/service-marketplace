@@ -444,15 +444,16 @@ test.describe('User Impersonation', () => {
     const context = await browser.newContext()
     const page = await context.newPage()
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.getByLabel(/password/i).fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
 
     await page.goto('/admin/users')
     // Search for Alice then click her View link
+    const searchResponse = page.waitForResponse((r) => r.url().includes('/admin/users'))
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
-    await page.waitForResponse((r) => r.url().includes('/api/admin/users'))
+    await searchResponse
     await page.getByRole('link', { name: /view/i }).first().click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
     aliceUserId = page.url().split('/').pop()!
@@ -462,7 +463,7 @@ test.describe('User Impersonation', () => {
   test('full impersonation flow', async ({ page }) => {
     // Step 1: Admin logs in and navigates to Alice's detail page
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.getByLabel(/password/i).fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -490,7 +491,7 @@ test.describe('User Impersonation', () => {
 
   test('logout while impersonating stops impersonation and navigates to admin user page', async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.getByLabel(/password/i).fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
