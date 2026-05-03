@@ -25,11 +25,15 @@ import type { Role } from './SortableRoleCard'
 
 interface RolesContentProps {
   userPriority: number
+  userPermissionNames: string[]
 }
 
-export function RolesContent({ userPriority }: RolesContentProps) {
+export function RolesContent({ userPriority, userPermissionNames }: RolesContentProps) {
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
+  const grantablePermissionIds = new Set(
+    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+  )
   const queryClient = useQueryClient()
 
   const [roles, setRoles] = useState<Role[]>(rolesData)
@@ -97,6 +101,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
 
   const sharedCardProps = {
     permissions,
+    grantablePermissionIds,
     onDelete: (roleId: string) => setDeletingRoleId(roleId),
     onSetDefault: (roleId: string) => setSettingDefaultRoleId(roleId),
   }

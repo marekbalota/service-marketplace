@@ -15,6 +15,7 @@ export type Permission = { permissionId: string; name: string; description: stri
 interface SortableRoleCardProps {
   role: Role
   permissions: Permission[]
+  grantablePermissionIds: Set<string>
   onDelete: (roleId: string) => void
   onSetDefault: (roleId: string) => void
   canEdit: boolean
@@ -25,6 +26,7 @@ interface SortableRoleCardProps {
 export function SortableRoleCard({
   role,
   permissions,
+  grantablePermissionIds,
   onDelete,
   onSetDefault,
   canEdit,
@@ -105,6 +107,7 @@ export function SortableRoleCard({
                       description="Modify role permissions and details"
                       submitLabel="Save Changes"
                       permissions={permissions}
+                      grantablePermissionIds={grantablePermissionIds}
                       defaultValues={{
                         name: role.name,
                         description: role.description ?? '',
