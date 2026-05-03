@@ -1,29 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
 import { useCurrentUser } from '#/lib/queries/users'
-import { authClient } from '#/auth'
+import { useStopImpersonating } from '#/lib/queries/auth'
 
 export function ImpersonationBanner() {
   const { data: user } = useCurrentUser()
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-
-  const stopMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await authClient.admin.stopImpersonating();
-      if (error) throw new Error(error.message ?? 'Failed to stop impersonation');
-    },
-    onSuccess: () => {
-      const targetUserId = user!.userId
-      queryClient.invalidateQueries({ queryKey: ['users', 'me'] })
-      navigate({ to: '/admin/users/$userId', params: { userId: targetUserId } })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
-  })
+  const stopMutation = useStopImpersonating()
 
   if (!user?.impersonatedBy) return null
 

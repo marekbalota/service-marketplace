@@ -23,6 +23,7 @@ import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
 import { queryClient } from '#/router'
+import { useStopImpersonating } from '#/lib/queries/auth'
 
 function ProfileOption({ name }: { name: string }) {
   return (
@@ -40,6 +41,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
   const navigate = useNavigate()
+  const stopMutation = useStopImpersonating({ onSuccess: onClose })
   const allProfiles = user?.profiles ?? []
   const isAdmin = (user?.role?.permissions ?? []).some((p: string) => p.startsWith('admin:'))
 
@@ -168,12 +170,16 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             variant="ghost"
             className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
             onClick={async () => {
-              await authClient.signOut()
-              queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
-              queryClient.clear()
-              await navigate({ to: '/' })
-              router.invalidate()
-              onClose()
+              if (user?.impersonatedBy) {
+                stopMutation.mutate()
+              } else {
+                await authClient.signOut()
+                queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
+                queryClient.clear()
+                router.invalidate()
+                await navigate({ to: '/' })
+                onClose()
+              }
             }}
           >
             <LogOut className="size-5" />
