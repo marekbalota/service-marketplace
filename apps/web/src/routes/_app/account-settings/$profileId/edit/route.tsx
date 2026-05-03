@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
@@ -64,9 +64,14 @@ function EditProfilePage() {
   const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
 
   // Image state
-  const [pendingUrls, setPendingUrls] = useState<string[]>([])
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
-  const [newImageUrl, setNewImageUrl] = useState('')
+
+  const pendingFilesRef = useRef(pendingFiles)
+  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
+  useEffect(() => () => {
+    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+  }, [])
 
   // Location state
   const [showAddLocation, setShowAddLocation] = useState(false)
@@ -99,8 +104,8 @@ function EditProfilePage() {
       if (error) throw error
 
       await Promise.all(
-        pendingUrls.map(url =>
-          api.images.url.post({ url, profileId }).then(({ error }) => { if (error) throw error })
+        pendingFiles.map(({ file }) =>
+          api.images.post({ file, profileId }).then(({ error }) => { if (error) throw error })
         ),
       )
 
@@ -151,24 +156,24 @@ function EditProfilePage() {
   })
 
   const visibleImages = images.filter(img => !pendingDeletes.includes(img.imageId))
-  const displayedUrls = [
+  const previews = [
     ...visibleImages.map(img => img.link),
-    ...pendingUrls,
+    ...pendingFiles.map(f => f.preview),
   ]
 
-  function addImageUrl() {
-    const trimmed = newImageUrl.trim()
-    if (trimmed) {
-      setPendingUrls(prev => [...prev, trimmed])
-      setNewImageUrl('')
-    }
+  function addFile(file: File) {
+    const preview = URL.createObjectURL(file)
+    setPendingFiles(prev => [...prev, { file, preview }])
   }
 
   function removeImage(index: number) {
     if (index < visibleImages.length) {
       setPendingDeletes(prev => [...prev, visibleImages[index]!.imageId])
     } else {
-      setPendingUrls(prev => prev.filter((_, i) => i !== index - visibleImages.length))
+      const pendingIndex = index - visibleImages.length
+      const preview = pendingFiles[pendingIndex]?.preview
+      if (preview) URL.revokeObjectURL(preview)
+      setPendingFiles(prev => prev.filter((_, i) => i !== pendingIndex))
     }
   }
 
@@ -310,41 +315,7 @@ function EditProfilePage() {
             <CardDescription>Photos of your work, profile pictures, etc.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter image URL"
-                value={newImageUrl}
-                onChange={e => setNewImageUrl(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') { e.preventDefault(); addImageUrl() }
-                }}
-              />
-              <Button type="button" variant="outline" onClick={addImageUrl}>
-                <Plus className="size-4" />
-              </Button>
-            </div>
-            {displayedUrls.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {displayedUrls.map((url, index) => (
-                  <div key={`${url}-${index}`} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Profile image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 size-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="size-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ImagePickerGrid previews={previews} onFilePicked={addFile} onRemove={removeImage} />
           </CardContent>
         </Card>
 
@@ -372,7 +343,7 @@ function EditProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {showAddLocation && (
-              <Card className="border-2 border-blue-200 bg-blue-50">
+              <Card className="border-2 border-primary/20 bg-muted/40">
                 <CardContent className="pt-6 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2">
@@ -458,7 +429,7 @@ function EditProfilePage() {
                 {locations.map(loc => (
                   <div
                     key={loc.locationId}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
                   >
                     <div>
                       <p className="font-medium">{formatDisplayName(loc)}</p>
@@ -470,7 +441,7 @@ function EditProfilePage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       onClick={() => setDeleteLocationId(loc.locationId)}
                     >
                       <Trash2 className="size-4" />
@@ -514,5 +485,63 @@ function EditProfilePage() {
         onClose={() => setDeleteLocationId(null)}
       />
     </main>
+  )
+}
+
+function ImagePickerGrid({
+  previews,
+  onFilePicked,
+  onRemove,
+}: {
+  previews: string[]
+  onFilePicked: (file: File) => void
+  onRemove: (index: number) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      onFilePicked(file)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {previews.map((preview, i) => (
+        <div key={preview} className="group relative">
+          <img
+            src={preview}
+            alt="Preview"
+            className="h-32 w-full rounded-lg border object-cover"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            onClick={() => onRemove(i)}
+            className="absolute right-1 top-1 size-5 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
+      ))}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        className="hidden"
+        onChange={handleChange}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => inputRef.current?.click()}
+        className="h-32 w-full border-dashed text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+      >
+        <Plus className="size-6" />
+      </Button>
+    </div>
   )
 }
