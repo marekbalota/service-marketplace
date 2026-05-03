@@ -81,7 +81,7 @@ describe('CreateProfilePage', () => {
       mutate: vi.fn(),
       isPending: false,
       isError: true,
-      error: new Error('Server error'),
+      error: { value: { message: 'Server error' } },
     })
     await renderPage()
     expect(screen.getByText('Server error')).toBeInTheDocument()

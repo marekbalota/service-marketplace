@@ -124,7 +124,7 @@ function EditProfilePage() {
         <CardContent className="p-6 space-y-4">
           <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>
           {saveMutation.isError && (
-            <p className="text-sm text-destructive">{(saveMutation.error as Error).message}</p>
+            <p className="text-sm text-destructive">{(saveMutation.error as any)?.value?.message ?? 'Failed to save profile.'}</p>
           )}
           <ProfileForm
             defaultValues={defaultValues}

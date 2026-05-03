@@ -14,7 +14,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
     '/',
     async ({ query, user }) => await MessagesService.findAllThreads(query.profileId, user.id, query.postId),
     {
-      auth: true,
+      blockDuringImpersonation: true,
       query: MessagesModel.findAllQuery,
       response: {
         200: MessagesModel.findAllResponse,
@@ -34,7 +34,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       return result
     },
     {
-      auth: true,
+      blockDuringImpersonation: true,
       body: MessagesModel.createThreadBody,
       response: {
         201: MessagesModel.createThreadResponse,
@@ -53,7 +53,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
     async ({ params, query, user }) =>
       await MessagesService.findThreadById(params.threadId, query.profileId, user.id),
     {
-      auth: true,
+      blockDuringImpersonation: true,
       params: MessagesModel.threadParams,
       query: MessagesModel.threadProfileQuery,
       response: {
@@ -74,7 +74,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       return msg
     },
     {
-      auth: true,
+      blockDuringImpersonation: true,
       params: MessagesModel.threadParams,
       body: MessagesModel.sendMessageBody,
       response: {
@@ -95,7 +95,7 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
       return report
     },
     {
-      auth: true,
+      blockDuringImpersonation: true,
       params: ReportsModel.messageReportParams,
       body: ReportsModel.createBody,
       response: {

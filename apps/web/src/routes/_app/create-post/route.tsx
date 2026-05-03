@@ -285,7 +285,7 @@ function CreatePostPage() {
             <PricingField control={form.control} priceValue={priceValue} />
 
             {mutation.isError && (
-              <FieldError errors={[{ message: 'Failed to create post. Please try again.' }]} />
+              <FieldError errors={[{ message: (mutation.error as any)?.value?.message ?? 'Failed to create post. Please try again.' }]} />
             )}
 
             <div className="flex gap-3 pt-6">

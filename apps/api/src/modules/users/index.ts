@@ -8,8 +8,9 @@ export const usersRoutes = new Elysia({ prefix: "/users" })
   .use(authRoutes)
   .get(
     "/me",
-    async ({ user }) => {
-      return await UsersService.getCurrentUser(user.id);
+    async ({ user, session }) => {
+      const data = await UsersService.getCurrentUser(user.id);
+      return { ...data, impersonatedBy: session.impersonatedBy ?? null };
     },
     {
       auth: true,

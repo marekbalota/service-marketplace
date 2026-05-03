@@ -54,12 +54,8 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       onSuccess()
     },
-    onError: (err: { message?: string; status?: number }) => {
-      if (err.status === 409) {
-        setError('You have already reviewed this post')
-      } else {
-        setError(err.message || 'Failed to submit review')
-      }
+    onError: (err) => {
+      setError((err as any)?.value?.message ?? 'Failed to submit review')
     },
   })
 

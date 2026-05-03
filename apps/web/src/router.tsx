@@ -1,5 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
-import { QueryClient, QueryCache } from '@tanstack/react-query'
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { ErrorCodes } from '@marketplace/shared'
 import { routeTree } from './routeTree.gen'
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
 import { NotFound } from './components/NotFound'
@@ -26,6 +28,13 @@ export const queryClient = new QueryClient({
         } else {
           redirecting401 = false
         }
+      }
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error: unknown) => {
+      if ((error as any)?.value?.code === ErrorCodes.ImpersonationReadOnly) {
+        toast.error((error as any).value.message)
       }
     },
   }),

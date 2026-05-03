@@ -1,11 +1,11 @@
 import { db } from "../../db";
 import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
-import { eq, isNull, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { UsersModel } from "./model";
 import { NotFoundError, ErrorMessages } from "../../lib/errors";
 
 export abstract class UsersService {
-  static async getCurrentUser(userId: string): Promise<UsersModel['meResponse']> {
+  static async getCurrentUser(userId: string): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy'>> {
     const [row] = await db
       .select({
         userId: users.id,
