@@ -436,3 +436,53 @@ test.describe('Email verification', () => {
     await expect(page.getByText(/unverified@example\.com/i).first()).toBeVisible()
   })
 })
+
+test.describe('User Impersonation', () => {
+  let aliceUserId: string
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByLabel(/password/i).fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+
+    await page.goto('/admin/users')
+    // Click Alice's row to get to her detail page
+    await page.getByRole('link', { name: /alice/i }).first().click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
+    aliceUserId = page.url().split('/').pop()!
+    await context.close()
+  })
+
+  test('full impersonation flow', async ({ page }) => {
+    // Step 1: Admin logs in and navigates to Alice's detail page
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByLabel(/password/i).fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto(`/admin/users/${aliceUserId}`)
+
+    // Step 2: Click Impersonate User → lands on /posts with banner visible
+    await expect(page.getByRole('button', { name: /impersonate user/i })).toBeEnabled()
+    await page.getByRole('button', { name: /impersonate user/i }).click()
+    await page.waitForURL('/posts')
+    await expect(page.getByText(/impersonating alice/i)).toBeVisible()
+
+    // Step 3: Banner has Exit Impersonation button
+    await expect(page.getByRole('button', { name: /exit impersonation/i })).toBeVisible()
+
+    // Step 4: Navigate to /messages → placeholder shown
+    await page.goto('/messages')
+    await expect(page.getByText(/messages are not accessible during impersonation/i)).toBeVisible()
+
+    // Step 5: Click Exit Impersonation → back to admin user detail page, banner gone
+    await page.getByRole('button', { name: /exit impersonation/i }).click()
+    await page.waitForURL(`/admin/users/${aliceUserId}`)
+    await expect(page.getByText(/impersonating/i)).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
+  })
+})

@@ -63,6 +63,7 @@ const baseUser: User = {
   userId: 'user-1',
   name: 'Alice',
   email: 'alice@example.com',
+  impersonatedBy: null,
   role: null,
   profiles: [baseProfile],
 }
