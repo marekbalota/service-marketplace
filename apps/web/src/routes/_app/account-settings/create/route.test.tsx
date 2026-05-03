@@ -15,21 +15,15 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useMutation: mockUseMutation,
+    useMutation:    mockUseMutation,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
 
 vi.mock('#/api', () => ({
   api: {
-    profiles: Object.assign(
-      vi.fn(() => ({ images: { post: vi.fn() } })),
-      { post: vi.fn() },
-    ),
-    images: Object.assign(
-      vi.fn(() => ({ delete: vi.fn() })),
-      { post: vi.fn() },
-    ),
+    profiles: { post: vi.fn() },
+    images:   { post: vi.fn() },
   },
 }))
 
@@ -37,9 +31,11 @@ vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 
-// ── Import component after mocks ───────────────────────────────────────────────
+// ── Import component after mocks ──────────────────────────────────────────────
 
 import { Route } from './route'
+
+// ── Render helper ─────────────────────────────────────────────────────────────
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -54,19 +50,29 @@ async function renderPage() {
 describe('CreateProfilePage', () => {
   beforeEach(() => {
     mockUseMutation.mockReturnValue({
-      mutate: vi.fn(),
+      mutate:    vi.fn(),
       isPending: false,
-      isError: false,
-      error: null,
+      isError:   false,
+      error:     null,
     })
   })
 
-  it('renders the page heading', async () => {
+  it('renders the Add Profile heading', async () => {
     await renderPage()
-    expect(screen.getByText(/add a new profile to your account/i)).toBeInTheDocument()
+    expect(screen.getByText('Add Profile')).toBeInTheDocument()
   })
 
-  it('renders the Back button', async () => {
+  it('renders the Basic Information card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Basic Information')).toBeInTheDocument()
+  })
+
+  it('renders the Images card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Images')).toBeInTheDocument()
+  })
+
+  it('renders a Back button', async () => {
     await renderPage()
     expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
   })
@@ -78,17 +84,12 @@ describe('CreateProfilePage', () => {
 
   it('shows error message when mutation fails', async () => {
     mockUseMutation.mockReturnValue({
-      mutate: vi.fn(),
+      mutate:    vi.fn(),
       isPending: false,
-      isError: true,
-      error: new Error('Server error'),
+      isError:   true,
+      error:     new Error('Create failed'),
     })
     await renderPage()
-    expect(screen.getByText('Server error')).toBeInTheDocument()
-  })
-
-  it('renders the Images section', async () => {
-    await renderPage()
-    expect(screen.getByText('Images')).toBeInTheDocument()
+    expect(screen.getByText('Create failed')).toBeInTheDocument()
   })
 })
