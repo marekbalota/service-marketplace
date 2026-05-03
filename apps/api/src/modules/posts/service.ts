@@ -134,7 +134,15 @@ export abstract class PostsService {
     });
   }
 
-  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery'], accountId: string | null = null) {
+  static async countByProfile(profileId: string) {
+    const [[activeRow], [archivedRow]] = await Promise.all([
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt))),
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt))),
+    ])
+    return { active: activeRow?.total ?? 0, archived: archivedRow?.total ?? 0 }
+  }
+
+  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
     const { offset = 0, size, archived = false } = query
 
     const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)

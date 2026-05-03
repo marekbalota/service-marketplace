@@ -77,7 +77,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   )
   .get(
     '/:id/posts',
-    async ({ params, query, user }) => PostsService.findByProfile(params.id, query, user.id),
+    async ({ params, query }) => PostsService.findByProfile(params.id, query),
     {
       auth: true,
       params:   ProfilesModel.profilePostsParams,
@@ -87,6 +87,19 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         ...unauthorizedResponse,
       },
       detail: { summary: 'List posts by profile', operationId: 'listProfilePosts', tags: ['Profiles'] },
+    },
+  )
+  .get(
+    '/:id/posts/count',
+    async ({ params }) => PostsService.countByProfile(params.id),
+    {
+      auth: true,
+      params: ProfilesModel.profilePostsParams,
+      response: {
+        200: PostsModel.profilePostsCountResponse,
+        ...unauthorizedResponse,
+      },
+      detail: { summary: 'Count active and archived posts by profile', operationId: 'countProfilePosts', tags: ['Profiles'] },
     },
   )
   .get(

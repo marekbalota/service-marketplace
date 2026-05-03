@@ -26,6 +26,17 @@ export function imagesQueryOptions(profileId: string) {
   })
 }
 
+export function profilePostsCountQueryOptions(profileId: string) {
+  return queryOptions({
+    queryKey: ['profiles', profileId, 'posts', 'count'] as const,
+    queryFn: async () => {
+      const { data, error } = await api.profiles({ id: profileId }).posts.count.get()
+      if (error) throw error
+      return data!
+    },
+  })
+}
+
 export function profilePostsQueryOptions(profileId: string, page: number, archived = false) {
   return queryOptions({
     queryKey: ['profiles', profileId, 'posts', { page, archived }] as const,

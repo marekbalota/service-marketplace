@@ -10,7 +10,7 @@ import { Separator } from '#/components/ui/separator'
 import { Button } from '#/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { BackButton } from '#/components/BackButton'
-import { profileQueryOptions, imagesQueryOptions, profilePostsQueryOptions } from '#/lib/queries/profiles'
+import { profileQueryOptions, imagesQueryOptions, profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { useState } from 'react'
@@ -79,15 +79,9 @@ function ProfileViewPage() {
     enabled: isAuthenticated,
   })
 
-  const { data: activeTotal } = useQuery({
-    ...profilePostsQueryOptions(profileId, 1, false),
+  const { data: postCounts } = useQuery({
+    ...profilePostsCountQueryOptions(profileId),
     enabled: isAuthenticated,
-    select: (d) => d?.total,
-  })
-  const { data: archivedTotal } = useQuery({
-    ...profilePostsQueryOptions(profileId, 1, true),
-    enabled: isAuthenticated,
-    select: (d) => d?.total,
   })
 
   return (
@@ -176,10 +170,10 @@ function ProfileViewPage() {
               variant="outline"
             >
               <ToggleGroupItem value="active">
-                Active{activeTotal !== undefined ? ` (${activeTotal})` : ''}
+                Active{postCounts ? ` (${postCounts.active})` : ''}
               </ToggleGroupItem>
               <ToggleGroupItem value="archived">
-                Archived{archivedTotal !== undefined ? ` (${archivedTotal})` : ''}
+                Archived{postCounts ? ` (${postCounts.archived})` : ''}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>

@@ -141,6 +141,10 @@ export const PostsModel = {
     archived: t.Optional(t.BooleanString()),
   }),
   findByProfileResponse: paginatedResponse,
+  profilePostsCountResponse: t.Object({
+    active:   t.Number(),
+    archived: t.Number(),
+  }),
 } as const
 
 export type PostsModel = {

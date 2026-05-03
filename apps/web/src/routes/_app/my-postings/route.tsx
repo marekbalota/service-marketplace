@@ -14,7 +14,7 @@ import { buttonVariants } from '#/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { cn } from '#/lib/utils'
 import { PaginationBar } from '#/components/PaginationBar'
-import { profilePostsQueryOptions } from '#/lib/queries/profiles'
+import { profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
 
 type Post = { postId: string; postTitle: string }
 
@@ -106,15 +106,9 @@ function MyPostingsPage() {
 
   const profileId = activeProfile?.userProfileId ?? ''
 
-  const { data: activeTotal } = useQuery({
-    ...profilePostsQueryOptions(profileId, 1, false),
+  const { data: postCounts } = useQuery({
+    ...profilePostsCountQueryOptions(profileId),
     enabled: !!activeProfile,
-    select: (d) => d?.total,
-  })
-  const { data: archivedTotal } = useQuery({
-    ...profilePostsQueryOptions(profileId, 1, true),
-    enabled: !!activeProfile,
-    select: (d) => d?.total,
   })
 
   function handleTabChange(vals: string[]) {
@@ -144,10 +138,10 @@ function MyPostingsPage() {
           variant="outline"
         >
           <ToggleGroupItem value="active">
-            Active{activeTotal !== undefined ? ` (${activeTotal})` : ''}
+            Active{postCounts ? ` (${postCounts.active})` : ''}
           </ToggleGroupItem>
           <ToggleGroupItem value="archived">
-            Archived{archivedTotal !== undefined ? ` (${archivedTotal})` : ''}
+            Archived{postCounts ? ` (${postCounts.archived})` : ''}
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
