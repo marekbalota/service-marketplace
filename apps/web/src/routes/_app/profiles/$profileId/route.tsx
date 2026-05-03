@@ -5,7 +5,7 @@ import {
 } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { BackButton } from '#/components/BackButton'
-import { profileQueryOptions, imagesQueryOptions } from '#/lib/queries/profiles'
+import { profileQueryOptions, imagesQueryOptions, profileLocationsQueryOptions } from '#/lib/queries/profiles'
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   loader: async ({ context: { queryClient }, params: { profileId } }) => {
@@ -44,6 +44,7 @@ function ProfileViewPage() {
   const router = useRouter()
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
+  const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
@@ -117,6 +118,43 @@ function ProfileViewPage() {
                     className="w-full h-32 object-cover rounded-lg border"
                   />
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Saved Locations */}
+        {locations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Saved Locations</CardTitle>
+              <CardDescription>Locations this profile frequently works in</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {locations.map(loc => {
+                  const displayName = [loc.street, loc.houseNumber, loc.city, loc.region, loc.country]
+                    .filter(Boolean).join(', ') || 'Unknown location'
+                  const detail = [
+                    loc.country && `Country: ${loc.country}`,
+                    loc.region  && `• Region: ${loc.region}`,
+                    loc.city    && `• City: ${loc.city}`,
+                  ].filter(Boolean).join(' ')
+
+                  return (
+                    <div
+                      key={loc.locationId}
+                      className="flex items-center p-4 rounded-lg border bg-card"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{displayName}</p>
+                        {detail && (
+                          <p className="text-xs text-muted-foreground mt-1">{detail}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
