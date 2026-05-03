@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations, favourites, profileLocations } from "../../db/schema";
 import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
@@ -257,6 +257,11 @@ export abstract class PostsService {
           .values(location!)
           .returning({ locationId: locations.locationId })
         resolvedLocationId = insertedLocation!.locationId
+
+        await tx
+          .insert(profileLocations)
+          .values({ userProfileId: postValues.authorId, locationId: resolvedLocationId })
+          .onConflictDoNothing()
       }
 
       const [inserted] = await tx

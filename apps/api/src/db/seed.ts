@@ -604,6 +604,13 @@ async function seed() {
 
     insertedPosts.push(inserted!);
 
+    if (locationId) {
+      await db
+        .insert(schema.profileLocations)
+        .values({ userProfileId: postValues.authorId, locationId })
+        .onConflictDoNothing();
+    }
+
     for (const cat of postCategories) {
       await db
         .insert(schema.postCategories)

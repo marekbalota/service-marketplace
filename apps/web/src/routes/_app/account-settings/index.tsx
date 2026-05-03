@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
@@ -7,6 +7,7 @@ import { PageHeader } from '#/components/PageHeader'
 import { api } from '#/api'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
+import { imagesQueryOptions } from '#/lib/queries/profiles'
 import type { UserProfile } from '#/types/api'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
@@ -87,6 +88,10 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
 }
 
 function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
+  const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
+  const visibleImages = images.slice(0, 3)
+  const extraCount = images.length - visibleImages.length
+
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
@@ -107,6 +112,9 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                 )}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
+              {profile.bio && (
+                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{profile.bio}</p>
+              )}
               <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
                 {profile.phoneNumber && (
                   <p className="flex items-center gap-1.5">
@@ -121,12 +129,23 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
                   </p>
                 )}
               </div>
-              <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                <p>Created {new Date(profile.createdAt).toLocaleDateString()}</p>
-                {profile.updatedAt && (
-                  <p>Updated {new Date(profile.updatedAt).toLocaleDateString()}</p>
-                )}
-              </div>
+              {visibleImages.length > 0 && (
+                <div className="mt-3 flex items-center gap-2">
+                  {visibleImages.map((img) => (
+                    <img
+                      key={img.imageId}
+                      src={img.link}
+                      alt={img.name}
+                      className="size-10 rounded-md border object-cover"
+                    />
+                  ))}
+                  {extraCount > 0 && (
+                    <span className="flex size-10 items-center justify-center rounded-md border bg-muted text-xs font-medium text-muted-foreground">
+                      +{extraCount}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

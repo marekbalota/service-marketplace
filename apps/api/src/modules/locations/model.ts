@@ -20,6 +20,15 @@ export const LocationsModel = {
   }),
   profileLocationsParams: t.Object({ id: t.String() }),
   profileLocationsResponse: t.Array(locationItem),
+  addBody: t.Object({
+    country:     t.Optional(t.String()),
+    region:      t.Optional(t.String()),
+    city:        t.Optional(t.String()),
+    street:      t.Optional(t.String()),
+    houseNumber: t.Optional(t.String()),
+  }),
+  addResponse: locationItem,
+  removeParams: t.Object({ id: t.String(), locationId: t.String() }),
 } as const
 
 export type LocationsModel = {
