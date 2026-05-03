@@ -70,6 +70,8 @@ function AdminOptions() {
     Permissions.AdminUsersView,
     Permissions.AdminUsersBan,
     Permissions.AdminUsersAssignRole,
+    Permissions.AdminUsersImpersonate,
+    Permissions.AdminPostsDeleteAny,
   ]);
   const canManageRoles = hasPermissions(permissions, [
     Permissions.AdminRolesManage,

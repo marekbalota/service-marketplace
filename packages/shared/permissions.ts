@@ -7,7 +7,9 @@ export const Permissions = {
   PostsEditOwn: 'posts:edit:own',
   PostsEditAny: 'posts:edit:any',
   PostsDeleteOwn: 'posts:delete:own',
-  PostsDeleteAny: 'posts:delete:any',
+
+  // Admin - Post Management
+  AdminPostsDeleteAny: 'admin:posts:delete:any',
 
   // Admin - User Management
   AdminUsersBan: 'admin:users:ban',

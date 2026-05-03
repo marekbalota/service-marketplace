@@ -149,7 +149,7 @@ function ProfileDetailPage() {
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const permissions = user?.role?.permissions ?? []
-  const canDeletePost = hasPermissions(permissions, [Permissions.PostsDeleteAny])
+  const canDeletePost = hasPermissions(permissions, [Permissions.AdminPostsDeleteAny])
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">

@@ -128,9 +128,9 @@ describe('ProfileDetailPage', () => {
     expect(screen.getByText('My Test Post')).toBeInTheDocument()
   })
 
-  it('shows Delete button on post cards when user has PostsDeleteAny permission', async () => {
+  it('shows Delete button on post cards when user has AdminPostsDeleteAny permission', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
-      data: { userId: 'u1', role: { permissions: ['posts:delete:any'] } },
+      data: { userId: 'u1', role: { permissions: ['admin:posts:delete:any'] } },
     } as unknown as ReturnType<typeof useCurrentUser>)
     mockUseSuspenseQuery.mockImplementation((opts: { queryKey: unknown[] }) => {
       const key = opts.queryKey
@@ -145,7 +145,7 @@ describe('ProfileDetailPage', () => {
 
   it('opens the confirm dialog when Delete is clicked', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
-      data: { userId: 'u1', role: { permissions: ['posts:delete:any'] } },
+      data: { userId: 'u1', role: { permissions: ['admin:posts:delete:any'] } },
     } as unknown as ReturnType<typeof useCurrentUser>)
     mockUseSuspenseQuery.mockImplementation((opts: { queryKey: unknown[] }) => {
       const key = opts.queryKey

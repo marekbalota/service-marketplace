@@ -18,7 +18,7 @@ import {
 import { PaginationBar } from '#/components/PaginationBar'
 import { StatCard } from '../../-components/StatCard'
 import { useCurrentUser } from '#/lib/queries/users'
-import { Permissions, hasPermissions } from '@marketplace/shared'
+import { Permissions, hasPermissions, hasAnyPermission } from '@marketplace/shared'
 import { usersQueryOptions, assignableRolesQueryOptions } from '../-queries/users'
 import { BanDialog } from './BanDialog'
 import { UnbanDialog } from './UnbanDialog'
@@ -32,7 +32,7 @@ function UserCard({ user }: { user: User }) {
   const permissions = currentUser?.role?.permissions ?? []
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole])
   const canBan = hasPermissions(permissions, [Permissions.AdminUsersBan])
-  const canViewUser = hasPermissions(permissions, [Permissions.AdminUsersView])
+  const canViewUser = hasAnyPermission(permissions, [Permissions.AdminUsersView, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny])
 
   const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions)
   const roleIsEditable = assignableRoles.some((r) => r.roleId === user.role?.roleId)
