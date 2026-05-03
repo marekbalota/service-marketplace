@@ -22,6 +22,7 @@ const client = treaty<typeof app>(app)
 let aliceCookie: string
 let aliceProfileId: string
 let testImageId: string
+let urlImageId: string
 
 const fakeJpeg = new File(
   [Buffer.from([0xff, 0xd8, 0xff, 0xe0])],
@@ -116,5 +117,43 @@ describe('DELETE /images/:id', () => {
     const { data } = await client.profiles({ id: aliceProfileId }).images.get()
     const found = data!.find(img => img.imageId === testImageId)
     expect(found).toBeUndefined()
+  })
+})
+
+describe('POST /images/url', () => {
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.images.url.post({
+      url: 'https://example.com/photo.jpg',
+      profileId: aliceProfileId,
+    })
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 403 when adding image to a profile not owned by the user', async () => {
+    const { error } = await client.images.url.post(
+      { url: 'https://example.com/photo.jpg', profileId: '00000000-0000-0000-0000-000000000000' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(403)
+  })
+
+  it('returns 201 with the created image', async () => {
+    const testUrl = 'https://example.com/photo.jpg'
+    const { data, error } = await client.images.url.post(
+      { url: testUrl, profileId: aliceProfileId },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+    expect(data!.link).toBe(testUrl)
+    expect(data!.name).toBe(testUrl)
+    expect(data!.userProfileId).toBe(aliceProfileId)
+    urlImageId = data!.imageId
+  })
+
+  it('image appears in GET /profiles/:id/images', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).images.get()
+    const found = data!.find(img => img.imageId === urlImageId)
+    expect(found).toBeDefined()
+    expect(found!.link).toBe('https://example.com/photo.jpg')
   })
 })

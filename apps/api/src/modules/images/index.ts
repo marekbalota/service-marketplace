@@ -24,6 +24,24 @@ export const imagesRoutes = new Elysia({ prefix: '/images' })
       detail: { summary: 'Upload an image', operationId: 'createImage', tags: ['Images'] },
     },
   )
+  .post(
+    '/url',
+    async ({ body, user, set }) => {
+      const created = await ImagesService.createForProfileByUrl(body.profileId, user.id, body.url)
+      set.status = 201
+      return created
+    },
+    {
+      auth: true,
+      body: ImagesModel.createUrlBody,
+      response: {
+        201: ImagesModel.createResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Add an image by URL', operationId: 'createImageByUrl', tags: ['Images'] },
+    },
+  )
   .delete(
     '/:id',
     async ({ params, user, set }) => {
