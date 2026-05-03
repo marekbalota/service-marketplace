@@ -59,6 +59,7 @@ vi.mock('./-components/PostTypeSelect', () => ({ PostTypeSelect: () => null }))
 vi.mock('./-components/CategorySelect', () => ({ CategorySelect: () => null }))
 vi.mock('./-components/SortSelect', () => ({ SortSelect: () => null }))
 vi.mock('./-components/RatingSelect', () => ({ RatingSelect: () => null }))
+vi.mock('./-components/LocationSelect', () => ({ LocationSelect: () => null }))
 
 vi.mock('@tanstack/react-pacer', () => ({
   useDebouncer: (_fn: unknown) => ({ maybeExecute: vi.fn() }),

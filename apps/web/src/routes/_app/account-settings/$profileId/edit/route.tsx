@@ -17,6 +17,7 @@ import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { profileSchema, type ProfileFormValues } from '../../-components/profileSchema'
 import { ProfileFields } from '../../-components/ProfileFields'
 import { ImagePickerGrid } from '../../-components/ImagePickerGrid'
+import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 import {
   imagesQueryOptions,
   profileQueryOptions,
@@ -58,7 +59,8 @@ function EditProfilePage() {
   const queryClient = useQueryClient()
 
   const { data: user } = useCurrentUser()
-  const profile = user?.profiles.find(p => p.userProfileId === profileId)!
+  const profile = user?.profiles.find(p => p.userProfileId === profileId)
+  if (!profile) return null
 
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
   const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
@@ -124,11 +126,14 @@ function EditProfilePage() {
   })
 
   const addLocationMutation = useMutation({
-    mutationFn: async (body: typeof newLocation) => {
-      const clean = Object.fromEntries(
-        Object.entries(body).map(([k, v]) => [k, v || undefined])
-      ) as typeof body
-      const { error } = await api.profiles({ id: profileId }).locations.post(clean)
+    mutationFn: async ({ country, region, city, street, houseNumber }: typeof newLocation) => {
+      const { error } = await api.profiles({ id: profileId }).locations.post({
+        country:     country     || undefined,
+        region:      region      || undefined,
+        city:        city        || undefined,
+        street:      street      || undefined,
+        houseNumber: houseNumber || undefined,
+      })
       if (error) throw error
     },
     onSuccess: () => {
@@ -175,24 +180,6 @@ function EditProfilePage() {
       if (preview) URL.revokeObjectURL(preview)
       setPendingFiles(prev => prev.filter((_, i) => i !== pendingIndex))
     }
-  }
-
-  function formatDisplayName(loc: {
-    country: string | null; region: string | null; city: string | null
-    street: string | null; houseNumber: string | null
-  }) {
-    return [loc.street, loc.houseNumber, loc.city, loc.region, loc.country]
-      .filter(Boolean).join(', ') || 'Unknown location'
-  }
-
-  function formatLocationDetail(loc: {
-    country: string | null; region: string | null; city: string | null
-  }) {
-    return [
-      loc.country && `Country: ${loc.country}`,
-      loc.region  && `• Region: ${loc.region}`,
-      loc.city    && `• City: ${loc.city}`,
-    ].filter(Boolean).join(' ')
   }
 
   const onSubmit: SubmitHandler<ProfileFormValues> = (values) => saveMutation.mutate(values)
@@ -347,7 +334,7 @@ function EditProfilePage() {
                     className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
                   >
                     <div>
-                      <p className="font-medium">{formatDisplayName(loc)}</p>
+                      <p className="font-medium">{formatLocationDisplayName(loc)}</p>
                       <div className="flex gap-2 text-xs text-muted-foreground mt-1">
                         <span>{formatLocationDetail(loc)}</span>
                       </div>

@@ -21,8 +21,9 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 })
 
 vi.mock('#/lib/queries/profiles', () => ({
-  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
-  imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileQueryOptions:          (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions:           (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileLocationsQueryOptions: (id: string) => ({ queryKey: ['locations', 'profile', id] }),
 }))
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────

@@ -90,9 +90,9 @@ function CreateProfilePage() {
         <BackButton onClick={() => navigate({ to: '/account-settings' })} />
         <Card>
           <CardContent className="p-6 space-y-4">
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
+            <div className="rounded-lg border bg-muted p-4 text-sm">
               <p className="font-medium">Profile created with a warning</p>
-              <p className="mt-1">{uploadWarning}</p>
+              <p className="mt-1 text-muted-foreground">{uploadWarning}</p>
             </div>
             <Link to="/account-settings" className={buttonVariants({ variant: 'default' })}>
               Go to Account Settings

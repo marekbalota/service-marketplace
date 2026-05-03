@@ -6,6 +6,7 @@ import {
 import { Skeleton } from '#/components/ui/skeleton'
 import { BackButton } from '#/components/BackButton'
 import { profileQueryOptions, imagesQueryOptions, profileLocationsQueryOptions } from '#/lib/queries/profiles'
+import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   loader: async ({ context: { queryClient }, params: { profileId } }) => {
@@ -133,23 +134,15 @@ function ProfileViewPage() {
             <CardContent>
               <div className="space-y-2">
                 {locations.map(loc => {
-                  const displayName = [loc.street, loc.houseNumber, loc.city, loc.region, loc.country]
-                    .filter(Boolean).join(', ') || 'Unknown location'
-                  const detail = [
-                    loc.country && `Country: ${loc.country}`,
-                    loc.region  && `• Region: ${loc.region}`,
-                    loc.city    && `• City: ${loc.city}`,
-                  ].filter(Boolean).join(' ')
-
                   return (
                     <div
                       key={loc.locationId}
                       className="flex items-center p-4 rounded-lg border bg-card"
                     >
                       <div>
-                        <p className="font-medium text-sm">{displayName}</p>
-                        {detail && (
-                          <p className="text-xs text-muted-foreground mt-1">{detail}</p>
+                        <p className="font-medium text-sm">{formatLocationDisplayName(loc)}</p>
+                        {formatLocationDetail(loc) && (
+                          <p className="text-xs text-muted-foreground mt-1">{formatLocationDetail(loc)}</p>
                         )}
                       </div>
                     </div>

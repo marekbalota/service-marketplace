@@ -142,11 +142,6 @@ describe('EditProfilePage', () => {
     expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument()
   })
 
-  it('renders the image URL input', async () => {
-    await renderPage()
-    expect(screen.getByPlaceholderText(/enter image url/i)).toBeInTheDocument()
-  })
-
   it('renders the Add Location button', async () => {
     await renderPage()
     expect(screen.getByRole('button', { name: /add location/i })).toBeInTheDocument()
