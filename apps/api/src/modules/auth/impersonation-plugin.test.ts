@@ -132,6 +132,34 @@ describe("POST /api/auth/admin/impersonate-user", () => {
     });
     expect(res.status).toBe(404);
   });
+
+  it("returns 403 when trying to start a new impersonation while already impersonating", async () => {
+    // Set up a fresh admin session and start impersonating Alice
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: "admin@example.com", password: "admin123" },
+      asResponse: true,
+    });
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers);
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    });
+    expect(impersonateRes.status).toBe(200);
+    const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers);
+
+    // Try to impersonate again while already in an impersonation session
+    const bobUser = await db.query.users.findFirst({ where: eq(users.email, "bob@example.com") });
+    const res = await auth.api.impersonateUser({
+      body: { userId: bobUser!.id },
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json() as { message: string };
+    expect(body.message).toMatch(/already impersonating/i);
+  });
 });
 
 describe("POST /api/auth/admin/stop-impersonating", () => {

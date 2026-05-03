@@ -450,8 +450,10 @@ test.describe('User Impersonation', () => {
     await page.waitForURL('/posts')
 
     await page.goto('/admin/users')
-    // Click Alice's row to get to her detail page
-    await page.getByRole('link', { name: /alice/i }).first().click()
+    // Search for Alice then click her View link
+    await page.getByPlaceholder(/search by name or email/i).fill('alice')
+    await page.waitForResponse((r) => r.url().includes('/api/admin/users'))
+    await page.getByRole('link', { name: /view/i }).first().click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
     aliceUserId = page.url().split('/').pop()!
     await context.close()
@@ -481,6 +483,28 @@ test.describe('User Impersonation', () => {
 
     // Step 5: Click Exit Impersonation → back to admin user detail page, banner gone
     await page.getByRole('button', { name: /exit impersonation/i }).click()
+    await page.waitForURL(`/admin/users/${aliceUserId}`)
+    await expect(page.getByText(/impersonating/i)).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
+  })
+
+  test('logout while impersonating stops impersonation and navigates to admin user page', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel(/email/i).fill('admin@example.com')
+    await page.getByLabel(/password/i).fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto(`/admin/users/${aliceUserId}`)
+
+    await page.getByRole('button', { name: /impersonate user/i }).click()
+    await page.waitForURL('/posts')
+    await expect(page.getByText(/impersonating alice/i)).toBeVisible()
+
+    // Open the profile panel and click Log out
+    await page.getByTestId('profile-menu-trigger').click()
+    await page.getByRole('button', { name: /log out/i }).click()
+
+    // Should navigate to Alice's admin user detail page, not sign out
     await page.waitForURL(`/admin/users/${aliceUserId}`)
     await expect(page.getByText(/impersonating/i)).not.toBeVisible()
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()

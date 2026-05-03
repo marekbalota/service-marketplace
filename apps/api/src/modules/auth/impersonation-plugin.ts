@@ -29,13 +29,13 @@ export function impersonationPlugin() {
             throw APIError.fromStatus("UNAUTHORIZED", { message: AuthErrorMessages.unauthorized });
           }
 
+          if (callerSession.session.impersonatedBy) {
+            throw APIError.fromStatus("FORBIDDEN", { message: ImpersonationErrorMessages.alreadyImpersonating });
+          }
+
           const callerPermissions = await RBACService.getUserPermissions(callerSession.user.id);
           if (!callerPermissions.includes(Permissions.AdminUsersImpersonate)) {
             throw APIError.fromStatus("FORBIDDEN", { message: AuthErrorMessages.missingPermissions });
-          }
-
-          if (callerSession.session.impersonatedBy) {
-            throw APIError.fromStatus("FORBIDDEN", { message: ImpersonationErrorMessages.alreadyImpersonating });
           }
 
           const targetUser = await db.query.users.findFirst({
