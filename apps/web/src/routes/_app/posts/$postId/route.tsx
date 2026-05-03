@@ -172,7 +172,7 @@ function PostDetailPage() {
               <User className="size-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Posted by</p>
-                <p className="font-medium group-hover:text-nav-browse-fg">{post.authorName}</p>
+                <p className="font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">{post.authorName}</p>
               </div>
             </Link>
             {locationText && (

@@ -31,8 +31,8 @@ export function LocationField<T extends FieldValues>({ control: controlProp, pro
     <Field className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950">
-            <MapPin className="size-5 text-orange-600" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20">
+            <MapPin className="size-5 text-orange-600 dark:text-orange-300" />
           </div>
           <span className="text-base font-semibold">Location (Optional)</span>
         </div>
