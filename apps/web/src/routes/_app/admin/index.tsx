@@ -59,23 +59,23 @@ function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer">
-                <p className="text-3xl font-bold text-blue-600">1,247</p>
+              <div className="p-4 bg-blue-100 dark:bg-blue-500/20 rounded-lg border border-blue-200 dark:border-blue-400/30 hover:bg-blue-200 dark:hover:bg-blue-500/25 transition-colors cursor-pointer">
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-300">1,247</p>
                 <p className="text-sm text-muted-foreground mt-1">Total Users</p>
-                <p className="text-xs text-blue-600 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 font-medium">View Analytics →</p>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 transition-colors cursor-pointer">
-                <p className="text-3xl font-bold text-green-600">342</p>
+              <div className="p-4 bg-green-100 dark:bg-green-500/20 rounded-lg border border-green-200 dark:border-green-400/30 hover:bg-green-200 dark:hover:bg-green-500/25 transition-colors cursor-pointer">
+                <p className="text-3xl font-bold text-green-600 dark:text-green-300">342</p>
                 <p className="text-sm text-muted-foreground mt-1">Active Posts</p>
-                <p className="text-xs text-green-600 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-green-600 dark:text-green-300 mt-2 font-medium">View Analytics →</p>
               </div>
-              <div className="p-4 bg-orange-50 rounded-lg border border-orange-100 hover:bg-orange-100 transition-colors cursor-pointer">
-                <p className="text-3xl font-bold text-orange-600">1,856</p>
+              <div className="p-4 bg-orange-100 dark:bg-orange-500/20 rounded-lg border border-orange-200 dark:border-orange-400/30 hover:bg-orange-200 dark:hover:bg-orange-500/25 transition-colors cursor-pointer">
+                <p className="text-3xl font-bold text-orange-600 dark:text-orange-300">1,856</p>
                 <p className="text-sm text-muted-foreground mt-1">Total Messages</p>
-                <p className="text-xs text-orange-600 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-orange-600 dark:text-orange-300 mt-2 font-medium">View Analytics →</p>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-                <p className="text-3xl font-bold text-red-600">12</p>
+              <div className="p-4 bg-red-100 dark:bg-red-500/20 rounded-lg border border-red-200 dark:border-red-400/30">
+                <p className="text-3xl font-bold text-red-600 dark:text-red-300">12</p>
                 <p className="text-sm text-muted-foreground mt-1">Active Bans</p>
               </div>
             </div>

@@ -103,7 +103,7 @@ function CreateProfilePage() {
       <BackButton onClick={() => navigate({ to: '/account-settings' })} />
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h1 className="text-lg font-semibold text-nav-browse-fg">Add a new profile to your account</h1>
+          <h1 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Add a new profile to your account</h1>
           {mutation.isError && (
             <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
           )}
