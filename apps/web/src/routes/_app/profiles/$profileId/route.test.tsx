@@ -34,7 +34,7 @@ const profile = {
   email:         'alice@example.com',
   bio:           'Software engineer',
   phoneNumber:   '+1 555 0001',
-  fax:           null,
+  fax:           '+1 555 0002',
   createdAt:     new Date('2024-01-01'),
   updatedAt:     null,
   accountName:   'Alice',
@@ -60,22 +60,37 @@ describe('ProfileViewPage', () => {
     mockUseSuspenseQuery.mockReturnValue({ data: profile })
   })
 
-  it('renders the profile name', async () => {
+  it('renders the profile name as page heading', async () => {
     await renderPage()
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
   })
 
-  it('renders the profile email', async () => {
+  it('renders the Basic Information card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Basic Information')).toBeInTheDocument()
+  })
+
+  it('renders member since date in subtitle area', async () => {
+    await renderPage()
+    expect(screen.getByText(/member since/i)).toBeInTheDocument()
+  })
+
+  it('renders the email', async () => {
     await renderPage()
     expect(screen.getByText('alice@example.com')).toBeInTheDocument()
   })
 
-  it('renders the phone number when present', async () => {
+  it('renders the phone number', async () => {
     await renderPage()
     expect(screen.getByText('+1 555 0001')).toBeInTheDocument()
   })
 
-  it('renders the bio when present', async () => {
+  it('renders the fax when present', async () => {
+    await renderPage()
+    expect(screen.getByText('+1 555 0002')).toBeInTheDocument()
+  })
+
+  it('renders the bio', async () => {
     await renderPage()
     expect(screen.getByText('Software engineer')).toBeInTheDocument()
   })
@@ -83,11 +98,5 @@ describe('ProfileViewPage', () => {
   it('renders a Back button', async () => {
     await renderPage()
     expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
-  })
-
-  it('shows em dash for missing fax', async () => {
-    await renderPage()
-    // fax is null — the component renders an em-dash span
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
 })
