@@ -79,6 +79,7 @@ export const sessions = pgTable("session", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  impersonatedBy: uuid("impersonated_by").references(() => users.id),
 });
 
 export const oauthAccounts = pgTable("account", {

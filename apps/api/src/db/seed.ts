@@ -14,6 +14,7 @@ const permissionDefinitions = [
   { name: Permissions.AdminUsersBan, description: "Ban and unban users" },
   { name: Permissions.AdminUsersView, description: "View user list" },
   { name: Permissions.AdminUsersAssignRole, description: "Assign roles to users" },
+  { name: Permissions.AdminUsersImpersonate, description: "Impersonate users with lower role priority" },
   { name: Permissions.AdminRolesManage, description: "Create, edit, delete roles" },
   { name: Permissions.AdminCategoriesManage, description: "Manage categories" },
 ];

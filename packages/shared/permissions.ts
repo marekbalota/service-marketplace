@@ -13,6 +13,7 @@ export const Permissions = {
   AdminUsersBan: 'admin:users:ban',
   AdminUsersView: 'admin:users:view',
   AdminUsersAssignRole: 'admin:users:assign-role',
+  AdminUsersImpersonate: 'admin:users:impersonate',
 
   // Admin - Role Management
   AdminRolesManage: 'admin:roles:manage',
