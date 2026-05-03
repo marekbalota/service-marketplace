@@ -177,4 +177,44 @@ describe("LoginForm", () => {
       expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }))
     })
   })
+
+  it("navigates to /verify-email with email when sign-in returns 403", async () => {
+    mockHandleBanError.mockReturnValueOnce(false)
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: "Email not verified" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Email not verified" } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/verify-email",
+        search: { email: "unverified@example.com" },
+      })
+    })
+  })
+
+  it("does not show a form error when redirecting to /verify-email on 403", async () => {
+    mockHandleBanError.mockReturnValueOnce(false)
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: "Email not verified" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Email not verified" } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalled()
+    })
+    expect(screen.queryByText(/email not verified/i)).not.toBeInTheDocument()
+  })
 })

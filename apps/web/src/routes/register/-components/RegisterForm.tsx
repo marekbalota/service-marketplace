@@ -6,7 +6,6 @@ import { authClient } from "#/auth"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
-import { queryClient } from "#/router"
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -25,9 +24,8 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterValues) => {
     await authClient.signUp.email(values, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries();
-        navigate({ to: "/" })
+      onSuccess: () => {
+        navigate({ to: "/verify-email", search: { email: values.email } })
       },
       onError: (ctx) => {
         form.setError("root", { message: ctx.error.message })

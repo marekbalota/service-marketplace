@@ -33,6 +33,10 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       },
       onError: (ctx) => {
         if (handleBanError(ctx.error)) return
+        if (ctx.error.status === 403) {
+          navigate({ to: "/verify-email", search: { email: values.email } })
+          return
+        }
         form.setError("root", { message: ctx.error.message })
       },
     })
