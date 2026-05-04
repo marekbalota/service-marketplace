@@ -205,6 +205,16 @@ entity Image {
     deleted_at : timestamp
 }
 
+entity ReviewImage {
+    review_image_id : uuid <<PK>>
+    ---
+    review_id : uuid <<FK>> <<NOT NULL>>
+    name : text <<NOT NULL>>
+    link : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
 entity Favourites {
     user_profile_id : uuid <<PK>> <<FK>>
     post_id : uuid <<PK>> <<FK>>
@@ -250,6 +260,7 @@ User ||--o{ Session
 User ||--o{ OAuthAccount
 UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
+Review ||--o{ ReviewImage : has images
 Post ||--o{ Favourites
 Post }o--o| Location
 UserProfile ||--o{ ProfileLocation

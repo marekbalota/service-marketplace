@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -10,6 +10,7 @@ import { FieldError } from '#/components/ui/field'
 import { api } from '#/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useActiveProfile } from '#/context/activeProfile'
+import { ImagePickerGrid } from '#/routes/_app/account-settings/-components/ImagePickerGrid'
 
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Rating is required').max(5),
@@ -29,6 +30,14 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   const { activeProfile } = useActiveProfile()
   const [error, setError] = useState<string | null>(null)
 
+  // Image state — same pattern as profile create/edit
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
+  const pendingFilesRef = useRef(pendingFiles)
+  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
+  useEffect(() => () => {
+    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+  }, [])
+
   const {
     control,
     handleSubmit,
@@ -41,17 +50,35 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   const mutation = useMutation({
     mutationFn: async (data: ReviewFormData) => {
       if (!activeProfile?.userProfileId) throw new Error('No active profile selected')
-      const { error, data: result } = await api.reviews.post({
+
+      // Step 1: Create the review
+      const { error: reviewError, data: result } = await api.reviews.post({
         rating: data.rating,
         reviewDescription: data.description || null,
         postId,
         profileId: activeProfile.userProfileId,
       })
-      if (error) throw error
-      return result
+      if (reviewError) throw reviewError
+
+      // Step 2: Upload images (best-effort — review is already created)
+      let imageFailCount = 0
+      for (const { file } of pendingFilesRef.current) {
+        const { error: imgError } = await api['review-images'].post({
+          file,
+          reviewId: result!.reviewId,
+        })
+        if (imgError) imageFailCount++
+      }
+
+      return { imageFailCount }
     },
-    onSuccess: () => {
+    onSuccess: ({ imageFailCount }) => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+      setPendingFiles([])
+      if (imageFailCount > 0) {
+        setError(`Review submitted, but ${imageFailCount} image(s) failed to upload.`)
+      }
       onSuccess()
     },
     onError: (err: { message?: string; status?: number }) => {
@@ -62,6 +89,17 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       }
     },
   })
+
+  function addFile(file: File) {
+    const preview = URL.createObjectURL(file)
+    setPendingFiles(prev => [...prev, { file, preview }])
+  }
+
+  function removeFile(index: number) {
+    const preview = pendingFiles[index]?.preview
+    if (preview) URL.revokeObjectURL(preview)
+    setPendingFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   const onSubmit = (data: ReviewFormData) => {
     setError(null)
@@ -103,6 +141,15 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
           )}
         />
         <FieldError errors={[errors.description]} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Images (Optional)</Label>
+        <ImagePickerGrid
+          previews={pendingFiles.map(f => f.preview)}
+          onFilePicked={addFile}
+          onRemove={removeFile}
+        />
       </div>
 
       <FieldError errors={[error ? { message: error } : undefined]} />

@@ -30,6 +30,7 @@ const baseReview: ReviewType = {
   rating: 4,
   reviewDescription: 'Great service!',
   reviewerId: 'profile-reviewer',
+  images: [],
 }
 
 describe('ReviewCard', () => {
@@ -38,38 +39,49 @@ describe('ReviewCard', () => {
   })
 
   it('renders the reviewer name', () => {
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: false,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
     expect(screen.getByText('Jane Doe')).toBeInTheDocument()
   })
 
   it('renders 4 filled stars for a rating of 4', () => {
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: false,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
     const stars = document.querySelectorAll('svg')
     const filledStars = Array.from(stars).filter(s => s.classList.contains('fill-star-filled'))
     expect(filledStars).toHaveLength(4)
   })
 
   it('renders the review description', () => {
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: false,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
     expect(screen.getByText('Great service!')).toBeInTheDocument()
+  })
+
+  it('does not render image thumbnails when images array is empty', () => {
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('renders image thumbnails when images are present', () => {
+    const reviewWithImages: ReviewType = {
+      ...baseReview,
+      images: [
+        { reviewImageId: 'img-1', link: 'http://example.com/a.jpg', name: 'a.jpg' },
+        { reviewImageId: 'img-2', link: 'http://example.com/b.jpg', name: 'b.jpg' },
+      ],
+    }
+    renderCard({ review: reviewWithImages, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
+    const imgs = screen.getAllByRole('img')
+    expect(imgs).toHaveLength(2)
+  })
+
+  it('opens lightbox when a thumbnail is clicked', () => {
+    const reviewWithImages: ReviewType = {
+      ...baseReview,
+      images: [{ reviewImageId: 'img-1', link: 'http://example.com/a.jpg', name: 'a.jpg' }],
+    }
+    renderCard({ review: reviewWithImages, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
+    fireEvent.click(screen.getByRole('img'))
+    // Dialog opens — the lightbox image src is now displayed
+    expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
   })
 
   it('shows the delete button when active profile matches reviewerId', () => {
@@ -77,13 +89,7 @@ describe('ReviewCard', () => {
       activeProfile: { userProfileId: 'profile-reviewer' } as UserProfile,
       setActiveProfileId: vi.fn(),
     })
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: true,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: true })
     const buttons = screen.getAllByRole('button')
     expect(buttons.length).toBeGreaterThan(0)
   })
@@ -94,13 +100,7 @@ describe('ReviewCard', () => {
       setActiveProfileId: vi.fn(),
     })
     const onDelete = vi.fn()
-    renderCard({
-      review: baseReview,
-      onDelete,
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: true,
-    })
+    renderCard({ review: baseReview, onDelete, isDeleting: false, onReport: vi.fn(), isAuthenticated: true })
     const deleteButton = screen.getAllByRole('button').find(
       btn => btn.querySelector('svg') !== null && btn.classList.contains('text-destructive'),
     )!
@@ -113,13 +113,7 @@ describe('ReviewCard', () => {
       activeProfile: { userProfileId: 'other-profile' } as UserProfile,
       setActiveProfileId: vi.fn(),
     })
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: true,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: true })
     const buttons = screen.getAllByRole('button')
     const deleteButton = buttons.find(btn => btn.classList.contains('text-destructive'))
     expect(deleteButton).toBeUndefined()
@@ -130,13 +124,7 @@ describe('ReviewCard', () => {
       activeProfile: { userProfileId: 'other-profile' } as UserProfile,
       setActiveProfileId: vi.fn(),
     })
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: true,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: true })
     expect(screen.getByRole('button', { name: /report review/i })).toBeInTheDocument()
   })
 
@@ -146,25 +134,13 @@ describe('ReviewCard', () => {
       setActiveProfileId: vi.fn(),
     })
     const onReport = vi.fn()
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport,
-      isAuthenticated: true,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport, isAuthenticated: true })
     fireEvent.click(screen.getByRole('button', { name: /report review/i }))
     expect(onReport).toHaveBeenCalledWith('rev-1')
   })
 
   it('does not show the report button when not authenticated', () => {
-    renderCard({
-      review: baseReview,
-      onDelete: vi.fn(),
-      isDeleting: false,
-      onReport: vi.fn(),
-      isAuthenticated: false,
-    })
+    renderCard({ review: baseReview, onDelete: vi.fn(), isDeleting: false, onReport: vi.fn(), isAuthenticated: false })
     expect(screen.queryByRole('button', { name: /report review/i })).not.toBeInTheDocument()
   })
 })

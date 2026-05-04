@@ -19,6 +19,7 @@ import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
+import { reviewImagesRoutes } from "./modules/review-images";
 import { reportCategoriesRoutes } from "./modules/reports";
 import { locationsRoutes } from "./modules/locations";
 import { initBucket } from "./storage";
@@ -60,6 +61,7 @@ export const app = new Elysia()
   .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
+  .use(reviewImagesRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(imagesRoutes)

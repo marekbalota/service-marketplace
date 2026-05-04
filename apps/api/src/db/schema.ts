@@ -301,6 +301,17 @@ export const reports = pgTable(
   ],
 );
 
+export const reviewImages = pgTable("review_images", {
+  reviewImageId: uuid("review_image_id").primaryKey().defaultRandom(),
+  reviewId: uuid("review_id")
+    .notNull()
+    .references(() => reviews.reviewId),
+  name: text("name").notNull(),
+  link: text("link").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 
 // Relations
 
@@ -354,7 +365,7 @@ export const userProfilesRelations = relations(
   }),
 );
 
-export const reviewsRelations = relations(reviews, ({ one }) => ({
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
   reviewer: one(userProfiles, {
     fields: [reviews.reviewerId],
     references: [userProfiles.userProfileId],
@@ -364,6 +375,7 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
     fields: [reviews.postId],
     references: [posts.postId],
   }),
+  reviewImages: many(reviewImages),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -488,3 +500,9 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+export const reviewImagesRelations = relations(reviewImages, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewImages.reviewId],
+    references: [reviews.reviewId],
+  }),
+}));

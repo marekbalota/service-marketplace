@@ -276,7 +276,7 @@ function PostDetailPage() {
               <EmptyState message="No reviews yet." />
             ) : (
               <div className="space-y-4">
-                {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
+                {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string; images: { reviewImageId: string; link: string; name: string }[] }) => (
                   <ReviewCard
                     key={review.reviewId}
                     review={review}
