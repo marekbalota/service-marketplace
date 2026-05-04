@@ -39,6 +39,13 @@ function checkPermissions(
         : permissions.some(p => userPermissions.includes(p));
 }
 
+// Three auth macro modes — pick the right one for each route:
+//   auth                 — requires login; blocks POST/PATCH/DELETE during impersonation.
+//                          Use for standard read-write endpoints.
+//   authWithPermissions  — same as auth plus RBAC permission checks.
+//                          Use for endpoints that require specific permissions.
+//   blockDuringImpersonation — requires login; blocks ALL methods during impersonation.
+//                          Use when reads must also be restricted (e.g. messages).
 const WRITE_METHODS = ['POST', 'PATCH', 'DELETE'];
 
 export const authRoutes = new Elysia({ name: "better-auth" })

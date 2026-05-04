@@ -192,6 +192,60 @@ describe("POST /api/auth/admin/stop-impersonating", () => {
     expect(stopBody.user.id).toBe(adminUserId);
   });
 
+  it("returns 500 when admin_session cookie is absent", async () => {
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: "admin@example.com", password: "admin123" },
+      asResponse: true,
+    });
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers);
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    });
+    expect(impersonateRes.status).toBe(200);
+
+    // Strip the admin_session and its signature cookie so only the impersonation session remains
+    const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
+      .split("; ")
+      .filter((c) => !c.startsWith("admin_session"))
+      .join("; ");
+
+    const res = await auth.api.stopImpersonating({
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    });
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when admin_session cookie has been tampered with", async () => {
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: "admin@example.com", password: "admin123" },
+      asResponse: true,
+    });
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers);
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    });
+    expect(impersonateRes.status).toBe(200);
+
+    // Replace the admin_session value with garbage so signature validation fails
+    const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
+      .split("; ")
+      .map((c) => (c.startsWith("admin_session=") ? "admin_session=tampered_value" : c))
+      .join("; ");
+
+    const res = await auth.api.stopImpersonating({
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    });
+    expect(res.status).toBe(500);
+  });
+
   it("returns 400 when not currently impersonating", async () => {
     // Sign in as admin (no impersonation active)
     const adminSignIn = await auth.api.signInEmail({
