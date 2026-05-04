@@ -12,6 +12,10 @@ vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(),
 }))
 
+vi.mock('./ImpersonationBanner', () => ({
+  ImpersonationBanner: () => <div data-testid="impersonation-banner">Impersonation Banner</div>,
+}))
+
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 
@@ -36,7 +40,7 @@ describe('Header', () => {
   })
 
   it('shows profile button and hides auth links when user is not null', async () => {
-    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', impersonatedBy: null, role: null, profiles: [] }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'p1', name: 'Alice', email: 'alice@example.com' } as User['profiles'][number],
@@ -48,11 +52,41 @@ describe('Header', () => {
   })
 
   it('shows profile button without name text when active profile is not yet available', async () => {
-    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', role: null, profiles: [] }
+    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', impersonatedBy: null, role: null, profiles: [] }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
     await renderHeader()
     expect(screen.getByTestId('profile-menu-trigger')).toBeInTheDocument()
     expect(screen.queryByText(/^profile$/i)).not.toBeInTheDocument()
+  })
+
+  it('shows impersonation banner when user has impersonatedBy set', async () => {
+    const user: User = {
+      userId: 'u1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      impersonatedBy: 'admin-id',
+      role: null,
+      profiles: [],
+    }
+    vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    await renderHeader()
+    expect(screen.getByTestId('impersonation-banner')).toBeInTheDocument()
+  })
+
+  it('does not show impersonation banner when impersonatedBy is null', async () => {
+    const user: User = {
+      userId: 'u1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      impersonatedBy: null,
+      role: null,
+      profiles: [],
+    }
+    vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    await renderHeader()
+    expect(screen.queryByTestId('impersonation-banner')).not.toBeInTheDocument()
   })
 })

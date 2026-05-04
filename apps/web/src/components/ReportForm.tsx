@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -63,12 +64,8 @@ export function ReportForm({
   const mutation = useMutation({
     mutationFn: (data: FormData) => onReport(data),
     onSuccess,
-    onError: (err: { message?: string; status?: number }) => {
-      if (err.status === 409) {
-        setServerError(`You have already reported this ${entityName}`)
-      } else {
-        setServerError(err.message || 'Failed to submit report')
-      }
+    onError: (err) => {
+      setServerError(err.message)
     },
   })
 

@@ -116,8 +116,8 @@ describe('ReportForm', () => {
     expect(mockOnReport).toHaveBeenCalledWith({ categoryId: FAKE_UUID, description: 'This is problematic.' })
   })
 
-  it('shows entity-specific already-reported message on 409', async () => {
-    mockOnReport.mockRejectedValue({ status: 409 })
+  it('shows already-reported message from server on 409', async () => {
+    mockOnReport.mockRejectedValue({ status: 409, value: { message: 'You have already reported this review' } })
     const user = userEvent.setup()
     renderForm({ entityName: 'review' })
 

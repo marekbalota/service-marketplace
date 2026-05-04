@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,19 +48,15 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
         postId,
         profileId: activeProfile.userProfileId,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to submit review.')
       return result
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       onSuccess()
     },
-    onError: (err: { message?: string; status?: number }) => {
-      if (err.status === 409) {
-        setError('You have already reviewed this post')
-      } else {
-        setError(err.message || 'Failed to submit review')
-      }
+    onError: (err) => {
+      setError(err.message)
     },
   })
 

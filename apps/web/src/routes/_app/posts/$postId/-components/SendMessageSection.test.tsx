@@ -36,7 +36,12 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   }
 })
 
+vi.mock('#/lib/queries/users', () => ({
+  useCurrentUser: vi.fn(() => ({ data: null })),
+}))
+
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { useCurrentUser } from '#/lib/queries/users'
 
 async function renderSection(props = {}) {
   const rootRoute = createRootRoute({
@@ -52,6 +57,7 @@ describe('SendMessageSection', () => {
   beforeEach(() => {
     vi.mocked(useQuery).mockReturnValue({ data: null, isLoading: false } as any)
     vi.mocked(useMutation).mockReturnValue({ mutate: mockMutate, isPending: false, isError: false } as any)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as any)
   })
 
   it('shows "Send Message" button when no existing thread', async () => {
@@ -118,5 +124,13 @@ describe('SendMessageSection', () => {
     await renderSection()
     fireEvent.click(screen.getByRole('button', { name: /send message/i }))
     expect(screen.getByText(/failed to send message/i)).toBeInTheDocument()
+  })
+
+  it('shows a disabled Send Message button with tooltip during impersonation', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { impersonatedBy: 'admin-id' },
+    } as any)
+    await renderSection()
+    expect(screen.getByRole('button', { name: /send message/i })).toBeDisabled()
   })
 })

@@ -1,4 +1,5 @@
 import { Suspense, useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -39,7 +40,7 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       const { error } = await api.posts({ id: postId }).delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete post.')
     },
     onSuccess: () => {
       setDeleteTarget(null)
@@ -131,7 +132,7 @@ function MyPostingsPage() {
         }
       />
 
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex justify-start">
         <ToggleGroup
           value={[archived ? 'archived' : 'active']}
           onValueChange={handleTabChange}

@@ -116,7 +116,7 @@ describe('EditProfilePage', () => {
       mutate:    vi.fn(),
       isPending: false,
       isError:   true,
-      error:     new Error('Update failed'),
+      error:     { value: { message: 'Update failed' } },
     })
     await renderPage()
     expect(screen.getAllByText('Update failed').length).toBeGreaterThan(0)

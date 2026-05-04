@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
@@ -33,6 +34,7 @@ function ManageRoles() {
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const userPriority = user?.role?.priority ?? 0
+  const userPermissionNames = user?.role?.permissions ?? []
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
@@ -43,27 +45,31 @@ function ManageRoles() {
         description="Configure user roles and permissions for the platform"
         action={
           <Suspense fallback={<Skeleton className="h-9 w-32" />}>
-            <CreateRoleAction />
+            <CreateRoleAction userPermissionNames={userPermissionNames} />
           </Suspense>
         }
       />
 
       <Suspense fallback={<RolesSkeleton />}>
-        <RolesContent userPriority={userPriority} />
+        <RolesContent userPriority={userPriority} userPermissionNames={userPermissionNames} />
       </Suspense>
     </main>
   )
 }
 
-function CreateRoleAction() {
+function CreateRoleAction({ userPermissionNames }: { userPermissionNames: string[] }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const { data: permissions } = useSuspenseQuery(permissionsQueryOptions)
   const queryClient = useQueryClient()
 
+  const grantablePermissionIds = new Set(
+    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+  )
+
   const createMutation = useMutation({
     mutationFn: async (values: RoleValues) => {
       const { error } = await api.admin.roles.post(values)
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create role.')
     },
     onSuccess: () => {
       setIsCreateOpen(false)
@@ -85,6 +91,7 @@ function CreateRoleAction() {
         description="Define a new role with specific permissions"
         submitLabel="Create Role"
         permissions={permissions}
+        grantablePermissionIds={grantablePermissionIds}
         onSubmit={(values) => createMutation.mutateAsync(values)}
       />
     </>

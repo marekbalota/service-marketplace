@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { DollarSign, MapPin, Star, Pencil, Flag } from 'lucide-react'
@@ -116,7 +117,7 @@ function PostDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
       const { error } = await api.reviews({ id: reviewId }).delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete review.')
     },
     onSuccess: () => {
       setDeletingReviewId(null)
@@ -336,7 +337,7 @@ function PostDetailPage() {
               descriptionRequired
               onReport={async (data) => {
                 const { error } = await api.posts({ id: postId }).reports.post(data)
-                if (error) throw error
+                if (error) throw wrapEdenError(error, 'Failed to submit report.')
               }}
               onSuccess={() => {
                 void queryClient.invalidateQueries({
@@ -365,7 +366,7 @@ function PostDetailPage() {
               entityName="review"
               onReport={async (data) => {
                 const { error } = await api.reviews({ id: reportingReviewId }).reports.post(data)
-                if (error) throw error
+                if (error) throw wrapEdenError(error, 'Failed to submit report.')
               }}
               onSuccess={() => {
                 void queryClient.invalidateQueries({

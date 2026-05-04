@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
@@ -57,7 +58,7 @@ function ProfilePostsContent({
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       const { error } = await api.admin.posts({ id: postId }).delete({})
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete post.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
@@ -149,7 +150,7 @@ function ProfileDetailPage() {
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const permissions = user?.role?.permissions ?? []
-  const canDeletePost = hasPermissions(permissions, [Permissions.PostsDeleteAny])
+  const canDeletePost = hasPermissions(permissions, [Permissions.AdminPostsDeleteAny])
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">

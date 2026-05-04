@@ -53,6 +53,8 @@ const baseRole = {
   priority: 5,
 }
 
+const allGrantable = new Set(basePermissions.map(p => p.permissionId))
+
 function renderCard(overrides: Partial<React.ComponentProps<typeof SortableRoleCard>> = {}) {
   const onDelete = vi.fn()
   const onSetDefault = vi.fn()
@@ -60,6 +62,7 @@ function renderCard(overrides: Partial<React.ComponentProps<typeof SortableRoleC
     <SortableRoleCard
       role={baseRole}
       permissions={basePermissions}
+      grantablePermissionIds={allGrantable}
       onDelete={onDelete}
       onSetDefault={onSetDefault}
       canEdit={true}

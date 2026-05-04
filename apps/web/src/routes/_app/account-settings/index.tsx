@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
@@ -56,14 +57,13 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
   const mutation = useMutation({
     mutationFn: async () => {
       const { error } = await api.profiles({ id: profile.userProfileId }).delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete profile.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
     },
     onError: (err) => {
-      const msg = (err as { value?: { message?: string } }).value?.message ?? (err as Error).message
-      setErrorMsg(msg)
+      setErrorMsg(err.message)
     },
   })
 

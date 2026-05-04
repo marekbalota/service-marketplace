@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { Trash2 } from 'lucide-react'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
@@ -19,7 +20,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
   const send = useMutation({
     mutationFn: async (content: string) => {
       const { data, error } = await api.threads({ threadId }).messages.post({ profileId, content })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to send message.')
       return data
     },
     onSuccess: () => {
@@ -88,7 +89,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
               entityName="message"
               onReport={async (data) => {
                 const { error } = await api.threads({ threadId }).messages({ messageId: reportingMessageId }).reports.post(data)
-                if (error) throw error
+                if (error) throw wrapEdenError(error, 'Failed to submit report.')
               }}
               onSuccess={() => {
                 void queryClient.invalidateQueries({ queryKey: hasReportedMessageQueryOptions(reportingMessageId!, profileId).queryKey })

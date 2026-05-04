@@ -11,7 +11,7 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
     '/',
     async ({ query }) => await AdminUsersService.findAll(query),
     {
-      authWithPermissions: Permissions.AdminUsersView,
+      authWithPermissions: [Permissions.AdminUsersView, Permissions.AdminUsersAssignRole, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny],
       query: AdminUsersModel.usersQuery,
       response: {
         200: AdminUsersModel.usersResponse,
@@ -25,7 +25,7 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
     '/:id',
     async ({ params }) => AdminUsersService.findById(params.id),
     {
-      authWithPermissions: Permissions.AdminUsersView,
+      authWithPermissions: [Permissions.AdminUsersView, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny],
       params: AdminUsersModel.findByIdParams,
       response: {
         200: AdminUsersModel.findByIdResponse,
@@ -40,7 +40,7 @@ export const adminUsersRoutes = new Elysia({ prefix: '/admin/users' })
     '/:id/profiles',
     async ({ params }) => AdminUsersService.findProfiles(params.id),
     {
-      authWithPermissions: Permissions.AdminUsersView,
+      authWithPermissions: [Permissions.AdminUsersView, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny],
       params: AdminUsersModel.userProfilesParams,
       response: {
         200: AdminUsersModel.userProfilesResponse,

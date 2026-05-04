@@ -5,6 +5,7 @@ export const UsersModel = {
     userId: t.String(),
     name: t.String(),
     email: t.String(),
+    impersonatedBy: t.Nullable(t.String()),
     role: t.Nullable(t.Object({
       roleId: t.String(),
       name: t.String(),

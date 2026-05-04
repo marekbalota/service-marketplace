@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   DndContext,
@@ -25,11 +26,15 @@ import type { Role } from './SortableRoleCard'
 
 interface RolesContentProps {
   userPriority: number
+  userPermissionNames: string[]
 }
 
-export function RolesContent({ userPriority }: RolesContentProps) {
+export function RolesContent({ userPriority, userPermissionNames }: RolesContentProps) {
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
+  const grantablePermissionIds = new Set(
+    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+  )
   const queryClient = useQueryClient()
 
   const [roles, setRoles] = useState<Role[]>(rolesData)
@@ -49,7 +54,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await api.admin.roles({ id: roleId }).delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete role.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
@@ -60,7 +65,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
   const setDefaultMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await api.admin.roles({ id: roleId }).default.patch()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to set default role.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
@@ -71,7 +76,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
   const reorderMutation = useMutation({
     mutationFn: async ({ roleId, newPriority }: { roleId: string; newPriority: number }) => {
       const { error } = await api.admin.roles.reorder.patch({ roleId, newPriority })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to reorder roles.')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
     onError: () => setRoles(rolesData),
@@ -97,6 +102,7 @@ export function RolesContent({ userPriority }: RolesContentProps) {
 
   const sharedCardProps = {
     permissions,
+    grantablePermissionIds,
     onDelete: (roleId: string) => setDeletingRoleId(roleId),
     onSetDefault: (roleId: string) => setSettingDefaultRoleId(roleId),
   }
