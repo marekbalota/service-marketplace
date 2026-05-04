@@ -9,6 +9,8 @@ import { AuthErrorMessages, ErrorMessages, ImpersonationErrorMessages } from "..
 import { Permissions } from "@marketplace/shared";
 import * as z from "zod";
 
+const IMPERSONATION_SESSION_DURATION_MS = 60 * 60 * 1000
+
 export function impersonationPlugin() {
   return {
     id: "impersonation",
@@ -45,8 +47,12 @@ export function impersonationPlugin() {
             throw APIError.fromStatus("NOT_FOUND", { message: ErrorMessages.userNotFound });
           }
 
-          if (callerSession.user.roleId && targetUser.roleId) {
-            const canManage = await RBACService.canManageRole(callerSession.user.roleId, targetUser.roleId);
+          // Users with no role are treated as lowest priority — safe to impersonate.
+          // If the target has a role, the caller must explicitly outrank them.
+          // callerSession.user.roleId is non-null here: reaching this point requires the
+          // AdminUsersImpersonate permission, which can only be held through a role.
+          if (targetUser.roleId) {
+            const canManage = await RBACService.canManageRole(callerSession.user.roleId!, targetUser.roleId);
             if (!canManage) {
               throw APIError.fromStatus("FORBIDDEN", { message: AuthErrorMessages.cannotManageRole });
             }
@@ -57,7 +63,7 @@ export function impersonationPlugin() {
             true,
             {
               impersonatedBy: callerSession.user.id,
-              expiresAt: new Date(Date.now() + 3600 * 1000),
+              expiresAt: new Date(Date.now() + IMPERSONATION_SESSION_DURATION_MS),
             },
             true,
           );
@@ -76,7 +82,10 @@ export function impersonationPlugin() {
             adminCookieProp.name,
             `${callerSession.session.token}|${dontRememberToken}`,
             ctx.context.secret,
-            ctx.context.authCookies.sessionToken.attributes,
+            {
+              ...ctx.context.authCookies.sessionToken.attributes,
+              maxAge: IMPERSONATION_SESSION_DURATION_MS / 1000,
+            },
           );
 
           deleteSessionCookie(ctx);
