@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { LoginForm } from "./LoginForm"
 
@@ -10,23 +10,29 @@ vi.mock("#/auth", () => ({
   },
 }))
 
+const mockNavigate = vi.hoisted(() => vi.fn())
+
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => mockNavigate,
 }))
 
-const mockQueryClientClear = vi.hoisted(() => vi.fn())
-
-vi.mock('#/router', () => ({
-  queryClient: { clear: mockQueryClientClear },
+vi.mock("#/router", () => ({
+  queryClient: {
+    invalidateQueries: vi.fn().mockResolvedValue(undefined),
+  },
 }))
 
 const mockHandleBanError = vi.hoisted(() => vi.fn().mockReturnValue(false))
 
-vi.mock('#/lib/ban-handler', () => ({
+vi.mock("#/lib/ban-handler", () => ({
   handleBanError: mockHandleBanError,
 }))
 
 describe("LoginForm", () => {
+  beforeEach(() => {
+    mockNavigate.mockClear()
+  })
+
   it("renders email and password inputs and a submit button", () => {
     render(<LoginForm />)
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
@@ -83,41 +89,132 @@ describe("LoginForm", () => {
     })
   })
 
-  it('calls handleBanError when sign-in onError fires with a banned error', async () => {
-    const { authClient } = await import('#/auth')
+  it("calls handleBanError when sign-in onError fires with a banned error", async () => {
+    const { authClient } = await import("#/auth")
     vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
-      callbacks?.onError?.({ error: { status: 403, message: 'Account banned' } } as never)
-      return Promise.resolve({ data: null, error: { status: 403, message: 'Account banned' } })
+      callbacks?.onError?.({ error: { status: 403, message: "Account banned" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Account banned" } })
     })
 
     render(<LoginForm />)
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'banned@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "banned@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
 
     await waitFor(() => {
       expect(mockHandleBanError).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 403, message: 'Account banned' })
+        expect.objectContaining({ status: 403, message: "Account banned" })
       )
     })
   })
 
-  it('does not show a form error when handleBanError returns true', async () => {
+  it("does not show a form error when handleBanError returns true", async () => {
     mockHandleBanError.mockReturnValueOnce(true)
-    const { authClient } = await import('#/auth')
+    const { authClient } = await import("#/auth")
     vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
-      callbacks?.onError?.({ error: { status: 403, message: 'Account banned' } } as never)
-      return Promise.resolve({ data: null, error: { status: 403, message: 'Account banned' } })
+      callbacks?.onError?.({ error: { status: 403, message: "Account banned" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Account banned" } })
     })
 
     render(<LoginForm />)
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'banned@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "banned@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
 
     await waitFor(() => {
       expect(mockHandleBanError).toHaveBeenCalled()
     })
     expect(screen.queryByText(/account banned/i)).not.toBeInTheDocument()
+  })
+
+  it("navigates to '/' after login when no redirect prop is given", async () => {
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onSuccess?.({} as never)
+      return Promise.resolve({ data: {}, error: null })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }))
+    })
+  })
+
+  it("navigates to the redirect path after login when redirect starts with '/'", async () => {
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onSuccess?.({} as never)
+      return Promise.resolve({ data: {}, error: null })
+    })
+
+    render(<LoginForm redirect="/messages?foo=bar" />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/messages?foo=bar' }))
+    })
+  })
+
+  it("navigates to '/' after login when redirect does not start with '/'", async () => {
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onSuccess?.({} as never)
+      return Promise.resolve({ data: {}, error: null })
+    })
+
+    render(<LoginForm redirect="https://evil.com" />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }))
+    })
+  })
+
+  it("navigates to /verify-email with email when sign-in returns 403", async () => {
+    mockHandleBanError.mockReturnValueOnce(false)
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: "Email not verified" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Email not verified" } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/verify-email",
+        search: { email: "unverified@example.com" },
+      })
+    })
+  })
+
+  it("does not show a form error when redirecting to /verify-email on 403", async () => {
+    mockHandleBanError.mockReturnValueOnce(false)
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce((_creds, callbacks) => {
+      callbacks?.onError?.({ error: { status: 403, message: "Email not verified" } } as never)
+      return Promise.resolve({ data: null, error: { status: 403, message: "Email not verified" } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalled()
+    })
+    expect(screen.queryByText(/email not verified/i)).not.toBeInTheDocument()
   })
 })

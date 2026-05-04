@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Star } from 'lucide-react'
+import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 
 interface StarRatingInputProps {
@@ -8,28 +10,31 @@ interface StarRatingInputProps {
 }
 
 export function StarRatingInput({ value, onChange, disabled }: StarRatingInputProps) {
+  const [hoverValue, setHoverValue] = useState(0)
+  const displayValue = hoverValue || value
+
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1" onMouseLeave={() => setHoverValue(0)}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
+        <Button
           key={star}
           type="button"
+          variant="ghost"
+          size="icon"
           disabled={disabled}
           onClick={() => onChange(star)}
-          className={cn(
-            'p-1 transition-colors',
-            disabled ? 'cursor-not-allowed opacity-50' : 'hover:scale-110 cursor-pointer'
-          )}
+          onMouseEnter={() => setHoverValue(star)}
+          className="p-1"
         >
           <Star
             className={cn(
               'size-6',
-              star <= value
+              star <= displayValue
                 ? 'fill-star-filled text-star-filled'
                 : 'text-star-empty'
             )}
           />
-        </button>
+        </Button>
       ))}
     </div>
   )

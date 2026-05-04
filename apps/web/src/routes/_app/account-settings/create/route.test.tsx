@@ -33,16 +33,16 @@ vi.mock('#/api', () => ({
   },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 
 // ── Import component after mocks ───────────────────────────────────────────────
 
-import { CreateProfilePage } from './route'
+import { Route } from './route'
 
 async function renderPage() {
-  const rootRoute = createRootRoute({ component: CreateProfilePage })
+  const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
     render(<RouterProvider router={router} />)
@@ -66,9 +66,9 @@ describe('CreateProfilePage', () => {
     expect(screen.getByText(/add a new profile to your account/i)).toBeInTheDocument()
   })
 
-  it('renders the Back link', async () => {
+  it('renders the Back button', async () => {
     await renderPage()
-    expect(screen.getByRole('link', { name: /back/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
   })
 
   it('renders the Create Profile submit button', async () => {

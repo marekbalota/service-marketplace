@@ -1,25 +1,18 @@
 import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
-import { queryOptions, useQuery, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { MapPin, User, FileText, AlignLeft, Tag, DollarSign } from 'lucide-react'
+import { FileText, AlignLeft, Tag } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { useState, useEffect } from 'react'
 import { api } from '#/api'
-import { categoriesQueryOptions } from '#/routes/_app/posts/index'
-import { formatLocation } from '#/lib/format'
+import { categoriesQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { MultiSelect } from '#/components/ui/multi-select'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import {
   Card,
   CardContent,
@@ -27,29 +20,12 @@ import {
   CardTitle,
   CardDescription,
 } from '#/components/ui/card'
-import {
-  Field,
-  FieldLabel,
-  FieldError,
-} from '#/components/ui/field'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { Field, FieldLabel, FieldError } from '#/components/ui/field'
+import { useActiveProfile } from '#/context/activeProfile'
 import { Permissions, hasPermissions } from '@marketplace/shared'
-
-// --- Query options ---
-
-export function profileLocationsQueryOptions(profileId: string) {
-  return queryOptions({
-    queryKey: ['locations', 'profile', profileId] as const,
-    queryFn: async () => {
-      const { data, error } = await api.profiles({ id: profileId }).locations.get()
-      if (error) throw error
-      return data ?? []
-    },
-    enabled: !!profileId,
-  })
-}
-
-// --- Zod schema ---
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
+import { LocationField } from './-components/LocationField'
+import { PricingField } from './-components/PricingField'
 
 const schema = z.object({
   postType:    z.enum(['OFFER', 'REQUEST']),
@@ -68,11 +44,9 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-// --- Route ---
-
 export const Route = createFileRoute('/_app/create-post')({
-  beforeLoad: ({ context: { user } }) => {
-    if (!user) throw redirect({ to: '/login' })
+  beforeLoad: ({ context: { user }, location }) => {
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
     const canCreatePosts = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsCreate])
     if (!canCreatePosts) throw redirect({ to: '/' })
   },
@@ -82,8 +56,6 @@ export const Route = createFileRoute('/_app/create-post')({
   component: CreatePostPage,
 })
 
-// --- Page ---
-
 function CreatePostPage() {
   const navigate = useNavigate()
   const router = useRouter()
@@ -92,9 +64,6 @@ function CreatePostPage() {
   const [isManualLocation, setIsManualLocation] = useState(false)
 
   const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions)
-  const { data: previousLocations = [] } = useQuery(
-    profileLocationsQueryOptions(activeProfile?.userProfileId ?? ''),
-  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -118,7 +87,6 @@ function CreatePostPage() {
   const { isValid } = form.formState
   const priceValue = form.watch('price')
 
-  // Clear rateType when price is removed
   useEffect(() => {
     if (!priceValue) {
       form.setValue('rateType', undefined, { shouldValidate: true })
@@ -183,14 +151,12 @@ function CreatePostPage() {
       <BackButton onClick={() => router.history.back()} />
 
       {activeProfile && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+        <div className="mb-6 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-100 dark:bg-blue-500/20 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-600">
-              <User className="size-5 text-white" />
-            </div>
+            <ProfileAvatar name={activeProfile.name} className="size-10 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Posting as</p>
-              <p className="font-semibold text-blue-900 dark:text-blue-100">{activeProfile.name}</p>
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Posting as</p>
+              <p className="font-semibold text-foreground">{activeProfile.name}</p>
             </div>
           </div>
         </div>
@@ -205,44 +171,45 @@ function CreatePostPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Post Type */}
             <Controller
               control={form.control}
               name="postType"
               render={({ field }) => (
                 <Field>
                   <FieldLabel className="text-base font-semibold">Type *</FieldLabel>
-                  <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border">
+                  <ToggleGroup
+                    value={field.value ? [field.value] : []}
+                    onValueChange={(vals) => { const v = vals[vals.length - 1]; if (v) field.onChange(v) }}
+                    className="grid grid-cols-2 overflow-hidden rounded-lg border p-0"
+                  >
                     {(['OFFER', 'REQUEST'] as const).map((type) => (
-                      <button
+                      <ToggleGroupItem
                         key={type}
-                        type="button"
-                        onClick={() => field.onChange(type)}
+                        value={type}
                         className={[
-                          'px-4 py-3 text-sm font-medium transition-colors',
+                          'h-11 rounded-none',
                           field.value === type
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'aria-pressed:bg-primary aria-pressed:text-primary-foreground'
                             : 'bg-background text-foreground hover:bg-muted',
                           type === 'OFFER' ? 'border-r' : '',
                         ].join(' ')}
                       >
                         {type === 'OFFER' ? 'Offering Service' : 'Requesting Service'}
-                      </button>
+                      </ToggleGroupItem>
                     ))}
-                  </div>
+                  </ToggleGroup>
                 </Field>
               )}
             />
 
-            {/* Title */}
             <Controller
               control={form.control}
               name="postTitle"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
-                      <FileText className="size-5 text-blue-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20">
+                      <FileText className="size-5 text-blue-600 dark:text-blue-300" />
                     </div>
                     <FieldLabel htmlFor="postTitle" className="text-base font-semibold">Title *</FieldLabel>
                   </div>
@@ -258,15 +225,14 @@ function CreatePostPage() {
               )}
             />
 
-            {/* Description */}
             <Controller
               control={form.control}
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950">
-                      <AlignLeft className="size-5 text-purple-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <AlignLeft className="size-5 text-muted-foreground" />
                     </div>
                     <FieldLabel htmlFor="description" className="text-base font-semibold">Description *</FieldLabel>
                   </div>
@@ -283,15 +249,14 @@ function CreatePostPage() {
               )}
             />
 
-            {/* Categories */}
             <Controller
               control={form.control}
               name="categoryIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
-                      <Tag className="size-5 text-green-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-500/20">
+                      <Tag className="size-5 text-green-600 dark:text-green-300" />
                     </div>
                     <FieldLabel className="text-base font-semibold">Categories (Optional)</FieldLabel>
                   </div>
@@ -310,186 +275,14 @@ function CreatePostPage() {
               )}
             />
 
-            {/* Location */}
-            <Field className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950">
-                    <MapPin className="size-5 text-orange-600" />
-                  </div>
-                  <span className="text-base font-semibold">Location (Optional)</span>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-2"
-                  onClick={handleToggleLocation}
-                >
-                  <MapPin className="size-4" />
-                  {isManualLocation ? 'Use Previous Location' : 'Enter New Location'}
-                </Button>
-              </div>
+            <LocationField
+              control={form.control}
+              profileId={activeProfile?.userProfileId ?? ''}
+              isManualLocation={isManualLocation}
+              onToggle={handleToggleLocation}
+            />
 
-              {!isManualLocation ? (
-                <Controller
-                  control={form.control}
-                  name="locationId"
-                  render={({ field }) => (
-                    <div className="space-y-2">
-                      <Select value={field.value} onValueChange={(v) => { field.onChange(v); field.onBlur() }} disabled={previousLocations.length === 0}>
-                        <SelectTrigger className="!h-11 w-full">
-                          <SelectValue placeholder="Select from your previous locations">
-                            {field.value
-                              ? formatLocation(
-                                  previousLocations.find((l) => l.locationId === field.value) ?? {},
-                                ) || undefined
-                              : undefined}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60 overflow-y-auto">
-                          {previousLocations.map((loc) => (
-                            <SelectItem key={loc.locationId} value={loc.locationId}>
-                              {formatLocation(loc)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {previousLocations.length === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          No previous locations. Click 'Enter New Location' to add one.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                />
-              ) : (
-                <Card className="border-2 border-dashed bg-muted/50">
-                  <CardContent className="space-y-4 pt-6">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Controller
-                        control={form.control}
-                        name="country"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="country">Country</FieldLabel>
-                            <Input {...field} id="country" placeholder="e.g., Czech Republic" aria-invalid={fieldState.invalid} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )}
-                      />
-                      <Controller
-                        control={form.control}
-                        name="region"
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="region">Region/State</FieldLabel>
-                            <Input {...field} id="region" placeholder="e.g., South Moravian Region" aria-invalid={fieldState.invalid} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )}
-                      />
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name="city"
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="city">City</FieldLabel>
-                          <Input {...field} id="city" placeholder="e.g., Brno" aria-invalid={fieldState.invalid} />
-                          <FieldError errors={[fieldState.error]} />
-                        </Field>
-                      )}
-                    />
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <Controller
-                        control={form.control}
-                        name="street"
-                        render={({ field }) => (
-                          <Field className="md:col-span-2">
-                            <FieldLabel htmlFor="street">Street</FieldLabel>
-                            <Input {...field} id="street" placeholder="e.g., Botanická" />
-                          </Field>
-                        )}
-                      />
-                      <Controller
-                        control={form.control}
-                        name="houseNumber"
-                        render={({ field }) => (
-                          <Field>
-                            <FieldLabel htmlFor="houseNumber">House No.</FieldLabel>
-                            <Input {...field} id="houseNumber" placeholder="e.g., 68a" />
-                          </Field>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </Field>
-
-            {/* Pricing */}
-            <Field className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
-                  <DollarSign className="size-5 text-emerald-600" />
-                </div>
-                <span className="text-base font-semibold">Pricing (Optional)</span>
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Controller
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel htmlFor="price">Price ($)</FieldLabel>
-                      <Input
-                        {...field}
-                        id="price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        className="h-11"
-                      />
-                    </Field>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="rateType"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Rate Type</FieldLabel>
-                      <Select
-                        value={field.value ?? ''}
-                        onValueChange={(v) => { field.onChange(v); field.onBlur() }}
-                        disabled={!priceValue}
-                      >
-                        <SelectTrigger className="!h-11 w-full">
-                          <SelectValue placeholder="Select rate type">
-                            {field.value === 'HOURLY'
-                              ? 'Hourly Rate'
-                              : field.value === 'DAILY'
-                                ? 'Daily Rate'
-                                : field.value === 'FIXED'
-                                  ? 'Fixed Price'
-                                  : undefined}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="HOURLY">Hourly Rate</SelectItem>
-                          <SelectItem value="DAILY">Daily Rate</SelectItem>
-                          <SelectItem value="FIXED">Fixed Price</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FieldError errors={[fieldState.error]} />
-                    </Field>
-                  )}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">Leave price empty if negotiable</p>
-            </Field>
+            <PricingField control={form.control} priceValue={priceValue} />
 
             {mutation.isError && (
               <FieldError errors={[{ message: 'Failed to create post. Please try again.' }]} />

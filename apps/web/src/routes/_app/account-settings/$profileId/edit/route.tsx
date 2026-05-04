@@ -1,9 +1,9 @@
-import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-router'
+import { useState, useEffect, useRef } from 'react'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
 import { api } from '#/api'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
-import { buttonVariants } from '#/components/ui/button'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { BackButton } from '#/components/BackButton'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
@@ -11,7 +11,7 @@ import {
   ImageInputSection,
   type ProfileFormValues,
 } from '../../-components/ProfileForm'
-import { imagesQueryOptions, profileQueryOptions } from '#/lib/profileQueries'
+import { imagesQueryOptions, profileQueryOptions } from '#/lib/queries/profiles'
 
 export const Route = createFileRoute('/_app/account-settings/$profileId/edit')({
   loader: async ({ context: { queryClient }, params }) => {
@@ -41,7 +41,7 @@ function EditSkeleton() {
   )
 }
 
-export function EditProfilePage() {
+function EditProfilePage() {
   const { profileId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -51,7 +51,16 @@ export function EditProfilePage() {
 
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
 
-  const patchMutation = useMutation({
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
+
+  const pendingFilesRef = useRef(pendingFiles)
+  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
+  useEffect(() => () => {
+    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+  }, [])
+
+  const saveMutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
       const { error } = await api.profiles({ id: profileId }).patch({
         name:        values.name,
@@ -61,33 +70,44 @@ export function EditProfilePage() {
         fax:         values.fax || null,
       })
       if (error) throw error
+
+      await Promise.all(pendingFiles.map(({ file }) =>
+        api.images.post({ file, profileId }).then(({ error }) => { if (error) throw error })
+      ))
+
+      await Promise.all(pendingDeletes.map(imageId =>
+        api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw error })
+      ))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       queryClient.invalidateQueries({ queryKey: profileQueryOptions(profileId).queryKey })
+      queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profileId).queryKey })
       navigate({ to: '/account-settings' })
     },
   })
 
-  const addImageMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const { error } = await api.images.post({ file, profileId })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profileId).queryKey })
-    },
-  })
+  const visibleImages = images.filter(img => !pendingDeletes.includes(img.imageId))
+  const previews = [
+    ...visibleImages.map(img => img.link),
+    ...pendingFiles.map(f => f.preview),
+  ]
 
-  const deleteImageMutation = useMutation({
-    mutationFn: async (imageId: string) => {
-      const { error } = await api.images({ id: imageId }).delete()
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profileId).queryKey })
-    },
-  })
+  function addFile(file: File) {
+    const preview = URL.createObjectURL(file)
+    setPendingFiles(prev => [...prev, { file, preview }])
+  }
+
+  function removeAt(index: number) {
+    if (index < visibleImages.length) {
+      setPendingDeletes(prev => [...prev, visibleImages[index]!.imageId])
+    } else {
+      const pendingIndex = index - visibleImages.length
+      const preview = pendingFiles[pendingIndex]?.preview
+      if (preview) URL.revokeObjectURL(preview)
+      setPendingFiles(prev => prev.filter((_, i) => i !== pendingIndex))
+    }
+  }
 
   const defaultValues: ProfileFormValues = {
     name:        profile.name,
@@ -99,35 +119,23 @@ export function EditProfilePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <Link to="/account-settings" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-          <ArrowLeft className="mr-1 size-4" />
-          Back
-        </Link>
-      </div>
+      <BackButton onClick={() => navigate({ to: '/account-settings' })} />
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>
-          {patchMutation.isError && (
-            <p className="text-sm text-destructive">{(patchMutation.error as Error).message}</p>
-          )}
-          {addImageMutation.isError && (
-            <p className="text-sm text-destructive">{(addImageMutation.error as Error).message}</p>
+          <h1 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Update your profile information</h1>
+          {saveMutation.isError && (
+            <p className="text-sm text-destructive">{(saveMutation.error as Error).message}</p>
           )}
           <ProfileForm
             defaultValues={defaultValues}
-            onSubmit={(v) => patchMutation.mutate(v)}
+            onSubmit={(v) => saveMutation.mutate(v)}
             submitLabel="Save Changes"
-            isPending={patchMutation.isPending}
+            isPending={saveMutation.isPending}
           >
             <ImageInputSection
-              previews={images.map(img => img.link)}
-              onFilePicked={(file) => addImageMutation.mutate(file)}
-              onRemove={(i) => {
-                const img = images[i]
-                if (img) deleteImageMutation.mutate(img.imageId)
-              }}
-              isUploading={addImageMutation.isPending}
+              previews={previews}
+              onFilePicked={addFile}
+              onRemove={removeAt}
             />
           </ProfileForm>
         </CardContent>

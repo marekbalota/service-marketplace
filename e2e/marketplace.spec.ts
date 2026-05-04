@@ -4,6 +4,11 @@ test.describe('My Postings', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
     await page.goto('/my-postings')
   })
 
@@ -112,6 +117,11 @@ test.describe('Account Settings — Profile CRUD', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
     await page.goto('/account-settings')
   })
 
@@ -126,19 +136,20 @@ test.describe('Account Settings — Profile CRUD', () => {
   test('create — navigates to create page and back', async ({ page }) => {
     await page.getByRole('link', { name: /add profile/i }).click()
     await expect(page).toHaveURL('/account-settings/create')
-    await expect(page.getByText(/add a new user profile/i)).toBeVisible()
-    await page.getByRole('link', { name: /back/i }).click()
+    await expect(page.getByText(/add a new profile to your account/i)).toBeVisible()
+    await page.getByRole('button', { name: /back/i }).click()
     await expect(page).toHaveURL('/account-settings')
   })
 
   test('create — fills form and submits, new profile appears in list', async ({ page }) => {
     const uniqueEmail = `e2e-profile-${Date.now()}@example.com`
     await page.getByRole('link', { name: /add profile/i }).click()
-    await page.getByLabel(/name/i).fill('E2E Test Profile')
-    await page.getByLabel(/email/i).fill(uniqueEmail)
+    await expect(page).toHaveURL('/account-settings/create')
+    await page.getByPlaceholder('e.g., John Smith').fill('E2E Test Profile')
+    await page.getByPlaceholder('email@example.com').fill(uniqueEmail)
     await page.getByRole('button', { name: /create profile/i }).click()
     await page.waitForURL('/account-settings')
-    await expect(page.getByText('E2E Test Profile')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'E2E Test Profile' }).first()).toBeVisible()
   })
 
   test('edit — navigates to edit page, updates name, returns to list', async ({ page }) => {
@@ -147,7 +158,7 @@ test.describe('Account Settings — Profile CRUD', () => {
     await editLinks.first().click()
     await expect(page).toHaveURL(/\/account-settings\/[^/]+\/edit/)
     await expect(page.getByText(/update your profile information/i)).toBeVisible()
-    await page.getByRole('link', { name: /back/i }).click()
+    await page.getByRole('button', { name: /back/i }).click()
     await expect(page).toHaveURL('/account-settings')
   })
 
@@ -168,26 +179,199 @@ test.describe('Account Settings — Profile CRUD', () => {
   })
 })
 
+test.describe('Create Post', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto('/create-post')
+  })
+
+  test('shows the create new posting form', async ({ page }) => {
+    await expect(page.getByText('Create New Posting')).toBeVisible()
+  })
+
+  test('creates a post and redirects to My Postings', async ({ page }) => {
+    const uniqueTitle = `E2E Lawn Care ${Date.now()}`
+    await page.getByPlaceholder(/Professional Lawn Care Service/i).fill(uniqueTitle)
+    await page.getByPlaceholder(/Describe your service offering or request in detail/i).fill(
+      'This is an e2e test post with enough text to pass the 10 character minimum.',
+    )
+    await page.getByRole('button', { name: /create posting/i }).click()
+    await page.waitForURL('/my-postings')
+    await expect(page.getByText(uniqueTitle)).toBeVisible()
+  })
+})
+
+test.describe('Messages', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    // Wait for user data to load so activeProfile is set in localStorage before navigating elsewhere
+    await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
+  })
+
+  test('shows the messages page heading', async ({ page }) => {
+    await page.goto('/messages')
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible()
+  })
+
+  test('sends a message from a post and lands on the thread page', async ({ page }) => {
+    // Navigate to posts page first
+    await page.goto('/posts')
+
+    // Search for Carol's posts by name to get a non-alice post
+    await page.getByPlaceholder('Search services, providers, or keywords...').fill('Carol White')
+    await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
+    // Wait for post cards to be visible (not just in DOM)
+    await expect(page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first()).toBeVisible({ timeout: 10000 })
+
+    // Click on the first post card by Carol
+    const carolPost = page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first()
+    await carolPost.click()
+
+    // Wait for navigation to complete (URL may have query params, so wait for /posts/:id pattern)
+    await page.waitForURL(/\/posts\/[0-9a-f-]+$/)
+
+    // Wait for the post detail page to fully load and messaging section to appear
+    // The SendMessageSection only renders when activeProfile exists and user is NOT the post owner
+    const sendMessageBtn = page.getByRole('button', { name: /send message/i })
+    const goToChat = page.getByRole('link', { name: /go to chat/i })
+
+    // Wait for either Send Message button or Go to Chat link to appear
+    await sendMessageBtn.waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
+      await goToChat.waitFor({ state: 'visible', timeout: 5000 })
+    })
+
+    if (await goToChat.isVisible()) {
+      // A thread already exists from a previous run — follow it
+      await goToChat.click()
+    } else {
+      await sendMessageBtn.click()
+      await page.getByPlaceholder(/write your message/i).fill('Hello, I am interested in this service!')
+      await page.getByRole('button', { name: /^send$/i }).click()
+    }
+
+    await expect(page).toHaveURL(/\/messages\/[0-9a-f-]+$/)
+  })
+})
+
+test.describe('Admin', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
+    await page.getByLabel(/password/i).fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+  })
+
+  test('shows the admin dashboard', async ({ page }) => {
+    await page.goto('/admin')
+    await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible()
+  })
+
+  test('shows the manage accounts page', async ({ page }) => {
+    await page.goto('/admin/users')
+    await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
+  })
+
+  test('shows the roles management page', async ({ page }) => {
+    await page.goto('/admin/roles')
+    await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
+  })
+
+  test('Manage Accounts card navigates to /admin/users', async ({ page }) => {
+    await page.goto('/admin')
+    await page.getByRole('link', { name: /manage accounts/i }).click()
+    await expect(page).toHaveURL('/admin/users')
+    await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
+  })
+
+  test('Manage Roles card navigates to /admin/roles', async ({ page }) => {
+    await page.goto('/admin')
+    await page.getByRole('link', { name: /manage roles/i }).click()
+    await expect(page).toHaveURL('/admin/roles')
+    await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
+  })
+
+  test('View button navigates to user detail page', async ({ page }) => {
+    await page.goto('/admin/users')
+    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]+$/)
+    await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
+  })
+
+  test('creates a new role via RoleDialog', async ({ page }) => {
+    const roleName = `E2E Role ${Date.now()}`
+    await page.goto('/admin/roles')
+    await page.getByRole('button', { name: /^create role$/i }).click()
+    await page.getByLabel(/role name/i).fill(roleName)
+    await page.getByLabel(/description/i).fill('Created by e2e test')
+    await page.getByRole('button', { name: /^create role$/i }).last().click()
+    await expect(page.getByText(roleName)).toBeVisible()
+  })
+
+  test('bans and unbans a user', async ({ page }) => {
+    await page.goto('/admin/users')
+    // Target the first user with a Ban button (exclude SuperAdmin - no Ban button for higher/equal priority roles)
+    const userName = page.getByRole('heading', { level: 3 }).first()
+    const userCard = userName.locator('..').locator('..').locator('..')
+    await userCard.getByRole('button', { name: /^ban$/i }).click()
+    await page.getByPlaceholder(/describe the reason for this ban/i).fill('E2E test ban')
+    await page.getByRole('button', { name: /^ban user$/i }).click()
+    await expect(userCard.getByText('banned')).toBeVisible()
+
+    await userCard.getByRole('button', { name: /^unban$/i }).click()
+    await page.getByRole('button', { name: /^confirm$/i }).click()
+    await expect(userCard.getByText('active')).toBeVisible()
+  })
+})
+
+test.describe('Banned page', () => {
+  test('shows account suspended UI and redirects home on acknowledge', async ({ page }) => {
+    // Seed the ban info that the banned page reads from sessionStorage
+    await page.goto('/')
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        'banInfo',
+        JSON.stringify({ reason: 'E2E test ban', expiresAt: null }),
+      )
+    })
+    await page.goto('/banned')
+
+    await expect(page.getByText(/account suspended/i)).toBeVisible()
+    await expect(page.getByText(/E2E test ban/)).toBeVisible()
+    await expect(page.getByText(/permanent/i)).toBeVisible()
+
+    await page.getByRole('button', { name: /i understand/i }).click()
+    await expect(page).toHaveURL('/posts')
+  })
+})
+
 test.describe('Authentication', () => {
   const testEmail = `e2e-${Date.now()}@example.com`
   const testPassword = 'password123'
   const testName = 'E2E Test User'
 
-  test('register — fills form, submits, lands on home page logged in', async ({ page }) => {
+  test('register — fills form, submits, lands on verify-email page', async ({ page }) => {
     await page.goto('/register')
     await page.getByLabel(/name/i).fill(testName)
-    await page.getByLabel(/email/i).fill(testEmail)
+    await page.getByRole('textbox', { name: /email/i }).fill(testEmail)
     await page.getByLabel(/password/i).fill(testPassword)
     await page.getByRole('button', { name: /register/i }).click()
 
-    await page.waitForURL('/posts')
-    // Profile menu trigger is present — the user is authenticated
-    await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
+    await page.waitForURL(/\/verify-email/)
+    await expect(page.getByText(new RegExp(`We sent a verification link to ${testEmail}`))).toBeVisible()
   })
 
   test('login — fills form, submits, lands on home page logged in', async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
@@ -197,14 +381,14 @@ test.describe('Authentication', () => {
 
   test('my-postings — redirects to /login when not authenticated', async ({ page }) => {
     await page.goto('/my-postings')
-    await page.waitForURL('/login')
+    await page.waitForURL(/\/login/)
     // CardTitle renders as a <div>, not a heading — use text matcher
     await expect(page.getByText('Welcome Back')).toBeVisible()
   })
 
   test('logout — clears session, shows login link in header', async ({ page }) => {
     await page.goto('/login')
-    await page.getByLabel(/email/i).fill('alice@example.com')
+    await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.getByLabel(/password/i).fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
@@ -212,5 +396,47 @@ test.describe('Authentication', () => {
     await page.getByTestId('profile-menu-trigger').click()
     await page.getByRole('button', { name: /log out/i }).click()
     await expect(page.getByRole('link', { name: /log in/i })).toBeVisible()
+  })
+})
+
+test.describe('Email verification', () => {
+  test('register redirects to /verify-email with email shown', async ({ page }) => {
+    const uniqueEmail = `e2e-verify-${Date.now()}@example.com`
+
+    await page.goto('/register')
+    await page.getByLabel(/full name/i).fill('E2E Verify User')
+    await page.getByRole('textbox', { name: /email/i }).fill(uniqueEmail)
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /register/i }).click()
+
+    await page.waitForURL('/verify-email**')
+    await expect(page.getByText(new RegExp(uniqueEmail, 'i')).first()).toBeVisible()
+    await expect(page.getByText(/check your email/i)).toBeVisible()
+  })
+
+  test('invalid verification link shows error state on callback page', async ({ page }) => {
+    await page.goto('/verify-email/callback?error=invalid_token')
+    await expect(
+      page.getByRole('heading', { name: /link expired or invalid/i }),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: /go to sign in/i })).toBeVisible()
+  })
+
+  test('valid callback page shows success state and redirects to home', async ({ page }) => {
+    await page.goto('/verify-email/callback')
+    await expect(page.getByRole('heading', { name: /email verified!/i })).toBeVisible()
+    await expect(page.getByText(/signing you in/i)).toBeVisible()
+    await page.waitForURL('/', { timeout: 5000 })
+  })
+
+  test('login with unverified account redirects to /verify-email', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('unverified@example.com')
+    await page.getByLabel(/password/i).fill('password123')
+    await page.getByRole('button', { name: /log in/i }).click()
+
+    await page.waitForURL('/verify-email**')
+    await expect(page.getByText(/check your email/i)).toBeVisible()
+    await expect(page.getByText(/unverified@example\.com/i).first()).toBeVisible()
   })
 })

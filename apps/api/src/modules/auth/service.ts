@@ -8,6 +8,8 @@ import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
 
+export const verificationTokenStore = new Map<string, string>();
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
   trustedOrigins: [
@@ -34,6 +36,20 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url, token }) => {
+      const verifyUrl = new URL(url);
+      verifyUrl.searchParams.set("callbackURL", "http://localhost:3000/verify-email/callback");
+      if (process.env.NODE_ENV === "test") {
+        verificationTokenStore.set(user.email, token);
+      }
+      console.log(`[email-verify] ${user.email} → ${verifyUrl.toString()}`);
+    },
   },
   advanced: {
     database: {

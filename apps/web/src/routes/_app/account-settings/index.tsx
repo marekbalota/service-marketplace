@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Plus, Edit, Trash2, CheckCircle2, User, Eye, Phone, Printer } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
+import { PageHeader } from '#/components/PageHeader'
 import { api } from '#/api'
-import { currentUserQueryOptions, useCurrentUser } from '#/lib/userQueries'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { useActiveProfile } from '#/context/activeProfile'
 import type { UserProfile } from '#/types/api'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
@@ -84,15 +86,14 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
   )
 }
 
-function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: boolean }) {
+
+function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isActive: boolean; isOnly: boolean }) {
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-1 items-start gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] shadow-md">
-              <User className="size-7 text-white" />
-            </div>
+            <ProfileAvatar name={profile.name} className="size-14 shrink-0 shadow-md" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold">{profile.name}</h3>
@@ -147,7 +148,7 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
               <Edit className="size-4" />
               Edit
             </Link>
-            <DeleteProfileButton profile={profile} />
+            {!isOnly && <DeleteProfileButton profile={profile} />}
           </div>
         </div>
       </CardContent>
@@ -155,26 +156,26 @@ function ProfileCard({ profile, isActive }: { profile: UserProfile; isActive: bo
   )
 }
 
-export function AccountSettingsPage() {
+function AccountSettingsPage() {
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const profiles = user?.profiles ?? []
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Account Settings</h1>
-          <p className="mt-1 text-muted-foreground">Manage your user profiles and account settings</p>
-        </div>
-        <Link
-          to="/account-settings/create"
-          className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
-        >
-          <Plus className="size-4" />
-          Add Profile
-        </Link>
-      </div>
+      <PageHeader
+        title="Account Settings"
+        description="Manage your user profiles and account settings"
+        action={
+          <Link
+            to="/account-settings/create"
+            className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
+          >
+            <Plus className="size-4" />
+            Add Profile
+          </Link>
+        }
+      />
 
       <div className="space-y-4">
         {profiles.map((profile) => (
@@ -182,6 +183,7 @@ export function AccountSettingsPage() {
             key={profile.userProfileId}
             profile={profile}
             isActive={profile.userProfileId === activeProfile?.userProfileId}
+            isOnly={profiles.length === 1}
           />
         ))}
       </div>

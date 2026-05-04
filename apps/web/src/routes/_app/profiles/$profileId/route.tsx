@@ -1,10 +1,10 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
-import { User } from 'lucide-react'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { BackButton } from '#/components/BackButton'
-import { profileQueryOptions, imagesQueryOptions } from '#/lib/profileQueries'
+import { profileQueryOptions, imagesQueryOptions } from '#/lib/queries/profiles'
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   loader: async ({ context: { queryClient }, params: { profileId } }) => {
@@ -41,7 +41,7 @@ function ProfileViewSkeleton() {
   )
 }
 
-export function ProfileViewPage() {
+function ProfileViewPage() {
   const { profileId } = Route.useParams()
   const router = useRouter()
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
@@ -53,9 +53,7 @@ export function ProfileViewPage() {
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] shadow-md">
-              <User className="size-8 text-white" />
-            </div>
+            <ProfileAvatar name={profile.name} className="size-16 shrink-0 shadow-md" />
             <div>
               <h1 className="text-2xl font-semibold">{profile.name}</h1>
               <p className="text-sm text-muted-foreground">{profile.email}</p>

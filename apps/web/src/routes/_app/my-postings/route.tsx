@@ -1,72 +1,39 @@
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { queryOptions, useSuspenseQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Plus } from 'lucide-react'
 import { api } from '#/api'
 import { PostCard } from '#/components/PostCard'
-import { PostCardSkeleton } from '#/components/PostCardSkeleton'
 import { EmptyState } from '#/components/EmptyState'
 import { PageHeader } from '#/components/PageHeader'
-import { useActiveProfile } from '#/hooks/useActiveProfile'
+import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
+import { ConfirmDialog } from '#/components/ConfirmDialog'
+import { useActiveProfile } from '#/context/activeProfile'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '#/components/ui/pagination'
-import { buildPageNumbers } from '#/routes/_app/posts/index'
+import { PaginationBar } from '#/components/PaginationBar'
+import { profilePostsQueryOptions } from '#/lib/queries/profiles'
 
-const PAGE_SIZE = 12
+type Post = { postId: string; postTitle: string }
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
 })
 
-export function myPostingsQueryOptions(profileId: string, page: number) {
-  return queryOptions({
-    queryKey: ['profiles', profileId, 'posts', { page }],
-    queryFn: async () => {
-      const { data, error } = await api.profiles({ id: profileId }).posts.get({
-        query: {
-          offset: (page - 1) * PAGE_SIZE,
-          size:   PAGE_SIZE,
-        },
-      })
-      if (error) throw error
-      return data
-    },
-    placeholderData: keepPreviousData,
-  })
-}
-
 export const Route = createFileRoute('/_app/my-postings')({
   validateSearch: searchSchema,
-  beforeLoad: async ({ context : { user } }) => {
-    if (!user) throw redirect({ to: '/login' })
+  beforeLoad: ({ context: { user }, location }) => {
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
   },
   component: MyPostingsPage,
 })
 
-function PostsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <PostCardSkeleton key={i} />
-      ))}
-    </div>
-  )
-}
-
 function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
   const queryClient = useQueryClient()
-  const { data } = useSuspenseQuery(myPostingsQueryOptions(profileId, page))
+  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page))
   const navigate = Route.useNavigate()
+  const [deleteTarget, setDeleteTarget] = useState<Post | null>(null)
 
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -74,6 +41,7 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
       if (error) throw error
     },
     onSuccess: () => {
+      setDeleteTarget(null)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
     },
@@ -103,53 +71,26 @@ function PostsGrid({ profileId, page }: { profileId: string; page: number }) {
           <PostCard
             key={post.postId}
             post={post}
-            onDelete={() => deleteMutation.mutate(post.postId)}
+            onDelete={() => setDeleteTarget(post)}
             deleteDisabled={deleteMutation.isPending}
           />
         ))}
       </div>
 
       {totalPages > 1 && (
-        <div className="mt-8 flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setPage(page - 1)}
-                  aria-disabled={page <= 1}
-                  className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-
-              {buildPageNumbers(page, totalPages).map((item, i) =>
-                item === 'ellipsis' ? (
-                  <PaginationItem key={`ellipsis-${i}`}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={item}>
-                    <PaginationLink
-                      isActive={item === page}
-                      onClick={() => setPage(item)}
-                      className="cursor-pointer"
-                    >
-                      {item}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setPage(page + 1)}
-                  aria-disabled={page >= totalPages}
-                  className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-8" />
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete post?"
+        description={`This will permanently remove "${deleteTarget?.postTitle ?? ''}". This action cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        onConfirm={async () => { if (deleteTarget) await deleteMutation.mutateAsync(deleteTarget.postId) }}
+        onClose={() => setDeleteTarget(null)}
+      />
     </>
   )
 }
@@ -172,7 +113,7 @@ function MyPostingsPage() {
       />
 
       {activeProfile ? (
-        <Suspense fallback={<PostsSkeleton />}>
+        <Suspense fallback={<PostsGridSkeleton />}>
           <PostsGrid profileId={activeProfile.userProfileId} page={page} />
         </Suspense>
       ) : (

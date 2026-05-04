@@ -6,7 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { useCurrentUser } from '#/lib/userQueries'
+import { useCurrentUser } from '#/lib/queries/users'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -34,19 +34,19 @@ vi.mock('#/api', () => ({
   },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('#/lib/profileQueries', () => ({
+vi.mock('#/lib/queries/profiles', () => ({
   imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
   profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
 }))
 
 // ── Import component and route after mocks ────────────────────────────────────
 
-import { EditProfilePage, Route } from './route'
+import { Route } from './route'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ const alice = {
 // ── Render helper ─────────────────────────────────────────────────────────────
 
 async function renderPage() {
-  const rootRoute = createRootRoute({ component: EditProfilePage })
+  const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
     render(<RouterProvider router={router} />)
@@ -101,9 +101,9 @@ describe('EditProfilePage', () => {
     expect(screen.getByText(/update your profile information/i)).toBeInTheDocument()
   })
 
-  it('renders the Back link', async () => {
+  it('renders the Back button', async () => {
     await renderPage()
-    expect(screen.getByRole('link', { name: /back/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
   })
 
   it('renders the Save Changes submit button', async () => {

@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
-import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte } from "drizzle-orm";
+import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
 import { ProfilesService } from "../profiles/service";
@@ -39,7 +39,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
-    const { search, type, categoryId, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
 
     if (profileId && accountId !== undefined) {
       const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
@@ -83,12 +83,12 @@ export abstract class PostsService {
           : undefined,
         type       
           ? eq(posts.postType, type) : undefined,
-        categoryId
+        categoryIds && categoryIds.length > 0
           ? exists(
               tx.select().from(postCategories).where(
                 and(
                   eq(postCategories.postId, posts.postId),
-                  eq(postCategories.categoryId, categoryId),
+                  inArray(postCategories.categoryId, categoryIds),
                 ),
               ),
             )

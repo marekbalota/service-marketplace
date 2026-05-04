@@ -6,8 +6,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { AccountSettingsPage } from './index'
-import { useCurrentUser } from '#/lib/userQueries'
+import { Route } from './index'
+import { useCurrentUser } from '#/lib/queries/users'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -33,12 +33,12 @@ vi.mock('#/auth', () => ({
   },
 }))
 
-vi.mock('#/lib/userQueries', () => ({
+vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('#/hooks/useActiveProfile', () => ({
+vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: mockUseActiveProfile,
 }))
 
@@ -85,7 +85,7 @@ const bob = {
 // ── Render helper ─────────────────────────────────────────────────────────────
 
 async function renderPage() {
-  const rootRoute = createRootRoute({ component: AccountSettingsPage })
+  const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory(),
@@ -148,5 +148,18 @@ describe('AccountSettingsPage', () => {
     expect(viewLinks).toHaveLength(2)
     expect(editLinks).toHaveLength(2)
     expect(deleteButtons).toHaveLength(2)
+  })
+
+  it('hides the Delete button when there is only one profile', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { ...baseUser, profiles: [alice] },
+    } as ReturnType<typeof useCurrentUser>)
+    mockUseActiveProfile.mockReturnValue({
+      activeProfile: alice,
+      allProfiles: [alice],
+      setActiveProfileId: vi.fn(),
+    })
+    await renderPage()
+    expect(screen.queryByRole('button', { name: /delete/i })).toBeNull()
   })
 })

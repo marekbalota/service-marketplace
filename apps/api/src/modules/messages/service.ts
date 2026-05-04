@@ -120,7 +120,7 @@ export abstract class MessagesService {
         lastMessage: last
           ? {
               content:   last.content,
-              createdAt: new Date(last.createdAt),
+              createdAt: new Date(`${last.createdAt}Z`), // Treat PostgreSQL timestamp as UTC
               sentByMe:  last.senderId === profileId,
             }
           : null,

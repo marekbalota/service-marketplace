@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { Footer } from '#/components/Footer'
 import { Header } from '#/components/Header'
-import { currentUserQueryOptions } from '#/lib/userQueries'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 
 export const Route = createFileRoute('/_app')({
   component: AppLayout,
