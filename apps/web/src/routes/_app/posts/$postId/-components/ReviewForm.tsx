@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,7 +48,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
         postId,
         profileId: activeProfile.userProfileId,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to submit review.')
       return result
     },
     onSuccess: () => {
@@ -55,7 +56,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       onSuccess()
     },
     onError: (err) => {
-      setError((err as any)?.value?.message ?? 'Failed to submit review')
+      setError(err.message)
     },
   })
 

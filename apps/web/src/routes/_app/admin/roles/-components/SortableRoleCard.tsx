@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { Edit, Trash2, GripVertical, Star, Loader2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -39,7 +40,7 @@ export function SortableRoleCard({
   const updateMutation = useMutation({
     mutationFn: async ({ name, description, permissionIds }: RoleValues) => {
       const { error } = await api.admin.roles({ id: role.roleId }).patch({ name, description, permissionIds })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to update role.')
     },
     onSuccess: () => {
       setEditOpen(false)

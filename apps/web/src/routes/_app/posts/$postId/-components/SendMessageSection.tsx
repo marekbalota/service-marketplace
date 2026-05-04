@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { Link, useRouter } from '@tanstack/react-router'
 import { MessageSquare } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -29,7 +30,7 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
   const send = useMutation({
     mutationFn: async () => {
       const { data, error } = await api.threads.post({ profileId, postId, content: draft })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to send message.')
       return data
     },
     onSuccess: (data) => {

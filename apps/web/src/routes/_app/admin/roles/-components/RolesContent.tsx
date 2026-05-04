@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   DndContext,
@@ -53,7 +54,7 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await api.admin.roles({ id: roleId }).delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to delete role.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
@@ -64,7 +65,7 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   const setDefaultMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await api.admin.roles({ id: roleId }).default.patch()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to set default role.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
@@ -75,7 +76,7 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   const reorderMutation = useMutation({
     mutationFn: async ({ roleId, newPriority }: { roleId: string; newPriority: number }) => {
       const { error } = await api.admin.roles.reorder.patch({ roleId, newPriority })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to reorder roles.')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
     onError: () => setRoles(rolesData),

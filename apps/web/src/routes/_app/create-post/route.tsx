@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -122,7 +123,7 @@ function CreatePostPage() {
           : { locationId: values.locationId || undefined }),
       }
       const { data, error } = await api.posts.post(body)
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create post.')
       return data
     },
     onSuccess: () => {
@@ -285,7 +286,7 @@ function CreatePostPage() {
             <PricingField control={form.control} priceValue={priceValue} />
 
             {mutation.isError && (
-              <FieldError errors={[{ message: (mutation.error as any)?.value?.message ?? 'Failed to create post. Please try again.' }]} />
+              <FieldError errors={[{ message: mutation.error?.message }]} />
             )}
 
             <div className="flex gap-3 pt-6">

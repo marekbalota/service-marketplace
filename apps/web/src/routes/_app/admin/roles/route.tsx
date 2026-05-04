@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
@@ -68,7 +69,7 @@ function CreateRoleAction({ userPermissionNames }: { userPermissionNames: string
   const createMutation = useMutation({
     mutationFn: async (values: RoleValues) => {
       const { error } = await api.admin.roles.post(values)
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create role.')
     },
     onSuccess: () => {
       setIsCreateOpen(false)

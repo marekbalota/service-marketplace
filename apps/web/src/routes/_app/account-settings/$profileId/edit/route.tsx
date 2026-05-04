@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
@@ -69,14 +70,14 @@ function EditProfilePage() {
         phoneNumber: values.phoneNumber || null,
         fax:         values.fax || null,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to save profile.')
 
       await Promise.all(pendingFiles.map(({ file }) =>
-        api.images.post({ file, profileId }).then(({ error }) => { if (error) throw error })
+        api.images.post({ file, profileId }).then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to upload image.') })
       ))
 
       await Promise.all(pendingDeletes.map(imageId =>
-        api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw error })
+        api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to delete image.') })
       ))
     },
     onSuccess: () => {
@@ -124,7 +125,7 @@ function EditProfilePage() {
         <CardContent className="p-6 space-y-4">
           <h1 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Update your profile information</h1>
           {saveMutation.isError && (
-            <p className="text-sm text-destructive">{(saveMutation.error as any)?.value?.message ?? 'Failed to save profile.'}</p>
+            <p className="text-sm text-destructive">{saveMutation.error?.message}</p>
           )}
           <ProfileForm
             defaultValues={defaultValues}

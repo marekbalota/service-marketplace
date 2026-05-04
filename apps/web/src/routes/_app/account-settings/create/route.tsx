@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
@@ -36,7 +37,7 @@ function CreateProfilePage() {
         phoneNumber: values.phoneNumber || undefined,
         fax:         values.fax || undefined,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create profile.')
 
       let failedCount = 0
       if (data && 'userProfileId' in data) {
@@ -105,7 +106,7 @@ function CreateProfilePage() {
         <CardContent className="p-6 space-y-4">
           <h1 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Add a new profile to your account</h1>
           {mutation.isError && (
-            <p className="text-sm text-destructive">{(mutation.error as any)?.value?.message ?? 'Failed to create profile.'}</p>
+            <p className="text-sm text-destructive">{mutation.error?.message}</p>
           )}
           <ProfileForm
             defaultValues={defaultValues}
