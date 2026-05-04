@@ -3,6 +3,7 @@ import { useNavigate, useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { authClient } from '#/auth'
 import { useCurrentUser, currentUserQueryOptions } from '#/lib/queries/users'
+import { ApiError } from '#/lib/api-error'
 
 export function useStopImpersonating(options?: { onSuccess?: () => void }) {
   const { data: user } = useCurrentUser()
@@ -13,11 +14,16 @@ export function useStopImpersonating(options?: { onSuccess?: () => void }) {
   return useMutation({
     mutationFn: async () => {
       const { error } = await authClient.admin.stopImpersonating()
-      if (error) throw new Error(error.message ?? 'Failed to stop impersonation')
+      if (error) throw new ApiError(error.message ?? 'Failed to stop impersonation')
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      const userId = user?.userId
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-      void navigate({ to: '/admin/users/$userId', params: { userId: user!.userId } })
+      if (userId) {
+        await navigate({ to: '/admin/users/$userId', params: { userId } })
+      } else {
+        await navigate({ to: '/' })
+      }
       router.invalidate()
       options?.onSuccess?.()
     },
