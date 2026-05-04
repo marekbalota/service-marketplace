@@ -151,12 +151,12 @@ function CreatePostPage() {
       <BackButton onClick={() => router.history.back()} />
 
       {activeProfile && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+        <div className="mb-6 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-100 dark:bg-blue-500/20 p-4">
           <div className="flex items-center gap-3">
             <ProfileAvatar name={activeProfile.name} className="size-10 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Posting as</p>
-              <p className="font-semibold text-blue-900 dark:text-blue-100">{activeProfile.name}</p>
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Posting as</p>
+              <p className="font-semibold text-foreground">{activeProfile.name}</p>
             </div>
           </div>
         </div>
@@ -208,8 +208,8 @@ function CreatePostPage() {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
-                      <FileText className="size-5 text-blue-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20">
+                      <FileText className="size-5 text-blue-600 dark:text-blue-300" />
                     </div>
                     <FieldLabel htmlFor="postTitle" className="text-base font-semibold">Title *</FieldLabel>
                   </div>
@@ -231,8 +231,8 @@ function CreatePostPage() {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950">
-                      <AlignLeft className="size-5 text-purple-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <AlignLeft className="size-5 text-muted-foreground" />
                     </div>
                     <FieldLabel htmlFor="description" className="text-base font-semibold">Description *</FieldLabel>
                   </div>
@@ -255,8 +255,8 @@ function CreatePostPage() {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950">
-                      <Tag className="size-5 text-green-600" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-500/20">
+                      <Tag className="size-5 text-green-600 dark:text-green-300" />
                     </div>
                     <FieldLabel className="text-base font-semibold">Categories (Optional)</FieldLabel>
                   </div>

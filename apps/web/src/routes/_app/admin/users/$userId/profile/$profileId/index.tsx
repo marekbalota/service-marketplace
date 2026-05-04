@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
-import { User as UserIcon } from 'lucide-react'
+import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { z } from 'zod'
 import { api } from '#/api'
 import { BackButton } from '#/components/BackButton'
@@ -22,6 +22,11 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_app/admin/users/$userId/profile/$profileId/')({
   validateSearch: searchSchema,
+  loaderDeps: ({ search: { page } }) => ({ page }),
+  loader: ({ context: { queryClient }, params: { profileId }, deps: { page = 1 } }) => {
+    void queryClient.prefetchQuery(profileQueryOptions(profileId))
+    void queryClient.prefetchQuery(profilePostsQueryOptions(profileId, page))
+  },
   component: ProfileDetailPage,
 })
 
@@ -49,22 +54,23 @@ function ProfilePostsContent({
   const setPage = (p: number) =>
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }) })
 
-  const handleDelete = async (_reason?: string) => {
-    if (!deleteTarget) return
-    const { error } = await api.admin.posts({ id: deleteTarget.postId }).delete({})
-    if (error) throw error
-    queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
-    setDeleteTarget(null)
-  }
+  const deleteMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await api.admin.posts({ id: postId }).delete({})
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
+      setDeleteTarget(null)
+    },
+  })
 
   return (
     <>
       <Card className="mb-6">
-        <CardContent className="pt-6">
+        <CardContent className="pt-2">
           <div className="flex items-start gap-4">
-            <div className="size-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md shrink-0">
-              <UserIcon className="size-8 text-white" />
-            </div>
+            <ProfileAvatar name={profile.name} className="size-16 shrink-0 shadow-md" fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-lg" />
             <div className="flex-1">
               <h1 className="text-xl font-semibold mb-0.5">{profile.name}</h1>
               <p className="text-sm text-muted-foreground mb-1">{profile.email}</p>
@@ -111,7 +117,7 @@ function ProfilePostsContent({
         confirmLabel="Delete"
         destructive
         reasonLabel="Reason (optional)"
-        onConfirm={handleDelete}
+        onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId)}
         onClose={() => setDeleteTarget(null)}
       />
     </>

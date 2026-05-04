@@ -1,5 +1,6 @@
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -10,6 +11,7 @@ import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
 const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -52,6 +54,10 @@ const baseProfile = {
   createdAt: new Date().toISOString(),
 }
 
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+}
+
 const basePost = {
   postId: 'post-1',
   postTitle: 'My Test Post',
@@ -72,7 +78,7 @@ async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
-    render(<RouterProvider router={router} />)
+    render(<RouterProvider router={router} />, { wrapper })
   })
 }
 
@@ -87,7 +93,10 @@ describe('ProfileDetailPage', () => {
       if (Array.isArray(key) && key[0] === 'profiles' && key[2] === 'posts') {
         return { data: { items: [], totalPages: 1, total: 0 } }
       }
-      return { data: baseProfile }
+      if (Array.isArray(key) && key[0] === 'profiles') {
+        return { data: baseProfile }
+      }
+      return { data: { items: [], totalPages: 1, total: 0 } }
     })
   })
 

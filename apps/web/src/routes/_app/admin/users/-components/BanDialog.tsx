@@ -53,7 +53,7 @@ export function BanDialog({
   onSubmit: (reason: string, expiresAt?: Date) => Promise<void>
   onClose: () => void
 }) {
-  const { control, handleSubmit, watch, reset, formState } = useForm<BanFormValues>({
+  const { control, handleSubmit, watch, reset, setError, formState } = useForm<BanFormValues>({
     resolver: zodResolver(banFormSchema),
     mode: 'onTouched',
     defaultValues: { reason: '', durationType: 'permanent', expiresAt: '' },
@@ -66,8 +66,12 @@ export function BanDialog({
       values.durationType === 'until-date' && values.expiresAt
         ? new Date(values.expiresAt)
         : undefined
-    await onSubmit(values.reason, expiresAt)
-    reset()
+    try {
+      await onSubmit(values.reason, expiresAt)
+      reset()
+    } catch {
+      setError('root', { message: 'Failed to ban user. Please try again.' })
+    }
   }
 
   return (
@@ -134,11 +138,12 @@ export function BanDialog({
             />
           )}
 
+          <FieldError errors={[formState.errors.root]} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { reset(); onClose() }}>
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={formState.isSubmitting}>
+            <Button type="submit" variant="destructive" disabled={formState.isSubmitting || !formState.isValid}>
               {formState.isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Ban User
             </Button>

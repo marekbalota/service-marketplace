@@ -122,7 +122,7 @@ function EditProfilePage() {
       <BackButton onClick={() => navigate({ to: '/account-settings' })} />
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h1 className="text-lg font-semibold text-nav-browse-fg">Update your profile information</h1>
+          <h1 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Update your profile information</h1>
           {saveMutation.isError && (
             <p className="text-sm text-destructive">{(saveMutation.error as Error).message}</p>
           )}

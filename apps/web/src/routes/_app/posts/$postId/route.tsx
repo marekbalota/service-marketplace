@@ -34,52 +34,36 @@ export const Route = createFileRoute('/_app/posts/$postId')({
 
 function PostDetailSkeleton() {
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6">
+    <main className="mx-auto max-w-4xl px-4 py-6">
       <Skeleton className="mb-4 h-9 w-24" />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader className="space-y-3">
-              <Skeleton className="h-7 w-1/2" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-5 w-20 rounded-full" />
-              </div>
-              <Skeleton className="h-8 w-28" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-24 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="space-y-4 lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-24" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="size-5 rounded-full" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-7 w-1/2" />
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-8 w-28" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+          <Separator />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="size-5 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-24" />
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </main>
   )
 }
@@ -130,176 +114,161 @@ function PostDetailPage() {
   const showReviewButton = !isOwner && activeProfile && !hasReviewed
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6">
+    <main className="mx-auto max-w-4xl px-4 py-6">
       <BackButton onClick={() => router.history.back()} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main column */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Post info card */}
-          <Card className="gap-2">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
-                <div className="flex items-center gap-2">
-                  {isAuthenticated && !isOwner && (
-                    <FavouriteButton postId={postId} />
-                  )}
-                  {isAuthenticated && !isOwner && !!activeProfile && !hasReported && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => setShowReportForm(true)}
-                    >
-                      <Flag className="size-4" />
-                    </Button>
-                  )}
-                  {isOwner && (
-                    <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
-                      <Pencil className="size-4" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <PostTypeBadge postType={post.postType} />
-                <div className="flex flex-wrap gap-2">
-                  {post.categories.map((category) => (
-                    <Badge key={category.categoryId} variant="secondary">
-                      {category.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {price !== null && (
-                <div className="flex items-center gap-1 pt-2">
-                  <DollarSign className="size-6 text-price" />
-                  <span className="text-2xl font-semibold text-price">
-                    {price}
-                    {rateLabel && <span className="text-base"> {rateLabel}</span>}
-                  </span>
-                </div>
+      <Card className="gap-2">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
+            <div className="flex items-center gap-2">
+              {isAuthenticated && !isOwner && (
+                <FavouriteButton postId={postId} />
               )}
-            </CardHeader>
-            <CardContent>
-              <h2 className="mb-2 text-lg font-medium">Description</h2>
-              <p className="text-muted-foreground">{post.description}</p>
-            </CardContent>
-          </Card>
+              {isOwner && (
+                <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
+                  <Pencil className="size-4" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
 
-          {/* Reviews card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
+          <div className="flex items-center gap-2">
+            <PostTypeBadge postType={post.postType} />
+            <div className="flex flex-wrap gap-2">
+              {post.categories.map((category) => (
+                <Badge key={category.categoryId} variant="secondary">
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {price !== null && (
+            <div className="flex items-center pt-2 gap-1">
+              <DollarSign className="size-6 text-price" />
+              <span className="text-2xl font-semibold text-price">
+                {price}
+                {rateLabel && <span className="text-base"> {rateLabel}</span>}
+              </span>
+            </div>
+          )}
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div>
+            <h2 className="mb-2 text-lg font-medium">Description</h2>
+            <p className="text-muted-foreground">{post.description}</p>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Link
+              to="/profiles/$profileId"
+              params={{ profileId: post.authorId }}
+              className="group -mx-1 flex items-center gap-3 rounded-lg px-1 py-1 no-underline transition-colors hover:bg-accent"
+            >
+              <ProfileAvatar name={post.authorName} className="size-8 shrink-0" />
+              <div>
+                <p className="text-sm text-muted-foreground">Posted by</p>
+                <p className="font-medium group-hover:text-primary">{post.authorName}</p>
+              </div>
+            </Link>
+            {locationText && (
+              <div className="flex items-center gap-2">
+                <MapPin className="size-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium">{locationText}</p>
+                </div>
+              </div>
+            )}
+            {post.rateType && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="size-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Rate Type</p>
+                  <p className="font-medium">{post.rateType.charAt(0) + post.rateType.slice(1).toLowerCase()}</p>
+                </div>
+              </div>
+            )}
+            {post.reviewCount > 0 && (
+              <div className="flex items-center gap-2">
+                <Star className="size-5 fill-star-filled text-star-filled" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Rating</p>
+                  <p className="font-medium">
+                    {post.averageRating!.toFixed(1)} ({post.reviewCount} {post.reviewCount === 1 ? 'review' : 'reviews'})
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!isOwner && activeProfile && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <SendMessageSection postId={postId} profileId={activeProfile.userProfileId} />
                 {showReviewButton && (
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowReviewForm(true)}>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => setShowReviewForm(true)}
+                  >
                     <Star className="size-4" />
                     Leave a Review
                   </Button>
                 )}
+                {hasReviewed && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reviewed this post
+                  </p>
+                )}
+                {!hasReported && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                    onClick={() => setShowReportForm(true)}
+                  >
+                    <Flag className="size-4" />
+                    Report Post
+                  </Button>
+                )}
+                {hasReported && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    You have already reported this post
+                  </p>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {hasReviewed && (
-                <p className="text-center text-sm text-muted-foreground">
-                  You have already reviewed this post
-                </p>
-              )}
-              {post.reviews.length === 0 ? (
-                <EmptyState message="No reviews yet." />
-              ) : (
-                <div className="space-y-4">
-                  {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
-                    <ReviewCard
-                      key={review.reviewId}
-                      review={review}
-                      onDelete={(id) => setDeletingReviewId(id)}
-                      isDeleting={deleteMutation.isPending}
-                      onReport={(id) => setReportingReviewId(id)}
-                      isAuthenticated={isAuthenticated}
-                    />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4 lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <h2 className="text-base font-medium">Post Details</h2>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Link
-                to="/profiles/$profileId"
-                params={{ profileId: post.authorId }}
-                className="group -mx-1 flex items-center gap-3 rounded-lg px-1 py-1 no-underline transition-colors hover:bg-accent"
-              >
-                <ProfileAvatar name={post.authorName} className="size-10 shrink-0" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Posted by</p>
-                  <p className="font-medium group-hover:text-primary">{post.authorName}</p>
-                </div>
-              </Link>
-
-              {locationText && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-3">
-                    <MapPin className="size-5 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-medium">{locationText}</p>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {post.rateType && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="size-5 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Rate Type</p>
-                      <p className="font-medium">
-                        {post.rateType.charAt(0) + post.rateType.slice(1).toLowerCase()}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {post.reviewCount > 0 && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-3">
-                    <Star className="size-5 shrink-0 fill-star-filled text-star-filled" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Rating</p>
-                      <p className="font-medium">
-                        {post.averageRating!.toFixed(1)} ({post.reviewCount}{' '}
-                        {post.reviewCount === 1 ? 'review' : 'reviews'})
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {!isOwner && activeProfile && (
-            <SendMessageSection postId={postId} profileId={activeProfile.userProfileId} />
+            </>
           )}
-        </div>
-      </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
+            {post.reviews.length === 0 ? (
+              <EmptyState message="No reviews yet." />
+            ) : (
+              <div className="space-y-4">
+                {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
+                  <ReviewCard
+                    key={review.reviewId}
+                    review={review}
+                    onDelete={(id) => setDeletingReviewId(id)}
+                    isDeleting={deleteMutation.isPending}
+                    onReport={(id) => setReportingReviewId(id)}
+                    isAuthenticated={isAuthenticated}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Leave a Review Dialog */}
       <Dialog

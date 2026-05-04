@@ -22,21 +22,24 @@ describe('BanDialog', () => {
   })
 
   it('shows a validation error when submitting without a reason', async () => {
+    const user = userEvent.setup()
     renderDialog()
+    // Touch the field by focusing and blurring
+    await user.click(screen.getByPlaceholderText(/describe the reason/i))
+    await user.tab()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /ban user/i }))
     })
     await waitFor(() => {
-      expect(screen.getByText(/reason is required/i)).toBeInTheDocument()
+      expect(screen.getByRole('alert')).toHaveTextContent(/reason is required/i)
     })
   })
 
   it('calls onSubmit with reason and no expiry for permanent ban', async () => {
+    const user = userEvent.setup()
     const onSubmit = vi.fn().mockResolvedValue(undefined)
     renderDialog({ onSubmit })
-    fireEvent.change(screen.getByPlaceholderText(/describe the reason/i), {
-      target: { value: 'Spamming' },
-    })
+    await user.type(screen.getByPlaceholderText(/describe the reason/i), 'Spamming')
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /ban user/i }))
     })
