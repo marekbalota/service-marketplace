@@ -6,6 +6,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { useCurrentUser } from '#/lib/queries/users'
+import { useActiveProfile } from '#/context/activeProfile'
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -16,20 +18,39 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery: vi.fn(() => ({ data: [] })),
+    useQuery: vi.fn(() => ({ data: undefined, isLoading: false })),
+  }
+})
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    useParams: vi.fn(() => ({ profileId: 'profile-1' })),
+    useRouter: vi.fn(() => ({ history: { back: vi.fn() } })),
   }
 })
 
 vi.mock('#/lib/queries/profiles', () => ({
-  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
-  imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileQueryOptions:      (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions:       (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profilePostsQueryOptions: (id: string, page: number, archived: boolean) => ({
+    queryKey: ['profiles', id, 'posts', { page, archived }],
+  }),
+}))
+
+vi.mock('#/lib/queries/users', () => ({
+  useCurrentUser: vi.fn(),
+}))
+
+vi.mock('#/context/activeProfile', () => ({
+  useActiveProfile: vi.fn(),
 }))
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const profile = {
   userProfileId: 'profile-1',
-  accountId:     'user-1',
   name:          'Alice Johnson',
   email:         'alice@example.com',
   bio:           'Software engineer',
@@ -37,8 +58,7 @@ const profile = {
   fax:           null,
   createdAt:     new Date('2024-01-01'),
   updatedAt:     null,
-  accountName:   'Alice',
-  roleName:      'user',
+  averageRating: 4.5,
 }
 
 // ── Render helper ─────────────────────────────────────────────────────────────
@@ -57,7 +77,10 @@ async function renderPage() {
 
 describe('ProfileViewPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     mockUseSuspenseQuery.mockReturnValue({ data: profile })
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
   })
 
   it('renders the profile name', async () => {
@@ -80,14 +103,36 @@ describe('ProfileViewPage', () => {
     expect(screen.getByText('Software engineer')).toBeInTheDocument()
   })
 
+  it('renders the average rating when present', async () => {
+    await renderPage()
+    expect(screen.getByText('4.5 / 5.0')).toBeInTheDocument()
+  })
+
   it('renders a Back button', async () => {
     await renderPage()
     expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
   })
 
-  it('shows em dash for missing fax', async () => {
+  it('shows "sign in" message for unauthenticated visitors', async () => {
     await renderPage()
-    // fax is null — the component renders an em-dash span
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    expect(screen.getByText(/sign in to view/i)).toBeInTheDocument()
+  })
+
+  it('does not show Archived tab for non-owners', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'other-user' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: { userProfileId: 'other-profile', name: 'Bob', email: 'bob@example.com' },
+    } as ReturnType<typeof useActiveProfile>)
+    await renderPage()
+    expect(screen.queryByRole('tab', { name: /archived/i })).not.toBeInTheDocument()
+  })
+
+  it('renders posts heading for authenticated user', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'some-user' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: { userProfileId: 'other-profile', name: 'Bob', email: 'bob@example.com' },
+    } as ReturnType<typeof useActiveProfile>)
+    await renderPage()
+    expect(screen.getByRole('heading', { name: /posts/i })).toBeInTheDocument()
   })
 })

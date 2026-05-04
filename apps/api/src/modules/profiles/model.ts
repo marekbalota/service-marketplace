@@ -11,9 +11,21 @@ const profileItemPublic = t.Object({
   updatedAt:     t.Nullable(t.Date()),
 })
 
+const profileItemWithRating = t.Object({
+  userProfileId: t.String(),
+  name:          t.String(),
+  email:         t.String(),
+  bio:           t.Nullable(t.String()),
+  phoneNumber:   t.Nullable(t.String()),
+  fax:           t.Nullable(t.String()),
+  createdAt:     t.Date(),
+  updatedAt:     t.Nullable(t.Date()),
+  averageRating: t.Nullable(t.Number()),
+})
+
 export const ProfilesModel = {
   findByIdParams:   t.Object({ id: t.String() }),
-  findByIdResponse: profileItemPublic,
+  findByIdResponse: profileItemWithRating,
   updateParams:     t.Object({ id: t.String() }),
   updateBody: t.Object({
     name:        t.Optional(t.String({ minLength: 1 })),

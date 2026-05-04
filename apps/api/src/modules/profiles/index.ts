@@ -90,6 +90,19 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     },
   )
   .get(
+    '/:id/posts/count',
+    async ({ params }) => PostsService.countByProfile(params.id),
+    {
+      auth: true,
+      params: ProfilesModel.profilePostsParams,
+      response: {
+        200: PostsModel.profilePostsCountResponse,
+        ...unauthorizedResponse,
+      },
+      detail: { summary: 'Count active and archived posts by profile', operationId: 'countProfilePosts', tags: ['Profiles'] },
+    },
+  )
+  .get(
     '/:id/locations',
     async ({ params, user }) => LocationsService.findByProfileId(params.id, user.id),
     {
