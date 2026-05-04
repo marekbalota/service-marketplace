@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import {
@@ -5,6 +6,7 @@ import {
 } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { BackButton } from '#/components/BackButton'
+import { ImageLightbox } from '#/components/ImageLightbox'
 import { profileQueryOptions, imagesQueryOptions, profileLocationsQueryOptions } from '#/lib/queries/profiles'
 import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 
@@ -46,6 +48,7 @@ function ProfileViewPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
   const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
@@ -111,12 +114,13 @@ function ProfileViewPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {images.map(img => (
+                {images.map((img, i) => (
                   <img
                     key={img.imageId}
                     src={img.link}
                     alt={img.name}
-                    className="w-full h-32 object-cover rounded-lg border"
+                    className="w-full h-32 cursor-pointer object-cover rounded-lg border transition-opacity hover:opacity-90"
+                    onClick={() => setLightboxIndex(i)}
                   />
                 ))}
               </div>
@@ -153,6 +157,13 @@ function ProfileViewPage() {
           </Card>
         )}
       </div>
+
+      <ImageLightbox
+        images={images.map(img => ({ src: img.link, alt: img.name }))}
+        initialIndex={lightboxIndex ?? 0}
+        open={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+      />
     </main>
   )
 }

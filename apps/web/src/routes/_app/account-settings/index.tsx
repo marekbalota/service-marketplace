@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ImageLightbox } from '#/components/ImageLightbox'
 import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { PageHeader } from '#/components/PageHeader'
@@ -91,6 +92,7 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
   const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
   const visibleImages = images.slice(0, 3)
   const extraCount = images.length - visibleImages.length
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   return (
     <Card className="shadow-sm transition-shadow hover:shadow-md">
@@ -131,18 +133,23 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
               </div>
               {visibleImages.length > 0 && (
                 <div className="mt-3 flex items-center gap-2">
-                  {visibleImages.map((img) => (
+                  {visibleImages.map((img, i) => (
                     <img
                       key={img.imageId}
                       src={img.link}
                       alt={img.name}
-                      className="size-10 rounded-md border object-cover"
+                      className="size-10 cursor-pointer rounded-md border object-cover transition-opacity hover:opacity-80"
+                      onClick={() => setLightboxIndex(i)}
                     />
                   ))}
                   {extraCount > 0 && (
-                    <span className="flex size-10 items-center justify-center rounded-md border bg-muted text-xs font-medium text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(visibleImages.length)}
+                      className="flex size-10 items-center justify-center rounded-md border bg-muted text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
+                    >
                       +{extraCount}
-                    </span>
+                    </button>
                   )}
                 </div>
               )}
@@ -170,6 +177,13 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
           </div>
         </div>
       </CardContent>
+
+      <ImageLightbox
+        images={images.map(img => ({ src: img.link, alt: img.name }))}
+        initialIndex={lightboxIndex ?? 0}
+        open={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+      />
     </Card>
   )
 }
