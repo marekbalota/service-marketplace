@@ -25,7 +25,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery: vi.fn(() => ({ data: undefined })),
+    useQuery: vi.fn(() => ({ data: undefined, isLoading: false })),
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
     useMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false, isError: false })),
   }

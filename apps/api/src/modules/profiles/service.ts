@@ -1,6 +1,6 @@
 import { db } from '../../db'
 import { userProfiles, users } from '../../db/schema'
-import { and, count, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull, sql } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
 import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 
@@ -18,7 +18,16 @@ const profileSelect = {
 export abstract class ProfilesService {
   static async findById(id: string) {
     const [row] = await db
-      .select(profileSelect)
+      .select({
+        ...profileSelect,
+        averageRating: sql<number | null>`(
+          SELECT AVG(r.rating)::float8
+          FROM reviews r
+          INNER JOIN posts p ON r.post_id = p.post_id
+          WHERE p.author_id = ${userProfiles.userProfileId}
+            AND p.deleted_at IS NULL
+        )`,
+      })
       .from(userProfiles)
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
       .limit(1)

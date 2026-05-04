@@ -7,6 +7,7 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '#/components/ui/dialog'
 import { cn } from '#/lib/utils'
 import { existingThreadQueryOptions } from '../-queries/threads'
 import { useCurrentUser } from '#/lib/queries/users'
@@ -36,6 +37,11 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
       void router.navigate({ to: '/messages/$threadId', params: { threadId: (data as { threadId: string }).threadId } })
     },
   })
+
+  function handleClose() {
+    setOpen(false)
+    setDraft('')
+  }
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />
@@ -71,39 +77,39 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
   }
 
   return (
-    <div className="space-y-2">
-      {!open && (
-        <Button className="w-full gap-2" onClick={() => setOpen(true)}>
-          <MessageSquare className="size-4" />
-          Send Message
-        </Button>
-      )}
-      {open && (
-        <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+    <>
+      <Button className="w-full gap-2" onClick={() => setOpen(true)}>
+        <MessageSquare className="size-4" />
+        Send Message
+      </Button>
+      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose() }}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Send Message</DialogTitle>
+          </DialogHeader>
           <Textarea
             placeholder="Write your message..."
             value={draft}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
-            rows={3}
-            className="resize-none bg-card"
+            rows={4}
+            className="resize-none"
           />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          {send.isError && (
+            <p className="text-sm text-destructive">Failed to send message. Please try again.</p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose} disabled={send.isPending}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!draft.trim() || send.isPending}
               onClick={() => send.mutate()}
             >
               {send.isPending ? 'Sending...' : 'Send'}
             </Button>
-          </div>
-          {send.isError && (
-            <p className="text-sm text-destructive">Failed to send message. Please try again.</p>
-          )}
-        </div>
-      )}
-    </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

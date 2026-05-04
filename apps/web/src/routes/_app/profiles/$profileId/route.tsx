@@ -1,10 +1,19 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
+import { Star, Mail, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
-import { Card, CardContent } from '#/components/ui/card'
+import { PostCard } from '#/components/PostCard'
+import { EmptyState } from '#/components/EmptyState'
+import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
+import { Separator } from '#/components/ui/separator'
+import { Button } from '#/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { BackButton } from '#/components/BackButton'
-import { profileQueryOptions, imagesQueryOptions } from '#/lib/queries/profiles'
+import { profileQueryOptions, imagesQueryOptions, profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
+import { useCurrentUser } from '#/lib/queries/users'
+import { useActiveProfile } from '#/context/activeProfile'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   loader: async ({ context: { queryClient }, params: { profileId } }) => {
@@ -16,91 +25,203 @@ export const Route = createFileRoute('/_app/profiles/$profileId')({
 
 function ProfileViewSkeleton() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <Skeleton className="mb-6 h-8 w-24" />
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <Skeleton className="size-16 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-7 w-40" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-1">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-32" />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="mx-auto size-24 rounded-full" />
+              <div className="space-y-2 text-center">
+                <Skeleton className="mx-auto h-6 w-40" />
+                <Skeleton className="mx-auto h-4 w-28" />
               </div>
+              <Separator />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </main>
   )
 }
+
+const PAGE_SIZE = 12
 
 function ProfileViewPage() {
   const { profileId } = Route.useParams()
   const router = useRouter()
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
+  const { data: user } = useCurrentUser()
+  const { activeProfile } = useActiveProfile()
+
+  const isOwner = activeProfile?.userProfileId === profileId
+  const isAuthenticated = user != null
+
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
+  const [page, setPage] = useState(1)
+
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    ...profilePostsQueryOptions(profileId, page, activeTab === 'archived'),
+    enabled: isAuthenticated,
+  })
+
+  const { data: postCounts } = useQuery({
+    ...profilePostsCountQueryOptions(profileId),
+    enabled: isAuthenticated,
+  })
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <BackButton onClick={() => router.history.back()} />
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <ProfileAvatar name={profile.name} className="size-16 shrink-0 shadow-md" />
-            <div>
-              <h1 className="text-2xl font-semibold">{profile.name}</h1>
-              <p className="text-sm text-muted-foreground">{profile.email}</p>
-            </div>
-          </div>
 
-          <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide">Phone</p>
-                <p>{profile.phoneNumber ?? <span className="text-muted-foreground">—</span>}</p>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-center">
+                <ProfileAvatar name={profile.name} className="size-24" />
               </div>
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide">Fax</p>
-                <p>{profile.fax ?? <span className="text-muted-foreground">—</span>}</p>
+              <div className="text-center">
+                <h1 className="text-xl font-semibold">{profile.name}</h1>
+                <p className="text-sm text-muted-foreground">
+                  Member since {new Date(profile.createdAt).toLocaleDateString()}
+                </p>
               </div>
-            </div>
 
-            {profile.bio && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide">Bio</p>
-                <p className="whitespace-pre-wrap">{profile.bio}</p>
-              </div>
-            )}
+              <Separator />
 
-            {images.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide">Images</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {images.map((img) => (
-                    <img
-                      key={img.imageId}
-                      src={img.link}
-                      alt={img.name}
-                      className="h-24 w-full rounded-lg border object-cover"
-                    />
-                  ))}
+              <div className="space-y-3 text-sm">
+                {profile.bio && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bio</p>
+                    <p className="whitespace-pre-wrap">{profile.bio}</p>
+                  </div>
+                )}
+                <div className="flex items-start gap-2">
+                  <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span>{profile.email}</span>
                 </div>
+                {profile.phoneNumber && (
+                  <div className="flex items-start gap-2">
+                    <Phone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span>{profile.phoneNumber}</span>
+                  </div>
+                )}
+                {profile.fax && (
+                  <div className="flex items-start gap-2">
+                    <Printer className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span>{profile.fax}</span>
+                  </div>
+                )}
+                {profile.averageRating !== null && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center gap-2">
+                      <Star className="size-4 fill-star-filled text-star-filled shrink-0" />
+                      <span className="font-medium">
+                        {profile.averageRating.toFixed(1)} / 5.0
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
 
-            <div className="border-t pt-3 text-xs text-muted-foreground">
-              <p>Member since {new Date(profile.createdAt).toLocaleDateString()}</p>
-            </div>
+              {images.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="grid grid-cols-3 gap-2">
+                    {images.map((img) => (
+                      <img
+                        key={img.imageId}
+                        src={img.link}
+                        alt={img.name}
+                        className="h-20 w-full rounded-lg border object-cover"
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main column — posts */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-medium">Posts</h2>
+            <ToggleGroup
+              value={[activeTab]}
+              onValueChange={(vals) => { const v = vals[vals.length - 1] as 'active' | 'archived'; if (v) { setActiveTab(v); setPage(1) } }}
+              variant="outline"
+            >
+              <ToggleGroupItem value="active">
+                Active{postCounts ? ` (${postCounts.active})` : ''}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="archived">
+                Archived{postCounts ? ` (${postCounts.archived})` : ''}
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
-        </CardContent>
-      </Card>
+
+          {!isAuthenticated ? (
+            <p className="text-muted-foreground">Sign in to view this user's posts.</p>
+          ) : postsLoading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-48 rounded-xl" />
+              ))}
+            </div>
+          ) : !postsData || postsData.items.length === 0 ? (
+            <EmptyState message={`No ${activeTab} posts.`} />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {postsData?.items.map((post) => (
+                  <PostCard key={post.postId} post={post} showFavouriteButton={!isOwner} />
+                ))}
+              </div>
+              {(postsData?.totalPages ?? 1) > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {page} / {postsData?.totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === postsData?.totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </main>
   )
 }

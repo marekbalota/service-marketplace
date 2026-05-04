@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
-import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
+import { eq, isNull, isNotNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
 import { ProfilesService } from "../profiles/service";
@@ -50,8 +50,8 @@ export abstract class PostsService {
       sort === 'price-low'  ? asc(posts.price)     :
       sort === 'price-high' ? desc(posts.price)    :
       sort === 'name'       ? asc(posts.postTitle) :
-      sort === 'reviews-most'  ? desc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
-      sort === 'reviews-least' ? asc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
+      sort === 'reviews-most'  ? desc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId})`) :
+      sort === 'reviews-least' ? asc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId})`) :
       desc(posts.createdAt);
 
     return db.transaction(async (tx) => {
@@ -59,7 +59,7 @@ export abstract class PostsService {
       const avgRatingSubquery = sql<number>`(
         SELECT COALESCE(AVG(r.rating), 0)
         FROM reviews r
-        WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL
+        WHERE r.post_id = ${posts.postId}
       )`;
 
       // Build rating filter condition
@@ -134,19 +134,29 @@ export abstract class PostsService {
     });
   }
 
+  static async countByProfile(profileId: string) {
+    const [[activeRow], [archivedRow]] = await Promise.all([
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt))),
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt))),
+    ])
+    return { active: activeRow?.total ?? 0, archived: archivedRow?.total ?? 0 }
+  }
+
   static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
-    const { offset = 0, size } = query
+    const { offset = 0, size, archived = false } = query
+
+    const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
 
       const total = countRow?.total ?? 0
 
       const q = postSelect(tx)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
         .orderBy(desc(posts.createdAt))
         .offset(offset)
 
@@ -207,6 +217,11 @@ export abstract class PostsService {
             '[]'::json
           )
         `,
+        averageRating: sql<number | null>`(
+          SELECT AVG(r.rating)::float8
+          FROM reviews r
+          WHERE r.post_id = ${posts.postId}
+        )`,
       })
       .from(posts)
       .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
@@ -230,11 +245,7 @@ export abstract class PostsService {
       houseNumber: row.locationHouseNumber,
     } : null;
 
-    const averageRating = row.reviews.length > 0
-      ? row.reviews.reduce((sum, r) => sum + r.rating, 0) / row.reviews.length
-      : null;
-
-    const { locationId, locationCountry, locationRegion, locationCity, locationStreet, locationHouseNumber, ...rest } = row;
+    const { locationId, locationCountry, locationRegion, locationCity, locationStreet, locationHouseNumber, averageRating, ...rest } = row;
     return { ...rest, location, averageRating, reviewCount: row.reviews.length };
   }
 

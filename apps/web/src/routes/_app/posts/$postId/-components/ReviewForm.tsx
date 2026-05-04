@@ -65,7 +65,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-lg border bg-card p-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label>Your Rating *</Label>
         <Controller
