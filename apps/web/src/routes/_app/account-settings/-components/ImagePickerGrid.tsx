@@ -1,7 +1,17 @@
 import { useRef, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, AlertCircle } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { ImageLightbox } from '#/components/ImageLightbox'
+
+function validateImageFile(file: File): Promise<boolean> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => { URL.revokeObjectURL(url); resolve(true) }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(false) }
+    img.src = url
+  })
+}
 
 export function ImagePickerGrid({
   previews,
@@ -14,15 +24,25 @@ export function ImagePickerGrid({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [rejectedCount, setRejectedCount] = useState(0)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files
-    if (files) {
-      for (const file of Array.from(files)) {
-        onFilePicked(file)
-      }
-      e.target.value = ''
-    }
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (files.length === 0) return
+
+    let rejected = 0
+    await Promise.all(
+      files.map(async (file) => {
+        const valid = await validateImageFile(file)
+        if (valid) {
+          onFilePicked(file)
+        } else {
+          rejected++
+        }
+      }),
+    )
+    if (rejected > 0) setRejectedCount(r => r + rejected)
   }
 
   return (
@@ -64,6 +84,25 @@ export function ImagePickerGrid({
           <Plus className="size-6" />
         </Button>
       </div>
+
+      {rejectedCount > 0 && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <span>
+            {rejectedCount === 1
+              ? '1 file could not be read and was skipped. Make sure it is a valid JPEG, PNG, GIF, or WebP image.'
+              : `${rejectedCount} files could not be read and were skipped. Make sure they are valid JPEG, PNG, GIF, or WebP images.`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setRejectedCount(0)}
+            className="ml-auto shrink-0 text-destructive/60 hover:text-destructive"
+            aria-label="Dismiss"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
 
       <ImageLightbox
         images={previews.map(src => ({ src, alt: 'Preview' }))}
