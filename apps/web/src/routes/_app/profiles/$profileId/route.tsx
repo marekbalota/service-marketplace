@@ -1,22 +1,31 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
+import { z } from 'zod'
+import { Suspense } from 'react'
 import { Star, Mail, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { PostCard } from '#/components/PostCard'
 import { EmptyState } from '#/components/EmptyState'
+import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Separator } from '#/components/ui/separator'
-import { Button } from '#/components/ui/button'
-import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '#/components/ui/tabs'
 import { BackButton } from '#/components/BackButton'
+import { PaginationBar } from '#/components/PaginationBar'
 import { profileQueryOptions, imagesQueryOptions, profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
-import { useState } from 'react'
+
+const searchSchema = z.object({
+  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
+  page: z.number().int().positive().optional().catch(undefined),
+})
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
-  loader: async ({ context: { queryClient }, params: { profileId } }) => {
+  validateSearch: searchSchema,
+  loaderDeps: ({ search: { tab, page } }) => ({ tab, page }),
+  loader: async ({ context: { queryClient }, params: { profileId }, deps: { page: _page, tab: _tab } }) => {
     await queryClient.ensureQueryData(profileQueryOptions(profileId))
   },
   pendingComponent: ProfileViewSkeleton,
@@ -47,22 +56,70 @@ function ProfileViewSkeleton() {
           </Card>
         </div>
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 rounded-xl" />
-            ))}
-          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-7 w-16" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                  <Skeleton className="h-8 w-24 rounded-md" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <PostsGridSkeleton count={6} columns={2} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>
   )
 }
 
-const PAGE_SIZE = 12
+function ProfilePostsGrid({
+  profileId,
+  page,
+  archived,
+  isOwner,
+}: {
+  profileId: string
+  page: number
+  archived: boolean
+  isOwner: boolean
+}) {
+  const navigate = Route.useNavigate()
+  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived, 6))
+  const posts = data?.items ?? []
+  const totalPages = data?.totalPages ?? 1
+
+  const setPage = (p: number) =>
+    navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }), replace: true })
+
+  if (posts.length === 0) {
+    return <EmptyState message={`No ${archived ? 'archived' : 'active'} posts.`} />
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {posts.map((post) => (
+          <PostCard key={post.postId} post={post} showFavouriteButton={!isOwner} />
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-4" />
+      )}
+    </>
+  )
+}
 
 function ProfileViewPage() {
   const { profileId } = Route.useParams()
   const router = useRouter()
+  const { tab, page = 1 } = Route.useSearch()
+  const activeTab = tab ?? 'active'
+  const navigate = Route.useNavigate()
+
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
   const { data: user } = useCurrentUser()
@@ -71,18 +128,14 @@ function ProfileViewPage() {
   const isOwner = activeProfile?.userProfileId === profileId
   const isAuthenticated = user != null
 
-  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
-  const [page, setPage] = useState(1)
-
-  const { data: postsData, isLoading: postsLoading } = useQuery({
-    ...profilePostsQueryOptions(profileId, page, activeTab === 'archived'),
-    enabled: isAuthenticated,
-  })
-
   const { data: postCounts } = useQuery({
     ...profilePostsCountQueryOptions(profileId),
     enabled: isAuthenticated,
   })
+
+  function handleTabChange(value: string) {
+    navigate({ search: () => ({ tab: value === 'archived' ? 'archived' : undefined }), replace: true })
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -160,67 +213,44 @@ function ProfileViewPage() {
           </Card>
         </div>
 
-        {/* Main column — posts */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium">Posts</h2>
-            <ToggleGroup
-              value={[activeTab]}
-              onValueChange={(vals) => { const v = vals[vals.length - 1] as 'active' | 'archived'; if (v) { setActiveTab(v); setPage(1) } }}
-              variant="outline"
-            >
-              <ToggleGroupItem value="active">
-                Active{postCounts ? ` (${postCounts.active})` : ''}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="archived">
-                Archived{postCounts ? ` (${postCounts.archived})` : ''}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-
-          {!isAuthenticated ? (
-            <p className="text-muted-foreground">Sign in to view this user's posts.</p>
-          ) : postsLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-48 rounded-xl" />
-              ))}
-            </div>
-          ) : !postsData || postsData.items.length === 0 ? (
-            <EmptyState message={`No ${activeTab} posts.`} />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {postsData?.items.map((post) => (
-                  <PostCard key={post.postId} post={post} showFavouriteButton={!isOwner} />
-                ))}
+        {/* Posts column */}
+        <Card className="lg:col-span-2">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-medium">Posts</h2>
+                {isAuthenticated && (
+                  <TabsList>
+                    <TabsTrigger value="active">
+                      Active{postCounts ? ` (${postCounts.active})` : ''}
+                    </TabsTrigger>
+                    <TabsTrigger value="archived">
+                      Archived{postCounts ? ` (${postCounts.archived})` : ''}
+                    </TabsTrigger>
+                  </TabsList>
+                )}
               </div>
-              {(postsData?.totalPages ?? 1) > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {page} / {postsData?.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === postsData?.totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+            </CardHeader>
+            <CardContent>
+              {!isAuthenticated ? (
+                <p className="text-muted-foreground">Sign in to view this user's posts.</p>
+              ) : (
+                <>
+                  <TabsContent value="active">
+                    <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
+                      <ProfilePostsGrid profileId={profileId} page={page} archived={false} isOwner={isOwner} />
+                    </Suspense>
+                  </TabsContent>
+                  <TabsContent value="archived">
+                    <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
+                      <ProfilePostsGrid profileId={profileId} page={page} archived={true} isOwner={isOwner} />
+                    </Suspense>
+                  </TabsContent>
+                </>
               )}
-            </>
-          )}
-        </div>
+            </CardContent>
+          </Tabs>
+        </Card>
       </div>
     </main>
   )

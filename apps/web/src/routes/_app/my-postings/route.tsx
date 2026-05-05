@@ -12,7 +12,7 @@ import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { useActiveProfile } from '#/context/activeProfile'
 import { buttonVariants } from '#/components/ui/button'
-import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '#/components/ui/tabs'
 import { cn } from '#/lib/utils'
 import { PaginationBar } from '#/components/PaginationBar'
 import { profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
@@ -21,6 +21,7 @@ type Post = { postId: string; postTitle: string }
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
+  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/my-postings')({
@@ -50,7 +51,7 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
   })
 
   const setPage = (value: number) =>
-    navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }) })
+    navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }), replace: true })
 
   const posts = data?.items ?? []
   const totalPages = data?.totalPages ?? 1
@@ -101,9 +102,8 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
 
 function MyPostingsPage() {
   const { activeProfile } = useActiveProfile()
-  const { page = 1 } = Route.useSearch()
+  const { page = 1, tab } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const [archived, setArchived] = useState(false)
 
   const profileId = activeProfile?.userProfileId ?? ''
 
@@ -112,11 +112,8 @@ function MyPostingsPage() {
     enabled: !!activeProfile,
   })
 
-  function handleTabChange(vals: string[]) {
-    const v = vals[vals.length - 1]
-    if (!v) return
-    setArchived(v === 'archived')
-    navigate({ search: () => ({}) })
+  function handleTabChange(value: string) {
+    navigate({ search: () => ({ tab: value === 'archived' ? 'archived' : undefined }), replace: true })
   }
 
   return (
@@ -132,28 +129,36 @@ function MyPostingsPage() {
         }
       />
 
-      <div className="mb-6 flex justify-start">
-        <ToggleGroup
-          value={[archived ? 'archived' : 'active']}
-          onValueChange={handleTabChange}
-          variant="outline"
-        >
-          <ToggleGroupItem value="active">
+      <Tabs value={tab ?? 'active'} onValueChange={handleTabChange}>
+        <TabsList variant="line" className="gap-6 mb-6">
+          <TabsTrigger value="active">
             Active{postCounts ? ` (${postCounts.active})` : ''}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="archived">
+          </TabsTrigger>
+          <TabsTrigger value="archived">
             Archived{postCounts ? ` (${postCounts.archived})` : ''}
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+          </TabsTrigger>
+        </TabsList>
 
-      {activeProfile ? (
-        <Suspense fallback={<PostsGridSkeleton />}>
-          <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={archived} />
-        </Suspense>
-      ) : (
-        <EmptyState message="No profile found." />
-      )}
+        <TabsContent value="active">
+          {activeProfile ? (
+            <Suspense fallback={<PostsGridSkeleton />}>
+              <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={false} />
+            </Suspense>
+          ) : (
+            <EmptyState message="No profile found." />
+          )}
+        </TabsContent>
+
+        <TabsContent value="archived">
+          {activeProfile ? (
+            <Suspense fallback={<PostsGridSkeleton />}>
+              <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={true} />
+            </Suspense>
+          ) : (
+            <EmptyState message="No profile found." />
+          )}
+        </TabsContent>
+      </Tabs>
     </main>
   )
 }

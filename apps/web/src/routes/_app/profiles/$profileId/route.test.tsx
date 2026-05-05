@@ -26,17 +26,20 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
-    useParams: vi.fn(() => ({ profileId: 'profile-1' })),
-    useRouter: vi.fn(() => ({ history: { back: vi.fn() } })),
+    useParams:   vi.fn(() => ({ profileId: 'profile-1' })),
+    useRouter:   vi.fn(() => ({ history: { back: vi.fn() } })),
+    useSearch:   vi.fn(() => ({ tab: undefined, page: undefined })),
+    useNavigate: vi.fn(() => vi.fn()),
   }
 })
 
 vi.mock('#/lib/queries/profiles', () => ({
-  profileQueryOptions:      (id: string) => ({ queryKey: ['profiles', id] }),
-  imagesQueryOptions:       (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
-  profilePostsQueryOptions: (id: string, page: number, archived: boolean) => ({
-    queryKey: ['profiles', id, 'posts', { page, archived }],
+  profileQueryOptions:           (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions:            (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profilePostsQueryOptions:      (id: string, page: number, archived: boolean, pageSize = 12) => ({
+    queryKey: ['profiles', id, 'posts', { page, archived, pageSize }],
   }),
+  profilePostsCountQueryOptions: (id: string) => ({ queryKey: ['profiles', id, 'posts', 'count'] }),
 }))
 
 vi.mock('#/lib/queries/users', () => ({
@@ -78,7 +81,13 @@ async function renderPage() {
 describe('ProfileViewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSuspenseQuery.mockReturnValue({ data: profile })
+    mockUseSuspenseQuery.mockImplementation((opts: { queryKey: unknown[] }) => {
+      const key = opts.queryKey
+      if (Array.isArray(key) && key[0] === 'profiles' && key[2] === 'posts') {
+        return { data: { items: [], totalPages: 1, total: 0 } }
+      }
+      return { data: profile }
+    })
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
   })
@@ -118,13 +127,14 @@ describe('ProfileViewPage', () => {
     expect(screen.getByText(/sign in to view/i)).toBeInTheDocument()
   })
 
-  it('does not show Archived tab for non-owners', async () => {
+  it('shows Active and Archived tabs for authenticated users', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'other-user' } } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'other-profile', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
     await renderPage()
-    expect(screen.queryByRole('tab', { name: /archived/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /active/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /archived/i })).toBeInTheDocument()
   })
 
   it('renders posts heading for authenticated user', async () => {

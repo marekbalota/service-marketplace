@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'

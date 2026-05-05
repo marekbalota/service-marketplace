@@ -29,6 +29,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
     ...actual,
     useSuspenseQuery: mockUseSuspenseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+    useQuery: vi.fn(() => ({ data: undefined })),
   }
 })
 
@@ -111,9 +112,15 @@ describe('ProfileDetailPage', () => {
     expect(screen.getByText('alice-profile@example.com')).toBeInTheDocument()
   })
 
-  it('shows empty state when profile has no posts', async () => {
+  it('shows Active and Archived tabs', async () => {
     await renderPage()
-    expect(screen.getByText(/no posts found for this profile/i)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /active/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /archived/i })).toBeInTheDocument()
+  })
+
+  it('shows empty state when active tab has no posts', async () => {
+    await renderPage()
+    expect(screen.getByText(/no active posts/i)).toBeInTheDocument()
   })
 
   it('shows post cards when posts are present', async () => {

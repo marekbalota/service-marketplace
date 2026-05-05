@@ -37,14 +37,14 @@ export function profilePostsCountQueryOptions(profileId: string) {
   })
 }
 
-export function profilePostsQueryOptions(profileId: string, page: number, archived = false) {
+export function profilePostsQueryOptions(profileId: string, page: number, archived = false, pageSize = PAGE_SIZE) {
   return queryOptions({
-    queryKey: ['profiles', profileId, 'posts', { page, archived }] as const,
+    queryKey: ['profiles', profileId, 'posts', { page, archived, pageSize }] as const,
     queryFn: async () => {
       const { data, error } = await api.profiles({ id: profileId }).posts.get({
         query: {
-          offset: (page - 1) * PAGE_SIZE,
-          size: PAGE_SIZE,
+          offset: (page - 1) * pageSize,
+          size: pageSize,
           archived,
         },
       })
