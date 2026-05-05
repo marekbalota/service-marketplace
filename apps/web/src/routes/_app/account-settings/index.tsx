@@ -100,7 +100,7 @@ function AccountSettingsHubSkeleton() {
 
 function AccountSettingsHubPage() {
   const { data: user } = useCurrentUser()
-const [activeSection, setActiveSection] = useState<SectionId>('account-information')
+  const [activeSection, setActiveSection] = useState<SectionId>('account-information')
   const [showChangeEmail, setShowChangeEmail] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const observersRef = useRef<IntersectionObserver[]>([])
@@ -135,12 +135,13 @@ const [activeSection, setActiveSection] = useState<SectionId>('account-informati
         <aside className="hidden lg:block w-56 shrink-0">
           <nav className="sticky top-24 flex flex-col gap-1">
             {SECTIONS.map(({ id, label, icon: Icon }) => (
-              <button
+              <Button
                 key={id}
                 type="button"
+                variant="ghost"
                 onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'w-full justify-start gap-2 text-sm font-medium',
                   activeSection === id
                     ? 'bg-muted text-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -148,7 +149,7 @@ const [activeSection, setActiveSection] = useState<SectionId>('account-informati
               >
                 <Icon className="size-4 shrink-0" />
                 {label}
-              </button>
+              </Button>
             ))}
           </nav>
         </aside>

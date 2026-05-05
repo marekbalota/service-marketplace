@@ -93,14 +93,16 @@ export function ImagePickerGrid({
               ? '1 file could not be read and was skipped. Make sure it is a valid JPEG, PNG, GIF, or WebP image.'
               : `${rejectedCount} files could not be read and were skipped. Make sure they are valid JPEG, PNG, GIF, or WebP images.`}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setRejectedCount(0)}
-            className="ml-auto shrink-0 text-destructive/60 hover:text-destructive"
+            className="ml-auto size-6 shrink-0 text-destructive/60 hover:text-destructive"
             aria-label="Dismiss"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 

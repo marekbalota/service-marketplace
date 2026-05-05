@@ -13,7 +13,7 @@ import {
 } from '#/components/ui/card'
 import { profileSchema, type ProfileFormValues } from '../../-components/profileSchema'
 import { ProfileFields } from '../../-components/ProfileFields'
-import { ImagePickerGrid } from '../../-components/ImagePickerGrid'
+import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 
 export const Route = createFileRoute('/_app/account-settings/profiles/create')({
   component: CreateProfilePage,

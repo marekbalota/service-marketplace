@@ -225,6 +225,7 @@ export const profileLocations = pgTable(
       .notNull()
       .references(() => locations.locationId),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [primaryKey({ columns: [table.userProfileId, table.locationId] })],
 );

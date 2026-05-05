@@ -42,6 +42,7 @@ const fakeJpeg = new File(
 )
 
 let sessionCookie = ''
+let bobCookie = ''
 let profileId = ''
 let postId = ''
 let reviewId = ''
@@ -53,6 +54,12 @@ beforeAll(async () => {
     asResponse: true,
   })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
+
+  const bobSignIn = await auth.api.signInEmail({
+    body: { email: 'bob@example.com', password: 'password123' },
+    asResponse: true,
+  })
+  bobCookie = bobSignIn.headers.get('set-cookie') ?? ''
 
   const { data: me } = await client.users.me.get({ headers: { Cookie: sessionCookie } })
   profileId = me!.profiles[0]!.userProfileId
@@ -118,6 +125,14 @@ describe('DELETE /review-images/:id', () => {
   it('returns 401 without a session cookie', async () => {
     const { error } = await client['review-images']({ id: reviewImageId }).delete()
     expect(error?.status).toBe(401)
+  })
+
+  it('returns 403 when deleting a review image owned by another user', async () => {
+    const { error } = await client['review-images']({ id: reviewImageId }).delete(
+      undefined,
+      { headers: { Cookie: bobCookie } },
+    )
+    expect(error?.status).toBe(403)
   })
 
   it('returns 404 for a non-existent review image', async () => {

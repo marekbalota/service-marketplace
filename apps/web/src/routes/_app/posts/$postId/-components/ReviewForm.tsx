@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { StarRatingInput } from '#/components/StarRatingInput'
@@ -10,7 +10,7 @@ import { FieldError } from '#/components/ui/field'
 import { api } from '#/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useActiveProfile } from '#/context/activeProfile'
-import { ImagePickerGrid } from '#/routes/_app/account-settings/-components/ImagePickerGrid'
+import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Rating is required').max(5),
@@ -45,6 +45,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   } = useForm<ReviewFormData>({
     resolver: zodResolver(reviewSchema),
     defaultValues: { rating: 0, description: '' },
+    mode: 'onTouched',
   })
 
   const mutation = useMutation({
@@ -101,13 +102,13 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
     setPendingFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const onSubmit = (data: ReviewFormData) => {
+  const onSubmit: SubmitHandler<ReviewFormData> = (data) => {
     setError(null)
     mutation.mutate(data)
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-lg border bg-card p-4">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-lg border bg-card p-4">
       <div className="space-y-2">
         <Label>Your Rating *</Label>
         <Controller

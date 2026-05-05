@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '#/components/ui/popover'
+import { Button } from '#/components/ui/button'
 import { Route } from '../index'
 import { locationsDistinctQueryOptions } from '../-queries/locations'
 import { LocationCombobox } from './LocationCombobox'
@@ -126,13 +127,15 @@ export function LocationSelect() {
           </div>
 
           {hasFilter && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={clearAll}
-              className="w-full rounded-md border border-input py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="w-full text-xs text-muted-foreground"
             >
               Clear location
-            </button>
+            </Button>
           )}
         </div>
       </PopoverContent>

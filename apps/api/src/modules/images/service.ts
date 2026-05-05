@@ -79,7 +79,8 @@ export abstract class ImagesService {
     const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
-    const created = await this.create(profileId, { link: url, name: url })
+    const name = new URL(url).pathname.split('/').pop() ?? url
+    const created = await this.create(profileId, { link: url, name })
     if (!created) throw new InternalServerError('Failed to save image')
     return created
   }

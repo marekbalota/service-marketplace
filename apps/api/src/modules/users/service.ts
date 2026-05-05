@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
-import { eq, isNull, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { UsersModel } from "./model";
 import { NotFoundError, ErrorMessages } from "../../lib/errors";
 

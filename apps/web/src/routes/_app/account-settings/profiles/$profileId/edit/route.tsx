@@ -13,10 +13,11 @@ import {
 import { Skeleton } from '#/components/ui/skeleton'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { profileSchema, type ProfileFormValues } from '../../../-components/profileSchema'
 import { ProfileFields } from '../../../-components/ProfileFields'
-import { ImagePickerGrid } from '../../../-components/ImagePickerGrid'
+import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 import {
   imagesQueryOptions,
@@ -244,16 +245,18 @@ function EditProfilePage() {
                 <CardContent className="pt-6 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Country *</label>
+                      <Label htmlFor="loc-country">Country *</Label>
                       <Input
+                        id="loc-country"
                         placeholder="e.g., USA, Slovakia"
                         value={newLocation.country}
                         onChange={e => setNewLocation(v => ({ ...v, country: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Region</label>
+                      <Label htmlFor="loc-region">Region</Label>
                       <Input
+                        id="loc-region"
                         placeholder="e.g., Texas, Bratislava Region"
                         value={newLocation.region}
                         onChange={e => setNewLocation(v => ({ ...v, region: e.target.value }))}
@@ -262,16 +265,18 @@ function EditProfilePage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">City</label>
+                      <Label htmlFor="loc-city">City</Label>
                       <Input
+                        id="loc-city"
                         placeholder="e.g., Austin, Bratislava"
                         value={newLocation.city}
                         onChange={e => setNewLocation(v => ({ ...v, city: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Street</label>
+                      <Label htmlFor="loc-street">Street</Label>
                       <Input
+                        id="loc-street"
                         placeholder="e.g., Main Street"
                         value={newLocation.street}
                         onChange={e => setNewLocation(v => ({ ...v, street: e.target.value }))}
@@ -279,8 +284,9 @@ function EditProfilePage() {
                     </div>
                   </div>
                   <div className="space-y-2 md:w-1/2">
-                    <label className="text-sm font-medium">House Number</label>
+                    <Label htmlFor="loc-house">House Number</Label>
                     <Input
+                      id="loc-house"
                       placeholder="e.g., 123"
                       value={newLocation.houseNumber}
                       onChange={e => setNewLocation(v => ({ ...v, houseNumber: e.target.value }))}

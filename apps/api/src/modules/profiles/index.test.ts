@@ -287,6 +287,89 @@ describe('DELETE /profiles/:id', () => {
   })
 })
 
+describe('POST /profiles/:id/locations', () => {
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).locations.post({ country: 'Slovakia' })
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 403 for a profile not owned by the caller', async () => {
+    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.post(
+      { country: 'Slovakia' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(403)
+  })
+
+  it('returns 201 with the created location', async () => {
+    const { data, error } = await client.profiles({ id: aliceProfileId }).locations.post(
+      { country: 'Slovakia', city: 'Bratislava' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+    expect(data!.country).toBe('Slovakia')
+    expect(data!.city).toBe('Bratislava')
+    expect(typeof data!.locationId).toBe('string')
+  })
+
+  it('location appears in GET /profiles/:id/locations after adding', async () => {
+    const { data: created } = await client.profiles({ id: aliceProfileId }).locations.post(
+      { country: 'TestCountry' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    const { data: list } = await client.profiles({ id: aliceProfileId }).locations.get({
+      headers: { Cookie: aliceCookie },
+    })
+    expect(list!.some(l => l.locationId === created!.locationId)).toBe(true)
+  })
+})
+
+describe('DELETE /profiles/:id/locations/:locationId', () => {
+  let locationId = ''
+
+  beforeAll(async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).locations.post(
+      { country: 'DeleteMe' },
+      { headers: { Cookie: aliceCookie } },
+    )
+    locationId = data!.locationId
+  })
+
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId }).delete()
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 403 for a profile not owned by the caller', async () => {
+    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations({ locationId }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(403)
+  })
+
+  it('returns 404 for a non-existent locationId', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId: '00000000-0000-0000-0000-000000000000' }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error?.status).toBe(404)
+  })
+
+  it('returns 204 and soft-deletes the location from the profile', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId }).delete(
+      undefined,
+      { headers: { Cookie: aliceCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data: list } = await client.profiles({ id: aliceProfileId }).locations.get({
+      headers: { Cookie: aliceCookie },
+    })
+    expect(list!.some(l => l.locationId === locationId)).toBe(false)
+  })
+})
+
 describe('GET /profiles/:id/reported/posts/:postId', () => {
   let reportedPostId = ''
   let unreportedPostId = ''

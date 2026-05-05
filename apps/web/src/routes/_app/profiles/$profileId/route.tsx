@@ -138,6 +138,7 @@ function ProfileViewPage() {
             <CardContent>
               <div className="space-y-2">
                 {locations.map(loc => {
+                  const detail = formatLocationDetail(loc)
                   return (
                     <div
                       key={loc.locationId}
@@ -145,8 +146,8 @@ function ProfileViewPage() {
                     >
                       <div>
                         <p className="font-medium text-sm">{formatLocationDisplayName(loc)}</p>
-                        {formatLocationDetail(loc) && (
-                          <p className="text-xs text-muted-foreground mt-1">{formatLocationDetail(loc)}</p>
+                        {detail && (
+                          <p className="text-xs text-muted-foreground mt-1">{detail}</p>
                         )}
                       </div>
                     </div>

@@ -113,6 +113,13 @@
       "when": 1777876507730,
       "tag": "0015_lively_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1777998791576,
+      "tag": "0016_soft_delete_profile_locations",
+      "breakpoints": true
     }
   ]
 }

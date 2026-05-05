@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '#/components/ui/popover'
+import { Button } from '#/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -85,14 +86,16 @@ export function LocationCombobox({
           <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
         )}
         {value && !disabled && !isFetching && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             aria-label={`Clear ${placeholder}`}
             onClick={handleClear}
-            className="rounded-sm opacity-70 hover:opacity-100"
+            className="size-4 shrink-0 opacity-70 hover:opacity-100"
           >
-            <X className="size-3.5 shrink-0" />
-          </button>
+            <X className="size-3.5" />
+          </Button>
         )}
         <ChevronDown
           className={cn(

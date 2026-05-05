@@ -106,6 +106,11 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .post(
     '/:id/locations',
     async ({ params, body, user, set }) => {
+      const hasField = Object.values(body).some(v => typeof v === 'string' && v.trim() !== '')
+      if (!hasField) {
+        set.status = 422
+        return { message: 'At least one location field must be provided' }
+      }
       const location = await LocationsService.addToProfile(params.id, user.id, body)
       set.status = 201
       return location
@@ -116,6 +121,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       body:   LocationsModel.addBody,
       response: {
         201: LocationsModel.addResponse,
+        422: t.Object({ message: t.String() }),
         ...unauthorizedResponse,
         ...forbiddenResponse,
       },

@@ -24,6 +24,7 @@ export abstract class LocationsService {
       .where(
         and(
           eq(profileLocations.userProfileId, profileId),
+          isNull(profileLocations.deletedAt),
           isNull(locations.deletedAt),
         ),
       )
@@ -60,11 +61,13 @@ export abstract class LocationsService {
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const [row] = await db
-      .delete(profileLocations)
+      .update(profileLocations)
+      .set({ deletedAt: new Date() })
       .where(
         and(
           eq(profileLocations.userProfileId, profileId),
           eq(profileLocations.locationId, locationId),
+          isNull(profileLocations.deletedAt),
         ),
       )
       .returning()

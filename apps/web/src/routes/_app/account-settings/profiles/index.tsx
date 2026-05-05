@@ -144,13 +144,15 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
                     />
                   ))}
                   {extraCount > 0 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={() => setLightboxIndex(visibleImages.length)}
-                      className="flex size-10 items-center justify-center rounded-md border bg-muted text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
+                      className="size-10 text-xs"
                     >
                       +{extraCount}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
