@@ -71,11 +71,11 @@ describe('AccountSettingsHubPage', () => {
     expect(screen.getByText('alice@example.com')).toBeInTheDocument()
   })
 
-  it('renders a Manage Profiles link pointing to /account-settings/profiles/', async () => {
+  it('renders a Manage Profiles link pointing to /account-settings/profiles', async () => {
     await renderPage()
     const link = screen.getByRole('link', { name: /manage profiles/i })
     expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/account-settings/profiles/')
+    expect(link).toHaveAttribute('href', '/account-settings/profiles')
   })
 
   it('renders the Log Out All Devices button as disabled', async () => {
