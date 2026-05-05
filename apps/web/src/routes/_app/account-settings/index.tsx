@@ -128,7 +128,10 @@ function AccountSettingsHubPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-8 text-2xl font-semibold">Account Settings</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold">Account Settings</h1>
+        <p className="mt-1 text-muted-foreground">Manage your account preferences and security settings</p>
+      </div>
 
       <div className="flex gap-8">
         {/* Sticky sidebar — hidden on mobile */}
@@ -160,7 +163,7 @@ function AccountSettingsHubPage() {
           <Card id="account-information">
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
-              <CardDescription>Manage your email address and password</CardDescription>
+              <CardDescription>Update your email and password</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4">
@@ -207,7 +210,7 @@ function AccountSettingsHubPage() {
           <Card id="notifications">
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
-              <CardDescription>Control which notifications you receive</CardDescription>
+              <CardDescription>Manage how you receive notifications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {NOTIFICATION_ROWS.map(({ id, label, description, icon: Icon }) => (
@@ -229,7 +232,7 @@ function AccountSettingsHubPage() {
           <Card id="connected-accounts">
             <CardHeader>
               <CardTitle>Connected Accounts</CardTitle>
-              <CardDescription>Link social accounts for easier sign-in</CardDescription>
+              <CardDescription>Link your OAuth providers for easy sign-in</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {OAUTH_PROVIDERS.map(({ id, label, initial }) => (
@@ -293,7 +296,7 @@ function AccountSettingsHubPage() {
           <Card id="user-profiles">
             <CardHeader>
               <CardTitle>User Profiles</CardTitle>
-              <CardDescription>Manage your public profiles</CardDescription>
+              <CardDescription>Manage your service profiles for posting</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
