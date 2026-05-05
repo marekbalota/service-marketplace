@@ -6,14 +6,12 @@ import {
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
 import { Switch } from '#/components/ui/switch'
 import { Skeleton } from '#/components/ui/skeleton'
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '#/components/ui/dialog'
+import { ChangeEmailDialog } from './-components/ChangeEmailDialog'
+import { ChangePasswordDialog } from './-components/ChangePasswordDialog'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
@@ -318,57 +316,8 @@ function AccountSettingsHubPage() {
         </div>
       </div>
 
-      {/* Change Email dialog — placeholder, not wired to API */}
-      <Dialog open={showChangeEmail} onOpenChange={setShowChangeEmail}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Email</DialogTitle>
-            <DialogDescription>Update your account email address.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-email">New Email</Label>
-              <Input id="new-email" type="email" placeholder="new@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email-current-password">Current Password</Label>
-              <Input id="email-current-password" type="password" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChangeEmail(false)}>Cancel</Button>
-            <Button disabled title="Coming soon">Change Email</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Change Password dialog — placeholder, not wired to API */}
-      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>Update your account password.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" type="password" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input id="confirm-password" type="password" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChangePassword(false)}>Cancel</Button>
-            <Button disabled title="Coming soon">Change Password</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ChangeEmailDialog open={showChangeEmail} onOpenChange={setShowChangeEmail} />
+      <ChangePasswordDialog open={showChangePassword} onOpenChange={setShowChangePassword} />
     </main>
   )
 }

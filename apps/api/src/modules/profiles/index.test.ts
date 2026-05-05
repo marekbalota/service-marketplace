@@ -278,7 +278,7 @@ describe('DELETE /profiles/:id', () => {
     }
 
     // Attempting to delete the last profile must return 409
-    const lastProfileId = profileIds[profileIds.length - 1]
+    const lastProfileId = profileIds[profileIds.length - 1]!
     const { error } = await client.profiles({ id: lastProfileId }).delete(
       undefined,
       { headers: { Cookie: aliceCookie } },
@@ -307,9 +307,10 @@ describe('POST /profiles/:id/locations', () => {
       { headers: { Cookie: aliceCookie } },
     )
     expect(error).toBeNull()
-    expect(data!.country).toBe('Slovakia')
-    expect(data!.city).toBe('Bratislava')
-    expect(typeof data!.locationId).toBe('string')
+    if (!data || 'message' in data) throw new Error('Expected location data')
+    expect(data.country).toBe('Slovakia')
+    expect(data.city).toBe('Bratislava')
+    expect(typeof data.locationId).toBe('string')
   })
 
   it('location appears in GET /profiles/:id/locations after adding', async () => {

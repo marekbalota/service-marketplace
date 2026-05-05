@@ -12,12 +12,11 @@ import {
 } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { profileSchema, type ProfileFormValues } from '../../../-components/profileSchema'
 import { ProfileFields } from '../../../-components/ProfileFields'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
+import { AddLocationForm, EMPTY_LOCATION, type LocationDraft } from './-components/AddLocationForm'
 import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 import {
   imagesQueryOptions,
@@ -77,9 +76,7 @@ function EditProfilePage() {
 
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null)
-  const [newLocation, setNewLocation] = useState({
-    country: '', region: '', city: '', street: '', houseNumber: '',
-  })
+  const [newLocation, setNewLocation] = useState<LocationDraft>(EMPTY_LOCATION)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -241,86 +238,14 @@ function EditProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {showAddLocation && (
-              <Card className="border-2 border-primary/20 bg-muted/40">
-                <CardContent className="pt-6 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="loc-country">Country *</Label>
-                      <Input
-                        id="loc-country"
-                        placeholder="e.g., USA, Slovakia"
-                        value={newLocation.country}
-                        onChange={e => setNewLocation(v => ({ ...v, country: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="loc-region">Region</Label>
-                      <Input
-                        id="loc-region"
-                        placeholder="e.g., Texas, Bratislava Region"
-                        value={newLocation.region}
-                        onChange={e => setNewLocation(v => ({ ...v, region: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="loc-city">City</Label>
-                      <Input
-                        id="loc-city"
-                        placeholder="e.g., Austin, Bratislava"
-                        value={newLocation.city}
-                        onChange={e => setNewLocation(v => ({ ...v, city: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="loc-street">Street</Label>
-                      <Input
-                        id="loc-street"
-                        placeholder="e.g., Main Street"
-                        value={newLocation.street}
-                        onChange={e => setNewLocation(v => ({ ...v, street: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2 md:w-1/2">
-                    <Label htmlFor="loc-house">House Number</Label>
-                    <Input
-                      id="loc-house"
-                      placeholder="e.g., 123"
-                      value={newLocation.houseNumber}
-                      onChange={e => setNewLocation(v => ({ ...v, houseNumber: e.target.value }))}
-                    />
-                  </div>
-                  {addLocationMutation.isError && (
-                    <p className="text-sm text-destructive">
-                      {(addLocationMutation.error as Error).message}
-                    </p>
-                  )}
-                  <div className="flex gap-2 justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowAddLocation(false)
-                        setNewLocation({ country: '', region: '', city: '', street: '', houseNumber: '' })
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => addLocationMutation.mutate(newLocation)}
-                      disabled={!newLocation.country || addLocationMutation.isPending}
-                    >
-                      {addLocationMutation.isPending && (
-                        <Loader2 className="mr-2 size-4 animate-spin" />
-                      )}
-                      Add Location
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <AddLocationForm
+                value={newLocation}
+                onChange={patch => setNewLocation(v => ({ ...v, ...patch }))}
+                onSave={() => addLocationMutation.mutate(newLocation)}
+                onCancel={() => { setShowAddLocation(false); setNewLocation(EMPTY_LOCATION) }}
+                isPending={addLocationMutation.isPending}
+                error={addLocationMutation.isError ? (addLocationMutation.error as Error).message : undefined}
+              />
             )}
 
             {locations.length === 0 ? (
