@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Button } from '#/components/ui/button';
 import { PageHeader } from '#/components/PageHeader';
 import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared';
 import { useCurrentUser } from '#/lib/queries/users';
@@ -164,11 +163,6 @@ function AdminOptions() {
                 <CardTitle>{option.title}</CardTitle>
                 <CardDescription>{option.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full" tabIndex={-1} aria-hidden="true">
-                  Open
-                </Button>
-              </CardContent>
             </Card>
           </Link>
         );
