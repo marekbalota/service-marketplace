@@ -11,11 +11,11 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '#/components/ui/card'
-import { profileSchema, type ProfileFormValues } from '../-components/profileSchema'
-import { ProfileFields } from '../-components/ProfileFields'
-import { ImagePickerGrid } from '../-components/ImagePickerGrid'
+import { profileSchema, type ProfileFormValues } from '../../-components/profileSchema'
+import { ProfileFields } from '../../-components/ProfileFields'
+import { ImagePickerGrid } from '../../-components/ImagePickerGrid'
 
-export const Route = createFileRoute('/_app/account-settings/create')({
+export const Route = createFileRoute('/_app/account-settings/profiles/create')({
   component: CreateProfilePage,
 })
 
@@ -66,7 +66,7 @@ function CreateProfilePage() {
           `Images are optional — you can add them later by editing the profile.`,
         )
       } else {
-        navigate({ to: '/account-settings' })
+        navigate({ to: '/account-settings/profiles' })
       }
     },
   })
@@ -87,15 +87,15 @@ function CreateProfilePage() {
   if (uploadWarning) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <BackButton onClick={() => navigate({ to: '/account-settings' })} />
+        <BackButton onClick={() => navigate({ to: '/account-settings/profiles' })} />
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="rounded-lg border bg-muted p-4 text-sm">
               <p className="font-medium">Profile created with a warning</p>
               <p className="mt-1 text-muted-foreground">{uploadWarning}</p>
             </div>
-            <Link to="/account-settings" className={buttonVariants({ variant: 'default' })}>
-              Go to Account Settings
+            <Link to="/account-settings/profiles" className={buttonVariants({ variant: 'default' })}>
+              Go to Manage Profiles
             </Link>
           </CardContent>
         </Card>
@@ -105,7 +105,7 @@ function CreateProfilePage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/account-settings' })} />
+      <BackButton onClick={() => navigate({ to: '/account-settings/profiles' })} />
 
       <div className="mb-6">
         <h2 className="mb-2">Add Profile</h2>
@@ -146,7 +146,7 @@ function CreateProfilePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate({ to: '/account-settings' })}
+            onClick={() => navigate({ to: '/account-settings/profiles' })}
           >
             Cancel
           </Button>

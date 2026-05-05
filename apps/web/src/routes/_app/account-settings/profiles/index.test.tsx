@@ -9,10 +9,6 @@ import {
 import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
-// ── Hoisted mocks ─────────────────────────────────────────────────────────────
-
-const mockUseActiveProfile = vi.hoisted(() => vi.fn())
-
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
@@ -40,7 +36,10 @@ vi.mock('#/lib/queries/users', () => ({
 }))
 
 vi.mock('#/context/activeProfile', () => ({
-  useActiveProfile: mockUseActiveProfile,
+  useActiveProfile: vi.fn(() => ({
+    activeProfile: { userProfileId: 'profile-1', name: 'Alice Johnson' },
+    setActiveProfileId: vi.fn(),
+  })),
 }))
 
 vi.mock('#/api', () => ({
@@ -51,8 +50,6 @@ vi.mock('#/api', () => ({
     ),
   },
 }))
-
-// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const baseUser = {
   userId: 'user-1',
@@ -83,8 +80,6 @@ const bob = {
   updatedAt: new Date('2024-03-01'),
 }
 
-// ── Render helper ─────────────────────────────────────────────────────────────
-
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({
@@ -96,23 +91,16 @@ async function renderPage() {
   })
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
-describe('AccountSettingsPage', () => {
+describe('ManageProfilesPage', () => {
   beforeEach(() => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, profiles: [alice, bob] },
     } as ReturnType<typeof useCurrentUser>)
-    mockUseActiveProfile.mockReturnValue({
-      activeProfile: alice,
-      allProfiles: [alice, bob],
-      setActiveProfileId: vi.fn(),
-    })
   })
 
-  it('renders the page heading', async () => {
+  it('renders the Manage Profiles heading', async () => {
     await renderPage()
-    expect(screen.getByRole('heading', { name: /account settings/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /manage profiles/i })).toBeInTheDocument()
   })
 
   it('renders Add Profile link', async () => {
@@ -131,16 +119,6 @@ describe('AccountSettingsPage', () => {
     expect(screen.getByText('Active')).toBeInTheDocument()
   })
 
-  it('shows profile email', async () => {
-    await renderPage()
-    expect(screen.getByText('alice@example.com')).toBeInTheDocument()
-  })
-
-  it('shows phone number when present', async () => {
-    await renderPage()
-    expect(screen.getByText(/\+1 \(555\) 111-2222/)).toBeInTheDocument()
-  })
-
   it('renders View and Edit links and Delete buttons for each profile', async () => {
     await renderPage()
     const viewLinks = screen.getAllByRole('link', { name: /view/i })
@@ -155,11 +133,6 @@ describe('AccountSettingsPage', () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, profiles: [alice] },
     } as ReturnType<typeof useCurrentUser>)
-    mockUseActiveProfile.mockReturnValue({
-      activeProfile:      alice,
-      allProfiles:        [alice],
-      setActiveProfileId: vi.fn(),
-    })
     await renderPage()
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument()
   })

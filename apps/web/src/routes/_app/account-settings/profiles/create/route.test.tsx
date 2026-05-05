@@ -7,8 +7,6 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 
-// ── Hoisted mocks ─────────────────────────────────────────────────────────────
-
 const mockUseMutation = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
@@ -31,11 +29,7 @@ vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
 }))
 
-// ── Import component after mocks ──────────────────────────────────────────────
-
 import { Route } from './route'
-
-// ── Render helper ─────────────────────────────────────────────────────────────
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -44,8 +38,6 @@ async function renderPage() {
     render(<RouterProvider router={router} />)
   })
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('CreateProfilePage', () => {
   beforeEach(() => {

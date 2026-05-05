@@ -1,224 +1,373 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { ImageLightbox } from '#/components/ImageLightbox'
-import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
-import { ProfileAvatar } from '#/components/ProfileAvatar'
-import { PageHeader } from '#/components/PageHeader'
-import { api } from '#/api'
+import { useEffect, useRef, useState } from 'react'
+import {
+  User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Smartphone, MessageSquare,
+} from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
-import { imagesQueryOptions } from '#/lib/queries/profiles'
-import type { UserProfile } from '#/types/api'
+import { ProfileAvatar } from '#/components/ProfileAvatar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
-import { Card, CardContent } from '#/components/ui/card'
+import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
+import { Separator } from '#/components/ui/separator'
+import { Switch } from '#/components/ui/switch'
 import { Skeleton } from '#/components/ui/skeleton'
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '#/components/ui/dialog'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(currentUserQueryOptions)
-  },
-  pendingComponent: AccountSettingsSkeleton,
-  component: AccountSettingsPage,
+  loader: ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(currentUserQueryOptions),
+  pendingComponent: AccountSettingsHubSkeleton,
+  component: AccountSettingsHubPage,
 })
 
-function AccountSettingsSkeleton() {
+const SECTIONS = [
+  { id: 'account-information',  label: 'Account Information',       icon: User        },
+  { id: 'notifications',        label: 'Notifications',             icon: Bell        },
+  { id: 'connected-accounts',   label: 'Connected Accounts',        icon: Key    },
+  { id: 'two-factor-auth',      label: 'Two-Factor Authentication', icon: Shield },
+  { id: 'login-management',     label: 'Login Management',          icon: LogOut      },
+  { id: 'user-profiles',        label: 'User Profiles',             icon: Users       },
+] as const
+
+type SectionId = typeof SECTIONS[number]['id']
+
+const NOTIFICATION_ROWS = [
+  {
+    id:          'notif-email',
+    label:       'Email Notifications',
+    description: 'Receive emails about new messages and activity',
+    icon:        Bell,
+  },
+  {
+    id:          'notif-messages',
+    label:       'Message Notifications',
+    description: 'Get notified when you receive a new message',
+    icon:        Mail,
+  },
+  {
+    id:          'notif-reviews',
+    label:       'Review Notifications',
+    description: 'Get notified when someone reviews your post',
+    icon:        Bell,
+  },
+] as const
+
+const OAUTH_PROVIDERS = [
+  { id: 'google',    label: 'Google',    initial: 'G'  },
+  { id: 'facebook',  label: 'Facebook',  initial: 'F'  },
+  { id: 'github',    label: 'GitHub',    initial: 'GH' },
+  { id: 'microsoft', label: 'Microsoft', initial: 'M'  },
+  { id: 'apple',     label: 'Apple',     initial: 'A'  },
+] as const
+
+const TWO_FA_METHODS = [
+  { id: 'email',         label: 'Email',             description: 'Receive a code via email',                      icon: Mail        },
+  { id: 'authenticator', label: 'Authenticator App', description: 'Use an app like Google Authenticator or Authy', icon: Smartphone  },
+  { id: 'sms',           label: 'SMS',               description: 'Receive a code via text message',               icon: MessageSquare },
+] as const
+
+function AccountSettingsHubSkeleton() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-72" />
+      <Skeleton className="mb-8 h-8 w-48" />
+      <div className="flex gap-8">
+        <div className="hidden lg:block w-56 shrink-0 space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full" />
+          ))}
         </div>
-        <Skeleton className="h-9 w-32" />
-      </div>
-      <div className="space-y-4">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-card p-6">
-            <div className="flex gap-4">
-              <Skeleton className="size-14 rounded-full shrink-0" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-48" />
+        <div className="flex-1 space-y-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
                 <Skeleton className="h-4 w-64" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            </div>
-          </div>
-        ))}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </main>
   )
 }
 
-function DeleteProfileButton({ profile }: { profile: UserProfile }) {
-  const queryClient = useQueryClient()
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await api.profiles({ id: profile.userProfileId }).delete()
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-    },
-    onError: (err) => {
-      const msg = (err as { value?: { message?: string } }).value?.message ?? (err as Error).message
-      setErrorMsg(msg)
-    },
-  })
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-24 gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-        disabled={mutation.isPending}
-        onClick={() => { setErrorMsg(null); mutation.mutate() }}
-      >
-        <Trash2 className="size-4" />
-        Delete
-      </Button>
-      {errorMsg && (
-        <p className="max-w-48 text-right text-xs text-destructive">{errorMsg}</p>
-      )}
-    </div>
-  )
-}
-
-function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isActive: boolean; isOnly: boolean }) {
-  const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
-  const visibleImages = images.slice(0, 3)
-  const extraCount = images.length - visibleImages.length
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-
-  return (
-    <Card className="shadow-sm transition-shadow hover:shadow-md">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-1 items-start gap-4">
-            <ProfileAvatar name={profile.name} className="size-14 shrink-0 shadow-md" />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-semibold">{profile.name}</h3>
-                {isActive && (
-                  <span className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
-                    'bg-active-bg text-active-fg border-active-border',
-                  )}>
-                    <CheckCircle2 className="size-3" />
-                    Active
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
-              {profile.bio && (
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{profile.bio}</p>
-              )}
-              <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
-                {profile.phoneNumber && (
-                  <p className="flex items-center gap-1.5">
-                    <Phone className="size-3.5 shrink-0" />
-                    {profile.phoneNumber}
-                  </p>
-                )}
-                {profile.fax && (
-                  <p className="flex items-center gap-1.5">
-                    <Printer className="size-3.5 shrink-0" />
-                    {profile.fax}
-                  </p>
-                )}
-              </div>
-              {visibleImages.length > 0 && (
-                <div className="mt-3 flex items-center gap-2">
-                  {visibleImages.map((img, i) => (
-                    <img
-                      key={img.imageId}
-                      src={img.link}
-                      alt={img.name}
-                      className="size-10 cursor-pointer rounded-md border object-cover transition-opacity hover:opacity-80"
-                      onClick={() => setLightboxIndex(i)}
-                    />
-                  ))}
-                  {extraCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxIndex(visibleImages.length)}
-                      className="flex size-10 items-center justify-center rounded-md border bg-muted text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
-                    >
-                      +{extraCount}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <Link
-              to="/profiles/$profileId"
-              params={{ profileId: profile.userProfileId }}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-24 gap-2')}
-            >
-              <Eye className="size-4" />
-              View
-            </Link>
-            <Link
-              to="/account-settings/$profileId/edit"
-              params={{ profileId: profile.userProfileId }}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-24 gap-2')}
-            >
-              <Edit className="size-4" />
-              Edit
-            </Link>
-            {!isOnly && <DeleteProfileButton profile={profile} />}
-          </div>
-        </div>
-      </CardContent>
-
-      <ImageLightbox
-        images={images.map(img => ({ src: img.link, alt: img.name }))}
-        initialIndex={lightboxIndex ?? 0}
-        open={lightboxIndex !== null}
-        onClose={() => setLightboxIndex(null)}
-      />
-    </Card>
-  )
-}
-
-function AccountSettingsPage() {
+function AccountSettingsHubPage() {
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
-  const profiles = user?.profiles ?? []
+  const [activeSection, setActiveSection] = useState<SectionId>('account-information')
+  const [showChangeEmail, setShowChangeEmail] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const observersRef = useRef<IntersectionObserver[]>([])
+
+  useEffect(() => {
+    observersRef.current.forEach(o => o.disconnect())
+    observersRef.current = []
+
+    SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id)
+      if (!el) return
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry?.isIntersecting) setActiveSection(id as SectionId) },
+        { rootMargin: '-10% 0px -80% 0px', threshold: 0 },
+      )
+      observer.observe(el)
+      observersRef.current.push(observer)
+    })
+
+    return () => { observersRef.current.forEach(o => o.disconnect()) }
+  }, [])
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <PageHeader
-        title="Account Settings"
-        description="Manage your user profiles and account settings"
-        action={
-          <Link
-            to="/account-settings/create"
-            className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
-          >
-            <Plus className="size-4" />
-            Add Profile
-          </Link>
-        }
-      />
+      <h1 className="mb-8 text-2xl font-semibold">Account Settings</h1>
 
-      <div className="space-y-4">
-        {profiles.map((profile) => (
-          <ProfileCard
-            key={profile.userProfileId}
-            profile={profile}
-            isActive={profile.userProfileId === activeProfile?.userProfileId}
-            isOnly={profiles.length === 1}
-          />
-        ))}
+      <div className="flex gap-8">
+        {/* Sticky sidebar — hidden on mobile */}
+        <aside className="hidden lg:block w-56 shrink-0">
+          <nav className="sticky top-24 flex flex-col gap-1">
+            {SECTIONS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  activeSection === id
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
+              >
+                <Icon className="size-4 shrink-0" />
+                {label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 space-y-8 min-w-0">
+
+          {/* 1 — Account Information */}
+          <Card id="account-information">
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>Manage your email address and password</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="size-5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Email Address</p>
+                    <p className="text-sm text-muted-foreground">{user?.email ?? '—'}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  title="Coming soon"
+                  onClick={() => setShowChangeEmail(true)}
+                >
+                  Change
+                </Button>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Lock className="size-5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Password</p>
+                    <p className="text-sm text-muted-foreground">••••••••</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  title="Coming soon"
+                  onClick={() => setShowChangePassword(true)}
+                >
+                  Change
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2 — Notifications */}
+          <Card id="notifications">
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>Control which notifications you receive</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {NOTIFICATION_ROWS.map(({ id, label, description, icon: Icon }) => (
+                <div key={id} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Icon className="size-5 text-muted-foreground shrink-0" />
+                    <div>
+                      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
+                      <p className="text-sm text-muted-foreground">{description}</p>
+                    </div>
+                  </div>
+                  <Switch id={id} disabled />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* 3 — Connected Accounts */}
+          <Card id="connected-accounts">
+            <CardHeader>
+              <CardTitle>Connected Accounts</CardTitle>
+              <CardDescription>Link social accounts for easier sign-in</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {OAUTH_PROVIDERS.map(({ id, label, initial }) => (
+                <div key={id} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold shrink-0">
+                      {initial}
+                    </span>
+                    <span className="text-sm font-medium">{label}</span>
+                  </div>
+                  <Button variant="outline" size="sm" disabled title="Coming soon">
+                    Connect
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* 4 — Two-Factor Authentication */}
+          <Card id="two-factor-auth">
+            <CardHeader>
+              <CardTitle>Two-Factor Authentication</CardTitle>
+              <CardDescription>Add an extra layer of security to your account</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {TWO_FA_METHODS.map(({ id, label, description, icon: Icon }) => (
+                <div key={id} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <Icon className="size-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{label}</p>
+                      <p className="text-sm text-muted-foreground">{description}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" disabled title="Coming soon">Enable</Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* 5 — Login Management */}
+          <Card id="login-management">
+            <CardHeader>
+              <CardTitle>Login Management</CardTitle>
+              <CardDescription>Manage your active sessions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Signing out of all devices will end all active sessions except your current one.
+              </p>
+              <Button variant="destructive" disabled title="Coming soon" className="gap-2">
+                <LogOut className="size-4" />
+                Log Out All Devices
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* 6 — User Profiles */}
+          <Card id="user-profiles">
+            <CardHeader>
+              <CardTitle>User Profiles</CardTitle>
+              <CardDescription>Manage your public profiles</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Create and manage profiles to post services or offers.
+              </p>
+              {activeProfile && (
+                <div className="flex items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3">
+                  <ProfileAvatar name={activeProfile.name} className="size-9 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">{activeProfile.name}</p>
+                    <p className="text-xs text-muted-foreground">Active profile</p>
+                  </div>
+                </div>
+              )}
+              <Link to="/account-settings/profiles" className={buttonVariants()}>
+                Manage Profiles
+              </Link>
+            </CardContent>
+          </Card>
+
+        </div>
       </div>
+
+      {/* Change Email dialog — placeholder, not wired to API */}
+      <Dialog open={showChangeEmail} onOpenChange={setShowChangeEmail}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Email</DialogTitle>
+            <DialogDescription>Update your account email address.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-email">New Email</Label>
+              <Input id="new-email" type="email" placeholder="new@example.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email-current-password">Current Password</Label>
+              <Input id="email-current-password" type="password" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChangeEmail(false)}>Cancel</Button>
+            <Button disabled title="Coming soon">Change Email</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password dialog — placeholder, not wired to API */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>Update your account password.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input id="current-password" type="password" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input id="new-password" type="password" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input id="confirm-password" type="password" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChangePassword(false)}>Cancel</Button>
+            <Button disabled title="Coming soon">Change Password</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

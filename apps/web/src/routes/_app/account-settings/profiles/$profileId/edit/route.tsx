@@ -14,9 +14,9 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
-import { profileSchema, type ProfileFormValues } from '../../-components/profileSchema'
-import { ProfileFields } from '../../-components/ProfileFields'
-import { ImagePickerGrid } from '../../-components/ImagePickerGrid'
+import { profileSchema, type ProfileFormValues } from '../../../-components/profileSchema'
+import { ProfileFields } from '../../../-components/ProfileFields'
+import { ImagePickerGrid } from '../../../-components/ImagePickerGrid'
 import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 import {
   imagesQueryOptions,
@@ -24,11 +24,11 @@ import {
   profileLocationsQueryOptions,
 } from '#/lib/queries/profiles'
 
-export const Route = createFileRoute('/_app/account-settings/$profileId/edit')({
+export const Route = createFileRoute('/_app/account-settings/profiles/$profileId/edit')({
   loader: async ({ context: { queryClient }, params }) => {
     const user = await queryClient.ensureQueryData(currentUserQueryOptions)
     const isOwner = user?.profiles.some(p => p.userProfileId === params.profileId)
-    if (!isOwner) throw redirect({ to: '/account-settings' })
+    if (!isOwner) throw redirect({ to: '/account-settings/profiles' })
   },
   pendingComponent: EditSkeleton,
   component: EditProfilePage,
@@ -65,7 +65,6 @@ function EditProfilePage() {
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
   const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
 
-  // Image state
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
 
@@ -75,7 +74,6 @@ function EditProfilePage() {
     for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
   }, [])
 
-  // Location state
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null)
   const [newLocation, setNewLocation] = useState({
@@ -121,7 +119,7 @@ function EditProfilePage() {
       queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       queryClient.invalidateQueries({ queryKey: profileQueryOptions(profileId).queryKey })
       queryClient.invalidateQueries({ queryKey: imagesQueryOptions(profileId).queryKey })
-      navigate({ to: '/account-settings' })
+      navigate({ to: '/account-settings/profiles' })
     },
   })
 
@@ -188,7 +186,7 @@ function EditProfilePage() {
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton
         label="Back to Profiles"
-        onClick={() => navigate({ to: '/account-settings' })}
+        onClick={() => navigate({ to: '/account-settings/profiles' })}
       />
 
       <div className="mb-6">
@@ -199,7 +197,6 @@ function EditProfilePage() {
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Basic Information */}
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
@@ -210,7 +207,6 @@ function EditProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Images */}
         <Card>
           <CardHeader>
             <CardTitle>Images</CardTitle>
@@ -221,7 +217,6 @@ function EditProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Saved Locations */}
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -355,7 +350,6 @@ function EditProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Error + action buttons */}
         {saveMutation.isError && (
           <p className="text-sm text-destructive">
             {(saveMutation.error as Error).message}
@@ -365,7 +359,7 @@ function EditProfilePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate({ to: '/account-settings' })}
+            onClick={() => navigate({ to: '/account-settings/profiles' })}
           >
             Cancel
           </Button>
@@ -389,4 +383,3 @@ function EditProfilePage() {
     </main>
   )
 }
-

@@ -8,8 +8,6 @@ import {
 } from '@tanstack/react-router'
 import { useCurrentUser } from '#/lib/queries/users'
 
-// ── Hoisted mocks ─────────────────────────────────────────────────────────────
-
 const mockUseMutation = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
@@ -52,11 +50,7 @@ vi.mock('#/lib/queries/profiles', () => ({
   profileLocationsQueryOptions: (id: string) => ({ queryKey: ['locations', 'profile', id] }),
 }))
 
-// ── Import component and route after mocks ────────────────────────────────────
-
 import { Route } from './route'
-
-// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const baseUser = {
   userId: 'user-1',
@@ -76,8 +70,6 @@ const alice = {
   updatedAt:     null,
 }
 
-// ── Render helper ─────────────────────────────────────────────────────────────
-
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
@@ -85,8 +77,6 @@ async function renderPage() {
     render(<RouterProvider router={router} />)
   })
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('EditProfilePage', () => {
   beforeEach(() => {
