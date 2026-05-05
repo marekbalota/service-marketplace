@@ -4,8 +4,6 @@ import {
   User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Smartphone, MessageSquare, Plus,
 } from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
-import { useActiveProfile } from '#/context/activeProfile'
-import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -102,8 +100,7 @@ function AccountSettingsHubSkeleton() {
 
 function AccountSettingsHubPage() {
   const { data: user } = useCurrentUser()
-  const { activeProfile } = useActiveProfile()
-  const [activeSection, setActiveSection] = useState<SectionId>('account-information')
+const [activeSection, setActiveSection] = useState<SectionId>('account-information')
   const [showChangeEmail, setShowChangeEmail] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const observersRef = useRef<IntersectionObserver[]>([])
@@ -300,19 +297,18 @@ function AccountSettingsHubPage() {
               <CardDescription>Manage your service profiles for posting</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Create and manage profiles to post services or offers.
-              </p>
-              {activeProfile && (
-                <div className="flex items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3">
-                  <ProfileAvatar name={activeProfile.name} className="size-9 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">{activeProfile.name}</p>
-                    <p className="text-xs text-muted-foreground">Active profile</p>
-                  </div>
+              <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-4 py-3">
+                <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Users className="size-5 text-muted-foreground" />
                 </div>
-              )}
-              <Link to="/account-settings/profiles" className={buttonVariants()}>
+                <div>
+                  <p className="text-sm font-medium">
+                    {user?.profiles.length ?? 0} Active {(user?.profiles.length ?? 0) === 1 ? 'Profile' : 'Profiles'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Profiles for posting services</p>
+                </div>
+              </div>
+              <Link to="/account-settings/profiles" className={buttonVariants({ variant: 'outline', className: 'w-full' })}>
                 Manage Profiles
               </Link>
             </CardContent>

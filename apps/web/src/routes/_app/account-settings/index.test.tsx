@@ -14,12 +14,6 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('#/context/activeProfile', () => ({
-  useActiveProfile: vi.fn(() => ({
-    activeProfile: { userProfileId: 'profile-1', name: 'Alice Johnson' },
-    setActiveProfileId: vi.fn(),
-  })),
-}))
 
 // Switch uses Radix internals — stub it to a simple checkbox
 vi.mock('#/components/ui/switch', () => ({
@@ -89,9 +83,9 @@ describe('AccountSettingsHubPage', () => {
     expect(screen.getByRole('button', { name: /log out all devices/i })).toBeDisabled()
   })
 
-  it('renders the active profile name in the User Profiles card', async () => {
+  it('renders the profile count in the User Profiles card', async () => {
     await renderPage()
-    expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
+    expect(screen.getByText(/0 Active Profiles/i)).toBeInTheDocument()
   })
 
   it('renders Change Email and Change Password buttons as disabled', async () => {
