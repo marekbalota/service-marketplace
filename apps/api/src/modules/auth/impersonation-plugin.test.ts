@@ -209,7 +209,7 @@ describe("POST /api/auth/admin/stop-impersonating", () => {
     // Strip the admin_session and its signature cookie so only the impersonation session remains
     const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
       .split("; ")
-      .filter((c) => !c.startsWith("admin_session"))
+      .filter((c) => !c.startsWith("better-auth.admin_session"))
       .join("; ");
 
     const res = await auth.api.stopImpersonating({
@@ -236,7 +236,7 @@ describe("POST /api/auth/admin/stop-impersonating", () => {
     // Replace the admin_session value with garbage so signature validation fails
     const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
       .split("; ")
-      .map((c) => (c.startsWith("admin_session=") ? "admin_session=tampered_value" : c))
+      .map((c) => (c.startsWith("better-auth.admin_session=") ? "better-auth.admin_session=tampered_value" : c))
       .join("; ");
 
     const res = await auth.api.stopImpersonating({

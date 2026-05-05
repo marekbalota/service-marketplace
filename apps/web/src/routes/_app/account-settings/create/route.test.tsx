@@ -40,6 +40,7 @@ vi.mock('#/lib/queries/users', () => ({
 // ── Import component after mocks ───────────────────────────────────────────────
 
 import { Route } from './route'
+import { ApiError } from '#/lib/api-error'
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -81,7 +82,7 @@ describe('CreateProfilePage', () => {
       mutate: vi.fn(),
       isPending: false,
       isError: true,
-      error: { value: { message: 'Server error' } },
+      error: new ApiError('Server error'),
     })
     await renderPage()
     expect(screen.getByText('Server error')).toBeInTheDocument()

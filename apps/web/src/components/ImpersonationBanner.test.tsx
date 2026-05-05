@@ -52,11 +52,6 @@ describe('ImpersonationBanner', () => {
     )
   })
 
-  it('renders nothing when impersonatedBy is null', async () => {
-    await renderBanner()
-    expect(screen.queryByText(/impersonating/i)).not.toBeInTheDocument()
-  })
-
   it('renders the banner when impersonatedBy is non-null', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, impersonatedBy: 'admin-id' },

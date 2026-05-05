@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReportForm } from './ReportForm'
+import { ApiError } from '#/lib/api-error'
 
 const mockOnReport = vi.hoisted(() => vi.fn())
 const mockCategoriesGet = vi.hoisted(() => vi.fn())
@@ -117,7 +118,7 @@ describe('ReportForm', () => {
   })
 
   it('shows already-reported message from server on 409', async () => {
-    mockOnReport.mockRejectedValue({ status: 409, value: { message: 'You have already reported this review' } })
+    mockOnReport.mockRejectedValue(new ApiError('You have already reported this review'))
     const user = userEvent.setup()
     renderForm({ entityName: 'review' })
 
