@@ -1,14 +1,15 @@
-import { createFileRoute, useNavigate, useRouter, redirect } from '@tanstack/react-router'
+import { createFileRoute, useRouter, redirect } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FileText, AlignLeft, Tag } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '#/api'
 import { categoriesQueryOptions, postDetailQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'
+import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
@@ -77,7 +78,6 @@ function EditPostSkeleton() {
 
 function EditPostPage() {
   const { postId } = Route.useParams()
-  const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -97,8 +97,14 @@ function EditPostPage() {
     },
   })
 
-  const { isValid } = form.formState
+  const { isValid, isDirty } = form.formState
   const priceValue = form.watch('price')
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+
+  const handleBack = () => {
+    if (isDirty) setShowDiscardDialog(true)
+    else router.history.back()
+  }
 
   useEffect(() => {
     if (!priceValue) {
@@ -123,7 +129,7 @@ function EditPostPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', postId] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      navigate({ to: '/posts/$postId', params: { postId } })
+      router.history.back()
     },
   })
 
@@ -131,7 +137,7 @@ function EditPostPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <BackButton onClick={() => router.history.back()} />
+      <BackButton onClick={handleBack} />
 
       <Card className="border-0 shadow-lg">
         <CardHeader className="space-y-1 pb-6">
@@ -256,7 +262,7 @@ function EditPostPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.history.back()}
+                onClick={handleBack}
                 className="h-11 flex-1"
               >
                 Cancel
@@ -272,6 +278,16 @@ function EditPostPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showDiscardDialog}
+        title="Discard changes?"
+        description="You have unsaved changes. Are you sure you want to leave?"
+        confirmLabel="Discard"
+        destructive
+        onConfirm={() => router.history.back()}
+        onClose={() => setShowDiscardDialog(false)}
+      />
     </main>
   )
 }

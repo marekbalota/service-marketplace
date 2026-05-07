@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-router'
 import { Route } from './route'
 
-const mockNavigate = vi.fn()
 const mockHistoryBack = vi.fn()
 const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
 
@@ -16,7 +15,6 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
     useParams: vi.fn(() => ({ postId: 'post-1' })),
     useRouter: vi.fn(() => ({ history: { back: mockHistoryBack } })),
   }
