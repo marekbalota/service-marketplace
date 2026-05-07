@@ -6,7 +6,7 @@ import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 import { formatLocation } from '#/lib/format'
-import { postDetailQueryOptions } from '../-queries/posts'
+import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { SendMessageSection } from './SendMessageSection'
 
 export function PostSidebarCard({ postId }: { postId: string }) {

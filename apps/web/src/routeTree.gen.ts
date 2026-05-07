@@ -29,6 +29,7 @@ import { Route as AppAccountSettingsIndexRouteImport } from './routes/_app/accou
 import { Route as AppProfilesProfileIdRouteRouteImport } from './routes/_app/profiles/$profileId/route'
 import { Route as AppPostsPostIdRouteRouteImport } from './routes/_app/posts/$postId/route'
 import { Route as AppMessagesThreadIdRouteRouteImport } from './routes/_app/messages/$threadId/route'
+import { Route as AppEditPostPostIdRouteRouteImport } from './routes/_app/edit-post/$postId/route'
 import { Route as AppAdminUsersRouteRouteImport } from './routes/_app/admin/users/route'
 import { Route as AppAdminRolesRouteRouteImport } from './routes/_app/admin/roles/route'
 import { Route as AppAccountSettingsCreateRouteRouteImport } from './routes/_app/account-settings/create/route'
@@ -140,6 +141,11 @@ const AppMessagesThreadIdRouteRoute =
     path: '/$threadId',
     getParentRoute: () => AppMessagesRouteRoute,
   } as any)
+const AppEditPostPostIdRouteRoute = AppEditPostPostIdRouteRouteImport.update({
+  id: '/edit-post/$postId',
+  path: '/edit-post/$postId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppAdminUsersRouteRoute = AppAdminUsersRouteRouteImport.update({
   id: '/users',
   path: '/users',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
   '/admin/users': typeof AppAdminUsersRouteRouteWithChildren
+  '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailIndexRoute
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
+  '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/_app/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/_app/admin/roles': typeof AppAdminRolesRouteRoute
   '/_app/admin/users': typeof AppAdminUsersRouteRouteWithChildren
+  '/_app/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
   '/_app/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/_app/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/account-settings/create'
     | '/admin/roles'
     | '/admin/users'
+    | '/edit-post/$postId'
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/account-settings/create'
     | '/admin/roles'
+    | '/edit-post/$postId'
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/_app/account-settings/create'
     | '/_app/admin/roles'
     | '/_app/admin/users'
+    | '/_app/edit-post/$postId'
     | '/_app/messages/$threadId'
     | '/_app/posts/$postId'
     | '/_app/profiles/$profileId'
@@ -504,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMessagesThreadIdRouteRouteImport
       parentRoute: typeof AppMessagesRouteRoute
     }
+    '/_app/edit-post/$postId': {
+      id: '/_app/edit-post/$postId'
+      path: '/edit-post/$postId'
+      fullPath: '/edit-post/$postId'
+      preLoaderRoute: typeof AppEditPostPostIdRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/admin/users': {
       id: '/_app/admin/users'
       path: '/users'
@@ -648,6 +667,7 @@ interface AppRouteRouteChildren {
   AppMessagesRouteRoute: typeof AppMessagesRouteRouteWithChildren
   AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppEditPostPostIdRouteRoute: typeof AppEditPostPostIdRouteRoute
   AppPostsPostIdRouteRoute: typeof AppPostsPostIdRouteRoute
   AppProfilesProfileIdRouteRoute: typeof AppProfilesProfileIdRouteRoute
   AppPostsIndexRoute: typeof AppPostsIndexRoute
@@ -660,6 +680,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppMessagesRouteRoute: AppMessagesRouteRouteWithChildren,
   AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
   AppIndexRoute: AppIndexRoute,
+  AppEditPostPostIdRouteRoute: AppEditPostPostIdRouteRoute,
   AppPostsPostIdRouteRoute: AppPostsPostIdRouteRoute,
   AppProfilesProfileIdRouteRoute: AppProfilesProfileIdRouteRoute,
   AppPostsIndexRoute: AppPostsIndexRoute,
