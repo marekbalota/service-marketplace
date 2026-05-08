@@ -2,17 +2,20 @@ import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DollarSign, Flag, Pencil } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { api } from '#/api'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { FavouriteButton } from '#/components/FavouriteButton'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { PostTypeBadge } from '#/components/PostTypeBadge'
 import { ReportForm } from '#/components/ReportForm'
-import { postDetailQueryOptions, hasReportedPostQueryOptions } from '../-queries/posts'
+import { cn } from '#/lib/utils'
+import { postDetailQueryOptions } from '#/lib/queries/posts'
+import { hasReportedPostQueryOptions } from '../-queries/posts'
 
 const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',
@@ -59,10 +62,14 @@ export function PostInfoCard({ postId }: { postId: string }) {
                 </Button>
               )}
               {isOwner && (
-                <Button variant="outline" size="sm" className="shrink-0 gap-2" disabled>
+                <Link
+                  to="/edit-post/$postId"
+                  params={{ postId }}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0 gap-2')}
+                >
                   <Pencil className="size-4" />
                   Edit
-                </Button>
+                </Link>
               )}
             </div>
           </div>

@@ -18,7 +18,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
-  return { ...actual, Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }
+  return { ...actual, Link: ({ children, to }: { children: React.ReactNode; to?: string }) => <a href={to ?? '#'}>{children}</a> }
 })
 
 vi.mock('#/lib/queries/users', () => ({ useCurrentUser: vi.fn() }))
@@ -55,22 +55,22 @@ describe('PostInfoCard', () => {
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
   })
 
-  it('shows Edit button for the post owner', async () => {
+  it('shows Edit link for the post owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-author', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
     vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u1' } } as unknown as ReturnType<typeof useCurrentUser>)
     await act(async () => render(<PostInfoCard postId="post-1" />))
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
   })
 
-  it('does not show Edit button for non-owner', async () => {
+  it('does not show Edit link for non-owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
     } as ReturnType<typeof useActiveProfile>)
     vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<typeof useCurrentUser>)
     await act(async () => render(<PostInfoCard postId="post-1" />))
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /edit/i })).not.toBeInTheDocument()
   })
 
   it('shows Report post button for authenticated non-owner', async () => {

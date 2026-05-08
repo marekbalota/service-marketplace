@@ -119,7 +119,7 @@ describe('PostDetailPage', () => {
       data: { userId: 'u1' },
     } as unknown as ReturnType<typeof useCurrentUser>)
     await renderPage()
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
   })
 
   it('does not show Edit button for non-owner', async () => {
@@ -131,7 +131,7 @@ describe('PostDetailPage', () => {
       data: { userId: 'u1' },
     } as unknown as ReturnType<typeof useCurrentUser>)
     await renderPage()
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /edit/i })).not.toBeInTheDocument()
   })
 
   it('shows empty state when there are no reviews', async () => {
