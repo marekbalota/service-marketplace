@@ -1,8 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 import { impersonationClient } from "./impersonation-client";
+import { env } from "./env";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:3001",
+  baseURL: env.apiUrl,
   fetchOptions: {
     credentials: "include",
   },

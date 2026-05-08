@@ -2,6 +2,7 @@
 export type { AdminRolesModel } from './modules/admin/roles/model';
 export type { AdminUsersModel } from './modules/admin/users/model';
 
+import { env } from "./lib/env";
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
@@ -20,12 +21,12 @@ import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
 import { reportCategoriesRoutes } from "./modules/reports";
-import { initBucket } from "./storage";
+import { initBucket } from "./lib/storage";
 
 export const app = new Elysia()
   .use(errorsPlugin)
   .use(cors({
-    origin: "http://localhost:3000",
+    origin: env.frontendUrl,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   }))

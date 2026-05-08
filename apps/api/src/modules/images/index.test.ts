@@ -1,7 +1,7 @@
 import { mock, describe, it, expect, beforeAll } from 'bun:test'
 
 // Mock MinIO storage BEFORE any module that imports it is resolved.
-mock.module('../../storage', () => ({
+mock.module('../../lib/storage', () => ({
   uploadImage: async (_file: File, profileId: string) =>
     `http://localhost:9000/marketplace/profiles/${profileId}/test.jpg`,
   initBucket:  async () => {},

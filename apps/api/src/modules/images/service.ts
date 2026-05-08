@@ -2,7 +2,7 @@ import { db } from '../../db'
 import { images, userProfiles } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { ForbiddenError, NotFoundError, InternalServerError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
-import { uploadImage, deleteUploadedImage } from '../../storage'
+import { uploadImage, deleteUploadedImage } from '../../lib/storage'
 import { ProfilesService } from '../profiles/service'
 
 const imageSelect = {

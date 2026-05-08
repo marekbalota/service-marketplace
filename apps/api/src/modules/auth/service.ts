@@ -9,14 +9,16 @@ import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
 import { impersonationPlugin } from "./impersonation-plugin";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../../lib/email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../../lib/email"
+import { redis } from "../../lib/redis";
+import { env } from "../../lib/env";
 
 export const verificationTokenStore = new Map<string, string>();
 export const resetTokenStore = new Map<string, string>();
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
-  trustedOrigins: ["http://localhost:3000"],
+  baseURL: env.betterAuthUrl,
+  trustedOrigins: [env.frontendUrl],
   plugins: [impersonationPlugin()],
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -42,8 +44,8 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url, token }) => {
       const resetUrl = new URL(url);
-      resetUrl.searchParams.set("callbackURL", "http://localhost:3000/reset-password");
-      if (process.env.NODE_ENV === "test") {
+      resetUrl.searchParams.set("callbackURL", `${env.frontendUrl}/reset-password`);
+      if (env.nodeEnv === "test") {
         resetTokenStore.set(user.email, token);
       }
       void sendPasswordResetEmail({ email: user.email, url: resetUrl.toString() });
@@ -55,16 +57,43 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url, token }) => {
       const verifyUrl = new URL(url);
-      verifyUrl.searchParams.set("callbackURL", "http://localhost:3000/verify-email/callback");
-      if (process.env.NODE_ENV === "test") {
+      verifyUrl.searchParams.set("callbackURL", `${env.frontendUrl}/verify-email/callback`);
+      if (env.nodeEnv === "test") {
         verificationTokenStore.set(user.email, token);
       }
       void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() });
     },
   },
+  secondaryStorage: {
+    get: async (key) => {
+      try {
+        return await redis.get(key)
+      } catch {
+        return null
+      }
+    },
+    set: async (key, value, ttl) => {
+      try {
+        if (ttl) await redis.set(key, value, "EX", ttl)
+        else await redis.set(key, value)
+      } catch {
+        // degrade gracefully
+      }
+    },
+    delete: async (key) => {
+      try {
+        await redis.del(key)
+      } catch {
+        // degrade gracefully
+      }
+    },
+  },
+  session: {
+    storeSessionInDatabase: true,
+  },
   rateLimit: {
     enabled: true,
-    storage: "memory",
+    storage: "secondary-storage",
     customRules: {
       "/sign-in/email": {
         window: 300,
@@ -104,7 +133,7 @@ export const auth = betterAuth({
       },
     },
   },
-  ...(process.env.NODE_ENV !== "test" ? {
+  ...(env.nodeEnv !== "test" ? {
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         if (ctx.path === "/sign-in/email") {
