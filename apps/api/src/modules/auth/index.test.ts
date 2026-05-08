@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { auth, verificationTokenStore } from "./service";
+import { auth, verificationTokenStore, resetTokenStore } from "./service";
 import { db } from "../../db";
 
 const TEST_EMAIL = `auth-test-${Date.now()}@example.com`;
@@ -113,5 +113,71 @@ describe("POST /api/auth/sign-out", () => {
       asResponse: true,
     });
     expect(res.status).toBe(200);
+  });
+});
+
+describe("Password reset", () => {
+  const RESET_EMAIL = `reset-test-${Date.now()}@example.com`;
+  const RESET_PASSWORD = "initial-password123";
+  const NEW_PASSWORD = "new-password456";
+
+  it("set up: registers and verifies a user for reset tests", async () => {
+    const signUpRes = await auth.api.signUpEmail({
+      body: { email: RESET_EMAIL, name: "Reset Test User", password: RESET_PASSWORD },
+      asResponse: true,
+    });
+    expect(signUpRes.status).toBe(200);
+    const token = verificationTokenStore.get(RESET_EMAIL);
+    if (!token) throw new Error("No verification token");
+    const verifyRes = await auth.api.verifyEmail({
+      query: { token, callbackURL: "http://localhost:3000/verify-email/callback" },
+      asResponse: true,
+    });
+    expect(verifyRes.status).toBeLessThan(400);
+  });
+
+  it("requestPasswordReset returns 200 (does not reveal whether user exists)", async () => {
+    const res = await auth.api.requestPasswordReset({
+      body: { email: RESET_EMAIL, redirectTo: "http://localhost:3000/reset-password" },
+      asResponse: true,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("requestPasswordReset for unknown email still returns 200 (enumeration prevention)", async () => {
+    const res = await auth.api.requestPasswordReset({
+      body: { email: "ghost-nobody@example.com", redirectTo: "http://localhost:3000/reset-password" },
+      asResponse: true,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("stores reset token in resetTokenStore during tests", () => {
+    expect(resetTokenStore.get(RESET_EMAIL)).toBeTruthy();
+  });
+
+  it("resetPassword with valid token returns 200", async () => {
+    const token = resetTokenStore.get(RESET_EMAIL)!;
+    const res = await auth.api.resetPassword({
+      body: { token, newPassword: NEW_PASSWORD },
+      asResponse: true,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("can sign in with new password after reset", async () => {
+    const res = await auth.api.signInEmail({
+      body: { email: RESET_EMAIL, password: NEW_PASSWORD },
+      asResponse: true,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("cannot sign in with old password after reset", async () => {
+    const res = await auth.api.signInEmail({
+      body: { email: RESET_EMAIL, password: RESET_PASSWORD },
+      asResponse: true,
+    });
+    expect(res.status).toBe(401);
   });
 });

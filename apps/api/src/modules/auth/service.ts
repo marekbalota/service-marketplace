@@ -9,8 +9,10 @@ import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
 import { impersonationPlugin } from "./impersonation-plugin";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../../lib/email";
 
 export const verificationTokenStore = new Map<string, string>();
+export const resetTokenStore = new Map<string, string>();
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
@@ -29,14 +31,21 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       roleId: { type: "string", input: false },
-      isBanned: {type: "boolean", input: false },
+      isBanned: { type: "boolean", input: false },
       banReason: { type: "string", input: false },
-      banExpiration: { type: "date", input: false }
-    }
+      banExpiration: { type: "date", input: false },
+    },
   },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      if (process.env.NODE_ENV === "test") {
+        resetTokenStore.set(user.email, token);
+      }
+      void sendPasswordResetEmail({ email: user.email, url });
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -48,7 +57,21 @@ export const auth = betterAuth({
       if (process.env.NODE_ENV === "test") {
         verificationTokenStore.set(user.email, token);
       }
-      console.log(`[email-verify] ${user.email} → ${verifyUrl.toString()}`);
+      void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() });
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    storage: "memory",
+    customRules: {
+      "/sign-in/email": {
+        window: 300,
+        max: 5,
+      },
+      "/request-password-reset": {
+        window: 3600,
+        max: 5,
+      },
     },
   },
   advanced: {
@@ -103,7 +126,7 @@ export const auth = betterAuth({
         }
       }),
     },
-  } : {})
+  } : {}),
 });
 
 export abstract class AuthService {
