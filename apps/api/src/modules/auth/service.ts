@@ -41,10 +41,12 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url, token }) => {
+      const resetUrl = new URL(url);
+      resetUrl.searchParams.set("callbackURL", "http://localhost:3000/reset-password");
       if (process.env.NODE_ENV === "test") {
         resetTokenStore.set(user.email, token);
       }
-      void sendPasswordResetEmail({ email: user.email, url });
+      void sendPasswordResetEmail({ email: user.email, url: resetUrl.toString() });
     },
   },
   emailVerification: {
