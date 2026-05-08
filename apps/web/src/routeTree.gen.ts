@@ -9,23 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteRouteImport } from './routes/verify-email/route'
-import { Route as RegisterRouteRouteImport } from './routes/register/route'
-import { Route as LoginRouteRouteImport } from './routes/login/route'
-import { Route as BannedRouteRouteImport } from './routes/banned/route'
+import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
-import { Route as VerifyEmailIndexRouteImport } from './routes/verify-email/index'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as VerifyEmailCallbackRouteRouteImport } from './routes/verify-email/callback/route'
+import { Route as AuthVerifyEmailRouteRouteImport } from './routes/_auth/verify-email/route'
+import { Route as AuthResetPasswordRouteRouteImport } from './routes/_auth/reset-password/route'
+import { Route as AuthRegisterRouteRouteImport } from './routes/_auth/register/route'
+import { Route as AuthLoginRouteRouteImport } from './routes/_auth/login/route'
+import { Route as AuthForgotPasswordRouteRouteImport } from './routes/_auth/forgot-password/route'
+import { Route as AuthBannedRouteRouteImport } from './routes/_auth/banned/route'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
 import { Route as AppMessagesRouteRouteImport } from './routes/_app/messages/route'
 import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAccountSettingsRouteRouteImport } from './routes/_app/account-settings/route'
+import { Route as AuthVerifyEmailIndexRouteImport } from './routes/_auth/verify-email/index'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppMessagesIndexRouteImport } from './routes/_app/messages/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAccountSettingsIndexRouteImport } from './routes/_app/account-settings/index'
+import { Route as AuthVerifyEmailCallbackRouteRouteImport } from './routes/_auth/verify-email/callback/route'
 import { Route as AppProfilesProfileIdRouteRouteImport } from './routes/_app/profiles/$profileId/route'
 import { Route as AppPostsPostIdRouteRouteImport } from './routes/_app/posts/$postId/route'
 import { Route as AppMessagesThreadIdRouteRouteImport } from './routes/_app/messages/$threadId/route'
@@ -39,46 +42,49 @@ import { Route as AppAccountSettingsProfileIdEditRouteRouteImport } from './rout
 import { Route as AppAdminUsersUserIdIndexRouteImport } from './routes/_app/admin/users/$userId/index'
 import { Route as AppAdminUsersUserIdProfileProfileIdIndexRouteImport } from './routes/_app/admin/users/$userId/profile/$profileId/index'
 
-const VerifyEmailRouteRoute = VerifyEmailRouteRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRouteRoute = RegisterRouteRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRouteRoute = LoginRouteRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BannedRouteRoute = BannedRouteRouteImport.update({
-  id: '/banned',
-  path: '/banned',
+const AuthRouteRoute = AuthRouteRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerifyEmailIndexRoute = VerifyEmailIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => VerifyEmailRouteRoute,
-} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const VerifyEmailCallbackRouteRoute =
-  VerifyEmailCallbackRouteRouteImport.update({
-    id: '/callback',
-    path: '/callback',
-    getParentRoute: () => VerifyEmailRouteRoute,
-  } as any)
+const AuthVerifyEmailRouteRoute = AuthVerifyEmailRouteRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthResetPasswordRouteRoute = AuthResetPasswordRouteRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthRegisterRouteRoute = AuthRegisterRouteRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthLoginRouteRoute = AuthLoginRouteRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthForgotPasswordRouteRoute = AuthForgotPasswordRouteRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthBannedRouteRoute = AuthBannedRouteRouteImport.update({
+  id: '/banned',
+  path: '/banned',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
   id: '/my-postings',
   path: '/my-postings',
@@ -104,6 +110,11 @@ const AppAccountSettingsRouteRoute = AppAccountSettingsRouteRouteImport.update({
   path: '/account-settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AuthVerifyEmailIndexRoute = AuthVerifyEmailIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthVerifyEmailRouteRoute,
+} as any)
 const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
@@ -124,6 +135,12 @@ const AppAccountSettingsIndexRoute = AppAccountSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAccountSettingsRouteRoute,
 } as any)
+const AuthVerifyEmailCallbackRouteRoute =
+  AuthVerifyEmailCallbackRouteRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => AuthVerifyEmailRouteRoute,
+  } as any)
 const AppProfilesProfileIdRouteRoute =
   AppProfilesProfileIdRouteRouteImport.update({
     id: '/profiles/$profileId',
@@ -194,17 +211,17 @@ const AppAdminUsersUserIdProfileProfileIdIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
-  '/banned': typeof BannedRouteRoute
-  '/login': typeof LoginRouteRoute
-  '/register': typeof RegisterRouteRoute
-  '/verify-email': typeof VerifyEmailRouteRouteWithChildren
   '/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/create-post': typeof AppCreatePostRouteRoute
   '/messages': typeof AppMessagesRouteRouteWithChildren
   '/my-postings': typeof AppMyPostingsRouteRoute
-  '/verify-email/callback': typeof VerifyEmailCallbackRouteRoute
-  '/verify-email/': typeof VerifyEmailIndexRoute
+  '/banned': typeof AuthBannedRouteRoute
+  '/forgot-password': typeof AuthForgotPasswordRouteRoute
+  '/login': typeof AuthLoginRouteRoute
+  '/register': typeof AuthRegisterRouteRoute
+  '/reset-password': typeof AuthResetPasswordRouteRoute
+  '/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
   '/admin/users': typeof AppAdminUsersRouteRouteWithChildren
@@ -212,10 +229,12 @@ export interface FileRoutesByFullPath {
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/account-settings/': typeof AppAccountSettingsIndexRoute
   '/admin/': typeof AppAdminIndexRoute
   '/messages/': typeof AppMessagesIndexRoute
   '/posts/': typeof AppPostsIndexRoute
+  '/verify-email/': typeof AuthVerifyEmailIndexRoute
   '/account-settings/$profileId/edit': typeof AppAccountSettingsProfileIdEditRouteRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
   '/admin/users/': typeof AppAdminUsersIndexRoute
@@ -223,24 +242,26 @@ export interface FileRoutesByFullPath {
   '/admin/users/$userId/profile/$profileId/': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/banned': typeof BannedRouteRoute
-  '/login': typeof LoginRouteRoute
-  '/register': typeof RegisterRouteRoute
+  '/': typeof AppIndexRoute
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
-  '/verify-email/callback': typeof VerifyEmailCallbackRouteRoute
-  '/': typeof AppIndexRoute
-  '/verify-email': typeof VerifyEmailIndexRoute
+  '/banned': typeof AuthBannedRouteRoute
+  '/forgot-password': typeof AuthForgotPasswordRouteRoute
+  '/login': typeof AuthLoginRouteRoute
+  '/register': typeof AuthRegisterRouteRoute
+  '/reset-password': typeof AuthResetPasswordRouteRoute
   '/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
   '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/account-settings': typeof AppAccountSettingsIndexRoute
   '/admin': typeof AppAdminIndexRoute
   '/messages': typeof AppMessagesIndexRoute
   '/posts': typeof AppPostsIndexRoute
+  '/verify-email': typeof AuthVerifyEmailIndexRoute
   '/account-settings/$profileId/edit': typeof AppAccountSettingsProfileIdEditRouteRoute
   '/admin/users': typeof AppAdminUsersIndexRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdIndexRoute
@@ -249,18 +270,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
-  '/banned': typeof BannedRouteRoute
-  '/login': typeof LoginRouteRoute
-  '/register': typeof RegisterRouteRoute
-  '/verify-email': typeof VerifyEmailRouteRouteWithChildren
+  '/_auth': typeof AuthRouteRouteWithChildren
   '/_app/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/create-post': typeof AppCreatePostRouteRoute
   '/_app/messages': typeof AppMessagesRouteRouteWithChildren
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
-  '/verify-email/callback': typeof VerifyEmailCallbackRouteRoute
+  '/_auth/banned': typeof AuthBannedRouteRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRouteRoute
+  '/_auth/login': typeof AuthLoginRouteRoute
+  '/_auth/register': typeof AuthRegisterRouteRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRouteRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
   '/_app/': typeof AppIndexRoute
-  '/verify-email/': typeof VerifyEmailIndexRoute
   '/_app/account-settings/create': typeof AppAccountSettingsCreateRouteRoute
   '/_app/admin/roles': typeof AppAdminRolesRouteRoute
   '/_app/admin/users': typeof AppAdminUsersRouteRouteWithChildren
@@ -268,10 +290,12 @@ export interface FileRoutesById {
   '/_app/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/_app/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/_auth/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/_app/account-settings/': typeof AppAccountSettingsIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/messages/': typeof AppMessagesIndexRoute
   '/_app/posts/': typeof AppPostsIndexRoute
+  '/_auth/verify-email/': typeof AuthVerifyEmailIndexRoute
   '/_app/account-settings/$profileId/edit': typeof AppAccountSettingsProfileIdEditRouteRoute
   '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
   '/_app/admin/users/': typeof AppAdminUsersIndexRoute
@@ -282,17 +306,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/banned'
-    | '/login'
-    | '/register'
-    | '/verify-email'
     | '/account-settings'
     | '/admin'
     | '/create-post'
     | '/messages'
     | '/my-postings'
-    | '/verify-email/callback'
-    | '/verify-email/'
+    | '/banned'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/verify-email'
     | '/account-settings/create'
     | '/admin/roles'
     | '/admin/users'
@@ -300,10 +324,12 @@ export interface FileRouteTypes {
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
+    | '/verify-email/callback'
     | '/account-settings/'
     | '/admin/'
     | '/messages/'
     | '/posts/'
+    | '/verify-email/'
     | '/account-settings/$profileId/edit'
     | '/admin/users/$userId'
     | '/admin/users/'
@@ -311,24 +337,26 @@ export interface FileRouteTypes {
     | '/admin/users/$userId/profile/$profileId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/banned'
-    | '/login'
-    | '/register'
+    | '/'
     | '/create-post'
     | '/my-postings'
-    | '/verify-email/callback'
-    | '/'
-    | '/verify-email'
+    | '/banned'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
     | '/account-settings/create'
     | '/admin/roles'
     | '/edit-post/$postId'
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
+    | '/verify-email/callback'
     | '/account-settings'
     | '/admin'
     | '/messages'
     | '/posts'
+    | '/verify-email'
     | '/account-settings/$profileId/edit'
     | '/admin/users'
     | '/admin/users/$userId'
@@ -336,18 +364,19 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
-    | '/banned'
-    | '/login'
-    | '/register'
-    | '/verify-email'
+    | '/_auth'
     | '/_app/account-settings'
     | '/_app/admin'
     | '/_app/create-post'
     | '/_app/messages'
     | '/_app/my-postings'
-    | '/verify-email/callback'
+    | '/_auth/banned'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/register'
+    | '/_auth/reset-password'
+    | '/_auth/verify-email'
     | '/_app/'
-    | '/verify-email/'
     | '/_app/account-settings/create'
     | '/_app/admin/roles'
     | '/_app/admin/users'
@@ -355,10 +384,12 @@ export interface FileRouteTypes {
     | '/_app/messages/$threadId'
     | '/_app/posts/$postId'
     | '/_app/profiles/$profileId'
+    | '/_auth/verify-email/callback'
     | '/_app/account-settings/'
     | '/_app/admin/'
     | '/_app/messages/'
     | '/_app/posts/'
+    | '/_auth/verify-email/'
     | '/_app/account-settings/$profileId/edit'
     | '/_app/admin/users/$userId'
     | '/_app/admin/users/'
@@ -368,40 +399,16 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
-  BannedRouteRoute: typeof BannedRouteRoute
-  LoginRouteRoute: typeof LoginRouteRoute
-  RegisterRouteRoute: typeof RegisterRouteRoute
-  VerifyEmailRouteRoute: typeof VerifyEmailRouteRouteWithChildren
+  AuthRouteRoute: typeof AuthRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/banned': {
-      id: '/banned'
-      path: '/banned'
-      fullPath: '/banned'
-      preLoaderRoute: typeof BannedRouteRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -411,13 +418,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verify-email/': {
-      id: '/verify-email/'
-      path: '/'
-      fullPath: '/verify-email/'
-      preLoaderRoute: typeof VerifyEmailIndexRouteImport
-      parentRoute: typeof VerifyEmailRouteRoute
-    }
     '/_app/': {
       id: '/_app/'
       path: '/'
@@ -425,12 +425,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/verify-email/callback': {
-      id: '/verify-email/callback'
-      path: '/callback'
-      fullPath: '/verify-email/callback'
-      preLoaderRoute: typeof VerifyEmailCallbackRouteRouteImport
-      parentRoute: typeof VerifyEmailRouteRoute
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/banned': {
+      id: '/_auth/banned'
+      path: '/banned'
+      fullPath: '/banned'
+      preLoaderRoute: typeof AuthBannedRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
     '/_app/my-postings': {
       id: '/_app/my-postings'
@@ -467,6 +502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAccountSettingsRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_auth/verify-email/': {
+      id: '/_auth/verify-email/'
+      path: '/'
+      fullPath: '/verify-email/'
+      preLoaderRoute: typeof AuthVerifyEmailIndexRouteImport
+      parentRoute: typeof AuthVerifyEmailRouteRoute
+    }
     '/_app/posts/': {
       id: '/_app/posts/'
       path: '/posts'
@@ -494,6 +536,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account-settings/'
       preLoaderRoute: typeof AppAccountSettingsIndexRouteImport
       parentRoute: typeof AppAccountSettingsRouteRoute
+    }
+    '/_auth/verify-email/callback': {
+      id: '/_auth/verify-email/callback'
+      path: '/callback'
+      fullPath: '/verify-email/callback'
+      preLoaderRoute: typeof AuthVerifyEmailCallbackRouteRouteImport
+      parentRoute: typeof AuthVerifyEmailRouteRoute
     }
     '/_app/profiles/$profileId': {
       id: '/_app/profiles/$profileId'
@@ -690,25 +739,44 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
   AppRouteRouteChildren,
 )
 
-interface VerifyEmailRouteRouteChildren {
-  VerifyEmailCallbackRouteRoute: typeof VerifyEmailCallbackRouteRoute
-  VerifyEmailIndexRoute: typeof VerifyEmailIndexRoute
+interface AuthVerifyEmailRouteRouteChildren {
+  AuthVerifyEmailCallbackRouteRoute: typeof AuthVerifyEmailCallbackRouteRoute
+  AuthVerifyEmailIndexRoute: typeof AuthVerifyEmailIndexRoute
 }
 
-const VerifyEmailRouteRouteChildren: VerifyEmailRouteRouteChildren = {
-  VerifyEmailCallbackRouteRoute: VerifyEmailCallbackRouteRoute,
-  VerifyEmailIndexRoute: VerifyEmailIndexRoute,
+const AuthVerifyEmailRouteRouteChildren: AuthVerifyEmailRouteRouteChildren = {
+  AuthVerifyEmailCallbackRouteRoute: AuthVerifyEmailCallbackRouteRoute,
+  AuthVerifyEmailIndexRoute: AuthVerifyEmailIndexRoute,
 }
 
-const VerifyEmailRouteRouteWithChildren =
-  VerifyEmailRouteRoute._addFileChildren(VerifyEmailRouteRouteChildren)
+const AuthVerifyEmailRouteRouteWithChildren =
+  AuthVerifyEmailRouteRoute._addFileChildren(AuthVerifyEmailRouteRouteChildren)
+
+interface AuthRouteRouteChildren {
+  AuthBannedRouteRoute: typeof AuthBannedRouteRoute
+  AuthForgotPasswordRouteRoute: typeof AuthForgotPasswordRouteRoute
+  AuthLoginRouteRoute: typeof AuthLoginRouteRoute
+  AuthRegisterRouteRoute: typeof AuthRegisterRouteRoute
+  AuthResetPasswordRouteRoute: typeof AuthResetPasswordRouteRoute
+  AuthVerifyEmailRouteRoute: typeof AuthVerifyEmailRouteRouteWithChildren
+}
+
+const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthBannedRouteRoute: AuthBannedRouteRoute,
+  AuthForgotPasswordRouteRoute: AuthForgotPasswordRouteRoute,
+  AuthLoginRouteRoute: AuthLoginRouteRoute,
+  AuthRegisterRouteRoute: AuthRegisterRouteRoute,
+  AuthResetPasswordRouteRoute: AuthResetPasswordRouteRoute,
+  AuthVerifyEmailRouteRoute: AuthVerifyEmailRouteRouteWithChildren,
+}
+
+const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
+  AuthRouteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
-  BannedRouteRoute: BannedRouteRoute,
-  LoginRouteRoute: LoginRouteRoute,
-  RegisterRouteRoute: RegisterRouteRoute,
-  VerifyEmailRouteRoute: VerifyEmailRouteRouteWithChildren,
+  AuthRouteRoute: AuthRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

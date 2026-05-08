@@ -14,6 +14,9 @@ const mockNavigate = vi.hoisted(() => vi.fn())
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
 }))
 
 vi.mock("#/router", () => ({
@@ -30,7 +33,8 @@ vi.mock("#/lib/ban-handler", () => ({
 
 describe("LoginForm", () => {
   beforeEach(() => {
-    mockNavigate.mockClear()
+    vi.clearAllMocks()
+    mockHandleBanError.mockReturnValue(false)
   })
 
   it("renders email and password inputs and a submit button", () => {
@@ -40,7 +44,19 @@ describe("LoginForm", () => {
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument()
   })
 
-  it("calls authClient.signIn.email with entered values on submit", async () => {
+  it("renders a 'Remember me' checkbox that defaults to unchecked", () => {
+    render(<LoginForm />)
+    const checkbox = screen.getByRole("checkbox", { name: /remember me/i })
+    expect(checkbox).toBeInTheDocument()
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it("renders a 'Forgot your password?' link", () => {
+    render(<LoginForm />)
+    expect(screen.getByRole("link", { name: /forgot your password/i })).toBeInTheDocument()
+  })
+
+  it("calls authClient.signIn.email with entered values and rememberMe: false by default", async () => {
     const { authClient } = await import("#/auth")
     render(<LoginForm />)
 
@@ -54,8 +70,25 @@ describe("LoginForm", () => {
 
     await waitFor(() => {
       expect(authClient.signIn.email).toHaveBeenCalledWith(
-        { email: "alice@example.com", password: "password123" },
+        { email: "alice@example.com", password: "password123", rememberMe: false },
         expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+      )
+    })
+  })
+
+  it("passes rememberMe: true when checkbox is checked before submit", async () => {
+    const { authClient } = await import("#/auth")
+    render(<LoginForm />)
+
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
+    fireEvent.click(screen.getByRole("checkbox", { name: /remember me/i }))
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(authClient.signIn.email).toHaveBeenCalledWith(
+        expect.objectContaining({ rememberMe: true }),
+        expect.anything(),
       )
     })
   })
@@ -64,7 +97,6 @@ describe("LoginForm", () => {
     const { container } = render(<LoginForm />)
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "not-an-email" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
-    // fireEvent.submit bypasses jsdom's native email constraint check so zodResolver runs
     fireEvent.submit(container.querySelector("form")!)
 
     await waitFor(() => {
@@ -86,6 +118,29 @@ describe("LoginForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+    })
+  })
+
+  it("shows rate limit countdown and disables submit on 429", async () => {
+    const { authClient } = await import("#/auth")
+    vi.mocked(authClient.signIn.email).mockImplementationOnce(async (_creds, callbacks) => {
+      const response = new Response(null, {
+        status: 429,
+        headers: { "X-Retry-After": "60" },
+      })
+      await (callbacks as { fetchOptions?: { onError?: (ctx: { response: Response }) => Promise<void> } })?.fetchOptions?.onError?.({ response })
+      callbacks?.onError?.({ error: { status: 429, message: "Too many requests" } } as never)
+      return Promise.resolve({ data: null, error: { status: 429, message: "Too many requests" } })
+    })
+
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "x@x.com" } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/too many login attempts/i)).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled()
     })
   })
 
