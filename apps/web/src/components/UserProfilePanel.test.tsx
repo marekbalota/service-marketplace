@@ -6,6 +6,7 @@ import { UserProfilePanel } from './UserProfilePanel'
 import type { User } from '#/types/api'
 
 const mockSignOut = vi.hoisted(() => vi.fn())
+const mockStopImpersonatingMutate = vi.hoisted(() => vi.fn())
 const mockInvalidate = vi.hoisted(() => vi.fn())
 const mockNavigate = vi.hoisted(() => vi.fn())
 const mockSetQueryData = vi.hoisted(() => vi.fn())
@@ -13,6 +14,10 @@ const mockClear = vi.hoisted(() => vi.fn())
 
 vi.mock('#/auth', () => ({
   authClient: { signOut: mockSignOut },
+}))
+
+vi.mock('#/lib/queries/auth', () => ({
+  useStopImpersonating: vi.fn(() => ({ mutate: mockStopImpersonatingMutate, isPending: false })),
 }))
 
 vi.mock('#/lib/queries/users', () => ({
@@ -47,6 +52,7 @@ vi.mock('#/components/ui/sheet', async (importOriginal) => {
 
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
+import { useStopImpersonating } from '#/lib/queries/auth'
 
 const baseProfile: User['profiles'][number] = {
   userProfileId: 'profile-1',
@@ -63,6 +69,7 @@ const baseUser: User = {
   userId: 'user-1',
   name: 'Alice',
   email: 'alice@example.com',
+  impersonatedBy: null,
   role: null,
   profiles: [baseProfile],
 }
@@ -77,10 +84,13 @@ async function renderPanel(onClose = vi.fn()) {
 
 describe('UserProfilePanel', () => {
   beforeEach(() => {
+    mockSignOut.mockReset()
     mockSignOut.mockResolvedValue(undefined)
+    mockStopImpersonatingMutate.mockReset()
     mockInvalidate.mockReset()
     mockSetQueryData.mockReset()
     mockClear.mockReset()
+    vi.mocked(useStopImpersonating).mockReturnValue({ mutate: mockStopImpersonatingMutate, isPending: false } as unknown as ReturnType<typeof useStopImpersonating>)
     vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: baseProfile, setActiveProfileId: vi.fn() })
   })
@@ -101,6 +111,19 @@ describe('UserProfilePanel', () => {
     expect(mockSetQueryData).toHaveBeenCalledWith(['users', 'me'], null)
     expect(mockInvalidate).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('stops impersonation instead of signing out when impersonatedBy is set', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { ...baseUser, impersonatedBy: 'admin-1' },
+    } as unknown as ReturnType<typeof useCurrentUser>)
+    const onClose = vi.fn()
+    await renderPanel(onClose)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /log out/i }))
+    })
+    expect(mockStopImpersonatingMutate).toHaveBeenCalled()
+    expect(mockSignOut).not.toHaveBeenCalled()
   })
 
   it('shows the profile switcher when profiles are available', async () => {

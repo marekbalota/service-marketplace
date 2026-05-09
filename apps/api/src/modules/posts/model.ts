@@ -146,10 +146,15 @@ export const PostsModel = {
   }),
   deleteParams: t.Object({ id: t.String() }),
   findByProfileQuery: t.Object({
-    offset: t.Optional(t.Numeric()),
-    size:   t.Optional(t.Numeric()),
+    offset:   t.Optional(t.Numeric()),
+    size:     t.Optional(t.Numeric()),
+    archived: t.Optional(t.BooleanString()),
   }),
   findByProfileResponse: paginatedResponse,
+  profilePostsCountResponse: t.Object({
+    active:   t.Number(),
+    archived: t.Number(),
+  }),
 } as const
 
 export type PostsModel = {

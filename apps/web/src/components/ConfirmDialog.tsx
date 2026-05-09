@@ -21,6 +21,7 @@ export function ConfirmDialog({
   destructive = false,
   isPending,
   reasonLabel,
+  reasonRequired = false,
   onConfirm,
   onClose,
 }: {
@@ -31,18 +32,23 @@ export function ConfirmDialog({
   destructive?: boolean
   isPending?: boolean
   reasonLabel?: string
+  reasonRequired?: boolean
   onConfirm: (reason?: string) => void | Promise<void>
   onClose: () => void
 }) {
   const [internalPending, setInternalPending] = useState(false)
   const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const isLoading = isPending ?? internalPending
 
   const handleConfirm = async () => {
     setInternalPending(true)
+    setError(null)
     try {
       await onConfirm(reasonLabel ? reason || undefined : undefined)
+    } catch {
+      setError('Something went wrong. Please try again.')
     } finally {
       setInternalPending(false)
       setReason('')
@@ -50,7 +56,7 @@ export function ConfirmDialog({
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => { if (!o) { setReason(''); onClose() } }}>
+    <AlertDialog open={open} onOpenChange={(o) => { if (!o) { setReason(''); setError(null); onClose() } }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -68,10 +74,11 @@ export function ConfirmDialog({
             />
           </div>
         )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            disabled={isLoading}
+            disabled={isLoading || (reasonRequired && !reason.trim())}
             className={destructive
               ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
               : undefined}

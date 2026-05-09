@@ -1,47 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import { User as UserIcon, Mail, Calendar, LogIn, Eye } from 'lucide-react';
-import { api } from '#/api';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Mail, Calendar, LogIn, Eye } from 'lucide-react';
+import { toast } from 'sonner';
+import { ProfileAvatar } from '#/components/ProfileAvatar';
 import { BackButton } from '#/components/BackButton';
 import { PageHeader } from '#/components/PageHeader';
 import { EmptyState } from '#/components/EmptyState';
-import { Button } from '#/components/ui/button';
+import { Button, buttonVariants } from '#/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip';
 import { Badge } from '#/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Skeleton } from '#/components/ui/skeleton';
-
-export const userDetailQueryOptions = (userId: string) =>
-  queryOptions({
-    queryKey: ['admin', 'users', userId],
-    queryFn: async () => {
-      const { data, error } = await api.admin.users({ id: userId }).get();
-      if (error) throw error;
-      return data!;
-    },
-  });
-
-export const userProfilesQueryOptions = (userId: string) =>
-  queryOptions({
-    queryKey: ['admin', 'users', userId, 'profiles'],
-    queryFn: async () => {
-      const { data, error } = await api.admin.users({ id: userId }).profiles.get();
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-const getRoleColor = (name: string | null) => {
-  if (!name) return 'bg-gray-100 text-gray-800';
-  if (name.toLowerCase() === 'admin' || name.toLowerCase() === 'superadmin') return 'bg-purple-100 text-purple-800';
-  if (name.toLowerCase() === 'moderator') return 'bg-blue-100 text-blue-800';
-  return 'bg-gray-100 text-gray-800';
-};
-
-const getStatusColor = (isBanned: boolean) =>
-  isBanned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+import { userDetailQueryOptions, userProfilesQueryOptions } from './-queries/user';
+import { useCurrentUser } from '#/lib/queries/users';
+import { Permissions } from '@marketplace/shared';
+import { authClient } from '#/auth';
 
 export const Route = createFileRoute('/_app/admin/users/$userId/')({
+  loader: ({ context: { queryClient }, params: { userId } }) => {
+    void queryClient.prefetchQuery(userDetailQueryOptions(userId))
+    void queryClient.prefetchQuery(userProfilesQueryOptions(userId))
+  },
   component: UserDetailPage,
 });
 
@@ -71,26 +51,48 @@ function UserDetailSkeleton() {
 }
 
 function UserDetailContent({ userId }: { userId: string }) {
-  const navigate = Route.useNavigate();
   const { data: user } = useSuspenseQuery(userDetailQueryOptions(userId));
   const { data: profiles = [] } = useSuspenseQuery(userProfilesQueryOptions(userId));
+  const { data: currentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const isImpersonating = !!currentUser?.impersonatedBy;
+  const hasImpersonatePermission = !!(
+    currentUser?.role?.permissions?.includes(Permissions.AdminUsersImpersonate)
+  );
+  const canImpersonate = !!(
+    !isImpersonating && hasImpersonatePermission && currentUser?.role && user.role &&
+    currentUser.role.priority > user.role.priority
+  );
+
+  const impersonateMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.admin.impersonateUser({ userId });
+      if (error) throw new Error(error.message ?? 'Impersonation failed');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
+      void navigate({ to: '/' });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   return (
     <>
       <Card className="mb-6">
-        <CardContent className="pt-6">
+        <CardContent className="pt-2">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div className="flex items-start gap-4 flex-1">
-              <div className="size-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md shrink-0">
-                <UserIcon className="size-8 text-white" />
-              </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <h2 className="text-xl font-semibold">{user.name}</h2>
                   {user.role && (
-                    <Badge className={getRoleColor(user.role.name)}>{user.role.name}</Badge>
+                    <Badge variant="secondary">{user.role.name}</Badge>
                   )}
-                  <Badge className={getStatusColor(user.isBanned)}>
+                  <Badge className={user.isBanned ? 'bg-banned-bg text-banned-fg' : 'bg-active-bg text-active-fg'}>
                     {user.isBanned ? 'banned' : 'active'}
                   </Badge>
                 </div>
@@ -106,11 +108,35 @@ function UserDetailContent({ userId }: { userId: string }) {
                 </div>
               </div>
             </div>
-            <Button variant="outline" className="gap-2" disabled>
-              <LogIn className="size-4" />
-              Impersonate User
-              {/* TODO: implement impersonation */}
-            </Button>
+            {hasImpersonatePermission && (
+              canImpersonate ? (
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  disabled={impersonateMutation.isPending}
+                  onClick={() => impersonateMutation.mutate()}
+                >
+                  <LogIn className="size-4" />
+                  Impersonate User
+                </Button>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <span tabIndex={0} className="inline-flex">
+                      <Button variant="outline" className="gap-2" disabled>
+                        <LogIn className="size-4" />
+                        Impersonate User
+                      </Button>
+                    </span>
+                  } />
+                  <TooltipContent>
+                    {isImpersonating
+                      ? 'Cannot start a new impersonation session while already impersonating'
+                      : 'Cannot impersonate users with equal or higher role priority'}
+                  </TooltipContent>
+                </Tooltip>
+              )
+            )}
           </div>
         </CardContent>
       </Card>
@@ -129,9 +155,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                   <CardContent className="pt-4 pb-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4 flex-1">
-                        <div className="size-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md shrink-0">
-                          <UserIcon className="size-6 text-white" />
-                        </div>
+                        <ProfileAvatar name={profile.name} className="size-12 shrink-0 shadow-md" fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold mb-0.5">{profile.name}</h3>
                           <p className="text-sm text-muted-foreground mb-1">{profile.email}</p>
@@ -147,20 +171,14 @@ function UserDetailContent({ userId }: { userId: string }) {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 shrink-0"
-                        onClick={() =>
-                          navigate({
-                            to: '/admin/users/$userId/profile/$profileId',
-                            params: { userId, profileId: profile.userProfileId },
-                          })
-                        }
+                      <Link
+                        to="/admin/users/$userId/profile/$profileId"
+                        params={{ userId, profileId: profile.userProfileId }}
+                        className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' gap-2 shrink-0'}
                       >
                         <Eye className="size-4" />
                         View Posts
-                      </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>

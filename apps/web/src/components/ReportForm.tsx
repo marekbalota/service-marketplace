@@ -63,12 +63,8 @@ export function ReportForm({
   const mutation = useMutation({
     mutationFn: (data: FormData) => onReport(data),
     onSuccess,
-    onError: (err: { message?: string; status?: number }) => {
-      if (err.status === 409) {
-        setServerError(`You have already reported this ${entityName}`)
-      } else {
-        setServerError(err.message || 'Failed to submit report')
-      }
+    onError: (err) => {
+      setServerError(err.message)
     },
   })
 

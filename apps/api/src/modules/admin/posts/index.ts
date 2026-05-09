@@ -13,7 +13,7 @@ export const adminPostsRoutes = new Elysia({ prefix: '/admin/posts' })
       set.status = 204;
     },
     {
-      authWithPermissions: Permissions.PostsDeleteAny,
+      authWithPermissions: Permissions.AdminPostsDeleteAny,
       params: t.Object({ id: t.String() }),
       body: t.Object({ reason: t.Optional(t.String()) }),
       response: {

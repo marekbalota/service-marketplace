@@ -1,6 +1,6 @@
-import type { Dispatch, SetStateAction } from 'react'
-import { useState, useEffect, useCallback } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
+import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   DndContext,
   closestCenter,
@@ -23,23 +23,23 @@ import { rolesQueryOptions } from '#/lib/queries/admin'
 import { permissionsQueryOptions } from '../-queries/admin'
 import { SortableRoleCard } from './SortableRoleCard'
 import type { Role } from './SortableRoleCard'
-import type { NewRoleState } from './CreateRoleButton'
 
 interface RolesContentProps {
-  editingRole: Role | null
-  setEditingRole: (role: Role | null) => void
-  newRole: NewRoleState
-  setNewRole: Dispatch<SetStateAction<NewRoleState>>
   userPriority: number
+  userPermissionNames: string[]
 }
 
-export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole, userPriority }: RolesContentProps) {
+export function RolesContent({ userPriority, userPermissionNames }: RolesContentProps) {
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
+  const grantablePermissionIds = new Set(
+    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+  )
   const queryClient = useQueryClient()
 
   const [roles, setRoles] = useState<Role[]>(rolesData)
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null)
+  const [settingDefaultRoleId, setSettingDefaultRoleId] = useState<string | null>(null)
   const sortableRoles = roles.filter(r => r.priority < userPriority)
 
   useEffect(() => {
@@ -51,7 +51,38 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await api.admin.roles({ id: roleId }).delete()
+      if (error) throw wrapEdenError(error, 'Failed to delete role.')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
+      setDeletingRoleId(null)
+    },
+  })
+
+  const setDefaultMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await api.admin.roles({ id: roleId }).default.patch()
+      if (error) throw wrapEdenError(error, 'Failed to set default role.')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
+      setSettingDefaultRoleId(null)
+    },
+  })
+
+  const reorderMutation = useMutation({
+    mutationFn: async ({ roleId, newPriority }: { roleId: string; newPriority: number }) => {
+      const { error } = await api.admin.roles.reorder.patch({ roleId, newPriority })
+      if (error) throw wrapEdenError(error, 'Failed to reorder roles.')
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] }),
+    onError: () => setRoles(rolesData),
+  })
+
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -66,56 +97,15 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
     const targetRole = sortableRoles[oldIndex]!
     const newPriorityInFullList = roles.length - 1 - (nonSortableRoles.length + newIndex)
 
-    try {
-      await api.admin.roles.reorder.patch({ roleId: targetRole.roleId, newPriority: newPriorityInFullList })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
-    } catch (error) {
-      setRoles(roles)
-      console.error('Failed to reorder role:', error)
-    }
-  }, [sortableRoles, roles, queryClient, userPriority])
-
-  const togglePermission = (permissionId: string) => {
-    setNewRole((prev) => ({
-      ...prev,
-      permissionIds: prev.permissionIds.includes(permissionId)
-        ? prev.permissionIds.filter((p) => p !== permissionId)
-        : [...prev.permissionIds, permissionId],
-    }))
+    reorderMutation.mutate({ roleId: targetRole.roleId, newPriority: newPriorityInFullList })
   }
 
-  const handleEditRole = (role: Role) => {
-    setEditingRole(role)
-    setNewRole({ name: role.name, description: role.description ?? '', permissionIds: role.permissions })
+  const sharedCardProps = {
+    permissions,
+    grantablePermissionIds,
+    onDelete: (roleId: string) => setDeletingRoleId(roleId),
+    onSetDefault: (roleId: string) => setSettingDefaultRoleId(roleId),
   }
-
-  const handleUpdateRole = async () => {
-    if (!editingRole) return
-    await api.admin.roles({ id: editingRole.roleId }).patch({
-      name: newRole.name,
-      description: newRole.description,
-      permissionIds: newRole.permissionIds,
-    })
-    setEditingRole(null)
-    setNewRole({ name: '', description: '', permissionIds: [] })
-    queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
-  }
-
-  const handleDeleteRole = (roleId: string) => {
-    setDeletingRoleId(roleId)
-  }
-
-  const doDeleteRole = async () => {
-    if (!deletingRoleId) return
-    await api.admin.roles({ id: deletingRoleId }).delete()
-    queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
-    setDeletingRoleId(null)
-  }
-
-  const getRoleColor = (isDefault: boolean) =>
-    isDefault ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-
-  const sharedCardProps = { editingRole, setEditingRole, newRole, setNewRole, onEdit: handleEditRole, onDelete: handleDeleteRole, onUpdateRole: handleUpdateRole, togglePermission, getRoleColor }
 
   return (
     <>
@@ -127,7 +117,14 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
 
       <div className="grid grid-cols-1 gap-6 mb-6">
         {roles.filter(r => r.priority >= userPriority).map((role) => (
-          <SortableRoleCard key={role.roleId} role={role} permissions={permissions} {...sharedCardProps} canReorder={false} />
+          <SortableRoleCard
+            key={role.roleId}
+            role={role}
+            {...sharedCardProps}
+            isPendingDelete={false}
+            isPendingSetDefault={false}
+            canEdit={false}
+          />
         ))}
       </div>
 
@@ -135,7 +132,14 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
         <SortableContext items={sortableRoles.map(r => r.roleId)} strategy={verticalListSortingStrategy}>
           <div className="grid grid-cols-1 gap-6">
             {sortableRoles.map((role) => (
-              <SortableRoleCard key={role.roleId} role={role} permissions={permissions} {...sharedCardProps} canReorder={true} />
+              <SortableRoleCard
+                key={role.roleId}
+                role={role}
+                {...sharedCardProps}
+                isPendingDelete={deleteRoleMutation.isPending && deleteRoleMutation.variables === role.roleId}
+                isPendingSetDefault={setDefaultMutation.isPending && setDefaultMutation.variables === role.roleId}
+                canEdit={true}
+              />
             ))}
           </div>
         </SortableContext>
@@ -147,8 +151,17 @@ export function RolesContent({ editingRole, setEditingRole, newRole, setNewRole,
         description="This will permanently remove this role. This action cannot be undone."
         confirmLabel="Delete"
         destructive
-        onConfirm={doDeleteRole}
+        onConfirm={() => deleteRoleMutation.mutateAsync(deletingRoleId!)}
         onClose={() => setDeletingRoleId(null)}
+      />
+
+      <ConfirmDialog
+        open={settingDefaultRoleId !== null}
+        title="Set as default role?"
+        description="New users will be assigned this role automatically. The current default role will no longer be the default."
+        confirmLabel="Set as Default"
+        onConfirm={() => setDefaultMutation.mutateAsync(settingDefaultRoleId!)}
+        onClose={() => setSettingDefaultRoleId(null)}
       />
     </>
   )

@@ -5,7 +5,7 @@ import type { UsersModel } from "./model";
 import { NotFoundError, ErrorMessages } from "../../lib/errors";
 
 export abstract class UsersService {
-  static async getCurrentUser(userId: string): Promise<UsersModel['meResponse']> {
+  static async getCurrentUser(userId: string): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy'>> {
     const [row] = await db
       .select({
         userId: users.id,

@@ -1,3 +1,4 @@
+import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
 
 function PostCardSkeleton() {
@@ -23,9 +24,9 @@ function PostCardSkeleton() {
   )
 }
 
-export function PostsGridSkeleton({ count = 6 }: { count?: number }) {
+export function PostsGridSkeleton({ count = 6, columns = 3 }: { count?: number; columns?: 2 | 3 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className={cn('grid grid-cols-1 gap-4 md:grid-cols-2', columns === 3 && 'lg:grid-cols-3')}>
       {Array.from({ length: count }).map((_, i) => (
         <PostCardSkeleton key={i} />
       ))}

@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { ErrorCodes } from "@marketplace/shared";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
@@ -7,10 +8,14 @@ import * as schema from "../../db/schema";
 import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
+import { impersonationPlugin } from "./impersonation-plugin";
+
+export const verificationTokenStore = new Map<string, string>();
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
   trustedOrigins: ["http://localhost:3000"],
+  plugins: [impersonationPlugin()],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -31,6 +36,20 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url, token }) => {
+      const verifyUrl = new URL(url);
+      verifyUrl.searchParams.set("callbackURL", "http://localhost:3000/verify-email/callback");
+      if (process.env.NODE_ENV === "test") {
+        verificationTokenStore.set(user.email, token);
+      }
+      console.log(`[email-verify] ${user.email} → ${verifyUrl.toString()}`);
+    },
   },
   advanced: {
     database: {
@@ -74,6 +93,7 @@ export const auth = betterAuth({
               await AuthService.clearUserSessions(user.id);
 
               throw new APIError("FORBIDDEN", {
+                code: ErrorCodes.Banned,
                 message: AuthErrorMessages.banned,
                 reason: banStatus.reason,
                 expiresAt: banStatus.expiresAt,

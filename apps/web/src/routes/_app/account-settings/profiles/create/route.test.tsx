@@ -30,6 +30,7 @@ vi.mock('#/lib/queries/users', () => ({
 }))
 
 import { Route } from './route'
+import { ApiError } from '#/lib/api-error'
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -79,7 +80,7 @@ describe('CreateProfilePage', () => {
       mutate:    vi.fn(),
       isPending: false,
       isError:   true,
-      error:     new Error('Create failed'),
+      error:     new ApiError('Create failed'),
     })
     await renderPage()
     expect(screen.getByText('Create failed')).toBeInTheDocument()

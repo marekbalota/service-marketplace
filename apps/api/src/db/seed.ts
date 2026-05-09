@@ -3,16 +3,18 @@ import { db, client } from "./index";
 import { auth } from "../modules/auth/service";
 import { Permissions } from "@marketplace/shared";
 import { eq, and } from "drizzle-orm";
+import { users } from "./schema";
 
 const permissionDefinitions = [
   { name: Permissions.PostsCreate, description: "Create new posts" },
   { name: Permissions.PostsEditOwn, description: "Edit own posts" },
   { name: Permissions.PostsEditAny, description: "Edit any post" },
   { name: Permissions.PostsDeleteOwn, description: "Delete own posts" },
-  { name: Permissions.PostsDeleteAny, description: "Delete any post" },
+  { name: Permissions.AdminPostsDeleteAny, description: "Delete any post" },
   { name: Permissions.AdminUsersBan, description: "Ban and unban users" },
   { name: Permissions.AdminUsersView, description: "View user list" },
   { name: Permissions.AdminUsersAssignRole, description: "Assign roles to users" },
+  { name: Permissions.AdminUsersImpersonate, description: "Impersonate users" },
   { name: Permissions.AdminRolesManage, description: "Create, edit, delete roles" },
   { name: Permissions.AdminCategoriesManage, description: "Manage categories" },
 ];
@@ -78,6 +80,9 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
     where: (u, { eq }) => eq(u.email, email),
   });
   if (existing) {
+    if (!existing.emailVerified) {
+      await db.update(schema.users).set({ emailVerified: true }).where(eq(schema.users.id, existing.id));
+    }
     const profile = await db.query.userProfiles.findFirst({
       where: (p, { eq }) => eq(p.accountId, existing.id),
     });
@@ -88,6 +93,12 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
     body: { name, email, password: "password123" },
     headers: new Headers(),
   });
+
+  // Mark email as verified so the user can sign in without going through the verification flow
+  await db
+    .update(users)
+    .set({ emailVerified: true })
+    .where(eq(users.id, result.user.id));
 
   const profile = await db.query.userProfiles.findFirst({
     where: (p, { eq }) => eq(p.accountId, result.user.id),
@@ -124,10 +135,10 @@ async function upsertAdminUser(name: string, email: string, password: string, ro
     headers: new Headers(),
   });
 
-  // BetterAuth creates user with default role, update to admin role
+  // BetterAuth creates user with default role, update to admin role and mark email as verified
   await db
     .update(schema.users)
-    .set({ roleId: role.roleId })
+    .set({ roleId: role.roleId, emailVerified: true })
     .where(eq(schema.users.id, result.user.id));
 
   console.log(`  Created admin user: ${email} (${roleName})`);
@@ -674,6 +685,22 @@ async function seed() {
   // SuperAdmin role: all permissions
   await assignPermissionsToRole(superAdminRole.roleId, adminPermissionNames);
   console.log("    SuperAdmin role: all permissions");
+
+  // Unverified user — used in e2e tests for the "login while unverified" flow
+  // Always ensure this user exists AND remains unverified (reset if a test verified them)
+  const existingUnverified = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.email, "unverified@example.com"),
+  });
+  if (!existingUnverified) {
+    await auth.api.signUpEmail({
+      body: { name: "Unverified User", email: "unverified@example.com", password: "password123" },
+      headers: new Headers(),
+    });
+    console.log("  Created: Unverified User (unverified@example.com) - emailVerified: false");
+  } else if (existingUnverified.emailVerified) {
+    await db.update(schema.users).set({ emailVerified: false }).where(eq(schema.users.id, existingUnverified.id));
+    console.log("  Reset: Unverified User (unverified@example.com) - emailVerified reset to false");
+  }
 
   console.log("✅ Seeded:");
   console.log(`   ${permissionDefinitions.length} permissions`);

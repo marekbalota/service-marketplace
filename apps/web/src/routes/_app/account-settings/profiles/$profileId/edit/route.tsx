@@ -5,6 +5,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash2, Plus, Loader2 } from 'lucide-react'
 import { api } from '#/api'
+import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { BackButton } from '#/components/BackButton'
 import {
@@ -99,17 +100,17 @@ function EditProfilePage() {
         phoneNumber: values.phoneNumber || null,
         fax:         values.fax || null,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to update profile.')
 
       await Promise.all(
         pendingFiles.map(({ file }) =>
-          api.images.post({ file, profileId }).then(({ error }) => { if (error) throw error })
+          api.images.post({ file, profileId }).then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to upload image.') })
         ),
       )
 
       await Promise.all(
         pendingDeletes.map(imageId =>
-          api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw error })
+          api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to delete image.') })
         ),
       )
     },
@@ -130,7 +131,7 @@ function EditProfilePage() {
         street:      street      || undefined,
         houseNumber: houseNumber || undefined,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to add location.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -146,7 +147,7 @@ function EditProfilePage() {
       const { error } = await api.profiles({ id: profileId })
         .locations({ locationId })
         .delete()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to remove location.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

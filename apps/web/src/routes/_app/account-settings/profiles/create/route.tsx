@@ -5,6 +5,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { api } from '#/api'
+import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 import { BackButton } from '#/components/BackButton'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -45,7 +46,7 @@ function CreateProfilePage() {
         phoneNumber: values.phoneNumber || undefined,
         fax:         values.fax || undefined,
       })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create profile.')
 
       let failedCount = 0
       if (data && 'userProfileId' in data) {

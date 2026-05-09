@@ -2,6 +2,7 @@ import { Controller, type Control, type FieldValues } from 'react-hook-form'
 import { DollarSign } from 'lucide-react'
 import { Input } from '#/components/ui/input'
 import { Field, FieldLabel, FieldError } from '#/components/ui/field'
+import { FieldIconHeader } from '#/components/FieldIconHeader'
 import {
   Select,
   SelectContent,
@@ -26,12 +27,12 @@ export function PricingField<T extends FieldValues>({ control: controlProp, pric
   const control = controlProp as Control<FieldValues, any>
   return (
     <Field className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
-          <DollarSign className="size-5 text-emerald-600" />
-        </div>
-        <span className="text-base font-semibold">Pricing (Optional)</span>
-      </div>
+      <FieldIconHeader
+        icon={DollarSign}
+        iconBgClassName="bg-emerald-100 dark:bg-emerald-500/20"
+        iconClassName="text-emerald-600 dark:text-emerald-300"
+        label="Pricing (Optional)"
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Controller
           control={control}

@@ -7,6 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { useCurrentUser } from '#/lib/queries/users'
+import { ApiError } from '#/lib/api-error'
 
 const mockUseMutation = vi.hoisted(() => vi.fn())
 
@@ -142,7 +143,7 @@ describe('EditProfilePage', () => {
       mutate:    vi.fn(),
       isPending: false,
       isError:   true,
-      error:     new Error('Update failed'),
+      error:     new ApiError('Update failed'),
     })
     await renderPage()
     expect(screen.getAllByText('Update failed').length).toBeGreaterThan(0)

@@ -254,6 +254,10 @@ Report }o--|| ReportCategory
 Report }o--o| Post
 Report }o--o| Message
 Report }o--o| Review
+ReportCategory ||--o{ Report
+Post |o--o{ Report : reported
+Message |o--o{ Report : reported
+Review |o--o{ Report : reported
 User ||--o{ UserProfile
 User }o--|| Role
 User ||--o{ Session

@@ -17,8 +17,6 @@ import {
 import { rolesQueryOptions } from '#/lib/queries/admin'
 import { UsersTable } from './-components/UsersTable'
 
-export { usersQueryOptions, assignableRolesQueryOptions } from './-queries/users'
-
 const searchSchema = z.object({
   q:      z.string().optional().catch(undefined),
   role:   z.string().optional().catch(undefined),
@@ -28,6 +26,9 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_app/admin/users/')({
   validateSearch: searchSchema,
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery(rolesQueryOptions)
+  },
   component: ManageAccounts,
 })
 
@@ -59,9 +60,8 @@ function RoleSelect() {
         <SelectValue>{roleLabels[role] ?? 'All Roles'}</SelectValue>
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
-        <SelectItem value="all">All Roles</SelectItem>
-        {allRoles.map((r) => (
-          <SelectItem key={r.roleId} value={r.name}>{r.name}</SelectItem>
+        {Object.entries(roleLabels).map(([value, label]) => (
+          <SelectItem key={value} value={value}>{label}</SelectItem>
         ))}
       </SelectContent>
     </Select>
@@ -97,13 +97,37 @@ function StatusSelect() {
   )
 }
 
+function UserCardSkeleton() {
+  return (
+    <Card className="border">
+      <CardContent className="pt-2 pb-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-14 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-48 mb-1" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function StatsAndListSkeleton() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {[...Array(3)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="pt-2 pb-2">
+            <CardContent className="pt-6">
               <Skeleton className="mb-2 h-8 w-16" />
               <Skeleton className="h-4 w-24" />
             </CardContent>
@@ -117,7 +141,7 @@ function StatsAndListSkeleton() {
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+              <UserCardSkeleton key={i} />
             ))}
           </div>
         </CardContent>

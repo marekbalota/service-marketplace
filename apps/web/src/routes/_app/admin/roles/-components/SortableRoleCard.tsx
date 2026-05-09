@@ -1,17 +1,14 @@
-import type { Dispatch, SetStateAction } from 'react'
-import { Edit, Trash2, GripVertical } from 'lucide-react'
+import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
+import { Edit, Trash2, GripVertical, Star, Loader2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { api } from '#/api'
 import { Button } from '#/components/ui/button'
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
-} from '#/components/ui/dialog'
 import { Badge } from '#/components/ui/badge'
-import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
-import { Checkbox } from '#/components/ui/checkbox'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card'
-import type { NewRoleState } from './CreateRoleButton'
+import { RoleDialog, type RoleValues } from './RoleDialog'
 
 export type Role = { roleId: string; name: string; description: string | null; isDefault: boolean; permissions: string[]; userCount: number; priority: number }
 export type Permission = { permissionId: string; name: string; description: string | null }
@@ -19,32 +16,38 @@ export type Permission = { permissionId: string; name: string; description: stri
 interface SortableRoleCardProps {
   role: Role
   permissions: Permission[]
-  editingRole: Role | null
-  setEditingRole: (role: Role | null) => void
-  newRole: NewRoleState
-  setNewRole: Dispatch<SetStateAction<NewRoleState>>
-  onEdit: (role: Role) => void
+  grantablePermissionIds: Set<string>
   onDelete: (roleId: string) => void
-  onUpdateRole: () => void
-  togglePermission: (permissionId: string) => void
-  getRoleColor: (isDefault: boolean) => string
-  canReorder: boolean
+  onSetDefault: (roleId: string) => void
+  canEdit: boolean
+  isPendingDelete: boolean
+  isPendingSetDefault: boolean
 }
 
 export function SortableRoleCard({
   role,
   permissions,
-  editingRole,
-  setEditingRole,
-  newRole,
-  setNewRole,
-  onEdit,
+  grantablePermissionIds,
   onDelete,
-  onUpdateRole,
-  togglePermission,
-  getRoleColor,
-  canReorder,
+  onSetDefault,
+  canEdit,
+  isPendingDelete,
+  isPendingSetDefault,
 }: SortableRoleCardProps) {
+  const [editOpen, setEditOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ name, description, permissionIds }: RoleValues) => {
+      const { error } = await api.admin.roles({ id: role.roleId }).patch({ name, description, permissionIds })
+      if (error) throw wrapEdenError(error, 'Failed to update role.')
+    },
+    onSuccess: () => {
+      setEditOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] })
+    },
+  })
+
   const {
     attributes,
     listeners,
@@ -52,7 +55,7 @@ export function SortableRoleCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: role.roleId, disabled: !canReorder })
+  } = useSortable({ id: role.roleId, disabled: !canEdit })
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -63,25 +66,26 @@ export function SortableRoleCard({
   return (
     <div ref={setNodeRef} style={style} className="group">
       <Card className="relative overflow-hidden">
-        {canReorder && (
+        {canEdit && (
           <button
+            type="button"
             className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted cursor-grab active:cursor-grabbing transition-all duration-200 ease-out z-10"
+            aria-label="Drag to reorder"
             {...attributes}
             {...listeners}
-            title="Drag to reorder"
           >
             <GripVertical className="size-5 text-muted-foreground" />
           </button>
         )}
-        <div className={canReorder ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
+        <div className={canEdit ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle>{role.name}</CardTitle>
-                  <Badge className={getRoleColor(role.isDefault)}>
-                    {role.isDefault ? 'default' : 'custom'}
-                  </Badge>
+                  {role.isDefault && (
+                    <Badge className="bg-purple-100 text-purple-800">default</Badge>
+                  )}
                   {role.userCount > 0 && (
                     <Badge variant="outline">
                       {role.userCount} user{role.userCount !== 1 ? 's' : ''}
@@ -91,94 +95,54 @@ export function SortableRoleCard({
                 <CardDescription>{role.description}</CardDescription>
               </div>
               <div className="flex gap-2">
-                {canReorder && (
+                {canEdit && (
                   <>
-                    <Dialog
-                      open={editingRole?.roleId === role.roleId}
-                      onOpenChange={(open) => {
-                        if (!open) {
-                          setEditingRole(null)
-                          setNewRole({ name: '', description: '', permissionIds: [] })
-                        }
+                    <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditOpen(true)}>
+                      <Edit className="size-4" />
+                      Edit
+                    </Button>
+                    <RoleDialog
+                      open={editOpen}
+                      onOpenChange={setEditOpen}
+                      title="Edit Role"
+                      description="Modify role permissions and details"
+                      submitLabel="Save Changes"
+                      permissions={permissions}
+                      grantablePermissionIds={grantablePermissionIds}
+                      defaultValues={{
+                        name: role.name,
+                        description: role.description ?? '',
+                        permissionIds: role.permissions,
                       }}
-                    >
-                      <DialogTrigger render={<Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(role)} />}>
-                        <Edit className="size-4" />
-                        Edit
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Edit Role</DialogTitle>
-                          <DialogDescription>Modify role permissions and details</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 mt-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="edit-name">Role Name *</Label>
-                            <Input
-                              id="edit-name"
-                              value={newRole.name}
-                              onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="edit-description">Description *</Label>
-                            <Input
-                              id="edit-description"
-                              value={newRole.description}
-                              onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-3">
-                            <Label>Permissions</Label>
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
-                              {permissions.map((permission) => (
-                                <div key={permission.permissionId} className="flex items-start space-x-3">
-                                  <Checkbox
-                                    id={`edit-${permission.permissionId}`}
-                                    checked={newRole.permissionIds.includes(permission.permissionId)}
-                                    onCheckedChange={() => togglePermission(permission.permissionId)}
-                                  />
-                                  <div className="flex-1">
-                                    <label
-                                      htmlFor={`edit-${permission.permissionId}`}
-                                      className="text-sm font-medium cursor-pointer"
-                                    >
-                                      {permission.description ?? permission.name}
-                                    </label>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 pt-4">
-                            <Button
-                              variant="outline"
-                              onClick={() => { setEditingRole(null); setNewRole({ name: '', description: '', permissionIds: [] }) }}
-                              className="flex-1"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={onUpdateRole}
-                              disabled={!newRole.name || !newRole.description}
-                              className="flex-1"
-                            >
-                              Save Changes
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      onSubmit={(values) => updateMutation.mutateAsync(values)}
+                    />
                     {!role.isDefault && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 text-red-600 hover:text-red-700"
-                        onClick={() => onDelete(role.roleId)}
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          disabled={isPendingSetDefault}
+                          onClick={() => onSetDefault(role.roleId)}
+                        >
+                          {isPendingSetDefault
+                            ? <Loader2 className="size-4 animate-spin" />
+                            : <Star className="size-4" />}
+                          Set as Default
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="gap-2"
+                          disabled={isPendingDelete}
+                          onClick={() => onDelete(role.roleId)}
+                        >
+                          {isPendingDelete
+                            ? <Loader2 className="size-4 animate-spin" />
+                            : <Trash2 className="size-4" />}
+                          Delete
+                        </Button>
+                      </>
                     )}
                   </>
                 )}

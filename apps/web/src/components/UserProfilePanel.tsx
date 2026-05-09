@@ -23,6 +23,7 @@ import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Label } from './ui/label'
 import { queryClient } from '#/router'
+import { useStopImpersonating } from '#/lib/queries/auth'
 
 function ProfileOption({ name }: { name: string }) {
   return (
@@ -40,6 +41,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
   const navigate = useNavigate()
+  const stopMutation = useStopImpersonating({ onSuccess: onClose })
   const allProfiles = user?.profiles ?? []
   const isAdmin = (user?.role?.permissions ?? []).some((p: string) => p.startsWith('admin:'))
 
@@ -89,8 +91,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-browse-bg)]">
-                <Search className="size-5 text-[var(--nav-browse-fg)]" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20">
+                <Search className="size-5 text-blue-600 dark:text-blue-300" />
               </div>
               <span>Browse Postings</span>
             </SheetClose>
@@ -105,8 +107,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-postings-bg)]">
-                <FileText className="size-5 text-[var(--nav-postings-fg)]" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-500/20">
+                <FileText className="size-5 text-green-600 dark:text-green-300" />
               </div>
               <span>My Postings</span>
             </SheetClose>
@@ -121,8 +123,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 />
               }
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--nav-messages-bg)]">
-                <MessageSquare className="size-5 text-[var(--nav-messages-fg)]" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-500/20">
+                <MessageSquare className="size-5 text-purple-600 dark:text-purple-300" />
               </div>
               <span>Messages</span>
             </SheetClose>
@@ -138,8 +140,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                   />
                 }
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
-                  <Shield className="size-5 text-green-600" />
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20">
+                  <Shield className="size-5 text-orange-600 dark:text-orange-300" />
                 </div>
                 <span>Admin</span>
               </SheetClose>
@@ -166,14 +168,18 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
           </SheetClose>
           <Button
             variant="ghost"
-            className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-[var(--nav-logout-hover)] hover:text-destructive"
+            className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-3 text-destructive hover:bg-red-100 dark:hover:bg-red-500/10 hover:text-destructive"
             onClick={async () => {
-              await authClient.signOut()
-              queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
-              queryClient.clear()
-              await navigate({ to: '/' })
-              router.invalidate()
-              onClose()
+              if (user?.impersonatedBy) {
+                stopMutation.mutate()
+              } else {
+                await authClient.signOut()
+                queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
+                await navigate({ to: '/posts' })
+                queryClient.clear()
+                router.invalidate()
+                onClose()
+              }
             }}
           >
             <LogOut className="size-5" />

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -59,7 +60,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
         postId,
         profileId: activeProfile.userProfileId,
       })
-      if (reviewError) throw reviewError
+      if (reviewError) throw wrapEdenError(reviewError, 'Failed to submit review.')
 
       // Step 2: Upload images (best-effort — review is already created)
       let imageFailCount = 0
@@ -82,12 +83,8 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       }
       onSuccess()
     },
-    onError: (err: { message?: string; status?: number }) => {
-      if (err.status === 409) {
-        setError('You have already reviewed this post')
-      } else {
-        setError(err.message || 'Failed to submit review')
-      }
+    onError: (err) => {
+      setError(err.message)
     },
   })
 

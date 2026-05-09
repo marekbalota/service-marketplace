@@ -3,6 +3,7 @@ import { auth } from "./service";
 import { AuthErrorMessages } from "../../lib/errors";
 import { RBACService } from "../../lib/rbac/rbac-helper";
 import type { Permission } from "@marketplace/shared";
+import { ErrorCodes } from "@marketplace/shared";
 type PermissionType = Permission;
 
 type PermissionCheck =
@@ -38,14 +39,27 @@ function checkPermissions(
         : permissions.some(p => userPermissions.includes(p));
 }
 
+// Three auth macro modes — pick the right one for each route:
+//   auth                 — requires login; blocks POST/PATCH/DELETE during impersonation.
+//                          Use for standard read-write endpoints.
+//   authWithPermissions  — same as auth plus RBAC permission checks.
+//                          Use for endpoints that require specific permissions.
+//   blockDuringImpersonation — requires login; blocks ALL methods during impersonation.
+//                          Use when reads must also be restricted (e.g. messages).
+const WRITE_METHODS = ['POST', 'PATCH', 'DELETE'];
+
 export const authRoutes = new Elysia({ name: "better-auth" })
     .mount(auth.handler)
     .macro({
         auth: {
-            async resolve({ status, request: { headers } }) {
+            async resolve({ status, request: { headers, method } }) {
                 const session = await auth.api.getSession({ headers });
                 if (!session) {
                     return status(401, { message: AuthErrorMessages.unauthorized });
+                }
+
+                if (session.session.impersonatedBy && WRITE_METHODS.includes(method.toUpperCase())) {
+                    return status(403, { code: ErrorCodes.ImpersonationReadOnly, message: AuthErrorMessages.impersonationReadOnly });
                 }
 
                 return {
@@ -55,10 +69,14 @@ export const authRoutes = new Elysia({ name: "better-auth" })
             },
         },
         authWithPermissions: (requiredPermissions: PermissionCheck | null) => ({
-            async resolve({ status, request: { headers } }) {
+            async resolve({ status, request: { headers, method } }) {
                 const session = await auth.api.getSession({ headers });
                 if (!session) {
                     return status(401, { message: AuthErrorMessages.unauthorized });
+                }
+
+                if (session.session.impersonatedBy && WRITE_METHODS.includes(method.toUpperCase())) {
+                    return status(403, { code: ErrorCodes.ImpersonationReadOnly, message: AuthErrorMessages.impersonationReadOnly });
                 }
 
                 const userPermissions = await RBACService.getUserPermissions(session.user.id);
@@ -78,4 +96,19 @@ export const authRoutes = new Elysia({ name: "better-auth" })
                 };
             },
         }),
+        blockDuringImpersonation: {
+            async resolve({ status, request: { headers } }) {
+                const session = await auth.api.getSession({ headers });
+                if (!session) {
+                    return status(401, { message: AuthErrorMessages.unauthorized });
+                }
+                if (session.session.impersonatedBy) {
+                    return status(403, { code: ErrorCodes.ImpersonationReadOnly, message: AuthErrorMessages.impersonationReadOnly });
+                }
+                return {
+                    user: session.user,
+                    session: session.session,
+                };
+            },
+        },
     });

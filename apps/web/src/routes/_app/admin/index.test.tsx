@@ -9,11 +9,6 @@ import {
 import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
-  return { ...actual, useNavigate: vi.fn(() => vi.fn()) }
-})
-
 vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
@@ -52,6 +47,14 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('Manage Roles')).toBeInTheDocument()
   })
 
+  it('shows Manage Categories when user has AdminCategoriesManage', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { userId: 'u1', role: { permissions: ['admin:categories:manage'] } },
+    } as unknown as ReturnType<typeof useCurrentUser>)
+    await renderPage()
+    expect(screen.getByText('Manage Categories')).toBeInTheDocument()
+  })
+
   it('hides all option cards when user has no permissions', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { userId: 'u1', role: { permissions: [] } },
@@ -60,5 +63,6 @@ describe('AdminDashboard', () => {
     expect(screen.queryByText('Manage Accounts')).not.toBeInTheDocument()
     expect(screen.queryByText('Manage Roles')).not.toBeInTheDocument()
     expect(screen.queryByText('Manage Reports and Bans')).not.toBeInTheDocument()
+    expect(screen.queryByText('Manage Categories')).not.toBeInTheDocument()
   })
 })

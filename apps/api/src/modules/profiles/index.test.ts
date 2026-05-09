@@ -44,6 +44,11 @@ describe('GET /profiles/:id', () => {
     expect(error).toBeNull()
     expect(data!.userProfileId).toBe(aliceProfileId)
   })
+
+  it('includes averageRating as a number or null', async () => {
+    const { data } = await client.profiles({ id: aliceProfileId }).get()
+    expect(data!.averageRating === null || typeof data!.averageRating === 'number').toBe(true)
+  })
 })
 
 describe('PATCH /profiles/:id', () => {
@@ -142,6 +147,56 @@ describe('GET /profiles/:profileId/posts', () => {
     if (page1!.total > 1) {
       expect(page1!.items[0]!.postId).not.toBe(page2!.items[0]?.postId)
     }
+  })
+
+  it('returns archived posts for any authenticated user', async () => {
+    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).posts.get({
+      query: { archived: 'true' },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(error).toBeNull()
+    expect(Array.isArray(data!.items)).toBe(true)
+  })
+
+  it('returns own archived posts when archived=true as owner', async () => {
+    const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { archived: 'true' },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(error).toBeNull()
+    expect(Array.isArray(data!.items)).toBe(true)
+  })
+})
+
+describe('GET /profiles/:id/posts/count', () => {
+  it('returns 401 without a session cookie', async () => {
+    const { error } = await client.profiles({ id: aliceProfileId }).posts.count.get()
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns active and archived counts as numbers', async () => {
+    const { data, error } = await client.profiles({ id: aliceProfileId }).posts.count.get({
+      headers: { Cookie: aliceCookie },
+    })
+    expect(error).toBeNull()
+    expect(typeof data!.active).toBe('number')
+    expect(typeof data!.archived).toBe('number')
+  })
+
+  it('active + archived equals total posts for the profile', async () => {
+    const { data: count } = await client.profiles({ id: aliceProfileId }).posts.count.get({
+      headers: { Cookie: aliceCookie },
+    })
+    const { data: all } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { size: 1000 },
+      headers: { Cookie: aliceCookie },
+    })
+    const { data: archived } = await client.profiles({ id: aliceProfileId }).posts.get({
+      query: { archived: 'true', size: 1000 },
+      headers: { Cookie: aliceCookie },
+    })
+    expect(count!.active).toBe(all!.total)
+    expect(count!.archived).toBe(archived!.total)
   })
 })
 
