@@ -102,7 +102,7 @@ backend-integration-tests:
     when: always
     paths:
       - apps/api/coverage/
-    expire_in: 10 minutes
+    expire_in: 30 minutes
 
 e2e-tests:
   stage: e2e tests
@@ -127,6 +127,6 @@ e2e-tests:
     paths:
       - playwright-report/
       - test-results/
-    expire_in: 10 minutes
+    expire_in: 60 minutes
   rules:
     - when: manual
