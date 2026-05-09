@@ -3,10 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useState, useEffect } from "react"
 import { useNavigate, Link } from "@tanstack/react-router"
+import { Turnstile } from "@marsidev/react-turnstile"
 import { authClient } from "#/auth"
+import { parseAuthErrorBody } from '#/lib/api-error'
 import { handleBanError } from '#/lib/ban-handler'
 import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
+import { env } from "#/env"
+import { useAppTheme } from "#/lib/theme"
 import { Button } from "#/components/ui/button"
 import { Checkbox } from "#/components/ui/checkbox"
 import { Input } from "#/components/ui/input"
@@ -26,6 +30,9 @@ type LoginValues = z.infer<typeof loginSchema>
 export function LoginForm({ redirect }: { redirect?: string }) {
   const navigate = useNavigate()
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [challengeVisible, setChallengeVisible] = useState(false)
+  const theme = useAppTheme()
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "", rememberMe: false },
@@ -52,6 +59,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       password: values.password,
       rememberMe: values.rememberMe,
       fetchOptions: {
+        headers: { "x-captcha-response": captchaToken! },
         onError: (ctx) => {
           if (ctx.response.status === 429) {
             const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "300", 10)
@@ -68,6 +76,12 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     if (handleBanError(error)) return
     if (error.status === 429) return
     if (error.status === 403) {
+      const body = parseAuthErrorBody(error)
+      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+        setCaptchaToken(null)
+        form.setError("root", { message: body.message as string ?? error.message })
+        return
+      }
       void navigate({ to: "/verify-email", search: { email: values.email } })
       return
     }
@@ -139,11 +153,21 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           Forgot your password?
         </Link>
       </div>
+      <div className={challengeVisible ? undefined : "!hidden"}>
+        <Turnstile
+          siteKey={env.turnstileSiteKey}
+          onSuccess={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+          onBeforeInteractive={() => setChallengeVisible(true)}
+          options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+        />
+      </div>
       <FieldError errors={[form.formState.errors.root]} />
       <Button
         type="submit"
         className="w-full"
-        disabled={form.formState.isSubmitting || rateLimitSeconds > 0}
+        disabled={!captchaToken || form.formState.isSubmitting || rateLimitSeconds > 0}
       >
         {rateLimitSeconds > 0
           ? `Try again in ${formatCountdown(rateLimitSeconds)}`

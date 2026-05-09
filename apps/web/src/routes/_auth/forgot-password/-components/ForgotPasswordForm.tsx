@@ -3,7 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useState, useEffect } from "react"
 import { CheckCircle2 } from "lucide-react"
+import { Turnstile } from "@marsidev/react-turnstile"
 import { authClient } from "#/auth"
+import { env } from "#/env"
+import { useAppTheme } from "#/lib/theme"
 import { formatCountdown } from "#/lib/format"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
@@ -20,6 +23,9 @@ type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 export function ForgotPasswordForm() {
   const [confirmed, setConfirmed] = useState(false)
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [challengeVisible, setChallengeVisible] = useState(false)
+  const theme = useAppTheme()
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
@@ -44,6 +50,7 @@ export function ForgotPasswordForm() {
     const { error } = await authClient.requestPasswordReset({
       email: values.email,
       fetchOptions: {
+        headers: { "x-captcha-response": captchaToken! },
         onError: (ctx) => {
           if (ctx.response.status === 429) {
             const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "3600", 10)
@@ -54,6 +61,7 @@ export function ForgotPasswordForm() {
     })
     if (error?.status === 429) return
     if (error) {
+      setCaptchaToken(null)
       form.setError("root", { message: error.message })
       return
     }
@@ -102,11 +110,21 @@ export function ForgotPasswordForm() {
               </Field>
             )}
           />
+          <div className={challengeVisible ? undefined : "!hidden"}>
+            <Turnstile
+              siteKey={env.turnstileSiteKey}
+              onSuccess={setCaptchaToken}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+              onBeforeInteractive={() => setChallengeVisible(true)}
+              options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+            />
+          </div>
           <FieldError errors={[form.formState.errors.root]} />
           <Button
             type="submit"
             className="w-full"
-            disabled={form.formState.isSubmitting || rateLimitSeconds > 0}
+            disabled={!captchaToken || form.formState.isSubmitting || rateLimitSeconds > 0}
           >
             {rateLimitSeconds > 0
               ? `Try again in ${formatCountdown(rateLimitSeconds)}`

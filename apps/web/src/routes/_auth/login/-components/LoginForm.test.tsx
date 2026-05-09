@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import { LoginForm } from "./LoginForm"
 
 vi.mock("#/auth", () => ({
@@ -31,9 +31,19 @@ vi.mock("#/lib/ban-handler", () => ({
   handleBanError: mockHandleBanError,
 }))
 
+let fireTurnstileSuccess: ((token: string) => void) | undefined
+
+vi.mock("@marsidev/react-turnstile", () => ({
+  Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
+    fireTurnstileSuccess = onSuccess
+    return null
+  },
+}))
+
 describe("LoginForm", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    fireTurnstileSuccess = undefined
     mockHandleBanError.mockReturnValue(false)
   })
 
@@ -42,6 +52,19 @@ describe("LoginForm", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument()
+  })
+
+  it("disables submit button until Turnstile fires onSuccess", () => {
+    render(<LoginForm />)
+    expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled()
+  })
+
+  it("enables submit button after Turnstile fires onSuccess", async () => {
+    render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /log in/i })).not.toBeDisabled()
+    })
   })
 
   it("renders a 'Remember me' checkbox that defaults to unchecked", () => {
@@ -59,6 +82,7 @@ describe("LoginForm", () => {
   it("calls authClient.signIn.email with entered values and rememberMe: false by default", async () => {
     const { authClient } = await import("#/auth")
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
 
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: "alice@example.com" },
@@ -70,8 +94,15 @@ describe("LoginForm", () => {
 
     await waitFor(() => {
       expect(authClient.signIn.email).toHaveBeenCalledWith(
-        { email: "alice@example.com", password: "password123", rememberMe: false },
-        expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+        expect.objectContaining({
+          email: "alice@example.com",
+          password: "password123",
+          rememberMe: false,
+          fetchOptions: expect.objectContaining({
+            headers: { "x-captcha-response": "test-token" },
+            onError: expect.any(Function),
+          }),
+        }),
       )
     })
   })
@@ -79,6 +110,7 @@ describe("LoginForm", () => {
   it("passes rememberMe: true when checkbox is checked before submit", async () => {
     const { authClient } = await import("#/auth")
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
@@ -88,13 +120,13 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(authClient.signIn.email).toHaveBeenCalledWith(
         expect.objectContaining({ rememberMe: true }),
-        expect.anything(),
       )
     })
   })
 
   it("shows a validation error for an invalid email format", async () => {
     const { container } = render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "not-an-email" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
     fireEvent.submit(container.querySelector("form")!)
@@ -112,6 +144,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "x@x.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "wrongpass" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -123,24 +156,24 @@ describe("LoginForm", () => {
 
   it("shows rate limit countdown and disables submit on 429", async () => {
     const { authClient } = await import("#/auth")
-    vi.mocked(authClient.signIn.email).mockImplementationOnce(async (_creds, callbacks) => {
+    vi.mocked(authClient.signIn.email).mockImplementationOnce(async (creds) => {
       const response = new Response(null, {
         status: 429,
         headers: { "X-Retry-After": "60" },
       })
-      await (callbacks as { fetchOptions?: { onError?: (ctx: { response: Response }) => Promise<void> } })?.fetchOptions?.onError?.({ response })
-      callbacks?.onError?.({ error: { status: 429, message: "Too many requests" } } as never)
+      const opts = creds as { fetchOptions?: { onError?: (ctx: { response: Response }) => void } }
+      opts.fetchOptions?.onError?.({ response })
       return Promise.resolve({ data: null, error: { status: 429, message: "Too many requests" } })
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "x@x.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/too many login attempts/i)).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled()
+      expect(screen.getByRole("button", { name: /try again in/i })).toBeDisabled()
     })
   })
 
@@ -152,6 +185,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "banned@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -172,6 +206,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "banned@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -190,6 +225,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -207,6 +243,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm redirect="/messages?foo=bar" />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -224,6 +261,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm redirect="https://evil.com" />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "a@a.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -242,6 +280,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))
@@ -263,6 +302,7 @@ describe("LoginForm", () => {
     })
 
     render(<LoginForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "unverified@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: /log in/i }))

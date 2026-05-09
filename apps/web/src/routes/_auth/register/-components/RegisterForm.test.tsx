@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import { RegisterForm } from "./RegisterForm"
 
 vi.mock("#/auth", () => ({
@@ -24,9 +24,19 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   }
 })
 
+let fireTurnstileSuccess: ((token: string) => void) | undefined
+
+vi.mock("@marsidev/react-turnstile", () => ({
+  Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => {
+    fireTurnstileSuccess = onSuccess
+    return null
+  },
+}))
+
 describe("RegisterForm", () => {
   beforeEach(() => {
-    mockNavigate.mockClear()
+    vi.clearAllMocks()
+    fireTurnstileSuccess = undefined
   })
 
   it("renders name, email, password inputs and a submit button", () => {
@@ -37,9 +47,23 @@ describe("RegisterForm", () => {
     expect(screen.getByRole("button", { name: /register/i })).toBeInTheDocument()
   })
 
+  it("disables submit button until Turnstile fires onSuccess", () => {
+    render(<RegisterForm />)
+    expect(screen.getByRole("button", { name: /register/i })).toBeDisabled()
+  })
+
+  it("enables submit button after Turnstile fires onSuccess", async () => {
+    render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /register/i })).not.toBeDisabled()
+    })
+  })
+
   it("calls authClient.signUp.email with entered values on submit", async () => {
     const { authClient } = await import("#/auth")
     render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
 
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: "Alice" } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "alice@example.com" } })
@@ -49,7 +73,11 @@ describe("RegisterForm", () => {
     await waitFor(() => {
       expect(authClient.signUp.email).toHaveBeenCalledWith(
         { name: "Alice", email: "alice@example.com", password: "password123" },
-        expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+        expect.objectContaining({
+          headers: { "x-captcha-response": "test-token" },
+          onSuccess: expect.any(Function),
+          onError: expect.any(Function),
+        }),
       )
     })
   })
@@ -62,6 +90,7 @@ describe("RegisterForm", () => {
     })
 
     render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: "Alice" } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "taken@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
@@ -74,6 +103,7 @@ describe("RegisterForm", () => {
 
   it("shows a validation error when name is empty", async () => {
     render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     // leave name field at its default empty value
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "alice@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })
@@ -99,6 +129,7 @@ describe("RegisterForm", () => {
 
   it("shows validation error when password is too short", async () => {
     render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: "Alice" } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "alice@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "short" } })
@@ -117,6 +148,7 @@ describe("RegisterForm", () => {
     })
 
     render(<RegisterForm />)
+    act(() => { fireTurnstileSuccess?.("test-token") })
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: "Alice" } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "alice@example.com" } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } })

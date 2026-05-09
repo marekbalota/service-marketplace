@@ -1,8 +1,13 @@
-import { Controller, useForm } from "react-hook-form"
+import { useState } from "react"
+import { Controller, useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "@tanstack/react-router"
+import { Turnstile } from "@marsidev/react-turnstile"
 import { authClient } from "#/auth"
+import { parseAuthErrorBody } from "#/lib/api-error"
+import { env } from "#/env"
+import { useAppTheme } from "#/lib/theme"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
@@ -17,20 +22,32 @@ type RegisterValues = z.infer<typeof registerSchema>
 
 export function RegisterForm() {
   const navigate = useNavigate()
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [challengeVisible, setChallengeVisible] = useState(false)
+  const theme = useAppTheme()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "" },
+    mode: "onTouched",
   })
 
-  const onSubmit = async (values: RegisterValues) => {
-    await authClient.signUp.email(values, {
-      onSuccess: () => {
-        navigate({ to: "/verify-email", search: { email: values.email } })
-      },
-      onError: (ctx) => {
-        form.setError("root", { message: ctx.error.message })
-      },
+  const onSubmit: SubmitHandler<RegisterValues> = async (values) => {
+    const { error } = await authClient.signUp.email(values, {
+      headers: { "x-captcha-response": captchaToken! },
     })
+    if (!error) {
+      void navigate({ to: "/verify-email", search: { email: values.email } })
+      return
+    }
+    if (error.status === 403) {
+      const body = parseAuthErrorBody(error)
+      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+        setCaptchaToken(null)
+        form.setError("root", { message: body.message as string ?? error.message })
+        return
+      }
+    }
+    form.setError("root", { message: error.message })
   }
 
   return (
@@ -91,8 +108,18 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
+      <div className={challengeVisible ? undefined : "!hidden"}>
+        <Turnstile
+          siteKey={env.turnstileSiteKey}
+          onSuccess={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+          onBeforeInteractive={() => setChallengeVisible(true)}
+          options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+        />
+      </div>
       <FieldError errors={[form.formState.errors.root]} />
-      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+      <Button type="submit" className="w-full" disabled={!captchaToken || form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Registering…" : "Register"}
       </Button>
     </form>
