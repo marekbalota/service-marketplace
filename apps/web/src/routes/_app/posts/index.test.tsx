@@ -29,6 +29,10 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
+vi.mock('#/context/activeProfile', () => ({
+  useActiveProfile: vi.fn(() => ({ activeProfile: null })),
+}))
+
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
 }))
