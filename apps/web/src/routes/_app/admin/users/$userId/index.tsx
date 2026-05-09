@@ -1,16 +1,21 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Calendar, LogIn, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import { ProfileAvatar } from '#/components/ProfileAvatar';
 import { BackButton } from '#/components/BackButton';
 import { PageHeader } from '#/components/PageHeader';
 import { EmptyState } from '#/components/EmptyState';
 import { Button, buttonVariants } from '#/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip';
 import { Badge } from '#/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Skeleton } from '#/components/ui/skeleton';
 import { userDetailQueryOptions, userProfilesQueryOptions } from './-queries/user';
+import { useCurrentUser } from '#/lib/queries/users';
+import { Permissions } from '@marketplace/shared';
+import { authClient } from '#/auth';
 
 export const Route = createFileRoute('/_app/admin/users/$userId/')({
   loader: ({ context: { queryClient }, params: { userId } }) => {
@@ -48,6 +53,32 @@ function UserDetailSkeleton() {
 function UserDetailContent({ userId }: { userId: string }) {
   const { data: user } = useSuspenseQuery(userDetailQueryOptions(userId));
   const { data: profiles = [] } = useSuspenseQuery(userProfilesQueryOptions(userId));
+  const { data: currentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const isImpersonating = !!currentUser?.impersonatedBy;
+  const hasImpersonatePermission = !!(
+    currentUser?.role?.permissions?.includes(Permissions.AdminUsersImpersonate)
+  );
+  const canImpersonate = !!(
+    !isImpersonating && hasImpersonatePermission && currentUser?.role && user.role &&
+    currentUser.role.priority > user.role.priority
+  );
+
+  const impersonateMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.admin.impersonateUser({ userId });
+      if (error) throw new Error(error.message ?? 'Impersonation failed');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
+      void navigate({ to: '/' });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   return (
     <>
@@ -77,11 +108,35 @@ function UserDetailContent({ userId }: { userId: string }) {
                 </div>
               </div>
             </div>
-            <Button variant="outline" className="gap-2" disabled>
-              <LogIn className="size-4" />
-              Impersonate User
-              {/* TODO: implement impersonation */}
-            </Button>
+            {hasImpersonatePermission && (
+              canImpersonate ? (
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  disabled={impersonateMutation.isPending}
+                  onClick={() => impersonateMutation.mutate()}
+                >
+                  <LogIn className="size-4" />
+                  Impersonate User
+                </Button>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <span tabIndex={0} className="inline-flex">
+                      <Button variant="outline" className="gap-2" disabled>
+                        <LogIn className="size-4" />
+                        Impersonate User
+                      </Button>
+                    </span>
+                  } />
+                  <TooltipContent>
+                    {isImpersonating
+                      ? 'Cannot start a new impersonation session while already impersonating'
+                      : 'Cannot impersonate users with equal or higher role priority'}
+                  </TooltipContent>
+                </Tooltip>
+              )
+            )}
           </div>
         </CardContent>
       </Card>

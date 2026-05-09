@@ -4,6 +4,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { EmptyState } from '#/components/EmptyState'
 import { cn } from '#/lib/utils'
 import { useActiveProfile } from '#/context/activeProfile'
+import { useCurrentUser } from '#/lib/queries/users'
 import { ChatInterface } from './-components/ChatInterface'
 
 function ThreadPageSkeleton() {
@@ -31,7 +32,12 @@ function ThreadPageSkeleton() {
 
 function ThreadPage() {
   const { threadId } = Route.useParams()
+  const { data: currentUser } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
+
+  if (currentUser?.impersonatedBy) {
+    return <EmptyState message="Messages are not accessible during impersonation." />
+  }
 
   if (!activeProfile) {
     return (

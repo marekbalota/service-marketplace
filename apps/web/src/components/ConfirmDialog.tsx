@@ -21,6 +21,7 @@ export function ConfirmDialog({
   destructive = false,
   isPending,
   reasonLabel,
+  reasonRequired = false,
   onConfirm,
   onClose,
 }: {
@@ -31,6 +32,7 @@ export function ConfirmDialog({
   destructive?: boolean
   isPending?: boolean
   reasonLabel?: string
+  reasonRequired?: boolean
   onConfirm: (reason?: string) => void | Promise<void>
   onClose: () => void
 }) {
@@ -76,7 +78,7 @@ export function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            disabled={isLoading}
+            disabled={isLoading || (reasonRequired && !reason.trim())}
             className={destructive
               ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
               : undefined}

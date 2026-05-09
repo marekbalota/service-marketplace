@@ -62,7 +62,7 @@ describe('DELETE /admin/posts/:id', () => {
     expect(error?.status).toBe(401);
   });
 
-  it('returns 403 for user without PostsDeleteAny', async () => {
+  it('returns 403 for user without AdminPostsDeleteAny', async () => {
     const { error } = await client['admin'].posts({ id: testPostId }).delete(
       {},
       { headers: { Cookie: userCookie } },

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Ban, Eye, Loader2 } from 'lucide-react'
@@ -18,7 +19,7 @@ import {
 import { PaginationBar } from '#/components/PaginationBar'
 import { StatCard } from '../../-components/StatCard'
 import { useCurrentUser } from '#/lib/queries/users'
-import { Permissions, hasPermissions } from '@marketplace/shared'
+import { Permissions, hasPermissions, hasAnyPermission } from '@marketplace/shared'
 import { usersQueryOptions, assignableRolesQueryOptions } from '../-queries/users'
 import { BanDialog } from './BanDialog'
 import { UnbanDialog } from './UnbanDialog'
@@ -32,7 +33,7 @@ function UserCard({ user }: { user: User }) {
   const permissions = currentUser?.role?.permissions ?? []
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole])
   const canBan = hasPermissions(permissions, [Permissions.AdminUsersBan])
-  const canViewUser = hasPermissions(permissions, [Permissions.AdminUsersView])
+  const canViewUser = hasAnyPermission(permissions, [Permissions.AdminUsersView, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny])
 
   const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions)
   const roleIsEditable = assignableRoles.some((r) => r.roleId === user.role?.roleId)
@@ -45,7 +46,7 @@ function UserCard({ user }: { user: User }) {
   const roleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await api.admin.users({ id: user.userId }).role.patch({ roleId })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to update role.')
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
     onError: () => toast.error('Failed to update role'),
@@ -54,7 +55,7 @@ function UserCard({ user }: { user: User }) {
   const banMutation = useMutation({
     mutationFn: async ({ reason, expiresAt }: { reason: string; expiresAt?: Date }) => {
       const { error } = await api.admin.users({ id: user.userId }).ban.patch({ reason, expiresAt })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to ban user.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
@@ -65,7 +66,7 @@ function UserCard({ user }: { user: User }) {
   const unbanMutation = useMutation({
     mutationFn: async () => {
       const { error } = await api.admin.users({ id: user.userId }).unban.patch()
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to unban user.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })

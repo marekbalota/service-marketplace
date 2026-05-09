@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { wrapEdenError } from '#/lib/api-error'
 import { Edit, Trash2, GripVertical, Star, Loader2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -15,6 +16,7 @@ export type Permission = { permissionId: string; name: string; description: stri
 interface SortableRoleCardProps {
   role: Role
   permissions: Permission[]
+  grantablePermissionIds: Set<string>
   onDelete: (roleId: string) => void
   onSetDefault: (roleId: string) => void
   canEdit: boolean
@@ -25,6 +27,7 @@ interface SortableRoleCardProps {
 export function SortableRoleCard({
   role,
   permissions,
+  grantablePermissionIds,
   onDelete,
   onSetDefault,
   canEdit,
@@ -37,7 +40,7 @@ export function SortableRoleCard({
   const updateMutation = useMutation({
     mutationFn: async ({ name, description, permissionIds }: RoleValues) => {
       const { error } = await api.admin.roles({ id: role.roleId }).patch({ name, description, permissionIds })
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to update role.')
     },
     onSuccess: () => {
       setEditOpen(false)
@@ -105,6 +108,7 @@ export function SortableRoleCard({
                       description="Modify role permissions and details"
                       submitLabel="Save Changes"
                       permissions={permissions}
+                      grantablePermissionIds={grantablePermissionIds}
                       defaultValues={{
                         name: role.name,
                         description: role.description ?? '',

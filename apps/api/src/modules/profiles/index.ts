@@ -90,6 +90,19 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
     },
   )
   .get(
+    '/:id/posts/count',
+    async ({ params }) => PostsService.countByProfile(params.id),
+    {
+      auth: true,
+      params: ProfilesModel.profilePostsParams,
+      response: {
+        200: PostsModel.profilePostsCountResponse,
+        ...unauthorizedResponse,
+      },
+      detail: { summary: 'Count active and archived posts by profile', operationId: 'countProfilePosts', tags: ['Profiles'] },
+    },
+  )
+  .get(
     '/:id/locations',
     async ({ params, user }) => LocationsService.findByProfileId(params.id, user.id),
     {
@@ -101,6 +114,49 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
         ...forbiddenResponse,
       },
       detail: { summary: 'List locations by profile', operationId: 'listProfileLocations', tags: ['Profiles'] },
+    },
+  )
+  .post(
+    '/:id/locations',
+    async ({ params, body, user, set }) => {
+      const hasField = Object.values(body).some(v => typeof v === 'string' && v.trim() !== '')
+      if (!hasField) {
+        set.status = 422
+        return { message: 'At least one location field must be provided' }
+      }
+      const location = await LocationsService.addToProfile(params.id, user.id, body)
+      set.status = 201
+      return location
+    },
+    {
+      auth: true,
+      params: LocationsModel.profileLocationsParams,
+      body:   LocationsModel.addBody,
+      response: {
+        201: LocationsModel.addResponse,
+        422: t.Object({ message: t.String() }),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: { summary: 'Add a location to profile', operationId: 'addProfileLocation', tags: ['Profiles'] },
+    },
+  )
+  .delete(
+    '/:id/locations/:locationId',
+    async ({ params, user, set }) => {
+      await LocationsService.removeFromProfile(params.id, user.id, params.locationId)
+      set.status = 204
+    },
+    {
+      auth: true,
+      params: LocationsModel.removeParams,
+      response: {
+        204: t.Void(),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+      },
+      detail: { summary: 'Remove a location from profile', operationId: 'removeProfileLocation', tags: ['Profiles'] },
     },
   )
   .get(

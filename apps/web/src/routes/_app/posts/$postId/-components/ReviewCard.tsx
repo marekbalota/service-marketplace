@@ -1,10 +1,18 @@
+import { useState } from 'react'
 import { Star, Trash2, Flag } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { cn } from '#/lib/utils'
 import { useActiveProfile } from '#/context/activeProfile'
+import { ImageLightbox } from '#/components/ImageLightbox'
 import { hasReportedReviewQueryOptions } from '../-queries/posts'
+
+export type ReviewImage = {
+  reviewImageId: string
+  link: string
+  name: string
+}
 
 export type ReviewType = {
   reviewId: string
@@ -13,6 +21,7 @@ export type ReviewType = {
   rating: number
   reviewDescription: string | null
   reviewerId: string
+  images: ReviewImage[]
 }
 
 export function ReviewCard({
@@ -30,6 +39,7 @@ export function ReviewCard({
 }) {
   const { activeProfile } = useActiveProfile()
   const profileId = activeProfile?.userProfileId
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const isMyReview = review.reviewerId === profileId
   const canReport = isAuthenticated && !isMyReview
@@ -89,7 +99,27 @@ export function ReviewCard({
         {review.reviewDescription && (
           <p className="text-muted-foreground">{review.reviewDescription}</p>
         )}
+        {review.images.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {review.images.map((img, i) => (
+              <img
+                key={img.reviewImageId}
+                src={img.link}
+                alt={img.name}
+                className="size-16 cursor-pointer rounded-md border object-cover transition-opacity hover:opacity-80"
+                onClick={() => setLightboxIndex(i)}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
+
+      <ImageLightbox
+        images={review.images.map(img => ({ src: img.link, alt: img.name }))}
+        initialIndex={lightboxIndex ?? 0}
+        open={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+      />
     </Card>
   )
 }

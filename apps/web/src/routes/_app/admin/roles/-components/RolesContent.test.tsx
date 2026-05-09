@@ -97,7 +97,7 @@ const mockRoles = [
 
 // userPriority=100 means all roles (priority < 100) are sortable => canEdit=true
 function renderContent() {
-  return render(<RolesContent userPriority={100} />)
+  return render(<RolesContent userPriority={100} userPermissionNames={[]} />)
 }
 
 describe('RolesContent', () => {

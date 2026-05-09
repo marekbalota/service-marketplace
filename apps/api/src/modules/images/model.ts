@@ -20,6 +20,10 @@ export const ImagesModel = {
     }),
     profileId: t.String(),
   }),
+  createUrlBody: t.Object({
+    url:       t.String(),
+    profileId: t.String(),
+  }),
   createResponse: imageItem,
   deleteParams:   t.Object({ id: t.String() }),
 } as const

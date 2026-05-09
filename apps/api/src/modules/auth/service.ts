@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { ErrorCodes } from "@marketplace/shared";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
@@ -7,6 +8,7 @@ import * as schema from "../../db/schema";
 import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
+import { impersonationPlugin } from "./impersonation-plugin";
 
 export const verificationTokenStore = new Map<string, string>();
 
@@ -16,6 +18,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
     ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
   ],
+  plugins: [impersonationPlugin()],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -93,6 +96,7 @@ export const auth = betterAuth({
               await AuthService.clearUserSessions(user.id);
 
               throw new APIError("FORBIDDEN", {
+                code: ErrorCodes.Banned,
                 message: AuthErrorMessages.banned,
                 reason: banStatus.reason,
                 expiresAt: banStatus.expiresAt,

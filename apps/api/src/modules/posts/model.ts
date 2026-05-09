@@ -32,6 +32,12 @@ const partialLocation = t.Object({
 
 // Shared response schemas
 const categoryItem = t.Object({ categoryId: t.String(), name: t.String() })
+const reviewImageItem = t.Object({
+  reviewImageId: t.String(),
+  link:          t.String(),
+  name:          t.String(),
+})
+
 const reviewItem = t.Object({
   reviewId:          t.String(),
   rating:            t.Number(),
@@ -39,6 +45,7 @@ const reviewItem = t.Object({
   reviewerId:        t.String(),
   reviewerName:      t.String(),
   createdAt:         t.Date(),
+  images:            t.Array(reviewImageItem),
 })
 
 const postWithLocation = t.Object({
@@ -76,6 +83,9 @@ export const PostsModel = {
     offset:     t.Optional(t.Numeric()),
     size:       t.Optional(t.Numeric()),
     profileId:  t.Optional(t.String()),
+    country:    t.Optional(t.String()),
+    region:     t.Optional(t.String()),
+    city:       t.Optional(t.String()),
   }),
   findAllResponse: paginatedResponse,
   findByIdParams: t.Object({ id: t.String() }),
@@ -136,10 +146,15 @@ export const PostsModel = {
   }),
   deleteParams: t.Object({ id: t.String() }),
   findByProfileQuery: t.Object({
-    offset: t.Optional(t.Numeric()),
-    size:   t.Optional(t.Numeric()),
+    offset:   t.Optional(t.Numeric()),
+    size:     t.Optional(t.Numeric()),
+    archived: t.Optional(t.BooleanString()),
   }),
   findByProfileResponse: paginatedResponse,
+  profilePostsCountResponse: t.Object({
+    active:   t.Number(),
+    archived: t.Number(),
+  }),
 } as const
 
 export type PostsModel = {

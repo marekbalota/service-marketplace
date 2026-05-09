@@ -7,6 +7,8 @@ import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
 import { useActiveProfile } from '#/context/activeProfile'
+import { useCurrentUser } from '#/lib/queries/users'
+import { EmptyState } from '#/components/EmptyState'
 import { threadsQueryOptions } from './-queries/threads'
 import { ThreadItem } from './-components/ThreadItem'
 
@@ -51,6 +53,7 @@ function ThreadSidebar({ profileId, activeThreadId }: { profileId: string; activ
 }
 
 function MessagesLayout() {
+  const { data: currentUser } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const threadMatch = useMatch({ from: '/_app/messages/$threadId', shouldThrow: false })
   const activeThreadId = threadMatch?.params.threadId
@@ -65,6 +68,14 @@ function MessagesLayout() {
       void navigate({ to: '/messages' })
     }
   }, [activeProfile?.userProfileId, isInThread, navigate])
+
+  if (currentUser?.impersonatedBy) {
+    return (
+      <div className="flex h-[calc(100svh-4rem)] items-center justify-center">
+        <EmptyState message="Messages are not accessible during impersonation." />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-[calc(100svh-4rem)] overflow-hidden">

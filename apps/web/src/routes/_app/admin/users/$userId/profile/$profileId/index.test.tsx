@@ -29,6 +29,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
     ...actual,
     useSuspenseQuery: mockUseSuspenseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+    useQuery: vi.fn(() => ({ data: undefined })),
   }
 })
 
@@ -111,9 +112,15 @@ describe('ProfileDetailPage', () => {
     expect(screen.getByText('alice-profile@example.com')).toBeInTheDocument()
   })
 
-  it('shows empty state when profile has no posts', async () => {
+  it('shows Active and Archived tabs', async () => {
     await renderPage()
-    expect(screen.getByText(/no posts found for this profile/i)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /active/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /archived/i })).toBeInTheDocument()
+  })
+
+  it('shows empty state when active tab has no posts', async () => {
+    await renderPage()
+    expect(screen.getByText(/no active posts/i)).toBeInTheDocument()
   })
 
   it('shows post cards when posts are present', async () => {
@@ -128,9 +135,9 @@ describe('ProfileDetailPage', () => {
     expect(screen.getByText('My Test Post')).toBeInTheDocument()
   })
 
-  it('shows Delete button on post cards when user has PostsDeleteAny permission', async () => {
+  it('shows Delete button on post cards when user has AdminPostsDeleteAny permission', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
-      data: { userId: 'u1', role: { permissions: ['posts:delete:any'] } },
+      data: { userId: 'u1', role: { permissions: ['admin:posts:delete:any'] } },
     } as unknown as ReturnType<typeof useCurrentUser>)
     mockUseSuspenseQuery.mockImplementation((opts: { queryKey: unknown[] }) => {
       const key = opts.queryKey
@@ -145,7 +152,7 @@ describe('ProfileDetailPage', () => {
 
   it('opens the confirm dialog when Delete is clicked', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
-      data: { userId: 'u1', role: { permissions: ['posts:delete:any'] } },
+      data: { userId: 'u1', role: { permissions: ['admin:posts:delete:any'] } },
     } as unknown as ReturnType<typeof useCurrentUser>)
     mockUseSuspenseQuery.mockImplementation((opts: { queryKey: unknown[] }) => {
       const key = opts.queryKey

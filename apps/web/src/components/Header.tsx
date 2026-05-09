@@ -12,6 +12,7 @@ import {
 } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
+import { ImpersonationBanner } from './ImpersonationBanner'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 
@@ -22,6 +23,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-10 border-b bg-card shadow-sm">
+      {user?.impersonatedBy && <ImpersonationBanner />}
       <div className="mx-auto max-w-7xl px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="no-underline">

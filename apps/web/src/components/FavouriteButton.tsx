@@ -6,6 +6,7 @@ import { useCurrentUser } from '#/lib/queries/users'
 import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { useActiveProfile } from '#/context/activeProfile'
 import { api } from '#/api'
+import { wrapEdenError } from '#/lib/api-error'
 
 export function FavouriteButton({
   postId,
@@ -33,36 +34,24 @@ export function FavouriteButton({
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { data, error, response } = await api.favourites({ postId }).post({ profileId: profileId! })
-      if (error) {
-        console.error('Add favourite error:', error, 'Status:', response?.status)
-        throw error
-      }
+      const { data, error } = await api.favourites({ postId }).post({ profileId: profileId! })
+      if (error) throw wrapEdenError(error, 'Failed to add favourite.')
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
       onToggle?.()
     },
-    onError: (error) => {
-      console.error('Add favourite mutation error:', error)
-    },
   })
 
   const removeMutation = useMutation({
     mutationFn: async () => {
-      const { error, response } = await api.favourites({ postId }).delete({ profileId: profileId! })
-      if (error) {
-        console.error('Remove favourite error:', error, 'Status:', response?.status)
-        throw error
-      }
+      const { error } = await api.favourites({ postId }).delete({ profileId: profileId! })
+      if (error) throw wrapEdenError(error, 'Failed to remove favourite.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
       onToggle?.()
-    },
-    onError: (error) => {
-      console.error('Remove favourite mutation error:', error)
     },
   })
 

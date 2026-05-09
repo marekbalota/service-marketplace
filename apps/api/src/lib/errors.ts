@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 
-const errorResponse = t.Object({ message: t.String() })
+const errorResponse = t.Object({ message: t.String(), code: t.Optional(t.String()) })
 
 export const ErrorMessages = {
   postNotFound:            'Post not found',
@@ -8,6 +8,7 @@ export const ErrorMessages = {
   profileNotFound:         'Profile not found',
   cannotDeleteLastProfile: 'Cannot delete your only profile. Create a new profile first.',
   imageNotFound:           'Image not found',
+  reviewImageNotFound:     'Review image not found',
   favouriteNotFound:       'Favourite not found',
   alreadyFavourited:       'Post is already favourited',
   reviewNotFound:          'Review not found',
@@ -21,11 +22,21 @@ export const ErrorMessages = {
   noDefaultRoleFound:      'No default role found',
 } as const
 
+export const ImpersonationErrorMessages = {
+  impersonationFailed: 'Failed to create impersonation session',
+  notCurrentlyImpersonating: 'Not currently impersonating',
+  alreadyImpersonating: 'Cannot start a new impersonation session while already impersonating',
+  adminSessionMissing: 'Admin session cookie missing',
+  adminSessionMismatch: 'Admin session mismatch',
+  adminSessionExpired: 'Admin session has expired',
+} as const
+
 export const AuthErrorMessages = {
   unauthorized: 'Unauthorized',
   forbidden:    'Forbidden',
   banned:       'Account banned',
   missingPermissions: 'Missing permissions',
+  impersonationReadOnly: 'Cannot make changes during impersonation',
   cannotManageRole: 'Cannot manage users with equal or higher role',
   cannotModifySameOrHigherRole: 'Cannot modify users with equal or higher role',
   cannotAssignSameOrHigherRole: 'Cannot assign roles with equal or higher priority',

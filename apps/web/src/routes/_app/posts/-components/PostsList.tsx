@@ -9,7 +9,7 @@ import { Route } from '../index'
 import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { postsQueryOptions, type RatingRange } from '../-queries/posts'
 
-export function PostsList({ type, category, q, sort, page, favouritesOnly, rating }: {
+export function PostsList({ type, category, q, sort, page, favouritesOnly, rating, country, region, city }: {
   type: 'all' | 'offer' | 'request'
   category?: string | string[]
   q: string
@@ -17,6 +17,9 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
   page: number
   favouritesOnly: boolean
   rating?: RatingRange | RatingRange[]
+  country?: string
+  region?: string
+  city?: string
 }) {
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
@@ -24,7 +27,7 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
 
   const activeProfileId = activeProfile?.userProfileId
   const profileId = favouritesOnly ? activeProfileId : undefined
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating, profileId }))
+  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city }))
 
   const { data: favouritesData } = useQuery({
     ...favouritesQueryOptions(activeProfileId ?? ''),

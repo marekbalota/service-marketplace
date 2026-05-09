@@ -1,6 +1,6 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
-import { eq, isNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
+import { posts, userProfiles, postCategories, categories, locations, favourites, profileLocations } from "../../db/schema";
+import { eq, isNull, isNotNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
 import { ProfilesService } from "../profiles/service";
@@ -39,7 +39,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
-    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId, country, region, city } = query;
 
     if (profileId && accountId !== undefined) {
       const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
@@ -50,8 +50,8 @@ export abstract class PostsService {
       sort === 'price-low'  ? asc(posts.price)     :
       sort === 'price-high' ? desc(posts.price)    :
       sort === 'name'       ? asc(posts.postTitle) :
-      sort === 'reviews-most'  ? desc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
-      sort === 'reviews-least' ? asc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL)`) :
+      sort === 'reviews-most'  ? desc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId})`) :
+      sort === 'reviews-least' ? asc(sql`(SELECT COUNT(*) FROM reviews r WHERE r.post_id = ${posts.postId})`) :
       desc(posts.createdAt);
 
     return db.transaction(async (tx) => {
@@ -59,7 +59,7 @@ export abstract class PostsService {
       const avgRatingSubquery = sql<number>`(
         SELECT COALESCE(AVG(r.rating), 0)
         FROM reviews r
-        WHERE r.post_id = ${posts.postId} AND r.deleted_at IS NULL
+        WHERE r.post_id = ${posts.postId}
       )`;
 
       // Build rating filter condition
@@ -104,6 +104,9 @@ export abstract class PostsService {
               ),
             )
           : undefined,
+        country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
+        region  ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})`  : undefined,
+        city    ? sql`unaccent(${locations.city})    ILIKE unaccent(${city})`    : undefined,
       );
 
       const [countRow] = await tx
@@ -134,19 +137,29 @@ export abstract class PostsService {
     });
   }
 
+  static async countByProfile(profileId: string) {
+    const [[activeRow], [archivedRow]] = await Promise.all([
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt))),
+      db.select({ total: count() }).from(posts).where(and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt))),
+    ])
+    return { active: activeRow?.total ?? 0, archived: archivedRow?.total ?? 0 }
+  }
+
   static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
-    const { offset = 0, size } = query
+    const { offset = 0, size, archived = false } = query
+
+    const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
 
       const total = countRow?.total ?? 0
 
       const q = postSelect(tx)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt)))
+        .where(and(eq(posts.authorId, profileId), deletedCondition))
         .orderBy(desc(posts.createdAt))
         .offset(offset)
 
@@ -191,7 +204,7 @@ export abstract class PostsService {
             '[]'::json
           )
         `,
-        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerId: string; reviewerName: string; createdAt: Date }[]>`
+        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerId: string; reviewerName: string; createdAt: Date; images: { reviewImageId: string; link: string; name: string }[] }[]>`
           coalesce(
             (select json_agg(json_build_object(
               'reviewId',          r.review_id,
@@ -199,7 +212,17 @@ export abstract class PostsService {
               'reviewDescription', r.review_description,
               'reviewerId',        r.reviewer_id,
               'reviewerName',      rp.name,
-              'createdAt',         r.created_at
+              'createdAt',         r.created_at,
+              'images',            coalesce(
+                (select json_agg(json_build_object(
+                  'reviewImageId', ri.review_image_id,
+                  'link',          ri.link,
+                  'name',          ri.name
+                ) order by ri.created_at)
+                from review_images ri
+                where ri.review_id = r.review_id and ri.deleted_at is null),
+                '[]'::json
+              )
             ) order by r.created_at desc)
             from reviews r
             join user_profiles rp on r.reviewer_id = rp.user_profile_id
@@ -207,6 +230,11 @@ export abstract class PostsService {
             '[]'::json
           )
         `,
+        averageRating: sql<number | null>`(
+          SELECT AVG(r.rating)::float8
+          FROM reviews r
+          WHERE r.post_id = ${posts.postId}
+        )`,
       })
       .from(posts)
       .innerJoin(userProfiles, eq(posts.authorId, userProfiles.userProfileId))
@@ -230,11 +258,7 @@ export abstract class PostsService {
       houseNumber: row.locationHouseNumber,
     } : null;
 
-    const averageRating = row.reviews.length > 0
-      ? row.reviews.reduce((sum, r) => sum + r.rating, 0) / row.reviews.length
-      : null;
-
-    const { locationId, locationCountry, locationRegion, locationCity, locationStreet, locationHouseNumber, ...rest } = row;
+    const { locationId, locationCountry, locationRegion, locationCity, locationStreet, locationHouseNumber, averageRating, ...rest } = row;
     return { ...rest, location, averageRating, reviewCount: row.reviews.length };
   }
 
@@ -254,6 +278,11 @@ export abstract class PostsService {
           .values(location!)
           .returning({ locationId: locations.locationId })
         resolvedLocationId = insertedLocation!.locationId
+
+        await tx
+          .insert(profileLocations)
+          .values({ userProfileId: postValues.authorId, locationId: resolvedLocationId })
+          .onConflictDoNothing()
       }
 
       const [inserted] = await tx

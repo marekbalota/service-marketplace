@@ -28,6 +28,7 @@ interface RoleDialogProps {
   description: string
   submitLabel: string
   permissions: Permission[]
+  grantablePermissionIds: Set<string>
   defaultValues?: RoleValues
   onSubmit: (values: RoleValues) => Promise<void>
 }
@@ -39,6 +40,7 @@ export function RoleDialog({
   description,
   submitLabel,
   permissions,
+  grantablePermissionIds,
   defaultValues,
   onSubmit,
 }: RoleDialogProps) {
@@ -111,20 +113,28 @@ export function RoleDialog({
           <div className="space-y-3">
             <Label>Permissions</Label>
             <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
-              {permissions.map((permission) => (
-                <div key={permission.permissionId} className="flex items-start space-x-3">
-                  <Checkbox
-                    id={`role-form-${permission.permissionId}`}
-                    checked={permissionIds.includes(permission.permissionId)}
-                    onCheckedChange={() => togglePermission(permission.permissionId)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor={`role-form-${permission.permissionId}`} className="cursor-pointer">
-                      {permission.description ?? permission.name}
-                    </Label>
+              {permissions.map((permission) => {
+                const grantable = grantablePermissionIds.has(permission.permissionId)
+                return (
+                  <div key={permission.permissionId} className="flex items-start space-x-3">
+                    <Checkbox
+                      id={`role-form-${permission.permissionId}`}
+                      checked={permissionIds.includes(permission.permissionId)}
+                      disabled={!grantable}
+                      className={grantable ? 'cursor-pointer' : 'cursor-not-allowed'}
+                      onCheckedChange={() => { if (grantable) togglePermission(permission.permissionId) }}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`role-form-${permission.permissionId}`}
+                        className={grantable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}
+                      >
+                        {permission.description ?? permission.name}
+                      </Label>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
           <FieldError errors={[formState.errors.root]} />

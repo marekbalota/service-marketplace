@@ -10,10 +10,11 @@ const permissionDefinitions = [
   { name: Permissions.PostsEditOwn, description: "Edit own posts" },
   { name: Permissions.PostsEditAny, description: "Edit any post" },
   { name: Permissions.PostsDeleteOwn, description: "Delete own posts" },
-  { name: Permissions.PostsDeleteAny, description: "Delete any post" },
+  { name: Permissions.AdminPostsDeleteAny, description: "Delete any post" },
   { name: Permissions.AdminUsersBan, description: "Ban and unban users" },
   { name: Permissions.AdminUsersView, description: "View user list" },
   { name: Permissions.AdminUsersAssignRole, description: "Assign roles to users" },
+  { name: Permissions.AdminUsersImpersonate, description: "Impersonate users" },
   { name: Permissions.AdminRolesManage, description: "Create, edit, delete roles" },
   { name: Permissions.AdminCategoriesManage, description: "Manage categories" },
 ];
@@ -613,6 +614,13 @@ async function seed() {
       .returning();
 
     insertedPosts.push(inserted!);
+
+    if (locationId) {
+      await db
+        .insert(schema.profileLocations)
+        .values({ userProfileId: postValues.authorId, locationId })
+        .onConflictDoNothing();
+    }
 
     for (const cat of postCategories) {
       await db

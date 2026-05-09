@@ -1,5 +1,6 @@
 import { queryClient, routerRef } from '#/router'
 import { currentUserQueryOptions } from '#/lib/queries/users'
+import { ErrorCodes } from '@marketplace/shared'
 
 const STORAGE_KEY = 'activeProfileId'
 
@@ -38,9 +39,8 @@ function extractBanInfo(error: unknown): BanError | null {
 
   // Eden Treaty API errors — body contains the parsed response
   if (err.body && typeof err.body === 'object') {
-    const body = err.body as { message?: string; reason?: string | null; expiresAt?: string | null }
-    if (body.message?.toLowerCase().includes('banned') ||
-        body.message?.toLowerCase().includes('ban')) {
+    const body = err.body as { code?: string; message?: string; reason?: string | null; expiresAt?: string | null }
+    if (body.code === ErrorCodes.Banned) {
       return {
         message: body.message ?? 'Account banned',
         reason: body.reason ?? null,
@@ -50,35 +50,18 @@ function extractBanInfo(error: unknown): BanError | null {
   }
 
   if (typeof err.message === 'string') {
-    // BetterAuth may serialize custom APIError bodies as JSON in err.message
+    // BetterAuth serializes APIError bodies as JSON in err.message
     try {
       const parsed = JSON.parse(err.message)
-      if (parsed.code === 'BANNED') {
+      if (parsed.code === ErrorCodes.Banned) {
         return {
-          message: 'Account banned',
+          message: parsed.message ?? 'Account banned',
           reason: parsed.reason ?? null,
           expiresAt: parsed.expiresAt ?? null,
         }
       }
     } catch {
-      // Plain string message fallback
-      if (err.message.toLowerCase().includes('banned')) {
-        return {
-          message: err.message,
-          reason: null,
-          expiresAt: null,
-        }
-      }
-    }
-  }
-
-  // authClient.signIn.email onError callback shape: { status, message }
-  if (err.status === 403 && typeof err.message === 'string' &&
-      err.message.toLowerCase().includes('banned')) {
-    return {
-      message: err.message,
-      reason: null,
-      expiresAt: null,
+      // not JSON — not a structured ban error
     }
   }
 

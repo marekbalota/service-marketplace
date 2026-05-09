@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Button } from '#/components/ui/button';
 import { PageHeader } from '#/components/PageHeader';
 import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared';
 import { useCurrentUser } from '#/lib/queries/users';
@@ -111,9 +110,9 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="size-2 rounded-full bg-gray-400 mt-2 shrink-0" />
+                <div className="size-2 rounded-full bg-red-500 mt-2 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">User role updated</p>
+                  <p className="text-sm font-medium">Message reported by user</p>
                   <p className="text-xs text-muted-foreground">3 hours ago</p>
                 </div>
               </div>
@@ -133,6 +132,8 @@ function AdminOptions() {
     Permissions.AdminUsersView,
     Permissions.AdminUsersBan,
     Permissions.AdminUsersAssignRole,
+    Permissions.AdminUsersImpersonate,
+    Permissions.AdminPostsDeleteAny,
   ]);
   const canManageRoles = hasPermissions(permissions, [Permissions.AdminRolesManage]);
   const canManageCategories = hasPermissions(permissions, [Permissions.AdminCategoriesManage]);
@@ -162,11 +163,6 @@ function AdminOptions() {
                 <CardTitle>{option.title}</CardTitle>
                 <CardDescription>{option.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full" tabIndex={-1} aria-hidden="true">
-                  Open
-                </Button>
-              </CardContent>
             </Card>
           </Link>
         );

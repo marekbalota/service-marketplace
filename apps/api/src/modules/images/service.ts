@@ -75,6 +75,16 @@ export abstract class ImagesService {
     await this.delete(imageId)
   }
 
+  static async createForProfileByUrl(profileId: string, accountId: string, url: string) {
+    const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const name = new URL(url).pathname.split('/').pop() ?? url
+    const created = await this.create(profileId, { link: url, name })
+    if (!created) throw new InternalServerError('Failed to save image')
+    return created
+  }
+
   static async createForProfile(profileId: string, accountId: string, file: File) {
     const isOwner = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)

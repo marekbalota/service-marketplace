@@ -79,6 +79,7 @@ export const sessions = pgTable("session", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  impersonatedBy: uuid("impersonated_by").references(() => users.id),
 });
 
 export const oauthAccounts = pgTable("account", {
@@ -215,6 +216,21 @@ export const favourites = pgTable(
   (table) => [primaryKey({ columns: [table.userProfileId, table.postId] })],
 );
 
+export const profileLocations = pgTable(
+  "profile_locations",
+  {
+    userProfileId: uuid("user_profile_id")
+      .notNull()
+      .references(() => userProfiles.userProfileId),
+    locationId: uuid("location_id")
+      .notNull()
+      .references(() => locations.locationId),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [primaryKey({ columns: [table.userProfileId, table.locationId] })],
+);
+
 export const messageThreads = pgTable(
   "message_threads",
   {
@@ -287,6 +303,17 @@ export const reports = pgTable(
   ],
 );
 
+export const reviewImages = pgTable("review_images", {
+  reviewImageId: uuid("review_image_id").primaryKey().defaultRandom(),
+  reviewId: uuid("review_id")
+    .notNull()
+    .references(() => reviews.reviewId),
+  name: text("name").notNull(),
+  link: text("link").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 
 // Relations
 
@@ -336,10 +363,11 @@ export const userProfilesRelations = relations(
     images: many(images),
     favourites: many(favourites),
     reports: many(reports),
+    profileLocations: many(profileLocations),
   }),
 );
 
-export const reviewsRelations = relations(reviews, ({ one }) => ({
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
   reviewer: one(userProfiles, {
     fields: [reviews.reviewerId],
     references: [userProfiles.userProfileId],
@@ -349,6 +377,7 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
     fields: [reviews.postId],
     references: [posts.postId],
   }),
+  reviewImages: many(reviewImages),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -387,6 +416,7 @@ export const postCategoriesRelations = relations(
 
 export const locationsRelations = relations(locations, ({ many }) => ({
   posts: many(posts),
+  profileLocations: many(profileLocations),
 }));
 
 export const imagesRelations = relations(images, ({ one }) => ({
@@ -404,6 +434,17 @@ export const favouritesRelations = relations(favourites, ({ one }) => ({
   post: one(posts, {
     fields: [favourites.postId],
     references: [posts.postId],
+  }),
+}));
+
+export const profileLocationsRelations = relations(profileLocations, ({ one }) => ({
+  userProfile: one(userProfiles, {
+    fields: [profileLocations.userProfileId],
+    references: [userProfiles.userProfileId],
+  }),
+  location: one(locations, {
+    fields: [profileLocations.locationId],
+    references: [locations.locationId],
   }),
 }));
 
@@ -461,3 +502,9 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+export const reviewImagesRelations = relations(reviewImages, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewImages.reviewId],
+    references: [reviews.reviewId],
+  }),
+}));

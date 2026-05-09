@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { impersonationClient } from "./impersonation-client";
 
 export const authClient = createAuthClient({
   baseURL:
@@ -7,4 +8,5 @@ export const authClient = createAuthClient({
   fetchOptions: {
     credentials: "include",
   },
+  plugins: [impersonationClient()],
 });

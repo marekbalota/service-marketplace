@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
+import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FileText, AlignLeft, Tag } from 'lucide-react'
+import { FieldIconHeader } from '#/components/FieldIconHeader'
+import { PostTypeToggle } from '#/components/PostTypeToggle'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { useState, useEffect } from 'react'
 import { api } from '#/api'
@@ -20,12 +23,11 @@ import {
   CardTitle,
   CardDescription,
 } from '#/components/ui/card'
-import { Field, FieldLabel, FieldError } from '#/components/ui/field'
+import { Field, FieldError } from '#/components/ui/field'
 import { useActiveProfile } from '#/context/activeProfile'
 import { Permissions, hasPermissions } from '@marketplace/shared'
-import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { LocationField } from './-components/LocationField'
-import { PricingField } from './-components/PricingField'
+import { PricingField } from '#/components/PricingField'
 
 const schema = z.object({
   postType:    z.enum(['OFFER', 'REQUEST']),
@@ -122,7 +124,7 @@ function CreatePostPage() {
           : { locationId: values.locationId || undefined }),
       }
       const { data, error } = await api.posts.post(body)
-      if (error) throw error
+      if (error) throw wrapEdenError(error, 'Failed to create post.')
       return data
     },
     onSuccess: () => {
@@ -171,48 +173,14 @@ function CreatePostPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Controller
-              control={form.control}
-              name="postType"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel className="text-base font-semibold">Type *</FieldLabel>
-                  <ToggleGroup
-                    value={field.value ? [field.value] : []}
-                    onValueChange={(vals) => { const v = vals[vals.length - 1]; if (v) field.onChange(v) }}
-                    className="grid grid-cols-2 overflow-hidden rounded-lg border p-0"
-                  >
-                    {(['OFFER', 'REQUEST'] as const).map((type) => (
-                      <ToggleGroupItem
-                        key={type}
-                        value={type}
-                        className={[
-                          'h-11 rounded-none',
-                          field.value === type
-                            ? 'aria-pressed:bg-primary aria-pressed:text-primary-foreground'
-                            : 'bg-background text-foreground hover:bg-muted',
-                          type === 'OFFER' ? 'border-r' : '',
-                        ].join(' ')}
-                      >
-                        {type === 'OFFER' ? 'Offering Service' : 'Requesting Service'}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </Field>
-              )}
-            />
+            <PostTypeToggle control={form.control} />
 
             <Controller
               control={form.control}
               name="postTitle"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20">
-                      <FileText className="size-5 text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <FieldLabel htmlFor="postTitle" className="text-base font-semibold">Title *</FieldLabel>
-                  </div>
+                  <FieldIconHeader icon={FileText} iconBgClassName="bg-blue-100 dark:bg-blue-500/20" iconClassName="text-blue-600 dark:text-blue-300" label="Title *" htmlFor="postTitle" />
                   <Input
                     {...field}
                     id="postTitle"
@@ -230,12 +198,7 @@ function CreatePostPage() {
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <AlignLeft className="size-5 text-muted-foreground" />
-                    </div>
-                    <FieldLabel htmlFor="description" className="text-base font-semibold">Description *</FieldLabel>
-                  </div>
+                  <FieldIconHeader icon={AlignLeft} iconBgClassName="bg-muted" iconClassName="text-muted-foreground" label="Description *" htmlFor="description" />
                   <Textarea
                     {...field}
                     id="description"
@@ -254,12 +217,7 @@ function CreatePostPage() {
               name="categoryIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-500/20">
-                      <Tag className="size-5 text-green-600 dark:text-green-300" />
-                    </div>
-                    <FieldLabel className="text-base font-semibold">Categories (Optional)</FieldLabel>
-                  </div>
+                  <FieldIconHeader icon={Tag} iconBgClassName="bg-green-100 dark:bg-green-500/20" iconClassName="text-green-600 dark:text-green-300" label="Categories (Optional)" />
                   <MultiSelect
                     options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
                     value={field.value}
@@ -285,7 +243,7 @@ function CreatePostPage() {
             <PricingField control={form.control} priceValue={priceValue} />
 
             {mutation.isError && (
-              <FieldError errors={[{ message: 'Failed to create post. Please try again.' }]} />
+              <FieldError errors={[{ message: mutation.error?.message }]} />
             )}
 
             <div className="flex gap-3 pt-6">

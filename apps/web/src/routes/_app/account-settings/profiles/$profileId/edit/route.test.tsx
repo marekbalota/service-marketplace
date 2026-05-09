@@ -7,8 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { useCurrentUser } from '#/lib/queries/users'
-
-// ── Hoisted mocks ─────────────────────────────────────────────────────────────
+import { ApiError } from '#/lib/api-error'
 
 const mockUseMutation = vi.hoisted(() => vi.fn())
 
@@ -25,11 +24,18 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 vi.mock('#/api', () => ({
   api: {
     profiles: vi.fn(() => ({
-      patch: vi.fn(),
+      patch:     vi.fn(),
+      locations: Object.assign(
+        vi.fn(() => ({ delete: vi.fn() })),
+        { post: vi.fn(), get: vi.fn(() => ({ data: [] })) },
+      ),
     })),
     images: Object.assign(
       vi.fn(() => ({ delete: vi.fn() })),
-      { post: vi.fn() },
+      {
+        post: vi.fn(),
+        url:  { post: vi.fn() },
+      },
     ),
   },
 }))
@@ -40,21 +46,18 @@ vi.mock('#/lib/queries/users', () => ({
 }))
 
 vi.mock('#/lib/queries/profiles', () => ({
-  imagesQueryOptions:  (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
-  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions:           (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileQueryOptions:          (id: string) => ({ queryKey: ['profiles', id] }),
+  profileLocationsQueryOptions: (id: string) => ({ queryKey: ['locations', 'profile', id] }),
 }))
-
-// ── Import component and route after mocks ────────────────────────────────────
 
 import { Route } from './route'
 
-// ── Fixtures ──────────────────────────────────────────────────────────────────
-
 const baseUser = {
   userId: 'user-1',
-  name: 'Alice',
-  email: 'alice@example.com',
-  role: null,
+  name:   'Alice',
+  email:  'alice@example.com',
+  role:   null,
 }
 
 const alice = {
@@ -68,8 +71,6 @@ const alice = {
   updatedAt:     null,
 }
 
-// ── Render helper ─────────────────────────────────────────────────────────────
-
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
@@ -78,12 +79,8 @@ async function renderPage() {
   })
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 describe('EditProfilePage', () => {
   beforeEach(() => {
-    // Route.useParams() uses TanStack Router's internal context, not the exported
-    // useParams hook, so we spy directly on the Route object.
     vi.spyOn(Route, 'useParams').mockReturnValue({ profileId: 'profile-1' })
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, profiles: [alice] },
@@ -96,27 +93,57 @@ describe('EditProfilePage', () => {
     })
   })
 
-  it('renders the page heading', async () => {
+  it('renders the Edit Profile heading', async () => {
     await renderPage()
-    expect(screen.getByText(/update your profile information/i)).toBeInTheDocument()
+    expect(screen.getByText('Edit Profile')).toBeInTheDocument()
   })
 
-  it('renders the Back button', async () => {
+  it('renders the page subtitle', async () => {
     await renderPage()
-    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
+    expect(screen.getByText(/update your profile information and manage your saved locations/i)).toBeInTheDocument()
   })
 
-  it('renders the Save Changes submit button', async () => {
+  it('renders the Basic Information card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Basic Information')).toBeInTheDocument()
+  })
+
+  it('renders the Images card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Images')).toBeInTheDocument()
+  })
+
+  it('renders the Saved Locations card title', async () => {
+    await renderPage()
+    expect(screen.getByText('Saved Locations')).toBeInTheDocument()
+  })
+
+  it('renders the Back to Profiles button', async () => {
+    await renderPage()
+    expect(screen.getByRole('button', { name: /back to profiles/i })).toBeInTheDocument()
+  })
+
+  it('renders the Cancel button', async () => {
+    await renderPage()
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+  })
+
+  it('renders the Save Changes button', async () => {
     await renderPage()
     expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument()
   })
 
-  it('shows error message when patch mutation fails', async () => {
+  it('renders the Add Location button', async () => {
+    await renderPage()
+    expect(screen.getByRole('button', { name: /add location/i })).toBeInTheDocument()
+  })
+
+  it('shows error message when save mutation fails', async () => {
     mockUseMutation.mockReturnValue({
       mutate:    vi.fn(),
       isPending: false,
       isError:   true,
-      error:     new Error('Update failed'),
+      error:     new ApiError('Update failed'),
     })
     await renderPage()
     expect(screen.getAllByText('Update failed').length).toBeGreaterThan(0)
