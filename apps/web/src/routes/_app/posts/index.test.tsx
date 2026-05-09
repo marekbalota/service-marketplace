@@ -36,10 +36,11 @@ vi.mock('#/context/activeProfile', () => ({
 
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
+  favouritesQueryOptions: () => ({ queryKey: ['favourites'], queryFn: async () => ({ items: [] }) }),
 }))
 
 vi.mock('./-queries/posts', () => ({
-  postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0 }) }),
+  postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0, totalPages: 1 }) }),
   PAGE_SIZE: 12,
 }))
 
@@ -92,7 +93,7 @@ const defaultSearch = {
 async function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   qc.setQueryData(['categories'], [])
-  qc.setQueryData(['posts'], { items: [], total: 0 })
+  qc.setQueryData(['posts'], { items: [], total: 0, totalPages: 1 })
   const component = (Route as any).options?.component
   const rootRoute = createRootRoute({ component })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory(), context: { queryClient: qc } })
