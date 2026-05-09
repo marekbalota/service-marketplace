@@ -23,4 +23,7 @@ export const env = {
     bucket: required("MINIO_BUCKET"),
     publicUrl: required("MINIO_PUBLIC_URL"),
   },
+  turnstile: {
+    secretKey: required("TURNSTILE_SECRET_KEY"),
+  },
 }

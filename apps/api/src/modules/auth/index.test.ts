@@ -5,6 +5,7 @@ import { db } from "../../db";
 const TEST_EMAIL = `auth-test-${Date.now()}@example.com`;
 const TEST_NAME = "Auth Test User";
 const TEST_PASSWORD = "password123";
+const CAPTCHA_HEADERS = new Headers({ "x-captcha-response": "test-token" });
 
 function getLatestVerificationToken(email: string): string {
   const token = verificationTokenStore.get(email);
@@ -18,6 +19,7 @@ describe("POST /api/auth/sign-up/email", () => {
   it("returns 200 and creates a user row", async () => {
     const res = await auth.api.signUpEmail({
       body: { email: TEST_EMAIL, name: TEST_NAME, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
@@ -39,9 +41,9 @@ describe("POST /api/auth/sign-up/email", () => {
   });
 
   it("returns 200 (not 422) for duplicate email when requireEmailVerification is on", async () => {
-    // better-auth returns a generic 200 for duplicate emails to prevent email enumeration
     const res = await auth.api.signUpEmail({
       body: { email: TEST_EMAIL, name: TEST_NAME, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
@@ -53,12 +55,21 @@ describe("POST /api/auth/sign-up/email", () => {
     });
     expect(user?.emailVerified).toBe(false);
   });
+
+  it("returns 400 when x-captcha-response header is missing", async () => {
+    const res = await auth.api.signUpEmail({
+      body: { email: `no-captcha-${Date.now()}@example.com`, name: TEST_NAME, password: TEST_PASSWORD },
+      asResponse: true,
+    });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("Email verification", () => {
   it("sign-in before verification returns 403", async () => {
     const res = await auth.api.signInEmail({
       body: { email: TEST_EMAIL, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(403);
@@ -83,6 +94,7 @@ describe("POST /api/auth/sign-in/email", () => {
   it("returns 200 and sets a session cookie", async () => {
     const res = await auth.api.signInEmail({
       body: { email: TEST_EMAIL, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
@@ -94,9 +106,18 @@ describe("POST /api/auth/sign-in/email", () => {
   it("returns 401 for wrong password", async () => {
     const res = await auth.api.signInEmail({
       body: { email: TEST_EMAIL, password: "wrong-password" },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(401);
+  });
+
+  it("returns 400 when x-captcha-response header is missing", async () => {
+    const res = await auth.api.signInEmail({
+      body: { email: TEST_EMAIL, password: TEST_PASSWORD },
+      asResponse: true,
+    });
+    expect(res.status).toBe(400);
   });
 });
 
@@ -104,6 +125,7 @@ describe("POST /api/auth/sign-out", () => {
   it("returns 200", async () => {
     const signInRes = await auth.api.signInEmail({
       body: { email: TEST_EMAIL, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     const cookie = signInRes.headers.get("set-cookie") ?? "";
@@ -124,6 +146,7 @@ describe("Password reset", () => {
   it("set up: registers and verifies a user for reset tests", async () => {
     const signUpRes = await auth.api.signUpEmail({
       body: { email: RESET_EMAIL, name: "Reset Test User", password: RESET_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(signUpRes.status).toBe(200);
@@ -139,6 +162,7 @@ describe("Password reset", () => {
   it("requestPasswordReset returns 200 (does not reveal whether user exists)", async () => {
     const res = await auth.api.requestPasswordReset({
       body: { email: RESET_EMAIL, redirectTo: "http://localhost:3000/reset-password" },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
@@ -147,9 +171,18 @@ describe("Password reset", () => {
   it("requestPasswordReset for unknown email still returns 200 (enumeration prevention)", async () => {
     const res = await auth.api.requestPasswordReset({
       body: { email: "ghost-nobody@example.com", redirectTo: "http://localhost:3000/reset-password" },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
+  });
+
+  it("requestPasswordReset returns 400 when x-captcha-response header is missing", async () => {
+    const res = await auth.api.requestPasswordReset({
+      body: { email: RESET_EMAIL, redirectTo: "http://localhost:3000/reset-password" },
+      asResponse: true,
+    });
+    expect(res.status).toBe(400);
   });
 
   it("stores reset token in resetTokenStore during tests", () => {
@@ -168,6 +201,7 @@ describe("Password reset", () => {
   it("can sign in with new password after reset", async () => {
     const res = await auth.api.signInEmail({
       body: { email: RESET_EMAIL, password: NEW_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(200);
@@ -176,6 +210,7 @@ describe("Password reset", () => {
   it("cannot sign in with old password after reset", async () => {
     const res = await auth.api.signInEmail({
       body: { email: RESET_EMAIL, password: RESET_PASSWORD },
+      headers: CAPTCHA_HEADERS,
       asResponse: true,
     });
     expect(res.status).toBe(401);

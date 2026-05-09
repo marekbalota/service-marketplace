@@ -13,6 +13,20 @@ import { sendVerificationEmail, sendPasswordResetEmail } from "../../lib/email"
 import { redis } from "../../lib/redis";
 import { env } from "../../lib/env";
 
+const CAPTCHA_PROTECTED_PATHS = ["/sign-up/email", "/sign-in/email", "/request-password-reset"];
+const TURNSTILE_SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+
+async function verifyCaptchaToken(token: string): Promise<boolean> {
+  try {
+    const body = new URLSearchParams({ secret: env.turnstile.secretKey, response: token });
+    const res = await fetch(TURNSTILE_SITEVERIFY_URL, { method: "POST", body });
+    const data = await res.json() as { success: boolean };
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
+
 export const verificationTokenStore = new Map<string, string>();
 export const resetTokenStore = new Map<string, string>();
 
@@ -133,31 +147,46 @@ export const auth = betterAuth({
       },
     },
   },
-  ...(env.nodeEnv !== "test" ? {
-    hooks: {
-      before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path === "/sign-in/email") {
-          const user = await db.query.users.findFirst({
-            where: eq(users.email, ctx.body.email),
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path)) {
+        const token = ctx.headers?.get("x-captcha-response");
+        if (!token) {
+          return new APIError("BAD_REQUEST", {
+            message: "Captcha response is required",
+            code: "MISSING_CAPTCHA_RESPONSE",
           });
+        }
+        const valid = await verifyCaptchaToken(token);
+        if (!valid) {
+          return new APIError("FORBIDDEN", {
+            message: "Captcha verification failed",
+            code: "CAPTCHA_VERIFICATION_FAILED",
+          });
+        }
+      }
 
-          if (user) {
-            const banStatus = await AuthService.checkBanStatus(user.id);
-            if (banStatus) {
-              await AuthService.clearUserSessions(user.id);
+      if (env.nodeEnv !== "test" && ctx.path === "/sign-in/email") {
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, ctx.body.email),
+        });
 
-              throw new APIError("FORBIDDEN", {
-                code: ErrorCodes.Banned,
-                message: AuthErrorMessages.banned,
-                reason: banStatus.reason,
-                expiresAt: banStatus.expiresAt,
-              });
-            }
+        if (user) {
+          const banStatus = await AuthService.checkBanStatus(user.id);
+          if (banStatus) {
+            await AuthService.clearUserSessions(user.id);
+
+            throw new APIError("FORBIDDEN", {
+              code: ErrorCodes.Banned,
+              message: AuthErrorMessages.banned,
+              reason: banStatus.reason,
+              expiresAt: banStatus.expiresAt,
+            });
           }
         }
-      }),
-    },
-  } : {}),
+      }
+    }),
+  },
 });
 
 export abstract class AuthService {
