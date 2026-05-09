@@ -28,7 +28,7 @@ export const app = new Elysia()
   .use(cors({
     origin: env.frontendUrl,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-captcha-response"],
     exposeHeaders: ["X-Retry-After"],
   }))
   .use(swagger({
