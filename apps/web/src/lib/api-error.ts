@@ -1,3 +1,20 @@
+export function parseAuthErrorBody(error: unknown): Record<string, unknown> | null {
+  if (typeof error !== 'object' || error === null) return null
+  const err = error as { body?: unknown; message?: unknown }
+  if (typeof err.body === 'object' && err.body !== null) return err.body as Record<string, unknown>
+  if (typeof err.message !== 'string') return null
+  try {
+    return JSON.parse(err.message)
+  } catch {
+    return null
+  }
+}
+
+export function parseAuthErrorCode(error: unknown): string | undefined {
+  const body = parseAuthErrorBody(error)
+  return typeof body?.code === 'string' ? body.code : undefined
+}
+
 export class ApiError extends Error {
   readonly code: string | undefined
 
