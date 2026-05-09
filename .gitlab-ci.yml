@@ -85,6 +85,7 @@ backend-integration-tests:
   image: docker:cli
   tags:
     - shared-fi
+  timeout: 15m
   needs:
     - job: install
       optional: false
