@@ -2,7 +2,7 @@
   "name": "api",
   "version": "1.0.50",
   "scripts": {
-    "test": "bun --env-file=../../.env test",
+    "test": "NODE_ENV=test bun --env-file=../../.env test",
     "dev": "bun --env-file=../../.env run --watch src/index.ts",
     "db:generate": "bun --env-file=../../.env run drizzle-kit generate",
     "db:migrate": "bun --env-file=../../.env run drizzle-kit migrate",

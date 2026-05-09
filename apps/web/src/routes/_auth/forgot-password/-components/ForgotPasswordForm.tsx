@@ -4,6 +4,7 @@ import { z } from "zod"
 import { useState, useEffect } from "react"
 import { CheckCircle2 } from "lucide-react"
 import { authClient } from "#/auth"
+import { formatCountdown } from "#/lib/format"
 import { Button } from "#/components/ui/button"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldLabel } from "#/components/ui/field"
@@ -15,11 +16,6 @@ const forgotPasswordSchema = z.object({
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
-function formatCountdown(seconds: number) {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, "0")}`
-}
 
 export function ForgotPasswordForm() {
   const [confirmed, setConfirmed] = useState(false)
@@ -48,7 +44,7 @@ export function ForgotPasswordForm() {
     const { error } = await authClient.requestPasswordReset({
       email: values.email,
       fetchOptions: {
-        onError: async (ctx: { response: Response }) => {
+        onError: (ctx) => {
           if (ctx.response.status === 429) {
             const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "3600", 10)
             setRateLimitSeconds(retryAfter)
@@ -107,11 +103,6 @@ export function ForgotPasswordForm() {
             )}
           />
           <FieldError errors={[form.formState.errors.root]} />
-          {rateLimitSeconds > 0 && (
-            <p className="text-center text-sm text-destructive">
-              Too many attempts — try again in {formatCountdown(rateLimitSeconds)}
-            </p>
-          )}
           <Button
             type="submit"
             className="w-full"

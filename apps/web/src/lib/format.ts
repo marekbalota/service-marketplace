@@ -18,3 +18,9 @@ export function formatLocation(loc: {
 export function getInitials(name: string): string {
   return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 }
+
+export function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${s.toString().padStart(2, "0")}`
+}

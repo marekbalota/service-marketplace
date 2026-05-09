@@ -5,11 +5,13 @@ import { useState, useEffect } from "react"
 import { useNavigate, Link } from "@tanstack/react-router"
 import { authClient } from "#/auth"
 import { handleBanError } from '#/lib/ban-handler'
+import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
 import { Button } from "#/components/ui/button"
 import { Checkbox } from "#/components/ui/checkbox"
 import { Input } from "#/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
+import { Label } from "#/components/ui/label"
 import { currentUserQueryOptions } from "#/lib/queries/users"
 
 const loginSchema = z.object({
@@ -20,11 +22,6 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>
 
-function formatCountdown(seconds: number) {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, "0")}`
-}
 
 export function LoginForm({ redirect }: { redirect?: string }) {
   const navigate = useNavigate()
@@ -50,32 +47,31 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   }, [rateLimitSeconds])
 
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
-    await authClient.signIn.email(
-      { email: values.email, password: values.password, rememberMe: values.rememberMe },
-      {
-        onSuccess: () => {
-          void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-          void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
-        },
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+      rememberMe: values.rememberMe,
+      fetchOptions: {
         onError: (ctx) => {
-          if (handleBanError(ctx.error)) return
-          if (ctx.error.status === 429) return
-          if (ctx.error.status === 403) {
-            void navigate({ to: "/verify-email", search: { email: values.email } })
-            return
+          if (ctx.response.status === 429) {
+            const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "300", 10)
+            setRateLimitSeconds(retryAfter)
           }
-          form.setError("root", { message: ctx.error.message })
         },
-        fetchOptions: {
-          onError: async (ctx: { response: Response }) => {
-            if (ctx.response.status === 429) {
-              const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "300", 10)
-              setRateLimitSeconds(retryAfter)
-            }
-          },
-        },
-      }
-    )
+      },
+    })
+    if (!error) {
+      void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+      return
+    }
+    if (handleBanError(error)) return
+    if (error.status === 429) return
+    if (error.status === 403) {
+      void navigate({ to: "/verify-email", search: { email: values.email } })
+      return
+    }
+    form.setError("root", { message: error.message })
   }
 
   return (
@@ -126,15 +122,16 @@ export function LoginForm({ redirect }: { redirect?: string }) {
             <div className="flex items-center gap-2">
               <Checkbox
                 id="login-remember-me"
+                className="cursor-pointer"
                 checked={field.value}
                 onCheckedChange={(checked) => {
                   field.onChange(checked)
                   field.onBlur()
                 }}
               />
-              <label htmlFor="login-remember-me" className="text-sm cursor-pointer">
+              <Label htmlFor="login-remember-me" className="cursor-pointer">
                 Remember me
-              </label>
+              </Label>
             </div>
           )}
         />
@@ -143,17 +140,16 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         </Link>
       </div>
       <FieldError errors={[form.formState.errors.root]} />
-      {rateLimitSeconds > 0 && (
-        <p className="text-center text-sm text-destructive">
-          Too many login attempts — try again in {formatCountdown(rateLimitSeconds)}
-        </p>
-      )}
       <Button
         type="submit"
         className="w-full"
         disabled={form.formState.isSubmitting || rateLimitSeconds > 0}
       >
-        {form.formState.isSubmitting ? "Signing in…" : "Log in"}
+        {rateLimitSeconds > 0
+          ? `Try again in ${formatCountdown(rateLimitSeconds)}`
+          : form.formState.isSubmitting
+            ? "Signing in…"
+            : "Log in"}
       </Button>
     </form>
   )

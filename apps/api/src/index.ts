@@ -29,6 +29,7 @@ export const app = new Elysia()
     origin: env.frontendUrl,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["X-Retry-After"],
   }))
   .use(swagger({
     documentation: {
