@@ -68,6 +68,12 @@ describe("ForgotPasswordForm", () => {
     })
   })
 
+  it("pre-fills the email field when defaultEmail prop is provided", () => {
+    render(<ForgotPasswordForm defaultEmail="prefilled@example.com" />)
+    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement
+    expect(emailInput.value).toBe("prefilled@example.com")
+  })
+
   it("shows root error for unexpected server errors", async () => {
     const { authClient } = await import("#/auth")
     vi.mocked(authClient.requestPasswordReset).mockResolvedValueOnce({

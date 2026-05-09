@@ -20,7 +20,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) {
   const [confirmed, setConfirmed] = useState(false)
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export function ForgotPasswordForm() {
   const theme = useAppTheme()
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: defaultEmail ?? "" },
     mode: "onTouched",
   })
 
