@@ -1,5 +1,11 @@
 import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { UsersTable } from './UsersTable'
 
 const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
@@ -70,7 +76,11 @@ const baseUser = {
 }
 
 async function renderTable() {
-  await act(async () => render(<UsersTable />))
+  const rootRoute = createRootRoute({ component: () => <UsersTable /> })
+  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
+  await act(async () => {
+    render(<RouterProvider router={router} />)
+  })
 }
 
 describe('UsersTable', () => {

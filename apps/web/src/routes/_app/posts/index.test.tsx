@@ -1,5 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -25,15 +26,31 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 })
 
 vi.mock('#/lib/queries/users', () => ({
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
+}))
+
+vi.mock('#/context/activeProfile', () => ({
+  useActiveProfile: vi.fn(() => ({ activeProfile: null })),
+}))
+
+vi.mock('#/api', () => ({
+  api: {
+    posts: { get: vi.fn().mockResolvedValue({ data: { items: [], total: 0, totalPages: 1 }, error: null }) },
+    categories: { get: vi.fn().mockResolvedValue({ data: [], error: null }) },
+    favourites: { get: vi.fn().mockResolvedValue({ data: { items: [] }, error: null }) },
+    users: { me: { get: vi.fn().mockResolvedValue({ data: null, error: null }) } },
+  },
 }))
 
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
+  favouritesQueryOptions: () => ({ queryKey: ['favourites'], queryFn: async () => ({ items: [] }) }),
 }))
 
-vi.mock('./-components/PostsList', () => ({
-  PostsList: () => <div data-testid="posts-list" />,
+vi.mock('./-queries/posts', () => ({
+  postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0, totalPages: 1 }) }),
+  PAGE_SIZE: 12,
 }))
 
 vi.mock('#/components/SearchFilterBar', () => ({
@@ -80,11 +97,18 @@ const defaultSearch = {
 }
 
 async function renderPage() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  qc.setQueryData(['categories'], [])
+  qc.setQueryData(['posts'], { items: [], total: 0, totalPages: 1 })
   const component = (Route as any).options?.component
   const rootRoute = createRootRoute({ component })
-  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
+  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory(), context: { queryClient: qc } })
   await act(async () => {
-    render(<RouterProvider router={router} />)
+    render(
+      <QueryClientProvider client={qc}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    )
   })
 }
 

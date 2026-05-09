@@ -1,0 +1,133 @@
+stages:
+  - install
+  - lint
+  - unit & integration tests
+  - e2e tests
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+variables:
+  BUN_INSTALL_CACHE_DIR: /tmp/bun-cache
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: marketplace_ci
+
+default:
+  image: oven/bun:latest
+
+.bun-cache: &bun-cache
+  key:
+    files:
+      - bun.lock
+      - package.json
+  paths:
+    - node_modules/
+    - apps/api/node_modules/
+    - apps/web/node_modules/
+    - /tmp/bun-cache
+
+install:
+  stage: install
+  tags:
+    - shared-fi
+  cache:
+    <<: *bun-cache
+  script:
+    - bun install --frozen-lockfile
+
+eslint:
+  stage: lint
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - bun run lint
+
+prettier:
+  stage: lint
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - bun run format:check
+
+frontend-unit-tests:
+  stage: unit & integration tests
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  cache:
+    <<: *bun-cache
+    policy: pull
+  script:
+    - bun install --frozen-lockfile
+    - cd apps/web && bun run test
+
+backend-integration-tests:
+  stage: unit & integration tests
+  image: docker:cli
+  tags:
+    - shared-fi
+  timeout: 15m
+  needs:
+    - job: install
+      optional: false
+  services:
+    - docker:24-dind-rootless
+  variables:
+    DOCKER_HOST: 'unix:///runner/services/docker/docker.sock'
+    DATABASE_URL: 'postgresql://postgres:postgres@db:5432/marketplace_ci'
+    BETTER_AUTH_URL: 'http://localhost:3001'
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - docker compose -f docker-compose.unit_integration_tests.yml --profile integration up --build --exit-code-from integration-tests
+  artifacts:
+    when: always
+    paths:
+      - apps/api/coverage/
+    expire_in: 30 minutes
+
+e2e-tests:
+  stage: e2e tests
+  image: docker:cli
+  tags:
+    - shared-fi
+  needs:
+    - job: install
+      optional: false
+  services:
+    - docker:24-dind-rootless
+  variables:
+    DOCKER_HOST: 'unix:///runner/services/docker/docker.sock'
+    CI: 'true'
+    PLAYWRIGHT_BASE_URL: 'http://web:3000'
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - docker compose -f docker-compose.e2e_tests.yml --profile e2e up --build --exit-code-from playwright
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - test-results/
+    expire_in: 60 minutes
+  rules:
+    - when: manual

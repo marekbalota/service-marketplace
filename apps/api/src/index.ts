@@ -27,7 +27,7 @@ import { initBucket } from "./storage";
 export const app = new Elysia()
   .use(errorsPlugin)
   .use(cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   }))
