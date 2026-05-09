@@ -91,9 +91,11 @@ const defaultSearch = {
 
 async function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  qc.setQueryData(['categories'], [])
+  qc.setQueryData(['posts'], { items: [], total: 0 })
   const component = (Route as any).options?.component
   const rootRoute = createRootRoute({ component })
-  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
+  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory(), context: { queryClient: qc } })
   await act(async () => {
     render(
       <QueryClientProvider client={qc}>
