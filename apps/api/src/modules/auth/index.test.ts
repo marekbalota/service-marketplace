@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { auth, verificationTokenStore, resetTokenStore } from "./service";
+import { auth, verificationTokenStore, resetTokenStore, existingSignupNotifiedEmails } from "./service";
 import { db } from "../../db";
 
 const TEST_EMAIL = `auth-test-${Date.now()}@example.com`;
@@ -62,6 +62,18 @@ describe("POST /api/auth/sign-up/email", () => {
       asResponse: true,
     });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("onExistingUserSignUp callback", () => {
+  it("records the email in existingSignupNotifiedEmails when sign-up is attempted with an existing email", async () => {
+    existingSignupNotifiedEmails.clear();
+    await auth.api.signUpEmail({
+      body: { email: TEST_EMAIL, name: TEST_NAME, password: TEST_PASSWORD },
+      headers: CAPTCHA_HEADERS,
+      asResponse: true,
+    });
+    expect(existingSignupNotifiedEmails.has(TEST_EMAIL)).toBe(true);
   });
 });
 

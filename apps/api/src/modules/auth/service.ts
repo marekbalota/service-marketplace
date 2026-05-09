@@ -9,7 +9,7 @@ import { users, roles, userProfiles, sessions } from "../../db/schema";
 import type { AuthModel } from "./model";
 import { AuthErrorMessages } from "../../lib/errors";
 import { impersonationPlugin } from "./impersonation-plugin";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../../lib/email"
+import { sendVerificationEmail, sendPasswordResetEmail, sendExistingAccountSignUpEmail } from "../../lib/email"
 import { redis } from "../../lib/redis";
 import { env } from "../../lib/env";
 
@@ -29,6 +29,7 @@ async function verifyCaptchaToken(token: string): Promise<boolean> {
 
 export const verificationTokenStore = new Map<string, string>();
 export const resetTokenStore = new Map<string, string>();
+export const existingSignupNotifiedEmails = new Set<string>();
 
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
@@ -63,6 +64,16 @@ export const auth = betterAuth({
         resetTokenStore.set(user.email, token);
       }
       void sendPasswordResetEmail({ email: user.email, url: resetUrl.toString() });
+    },
+    onExistingUserSignUp: async ({ user }) => {
+      if (env.nodeEnv === "test") {
+        existingSignupNotifiedEmails.add(user.email);
+      }
+      void sendExistingAccountSignUpEmail({
+        email: user.email,
+        loginUrl: `${env.frontendUrl}/login`,
+        resetUrl: `${env.frontendUrl}/forgot-password?email=${encodeURIComponent(user.email)}`,
+      });
     },
   },
   emailVerification: {
