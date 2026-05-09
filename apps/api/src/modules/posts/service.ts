@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { posts, userProfiles, postCategories, categories, locations, favourites } from "../../db/schema";
+import { posts, userProfiles, postCategories, categories, locations, favourites, profileLocations } from "../../db/schema";
 import { eq, isNull, isNotNull, ilike, and, or, desc, asc, exists, sql, count, gte, lte, inArray } from "drizzle-orm";
 import type { PostsModel } from "./model";
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from "../../lib/errors";
@@ -39,7 +39,7 @@ const postSelect = (tx: DbOrTx) => tx
 
 export abstract class PostsService {
   static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
-    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId } = query;
+    const { search, type, categoryIds, sort, offset = 0, size, ratingMin, ratingMax, profileId, country, region, city } = query;
 
     if (profileId && accountId !== undefined) {
       const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
@@ -104,6 +104,9 @@ export abstract class PostsService {
               ),
             )
           : undefined,
+        country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
+        region  ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})`  : undefined,
+        city    ? sql`unaccent(${locations.city})    ILIKE unaccent(${city})`    : undefined,
       );
 
       const [countRow] = await tx
@@ -201,7 +204,7 @@ export abstract class PostsService {
             '[]'::json
           )
         `,
-        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerId: string; reviewerName: string; createdAt: Date }[]>`
+        reviews: sql<{ reviewId: string; rating: number; reviewDescription: string | null; reviewerId: string; reviewerName: string; createdAt: Date; images: { reviewImageId: string; link: string; name: string }[] }[]>`
           coalesce(
             (select json_agg(json_build_object(
               'reviewId',          r.review_id,
@@ -209,7 +212,17 @@ export abstract class PostsService {
               'reviewDescription', r.review_description,
               'reviewerId',        r.reviewer_id,
               'reviewerName',      rp.name,
-              'createdAt',         r.created_at
+              'createdAt',         r.created_at,
+              'images',            coalesce(
+                (select json_agg(json_build_object(
+                  'reviewImageId', ri.review_image_id,
+                  'link',          ri.link,
+                  'name',          ri.name
+                ) order by ri.created_at)
+                from review_images ri
+                where ri.review_id = r.review_id and ri.deleted_at is null),
+                '[]'::json
+              )
             ) order by r.created_at desc)
             from reviews r
             join user_profiles rp on r.reviewer_id = rp.user_profile_id
@@ -265,6 +278,11 @@ export abstract class PostsService {
           .values(location!)
           .returning({ locationId: locations.locationId })
         resolvedLocationId = insertedLocation!.locationId
+
+        await tx
+          .insert(profileLocations)
+          .values({ userProfileId: postValues.authorId, locationId: resolvedLocationId })
+          .onConflictDoNothing()
       }
 
       const [inserted] = await tx

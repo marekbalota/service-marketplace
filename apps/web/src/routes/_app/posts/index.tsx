@@ -16,6 +16,7 @@ import { PostTypeSelect } from './-components/PostTypeSelect'
 import { CategorySelect } from './-components/CategorySelect'
 import { SortSelect } from './-components/SortSelect'
 import { RatingSelect } from './-components/RatingSelect'
+import { LocationSelect } from './-components/LocationSelect'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
@@ -29,15 +30,19 @@ const searchSchema = z.object({
   page:       z.number().int().positive().optional().catch(undefined),
   favourites: z.boolean().optional().catch(undefined),
   rating:     z.union([ratingRangeSchema, z.array(ratingRangeSchema)]).optional().catch(undefined),
+  country:    z.string().optional().catch(undefined),
+  region:     z.string().optional().catch(undefined),
+  city:       z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/posts/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search: { q, type, category, sort, page, rating } }) => ({ q, type, category, sort, page, rating }),
-  loader: async ({ context: { queryClient }, deps: { q, type, category, sort = 'newest', page = 1, rating } }) => {
+  loaderDeps: ({ search: { q, type, category, sort, page, rating, country, region, city } }) =>
+    ({ q, type, category, sort, page, rating, country, region, city }),
+  loader: async ({ context: { queryClient }, deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city } }) => {
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions),
-      queryClient.ensureQueryData(postsQueryOptions({ q, type, category, sort, page, rating })),
+      queryClient.ensureQueryData(postsQueryOptions({ q, type, category, sort, page, rating, country, region, city })),
     ])
   },
   pendingComponent: PageSkeleton,
@@ -77,7 +82,7 @@ function PageSkeleton() {
 }
 
 function HomePage() {
-  const { q = '', type = 'all', category, sort = 'newest', page = 1, favourites = false, rating } = Route.useSearch()
+  const { q = '', type = 'all', category, sort = 'newest', page = 1, favourites = false, rating, country, region, city } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
@@ -111,9 +116,10 @@ function HomePage() {
       ),
     }] : []),
     { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[160px]' },
-    { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[160px]' },
-    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[220px]' },
+    { label: 'Category',  control: <CategorySelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Rating',    control: <RatingSelect />,   desktopWidth: 'w-[160px]' },
+    { label: 'Sort By',   control: <SortSelect />,     desktopWidth: 'w-[220px]' },
+    { label: 'All Locations', control: <LocationSelect />, desktopWidth: 'w-auto' },
   ]
 
   return (
@@ -143,7 +149,7 @@ function HomePage() {
       </div>
 
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} />
+        <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} country={country} region={region} city={city} />
       </Suspense>
     </>
   )

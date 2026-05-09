@@ -166,6 +166,7 @@ entity Report {
     description : text
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
+    CHECK: exactly one of (post_id, message_id, review_id) is NOT NULL
 }
 
 entity Category {
@@ -204,9 +205,26 @@ entity Image {
     deleted_at : timestamp
 }
 
+entity ReviewImage {
+    review_image_id : uuid <<PK>>
+    ---
+    review_id : uuid <<FK>> <<NOT NULL>>
+    name : text <<NOT NULL>>
+    link : text <<NOT NULL>>
+    created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
 entity Favourites {
     user_profile_id : uuid <<PK>> <<FK>>
     post_id : uuid <<PK>> <<FK>>
+    ---
+    created_at : timestamp <<NOT NULL>>
+}
+
+entity ProfileLocation {
+    user_profile_id : uuid <<PK>> <<FK>>
+    location_id : uuid <<PK>> <<FK>>
     ---
     created_at : timestamp <<NOT NULL>>
 }
@@ -231,6 +249,11 @@ Message }o--|| UserProfile : sender
 Message }o--|| MessageThread : belongs to
 MessageThread }o--|| Post
 MessageThread }o--|| UserProfile : initiator
+Report }o--|| UserProfile : reporter
+Report }o--|| ReportCategory
+Report }o--o| Post
+Report }o--o| Message
+Report }o--o| Review
 ReportCategory ||--o{ Report
 Post |o--o{ Report : reported
 Message |o--o{ Report : reported
@@ -241,8 +264,10 @@ User ||--o{ Session
 User ||--o{ OAuthAccount
 UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
+Review ||--o{ ReviewImage : has images
 Post ||--o{ Favourites
-UserProfile ||--o{ Report : reports
 Post }o--o| Location
+UserProfile ||--o{ ProfileLocation
+Location ||--o{ ProfileLocation
 
 @enduml
