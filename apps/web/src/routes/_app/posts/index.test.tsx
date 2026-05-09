@@ -26,6 +26,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 })
 
 vi.mock('#/lib/queries/users', () => ({
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
 }))
 
@@ -35,6 +36,11 @@ vi.mock('#/context/activeProfile', () => ({
 
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
+}))
+
+vi.mock('./-queries/posts', () => ({
+  postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0 }) }),
+  PAGE_SIZE: 12,
 }))
 
 vi.mock('./-components/PostsList', () => ({
