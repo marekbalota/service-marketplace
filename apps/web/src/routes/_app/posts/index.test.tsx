@@ -1,5 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -79,11 +80,16 @@ const defaultSearch = {
 }
 
 async function renderPage() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const component = (Route as any).options?.component
   const rootRoute = createRootRoute({ component })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
-    render(<RouterProvider router={router} />)
+    render(
+      <QueryClientProvider client={qc}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    )
   })
 }
 
