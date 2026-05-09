@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter, redirect } from '@tanstack/react-router'
+import { createFileRoute, useRouter, redirect, useBlocker } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { FileText, AlignLeft, Tag } from 'lucide-react'
 import { FieldIconHeader } from '#/components/FieldIconHeader'
 import { PostTypeToggle } from '#/components/PostTypeToggle'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { api } from '#/api'
 import { categoriesQueryOptions, postDetailQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'
@@ -40,18 +40,19 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export const Route = createFileRoute('/_app/edit-post/$postId')({
-  beforeLoad: ({ context: { user }, location }) => {
+  beforeLoad: async ({ context: { user, queryClient }, params: { postId }, location }) => {
     if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
-    const canEdit = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn])
-    if (!canEdit) throw redirect({ to: '/' })
+    if (!hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn]))
+      throw redirect({ to: '/' })
+    const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId))
+    const isOwner = user.profiles.some((p) => p.userProfileId === post.authorId)
+    if (!isOwner) throw redirect({ to: '/posts/$postId', params: { postId } })
   },
-  loader: async ({ context: { queryClient, user }, params: { postId } }) => {
-    const [post] = await Promise.all([
+  loader: async ({ context: { queryClient }, params: { postId } }) => {
+    await Promise.all([
       queryClient.ensureQueryData(postDetailQueryOptions(postId)),
       queryClient.ensureQueryData(categoriesQueryOptions),
     ])
-    const isOwner = user?.profiles.some((p) => p.userProfileId === post.authorId) ?? false
-    if (!isOwner) throw redirect({ to: '/posts/$postId', params: { postId } })
   },
   pendingComponent: EditPostSkeleton,
   component: EditPostPage,
@@ -60,19 +61,62 @@ export const Route = createFileRoute('/_app/edit-post/$postId')({
 function EditPostSkeleton() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <Skeleton className="mb-4 h-9 w-24" />
-      <div className="rounded-xl border-0 shadow-lg p-6 space-y-6">
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-4 w-64" />
-        <Skeleton className="h-11 w-full" />
-        <Skeleton className="h-11 w-full" />
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-11 w-full" />
-        <div className="grid grid-cols-2 gap-4">
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-11 w-full" />
-        </div>
-      </div>
+      <Skeleton className="mb-4 h-9 w-20" />
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="space-y-1 pb-6">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-5 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-14" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-6">
+              <Skeleton className="h-11 flex-1" />
+              <Skeleton className="h-11 flex-1" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   )
 }
@@ -100,12 +144,11 @@ function EditPostPage() {
 
   const { isValid, isDirty } = form.formState
   const priceValue = form.watch('price')
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
-  const handleBack = () => {
-    if (isDirty) setShowDiscardDialog(true)
-    else router.history.back()
-  }
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => isDirty,
+    withResolver: true,
+  })
 
   useEffect(() => {
     if (!priceValue) {
@@ -132,13 +175,14 @@ function EditPostPage() {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       router.history.back()
     },
+    onError: (error) => form.setError('root', { message: error.message }),
   })
 
   const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <BackButton onClick={handleBack} />
+      <BackButton onClick={() => router.history.back()} />
 
       <Card className="border-0 shadow-lg">
         <CardHeader className="space-y-1 pb-6">
@@ -211,15 +255,13 @@ function EditPostPage() {
 
             <PricingField control={form.control} priceValue={priceValue} />
 
-            {mutation.isError && (
-              <FieldError errors={[{ message: mutation.error?.message }]} />
-            )}
+            <FieldError errors={[form.formState.errors.root]} />
 
             <div className="flex gap-3 pt-6">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleBack}
+                onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
                 Cancel
@@ -237,13 +279,13 @@ function EditPostPage() {
       </Card>
 
       <ConfirmDialog
-        open={showDiscardDialog}
+        open={status === 'blocked'}
         title="Discard changes?"
         description="You have unsaved changes. Are you sure you want to leave?"
         confirmLabel="Discard"
         destructive
-        onConfirm={() => router.history.back()}
-        onClose={() => setShowDiscardDialog(false)}
+        onConfirm={() => proceed?.()}
+        onClose={() => reset?.()}
       />
     </main>
   )

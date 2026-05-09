@@ -23,6 +23,7 @@ import {
   CardTitle,
   CardDescription,
 } from '#/components/ui/card'
+import { Skeleton } from '#/components/ui/skeleton'
 import { Field, FieldError } from '#/components/ui/field'
 import { useActiveProfile } from '#/context/activeProfile'
 import { Permissions, hasPermissions } from '@marketplace/shared'
@@ -55,8 +56,91 @@ export const Route = createFileRoute('/_app/create-post')({
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(categoriesQueryOptions)
   },
+  pendingComponent: CreatePostSkeleton,
   component: CreatePostPage,
 })
+
+function CreatePostSkeleton() {
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-6">
+      <Skeleton className="mb-4 h-9 w-20" />
+      <div className="mb-6 rounded-lg border p-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+      </div>
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="space-y-1 pb-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-5 w-72" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-14" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-10 shrink-0 rounded-lg" />
+                  <Skeleton className="h-5 w-36" />
+                </div>
+                <Skeleton className="h-9 w-44" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-6">
+              <Skeleton className="h-11 flex-1" />
+              <Skeleton className="h-11 flex-1" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
+  )
+}
 
 function CreatePostPage() {
   const navigate = useNavigate()
@@ -133,6 +217,7 @@ function CreatePostPage() {
       queryClient.invalidateQueries({ queryKey: ['locations', 'profile', activeProfile?.userProfileId] })
       navigate({ to: '/my-postings' })
     },
+    onError: (error) => form.setError('root', { message: error.message }),
   })
 
   const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
@@ -242,9 +327,7 @@ function CreatePostPage() {
 
             <PricingField control={form.control} priceValue={priceValue} />
 
-            {mutation.isError && (
-              <FieldError errors={[{ message: mutation.error?.message }]} />
-            )}
+            <FieldError errors={[form.formState.errors.root]} />
 
             <div className="flex gap-3 pt-6">
               <Button
