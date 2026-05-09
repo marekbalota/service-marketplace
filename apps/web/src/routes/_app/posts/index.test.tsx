@@ -34,6 +34,15 @@ vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(() => ({ activeProfile: null })),
 }))
 
+vi.mock('#/api', () => ({
+  api: {
+    posts: { get: vi.fn().mockResolvedValue({ data: { items: [], total: 0, totalPages: 1 }, error: null }) },
+    categories: { get: vi.fn().mockResolvedValue({ data: [], error: null }) },
+    favourites: { get: vi.fn().mockResolvedValue({ data: { items: [] }, error: null }) },
+    users: { me: { get: vi.fn().mockResolvedValue({ data: null, error: null }) } },
+  },
+}))
+
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
   favouritesQueryOptions: () => ({ queryKey: ['favourites'], queryFn: async () => ({ items: [] }) }),
@@ -42,10 +51,6 @@ vi.mock('#/lib/queries/posts', () => ({
 vi.mock('./-queries/posts', () => ({
   postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0, totalPages: 1 }) }),
   PAGE_SIZE: 12,
-}))
-
-vi.mock('./-components/PostsList', () => ({
-  PostsList: () => <div data-testid="posts-list" />,
 }))
 
 vi.mock('#/components/SearchFilterBar', () => ({
