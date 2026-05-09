@@ -69,7 +69,7 @@ const TWO_FA_METHODS = [
 
 function AccountSettingsHubSkeleton() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <Skeleton className="mb-8 h-8 w-48" />
       <div className="flex gap-8">
         <div className="hidden lg:block w-56 shrink-0 space-y-2">
@@ -122,7 +122,7 @@ function AccountSettingsHubPage() {
   }, [])
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Account Settings</h1>
         <p className="mt-1 text-muted-foreground">Manage your account preferences and security settings</p>

@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_app/account-settings/profiles/')({
 
 function ManageProfilesSkeleton() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="space-y-2">
           <Skeleton className="h-8 w-56" />
@@ -198,7 +198,7 @@ function ManageProfilesPage() {
   const profiles = user?.profiles ?? []
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 py-8">
       <BackButton
         label="Back to Account Settings"
         onClick={() => navigate({ to: '/account-settings' })}
