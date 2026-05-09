@@ -53,6 +53,9 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     return () => clearInterval(id)
   }, [rateLimitSeconds])
 
+  const watchedEmail = form.watch("email")
+  const isValidEmail = z.email().safeParse(watchedEmail).success
+
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
     const { error } = await authClient.signIn.email({
       email: values.email,
@@ -149,7 +152,11 @@ export function LoginForm({ redirect }: { redirect?: string }) {
             </div>
           )}
         />
-        <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/forgot-password"
+          search={isValidEmail ? { email: watchedEmail } : {}}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
           Forgot your password?
         </Link>
       </div>

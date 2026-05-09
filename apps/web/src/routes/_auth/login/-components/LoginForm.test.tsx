@@ -14,9 +14,18 @@ const mockNavigate = vi.hoisted(() => vi.fn())
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
-  ),
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: React.ReactNode
+    to: string
+    search?: Record<string, string>
+  }) => {
+    const params = search ? new URLSearchParams(search).toString() : ""
+    return <a href={params ? `${to}?${params}` : to}>{children}</a>
+  },
 }))
 
 vi.mock("#/router", () => ({
@@ -311,5 +320,29 @@ describe("LoginForm", () => {
       expect(mockNavigate).toHaveBeenCalled()
     })
     expect(screen.queryByText(/email not verified/i)).not.toBeInTheDocument()
+  })
+
+  it("forgot-password link includes email param when email field has a value", () => {
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "user@example.com" },
+    })
+    const link = screen.getByRole("link", { name: /forgot your password/i })
+    expect(link).toHaveAttribute("href", "/forgot-password?email=user%40example.com")
+  })
+
+  it("forgot-password link has no email param when email field is empty", () => {
+    render(<LoginForm />)
+    const link = screen.getByRole("link", { name: /forgot your password/i })
+    expect(link).toHaveAttribute("href", "/forgot-password")
+  })
+
+  it("forgot-password link has no email param when email is not yet a valid format", () => {
+    render(<LoginForm />)
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "notanemail" },
+    })
+    const link = screen.getByRole("link", { name: /forgot your password/i })
+    expect(link).toHaveAttribute("href", "/forgot-password")
   })
 })
