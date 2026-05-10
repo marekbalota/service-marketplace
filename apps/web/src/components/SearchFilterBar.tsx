@@ -58,7 +58,7 @@ export function SearchFilterBar({
           <SheetTrigger
             className={cn(
               buttonVariants({ variant: 'outline', size: 'icon' }),
-              'shrink-0 md:hidden',
+              'shrink-0 lg:hidden',
             )}
           >
             <SlidersHorizontal className="size-4" />
@@ -83,7 +83,7 @@ export function SearchFilterBar({
 
       {/* Row 2: desktop filter controls */}
       {filters.length > 0 && (
-        <div className="hidden gap-3 mt-4 md:flex">
+        <div className="hidden gap-3 mt-4 lg:flex">
           {filters.map(({ label, control, desktopWidth }) => (
             <div key={label} className={desktopWidth}>
               <span className="sr-only">{label}</span>
