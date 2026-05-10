@@ -59,7 +59,6 @@ function EditProfilePage() {
 
   const { data: user } = useCurrentUser()
   const profile = user?.profiles.find((p) => p.userProfileId === profileId)
-  if (!profile) return null
 
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
   const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
@@ -85,11 +84,11 @@ function EditProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profile.name,
-      email: profile.email,
-      bio: profile.bio ?? '',
-      phoneNumber: profile.phoneNumber ?? '',
-      fax: profile.fax ?? '',
+      name: profile?.name ?? '',
+      email: profile?.email ?? '',
+      bio: profile?.bio ?? '',
+      phoneNumber: profile?.phoneNumber ?? '',
+      fax: profile?.fax ?? '',
     },
     mode: 'onTouched',
   })
@@ -164,6 +163,8 @@ function EditProfilePage() {
       setDeleteLocationId(null)
     },
   })
+
+  if (!profile) return null
 
   const visibleImages = images.filter((img) => !pendingDeletes.includes(img.imageId))
   const previews = [...visibleImages.map((img) => img.link), ...pendingFiles.map((f) => f.preview)]

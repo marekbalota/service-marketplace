@@ -183,7 +183,7 @@ describe('PATCH /admin/users/:id/ban', () => {
   })
 
   it('returns 422 for missing reason', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { error } = await client['admin']
       .users({ id: regularUserId })
       .ban.patch({} as any, { headers: { Cookie: adminCookie } })
@@ -258,7 +258,7 @@ describe('PATCH /admin/users/:id/role', () => {
   })
 
   it('returns 422 for missing roleId', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { error } = await client['admin']
       .users({ id: regularUserId })
       .role.patch({} as any, { headers: { Cookie: adminCookie } })

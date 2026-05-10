@@ -86,7 +86,7 @@ describe('ImagePickerGrid', () => {
   it('accepts valid files and rejects invalid ones in a mixed batch', async () => {
     const calls: boolean[] = []
     vi.spyOn(globalThis, 'Image').mockImplementation(() => {
-      let idx = calls.length
+      const idx = calls.length
       calls.push(false)
       const img = {
         onload: null as (() => void) | null,
