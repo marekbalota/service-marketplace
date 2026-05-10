@@ -11,7 +11,7 @@ function renderInput(props: Partial<React.ComponentProps<typeof MessageInput>> =
       onChange={vi.fn()}
       onSend={vi.fn()}
       {...props}
-    />
+    />,
   )
 }
 

@@ -2,7 +2,12 @@ import { Elysia } from 'elysia'
 import { MessagesModel } from './model'
 import { MessagesService } from './service'
 import { authRoutes } from '../auth'
-import { conflictResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import {
+  conflictResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  unauthorizedResponse,
+} from '../../lib/errors'
 import { ReportsModel } from '../reports/model'
 import { ReportsService } from '../reports/service'
 
@@ -12,7 +17,8 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
   // List threads for the active profile (optionally filtered by postId)
   .get(
     '/',
-    async ({ query, user }) => await MessagesService.findAllThreads(query.profileId, user.id, query.postId),
+    async ({ query, user }) =>
+      await MessagesService.findAllThreads(query.profileId, user.id, query.postId),
     {
       blockDuringImpersonation: true,
       query: MessagesModel.findAllQuery,
@@ -90,7 +96,12 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
   .post(
     '/:threadId/messages/:messageId/reports',
     async ({ params, body, user, set }) => {
-      const report = await ReportsService.createForMessageForAccount(user.id, params.threadId, params.messageId, body)
+      const report = await ReportsService.createForMessageForAccount(
+        user.id,
+        params.threadId,
+        params.messageId,
+        body,
+      )
       set.status = 201
       return report
     },
@@ -105,8 +116,10 @@ export const messagesRoutes = new Elysia({ prefix: '/threads' })
         ...notFoundResponse,
         ...conflictResponse,
       },
-      detail: { summary: 'Report a message', operationId: 'createMessageReport', tags: ['Reports'] },
+      detail: {
+        summary: 'Report a message',
+        operationId: 'createMessageReport',
+        tags: ['Reports'],
+      },
     },
   )
-
-

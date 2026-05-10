@@ -19,5 +19,5 @@ export const ReviewsModel = {
 } as const
 
 export type ReviewsModel = {
-  [k in keyof typeof ReviewsModel]: UnwrapSchema<typeof ReviewsModel[k]>
+  [k in keyof typeof ReviewsModel]: UnwrapSchema<(typeof ReviewsModel)[k]>
 }

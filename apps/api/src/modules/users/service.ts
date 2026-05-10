@@ -1,21 +1,23 @@
-import { db } from "../../db";
-import { userProfiles, users, roles, rolePermissions, permissions } from "../../db/schema";
-import { eq, sql } from "drizzle-orm";
-import type { UsersModel } from "./model";
-import { NotFoundError, ErrorMessages } from "../../lib/errors";
+import { db } from '../../db'
+import { userProfiles, users, roles, rolePermissions, permissions } from '../../db/schema'
+import { eq, sql } from 'drizzle-orm'
+import type { UsersModel } from './model'
+import { NotFoundError, ErrorMessages } from '../../lib/errors'
 
 export abstract class UsersService {
-  static async getCurrentUser(userId: string): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy'>> {
+  static async getCurrentUser(
+    userId: string,
+  ): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy'>> {
     const [row] = await db
       .select({
         userId: users.id,
         name: users.name,
         email: users.email,
         role: sql<{
-          roleId: string;
-          name: string;
-          priority: number;
-          permissions: string[];
+          roleId: string
+          name: string
+          priority: number
+          permissions: string[]
         } | null>`
           case
             when ${users.roleId} is null then null
@@ -33,16 +35,18 @@ export abstract class UsersService {
             )::json
           end
         `,
-        profiles: sql<{
-          userProfileId: string;
-          name: string;
-          email: string;
-          bio: string | null;
-          phoneNumber: string | null;
-          fax: string | null;
-          createdAt: Date;
-          updatedAt: Date | null;
-        }[]>`
+        profiles: sql<
+          {
+            userProfileId: string
+            name: string
+            email: string
+            bio: string | null
+            phoneNumber: string | null
+            fax: string | null
+            createdAt: Date
+            updatedAt: Date | null
+          }[]
+        >`
           coalesce(
             (select json_agg(json_build_object(
               'userProfileId', ${userProfiles.userProfileId},
@@ -64,12 +68,12 @@ export abstract class UsersService {
       .from(users)
       .leftJoin(roles, eq(users.roleId, roles.roleId))
       .where(eq(users.id, userId))
-      .limit(1);
+      .limit(1)
 
     if (!row) {
-      throw new NotFoundError(ErrorMessages.userNotFound);
+      throw new NotFoundError(ErrorMessages.userNotFound)
     }
 
-    return row;
+    return row
   }
 }

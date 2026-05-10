@@ -2,17 +2,23 @@ import { db } from '../../db'
 import { userProfiles, users } from '../../db/schema'
 import { and, count, eq, isNull, sql } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
-import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ErrorMessages,
+  AuthErrorMessages,
+} from '../../lib/errors'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
-  name:          userProfiles.name,
-  email:         userProfiles.email,
-  bio:           userProfiles.bio,
-  phoneNumber:   userProfiles.phoneNumber,
-  fax:           userProfiles.fax,
-  createdAt:     userProfiles.createdAt,
-  updatedAt:     userProfiles.updatedAt,
+  name: userProfiles.name,
+  email: userProfiles.email,
+  bio: userProfiles.bio,
+  phoneNumber: userProfiles.phoneNumber,
+  fax: userProfiles.fax,
+  createdAt: userProfiles.createdAt,
+  updatedAt: userProfiles.updatedAt,
 }
 
 export abstract class ProfilesService {
@@ -40,15 +46,15 @@ export abstract class ProfilesService {
     return db
       .select({
         userProfileId: userProfiles.userProfileId,
-        accountId:     userProfiles.accountId,
-        name:          userProfiles.name,
-        email:         userProfiles.email,
-        bio:           userProfiles.bio,
-        phoneNumber:   userProfiles.phoneNumber,
-        fax:           userProfiles.fax,
-        createdAt:     userProfiles.createdAt,
-        updatedAt:     userProfiles.updatedAt,
-        accountName:   users.name,
+        accountId: userProfiles.accountId,
+        name: userProfiles.name,
+        email: userProfiles.email,
+        bio: userProfiles.bio,
+        phoneNumber: userProfiles.phoneNumber,
+        fax: userProfiles.fax,
+        createdAt: userProfiles.createdAt,
+        updatedAt: userProfiles.updatedAt,
+        accountName: users.name,
       })
       .from(userProfiles)
       .innerJoin(users, eq(userProfiles.accountId, users.id))
@@ -59,7 +65,13 @@ export abstract class ProfilesService {
     const [row] = await db
       .select({ userProfileId: userProfiles.userProfileId })
       .from(userProfiles)
-      .where(and(eq(userProfiles.userProfileId, profileId), eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
+      .where(
+        and(
+          eq(userProfiles.userProfileId, profileId),
+          eq(userProfiles.accountId, accountId),
+          isNull(userProfiles.deletedAt),
+        ),
+      )
       .limit(1)
 
     return row !== undefined
@@ -70,7 +82,7 @@ export abstract class ProfilesService {
       .select({ userProfileId: userProfiles.userProfileId })
       .from(userProfiles)
       .where(and(eq(userProfiles.accountId, accountId), isNull(userProfiles.deletedAt)))
-    return rows.map(p => p.userProfileId)
+    return rows.map((p) => p.userProfileId)
   }
 
   static async update(id: string, body: ProfilesModel['updateBody']) {
@@ -84,7 +96,11 @@ export abstract class ProfilesService {
     return updated
   }
 
-  static async updateWithOwnershipCheck(accountId: string, id: string, body: ProfilesModel['updateBody']) {
+  static async updateWithOwnershipCheck(
+    accountId: string,
+    id: string,
+    body: ProfilesModel['updateBody'],
+  ) {
     const isOwner = await this.isProfileOwnedByAccount(id, accountId)
     if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
     return this.update(id, body)
@@ -95,11 +111,11 @@ export abstract class ProfilesService {
       .insert(userProfiles)
       .values({
         accountId,
-        name:        body.name,
-        email:       body.email,
-        bio:         body.bio ?? null,
+        name: body.name,
+        email: body.email,
+        bio: body.bio ?? null,
         phoneNumber: body.phoneNumber ?? null,
-        fax:         body.fax ?? null,
+        fax: body.fax ?? null,
       })
       .returning(profileSelect)
 

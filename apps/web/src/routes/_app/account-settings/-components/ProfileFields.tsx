@@ -14,11 +14,7 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Name *</FieldLabel>
-              <Input
-                placeholder="e.g., John Smith"
-                aria-invalid={fieldState.invalid}
-                {...field}
-              />
+              <Input placeholder="e.g., John Smith" aria-invalid={fieldState.invalid} {...field} />
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}

@@ -7,8 +7,14 @@ function validateImageFile(file: File): Promise<boolean> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
-    img.onload = () => { URL.revokeObjectURL(url); resolve(true) }
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(false) }
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(true)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(false)
+    }
     img.src = url
   })
 }
@@ -42,14 +48,14 @@ export function ImagePickerGrid({
         }
       }),
     )
-    if (rejected > 0) setRejectedCount(r => r + rejected)
+    if (rejected > 0) setRejectedCount((r) => r + rejected)
   }
 
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {previews.map((preview, i) => (
-          <div key={preview} className="group relative">
+          <div key={`${preview}-${i}`} className="group relative">
             <img
               src={preview}
               alt="Preview"
@@ -107,7 +113,7 @@ export function ImagePickerGrid({
       )}
 
       <ImageLightbox
-        images={previews.map(src => ({ src, alt: 'Preview' }))}
+        images={previews.map((src) => ({ src, alt: 'Preview' }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

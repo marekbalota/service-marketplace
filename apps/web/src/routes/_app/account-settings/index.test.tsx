@@ -14,7 +14,6 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-
 // Switch uses Radix internals — stub it to a simple checkbox
 vi.mock('#/components/ui/switch', () => ({
   Switch: ({ id, disabled }: { id?: string; disabled?: boolean }) => (
@@ -23,11 +22,14 @@ vi.mock('#/components/ui/switch', () => ({
 }))
 
 // IntersectionObserver is not available in jsdom
-vi.stubGlobal('IntersectionObserver', vi.fn(() => ({
-  observe:    vi.fn(),
-  unobserve:  vi.fn(),
-  disconnect: vi.fn(),
-})))
+vi.stubGlobal(
+  'IntersectionObserver',
+  vi.fn(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+)
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -51,12 +53,12 @@ describe('AccountSettingsHubPage', () => {
 
   it('renders all 6 section card titles', async () => {
     await renderPage()
-    expect(screen.getByText('Account Information')).toBeInTheDocument()
-    expect(screen.getByText('Notifications')).toBeInTheDocument()
-    expect(screen.getByText('Connected Accounts')).toBeInTheDocument()
-    expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument()
-    expect(screen.getByText('Login Management')).toBeInTheDocument()
-    expect(screen.getByText('User Profiles')).toBeInTheDocument()
+    expect(screen.getAllByText('Account Information')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Notifications')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Connected Accounts')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Two-Factor Authentication')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Login Management')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('User Profiles')[0]).toBeInTheDocument()
   })
 
   it('renders sidebar buttons for all 6 sections', async () => {

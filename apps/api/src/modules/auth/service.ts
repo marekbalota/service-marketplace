@@ -1,26 +1,46 @@
-import { betterAuth } from "better-auth";
-import { ErrorCodes } from "@marketplace/shared";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware, APIError } from "better-auth/api";
-import { eq } from "drizzle-orm";
-import { db } from "../../db";
-import * as schema from "../../db/schema";
-import { users, roles, userProfiles, sessions } from "../../db/schema";
-import type { AuthModel } from "./model";
-import { AuthErrorMessages } from "../../lib/errors";
-import { impersonationPlugin } from "./impersonation-plugin";
+import { betterAuth } from 'better-auth'
+import { ErrorCodes } from '@marketplace/shared'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { createAuthMiddleware, APIError } from 'better-auth/api'
+import { eq } from 'drizzle-orm'
+import { db } from '../../db'
+import * as schema from '../../db/schema'
+import { users, roles, userProfiles, sessions } from '../../db/schema'
+import type { AuthModel } from './model'
+import { AuthErrorMessages } from '../../lib/errors'
+import { impersonationPlugin } from './impersonation-plugin'
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendExistingAccountSignUpEmail,
+} from '../../lib/email'
+import { redis } from '../../lib/redis'
+import { env } from '../../lib/env'
 
-export const verificationTokenStore = new Map<string, string>();
+const CAPTCHA_PROTECTED_PATHS = ['/sign-up/email', '/sign-in/email', '/request-password-reset']
+const TURNSTILE_SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+
+async function verifyCaptchaToken(token: string): Promise<boolean> {
+  try {
+    const body = new URLSearchParams({ secret: env.turnstile.secretKey, response: token })
+    const res = await fetch(TURNSTILE_SITEVERIFY_URL, { method: 'POST', body })
+    const data = (await res.json()) as { success: boolean }
+    return data.success === true
+  } catch {
+    return false
+  }
+}
+
+export const verificationTokenStore = new Map<string, string>()
+export const resetTokenStore = new Map<string, string>()
+export const existingSignupNotifiedEmails = new Set<string>()
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
-  trustedOrigins: [
-    "http://localhost:3000",
-    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
-  ],
+  baseURL: env.betterAuthUrl,
+  trustedOrigins: [env.frontendUrl],
   plugins: [impersonationPlugin()],
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
     schema: {
       ...schema,
       user: schema.users,
@@ -31,27 +51,87 @@ export const auth = betterAuth({
   }),
   user: {
     additionalFields: {
-      roleId: { type: "string", input: false },
-      isBanned: {type: "boolean", input: false },
-      banReason: { type: "string", input: false },
-      banExpiration: { type: "date", input: false }
-    }
+      roleId: { type: 'string', input: false },
+      isBanned: { type: 'boolean', input: false },
+      banReason: { type: 'string', input: false },
+      banExpiration: { type: 'date', input: false },
+    },
   },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      const resetUrl = new URL(url)
+      resetUrl.searchParams.set('callbackURL', `${env.frontendUrl}/reset-password`)
+      if (env.nodeEnv === 'test') {
+        resetTokenStore.set(user.email, token)
+      }
+      void sendPasswordResetEmail({ email: user.email, url: resetUrl.toString() })
+    },
+    onExistingUserSignUp: async ({ user }) => {
+      if (env.nodeEnv === 'test') {
+        existingSignupNotifiedEmails.add(user.email)
+      }
+      void sendExistingAccountSignUpEmail({
+        email: user.email,
+        loginUrl: `${env.frontendUrl}/login`,
+        resetUrl: `${env.frontendUrl}/forgot-password?email=${encodeURIComponent(user.email)}`,
+      })
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
     sendOnSignIn: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url, token }) => {
-      const verifyUrl = new URL(url);
-      verifyUrl.searchParams.set("callbackURL", "http://localhost:3000/verify-email/callback");
-      if (process.env.NODE_ENV === "test") {
-        verificationTokenStore.set(user.email, token);
+      const verifyUrl = new URL(url)
+      verifyUrl.searchParams.set('callbackURL', `${env.frontendUrl}/verify-email/callback`)
+      if (env.nodeEnv === 'test') {
+        verificationTokenStore.set(user.email, token)
       }
-      console.log(`[email-verify] ${user.email} → ${verifyUrl.toString()}`);
+      void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+    },
+  },
+  secondaryStorage: {
+    get: async (key) => {
+      try {
+        return await redis.get(key)
+      } catch {
+        return null
+      }
+    },
+    set: async (key, value, ttl) => {
+      try {
+        if (ttl) await redis.set(key, value, 'EX', ttl)
+        else await redis.set(key, value)
+      } catch {
+        // degrade gracefully
+      }
+    },
+    delete: async (key) => {
+      try {
+        await redis.del(key)
+      } catch {
+        // degrade gracefully
+      }
+    },
+  },
+  session: {
+    storeSessionInDatabase: true,
+  },
+  rateLimit: {
+    enabled: env.nodeEnv === 'production',
+    storage: 'secondary-storage',
+    customRules: {
+      '/sign-in/email': {
+        window: 300,
+        max: 5,
+      },
+      '/request-password-reset': {
+        window: 3600,
+        max: 5,
+      },
     },
   },
   advanced: {
@@ -65,80 +145,94 @@ export const auth = betterAuth({
         after: async (user) => {
           const role = await db.query.roles.findFirst({
             where: eq(roles.isDefault, true),
-          });
+          })
 
           if (role) {
-            await db
-              .update(users)
-              .set({ roleId: role.roleId })
-              .where(eq(users.id, user.id));
+            await db.update(users).set({ roleId: role.roleId }).where(eq(users.id, user.id))
           }
           await db.insert(userProfiles).values({
             accountId: user.id,
             name: user.name,
             email: user.email,
-          });
+          })
         },
       },
     },
   },
-  ...(process.env.NODE_ENV !== "test" ? {
-    hooks: {
-      before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path === "/sign-in/email") {
-          const user = await db.query.users.findFirst({
-            where: eq(users.email, ctx.body.email),
-          });
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      // Internal auth.api.* calls (seed, tests) have no HTTP host header — skip CAPTCHA.
+      // CAPTCHA is a browser-facing control; internal callers are trusted by design.
+      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path) && ctx.headers?.get('host')) {
+        const token = ctx.headers?.get('x-captcha-response')
+        if (!token) {
+          return new APIError('BAD_REQUEST', {
+            message: 'Captcha response is required',
+            code: 'MISSING_CAPTCHA_RESPONSE',
+          })
+        }
+        const valid = await verifyCaptchaToken(token)
+        if (!valid) {
+          return new APIError('FORBIDDEN', {
+            message: 'Captcha verification failed',
+            code: 'CAPTCHA_VERIFICATION_FAILED',
+          })
+        }
+      }
 
-          if (user) {
-            const banStatus = await AuthService.checkBanStatus(user.id);
-            if (banStatus) {
-              await AuthService.clearUserSessions(user.id);
+      if (env.nodeEnv !== 'test' && ctx.path === '/sign-in/email') {
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, ctx.body.email),
+        })
 
-              throw new APIError("FORBIDDEN", {
-                code: ErrorCodes.Banned,
-                message: AuthErrorMessages.banned,
-                reason: banStatus.reason,
-                expiresAt: banStatus.expiresAt,
-              });
-            }
+        if (user) {
+          const banStatus = await AuthService.checkBanStatus(user.id)
+          if (banStatus) {
+            await AuthService.clearUserSessions(user.id)
+
+            throw new APIError('FORBIDDEN', {
+              code: ErrorCodes.Banned,
+              message: AuthErrorMessages.banned,
+              reason: banStatus.reason,
+              expiresAt: banStatus.expiresAt,
+            })
           }
         }
-      }),
-    },
-  } : {})
-});
+      }
+    }),
+  },
+})
 
 export abstract class AuthService {
   static async checkBanStatus(userId: string): Promise<AuthModel['banCheckResult'] | null> {
     const user = await db.query.users.findFirst({
       where: eq(users.id, userId),
-    });
+    })
 
     if (!user?.isBanned) {
-      return null;
+      return null
     }
 
-    const now = new Date();
-    const isExpired = user.banExpiration && user.banExpiration < now;
+    const now = new Date()
+    const isExpired = user.banExpiration && user.banExpiration < now
 
     if (isExpired) {
       await db
         .update(users)
         .set({ isBanned: false, banReason: null, banExpiration: null })
-        .where(eq(users.id, userId));
+        .where(eq(users.id, userId))
 
-      return null;
+      return null
     }
 
     return {
       isBanned: true,
       reason: user.banReason,
       expiresAt: user.banExpiration,
-    };
+    }
   }
 
   static async clearUserSessions(userId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.userId, userId));
+    await db.delete(sessions).where(eq(sessions.userId, userId))
   }
 }

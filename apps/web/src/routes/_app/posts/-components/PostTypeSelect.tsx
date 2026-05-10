@@ -1,4 +1,10 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import { Route } from '../index'
 
 type PostTypeFilter = 'all' | 'offer' | 'request'
@@ -16,7 +22,13 @@ export function PostTypeSelect() {
     <Select
       value={type}
       onValueChange={(v) =>
-        navigate({ search: (prev) => ({ ...prev, type: v === 'all' ? undefined : (v as PostTypeFilter), page: undefined }) })
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            type: v === 'all' ? undefined : (v as PostTypeFilter),
+            page: undefined,
+          }),
+        })
       }
     >
       <SelectTrigger className="w-full">
@@ -24,7 +36,9 @@ export function PostTypeSelect() {
       </SelectTrigger>
       <SelectContent>
         {(Object.entries(POST_TYPE_LABELS) as [PostTypeFilter, string][]).map(([value, label]) => (
-          <SelectItem key={value} value={value}>{label}</SelectItem>
+          <SelectItem key={value} value={value}>
+            {label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>

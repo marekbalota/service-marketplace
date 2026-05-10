@@ -5,13 +5,7 @@ import { BanDialog } from './BanDialog'
 
 function renderDialog(props: Partial<React.ComponentProps<typeof BanDialog>> = {}) {
   return render(
-    <BanDialog
-      open={true}
-      userName="John Smith"
-      onSubmit={vi.fn()}
-      onClose={vi.fn()}
-      {...props}
-    />
+    <BanDialog open={true} userName="John Smith" onSubmit={vi.fn()} onClose={vi.fn()} {...props} />,
   )
 }
 

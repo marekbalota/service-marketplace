@@ -1,8 +1,8 @@
 import { chromium, request } from '@playwright/test'
 import fs from 'fs'
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
-const API_URL = process.env.CI === 'true' ? 'http://api:3001' : 'http://localhost:3001'
+const BASE_URL = process.env.FRONTEND_URL ?? 'http://localhost:3000'
+const API_URL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001'
 
 export default async function globalSetup() {
   fs.mkdirSync('e2e/.auth', { recursive: true })
@@ -18,6 +18,9 @@ export default async function globalSetup() {
       email: 'alice@example.com',
       password: 'password123',
     },
+    headers: {
+      'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX',
+    },
   })
 
   console.log(`[global-setup] Response status: ${response.status()}`)
@@ -27,7 +30,9 @@ export default async function globalSetup() {
   }
 
   const apiCookies = await context.storageState()
-  console.log(`[global-setup] Cookies received: ${apiCookies.cookies.map(c => c.name).join(', ')}`)
+  console.log(
+    `[global-setup] Cookies received: ${apiCookies.cookies.map((c) => c.name).join(', ')}`,
+  )
 
   const webHostname = new URL(BASE_URL).hostname
 
@@ -44,7 +49,7 @@ export default async function globalSetup() {
       httpOnly,
       secure,
       sameSite,
-    }))
+    })),
   )
 
   await browserContext.storageState({ path: 'e2e/.auth/alice.json' })

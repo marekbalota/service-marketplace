@@ -2,7 +2,12 @@ import { Elysia, t } from 'elysia'
 import { FavouritesModel } from './model'
 import { FavouritesService } from './service'
 import { authRoutes } from '../auth'
-import { notFoundResponse, unauthorizedResponse, conflictResponse, forbiddenResponse } from '../../lib/errors'
+import {
+  notFoundResponse,
+  unauthorizedResponse,
+  conflictResponse,
+  forbiddenResponse,
+} from '../../lib/errors'
 
 export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
@@ -17,15 +22,23 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
         ...unauthorizedResponse,
         ...forbiddenResponse,
       },
-      detail: { summary: 'List user favourites', operationId: 'listFavourites', tags: ['Favourites'] },
+      detail: {
+        summary: 'List user favourites',
+        operationId: 'listFavourites',
+        tags: ['Favourites'],
+      },
     },
   )
   .post(
     '/:postId',
     async ({ params, user, body, set }) => {
-      const result = await FavouritesService.addFavouriteForProfile(user.id, body.profileId, params.postId)
+      const result = await FavouritesService.addFavouriteForProfile(
+        user.id,
+        body.profileId,
+        params.postId,
+      )
       set.status = 201
-      return result;
+      return result
     },
     {
       auth: true,
@@ -38,7 +51,11 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
         ...notFoundResponse,
         ...conflictResponse,
       },
-      detail: { summary: 'Add post to favourites', operationId: 'addFavourite', tags: ['Favourites'] },
+      detail: {
+        summary: 'Add post to favourites',
+        operationId: 'addFavourite',
+        tags: ['Favourites'],
+      },
     },
   )
   .delete(
@@ -57,6 +74,10 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
         ...forbiddenResponse,
         ...notFoundResponse,
       },
-      detail: { summary: 'Remove post from favourites', operationId: 'removeFavourite', tags: ['Favourites'] },
+      detail: {
+        summary: 'Remove post from favourites',
+        operationId: 'removeFavourite',
+        tags: ['Favourites'],
+      },
     },
   )

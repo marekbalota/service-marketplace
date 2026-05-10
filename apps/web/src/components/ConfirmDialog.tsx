@@ -56,7 +56,16 @@ export function ConfirmDialog({
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={(o) => { if (!o) { setReason(''); setError(null); onClose() } }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) {
+          setReason('')
+          setError(null)
+          onClose()
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -79,9 +88,11 @@ export function ConfirmDialog({
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             disabled={isLoading || (reasonRequired && !reason.trim())}
-            className={destructive
-              ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              : undefined}
+            className={
+              destructive
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : undefined
+            }
             onClick={handleConfirm}
           >
             {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}

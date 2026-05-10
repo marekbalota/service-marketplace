@@ -1,4 +1,4 @@
-import { t, type UnwrapSchema } from 'elysia';
+import { t, type UnwrapSchema } from 'elysia'
 
 const roleRow = t.Object({
   roleId: t.String(),
@@ -7,7 +7,7 @@ const roleRow = t.Object({
   priority: t.Number(),
   isDefault: t.Boolean(),
   createdAt: t.Date(),
-});
+})
 
 const roleWithPermissions = t.Object({
   roleId: t.String(),
@@ -18,7 +18,7 @@ const roleWithPermissions = t.Object({
   permissions: t.Array(t.String()),
   userCount: t.Number(),
   createdAt: t.Date(),
-});
+})
 
 export const AdminRolesModel = {
   // List roles
@@ -54,19 +54,23 @@ export const AdminRolesModel = {
   setDefaultParams: t.Object({ id: t.String() }),
 
   // List permissions
-  permissionResponse: t.Array(t.Object({
-    permissionId: t.String(),
-    name: t.String(),
-    description: t.Nullable(t.String()),
-  })),
+  permissionResponse: t.Array(
+    t.Object({
+      permissionId: t.String(),
+      name: t.String(),
+      description: t.Nullable(t.String()),
+    }),
+  ),
 
   // List assignable roles
-  assignableRoleResponse: t.Array(t.Object({
-    roleId: t.String(),
-    name: t.String(),
-  })),
-} as const;
+  assignableRoleResponse: t.Array(
+    t.Object({
+      roleId: t.String(),
+      name: t.String(),
+    }),
+  ),
+} as const
 
 export type AdminRolesModel = {
-  [k in keyof typeof AdminRolesModel]: UnwrapSchema<typeof AdminRolesModel[k]>;
-};
+  [k in keyof typeof AdminRolesModel]: UnwrapSchema<(typeof AdminRolesModel)[k]>
+}

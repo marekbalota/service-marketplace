@@ -3,14 +3,12 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
+  envDir: '../../',
   plugins: [react()],
   resolve: {
     alias: {
       '#': fileURLToPath(new URL('./src', import.meta.url)),
     },
-  },
-  ssr: {
-    noExternal: ['zod'],
   },
   test: {
     environment: 'jsdom',

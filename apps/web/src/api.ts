@@ -1,10 +1,7 @@
-import { treaty } from "@elysiajs/eden";
-import type { App } from "api";
+import { treaty } from '@elysiajs/eden'
+import type { App } from 'api'
+import { env } from './env'
 
-const apiServer =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
-
-export const api = treaty<App>(apiServer, {
-  fetch: { credentials: "include" },
-});
+export const api = treaty<App>(env.apiUrl, {
+  fetch: { credentials: 'include' },
+})

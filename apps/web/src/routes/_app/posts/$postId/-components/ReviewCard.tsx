@@ -64,7 +64,10 @@ export function ReviewCard({
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={cn('size-4', star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty')}
+                  className={cn(
+                    'size-4',
+                    star <= review.rating ? 'fill-star-filled text-star-filled' : 'text-star-empty',
+                  )}
                 />
               ))}
             </div>
@@ -115,7 +118,7 @@ export function ReviewCard({
       </CardContent>
 
       <ImageLightbox
-        images={review.images.map(img => ({ src: img.link, alt: img.name }))}
+        images={review.images.map((img) => ({ src: img.link, alt: img.name }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

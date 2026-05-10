@@ -18,7 +18,7 @@ describe('StarRatingInput', () => {
   it('does not call onChange when disabled', () => {
     const onChange = vi.fn()
     render(<StarRatingInput value={3} onChange={onChange} disabled />)
-    screen.getAllByRole('button').forEach(btn => fireEvent.click(btn))
+    screen.getAllByRole('button').forEach((btn) => fireEvent.click(btn))
     expect(onChange).not.toHaveBeenCalled()
   })
 

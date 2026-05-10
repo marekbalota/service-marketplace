@@ -2,18 +2,21 @@ import { db } from '../../db'
 import { reviewImages, reviews, userProfiles } from '../../db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import {
-  ForbiddenError, NotFoundError, InternalServerError,
-  ErrorMessages, AuthErrorMessages,
+  ForbiddenError,
+  NotFoundError,
+  InternalServerError,
+  ErrorMessages,
+  AuthErrorMessages,
 } from '../../lib/errors'
-import { uploadReviewImage, deleteUploadedImage } from '../../storage'
+import { uploadReviewImage, deleteUploadedImage } from '../../lib/storage'
 import { ProfilesService } from '../profiles/service'
 
 const reviewImageSelect = {
   reviewImageId: reviewImages.reviewImageId,
-  reviewId:      reviewImages.reviewId,
-  name:          reviewImages.name,
-  link:          reviewImages.link,
-  createdAt:     reviewImages.createdAt,
+  reviewId: reviewImages.reviewId,
+  name: reviewImages.name,
+  link: reviewImages.link,
+  createdAt: reviewImages.createdAt,
 }
 
 export abstract class ReviewImagesService {

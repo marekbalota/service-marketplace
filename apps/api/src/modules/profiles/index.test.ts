@@ -11,7 +11,12 @@ import { postsRoutes } from '../posts'
 import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
 
-const app = new Elysia().use(errorsPlugin).use(authRoutes).use(profilesRoutes).use(usersRoutes).use(postsRoutes)
+const app = new Elysia()
+  .use(errorsPlugin)
+  .use(authRoutes)
+  .use(profilesRoutes)
+  .use(usersRoutes)
+  .use(postsRoutes)
 const client = treaty(app)
 
 let aliceCookie: string
@@ -29,7 +34,7 @@ beforeAll(async () => {
   aliceCookie = signInRes.headers.get('set-cookie') ?? ''
 
   const { data } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
-  const aliceProfile = data?.profiles.find(p => p.name === 'Alice Johnson') ?? data?.profiles[0]
+  const aliceProfile = data?.profiles.find((p) => p.name === 'Alice Johnson') ?? data?.profiles[0]
   aliceProfileId = aliceProfile?.userProfileId ?? ''
 })
 
@@ -58,10 +63,9 @@ describe('PATCH /profiles/:id', () => {
   })
 
   it('returns 403 when patching a profile not owned by the user', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).patch(
-      { name: 'Test' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .patch({ name: 'Test' }, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
@@ -75,10 +79,9 @@ describe('PATCH /profiles/:id', () => {
   })
 
   it('updates own profile and returns 200 with updated profile', async () => {
-    const { data, error } = await client.profiles({ id: aliceProfileId }).patch(
-      { bio: 'Updated bio from test' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { data, error } = await client
+      .profiles({ id: aliceProfileId })
+      .patch({ bio: 'Updated bio from test' }, { headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
     expect(data!.bio).toBe('Updated bio from test')
   })
@@ -92,7 +95,7 @@ describe('GET /profiles/:profileId/posts', () => {
 
   it('returns 200 with items, total, and totalPages when authenticated', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get({
-      headers: { Cookie: aliceCookie }
+      headers: { Cookie: aliceCookie },
     })
     expect(error).toBeNull()
     expect(Array.isArray(data!.items)).toBe(true)
@@ -102,7 +105,7 @@ describe('GET /profiles/:profileId/posts', () => {
 
   it('only returns posts authored by the given profile', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).posts.get({
-      headers: { Cookie: aliceCookie }
+      headers: { Cookie: aliceCookie },
     })
     for (const post of data!.items) {
       expect(post.authorId).toBe(aliceProfileId)
@@ -110,9 +113,11 @@ describe('GET /profiles/:profileId/posts', () => {
   })
 
   it('returns 200 with empty array for unknown profile', async () => {
-    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).posts.get({
-      headers: { Cookie: aliceCookie }
-    })
+    const { data, error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .posts.get({
+        headers: { Cookie: aliceCookie },
+      })
     expect(error).toBeNull()
     expect(data!.items).toHaveLength(0)
     expect(data!.total).toBe(0)
@@ -150,17 +155,19 @@ describe('GET /profiles/:profileId/posts', () => {
   })
 
   it('returns archived posts for any authenticated user', async () => {
-    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).posts.get({
-      query: { archived: 'true' },
-      headers: { Cookie: aliceCookie },
-    })
+    const { data, error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .posts.get({
+        query: { archived: true },
+        headers: { Cookie: aliceCookie },
+      })
     expect(error).toBeNull()
     expect(Array.isArray(data!.items)).toBe(true)
   })
 
   it('returns own archived posts when archived=true as owner', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).posts.get({
-      query: { archived: 'true' },
+      query: { archived: true },
       headers: { Cookie: aliceCookie },
     })
     expect(error).toBeNull()
@@ -192,7 +199,7 @@ describe('GET /profiles/:id/posts/count', () => {
       headers: { Cookie: aliceCookie },
     })
     const { data: archived } = await client.profiles({ id: aliceProfileId }).posts.get({
-      query: { archived: 'true', size: 1000 },
+      query: { archived: true, size: 1000 },
       headers: { Cookie: aliceCookie },
     })
     expect(count!.active).toBe(all!.total)
@@ -208,7 +215,7 @@ describe('GET /profiles/:id/locations', () => {
 
   it('returns 200 with an array when authenticated', async () => {
     const { data, error } = await client.profiles({ id: aliceProfileId }).locations.get({
-      headers: { Cookie: aliceCookie }
+      headers: { Cookie: aliceCookie },
     })
     expect(error).toBeNull()
     expect(Array.isArray(data)).toBe(true)
@@ -216,7 +223,7 @@ describe('GET /profiles/:id/locations', () => {
 
   it('each location has locationId as string', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).locations.get({
-      headers: { Cookie: aliceCookie }
+      headers: { Cookie: aliceCookie },
     })
     for (const loc of data ?? []) {
       expect(typeof loc.locationId).toBe('string')
@@ -224,9 +231,11 @@ describe('GET /profiles/:id/locations', () => {
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.get({
-      headers: { Cookie: aliceCookie }
-    })
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .locations.get({
+        headers: { Cookie: aliceCookie },
+      })
     expect(error?.status).toBe(403)
   })
 })
@@ -274,7 +283,7 @@ describe('POST /profiles', () => {
     )
     testCreatedProfileIds.push(data!.userProfileId)
     const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
-    const found = me!.profiles.find(p => p.userProfileId === data!.userProfileId)
+    const found = me!.profiles.find((p) => p.userProfileId === data!.userProfileId)
     expect(found).toBeDefined()
   })
 })
@@ -297,10 +306,9 @@ describe('DELETE /profiles/:id', () => {
   })
 
   it('returns 403 when trying to delete a profile not owned by the user', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
@@ -311,56 +319,55 @@ describe('DELETE /profiles/:id', () => {
     )
     testCreatedProfileIds.push(created!.userProfileId)
 
-    const { error } = await client.profiles({ id: created!.userProfileId }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: created!.userProfileId })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
 
     const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
-    const found = me!.profiles.find(p => p.userProfileId === created!.userProfileId)
+    const found = me!.profiles.find((p) => p.userProfileId === created!.userProfileId)
     expect(found).toBeUndefined()
   })
 
   it('returns 409 when attempting to delete the last active profile', async () => {
-    // Get current profiles to find the last one
     const { data: me } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
-    const profileIds = me?.profiles.map(p => p.userProfileId) ?? []
+    const profileIds = me?.profiles.map((p) => p.userProfileId) ?? []
 
-    // Delete all but one profile
-    for (const id of profileIds.slice(0, -1)) {
+    // Delete all profiles except aliceProfileId so subsequent tests can still use it
+    for (const id of profileIds.filter((id) => id !== aliceProfileId)) {
       await client.profiles({ id }).delete(undefined, { headers: { Cookie: aliceCookie } })
     }
 
-    // Attempting to delete the last profile must return 409
-    const lastProfileId = profileIds[profileIds.length - 1]!
-    const { error } = await client.profiles({ id: lastProfileId }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    // Attempting to delete the last remaining profile must return 409
+    const { error } = await client
+      .profiles({ id: aliceProfileId })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(409)
   })
 })
 
 describe('POST /profiles/:id/locations', () => {
   it('returns 401 without a session cookie', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).locations.post({ country: 'Slovakia' })
+    const { error } = await client
+      .profiles({ id: aliceProfileId })
+      .locations.post({ country: 'Slovakia' })
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations.post(
-      { country: 'Slovakia' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .locations.post({ country: 'Slovakia' }, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 201 with the created location', async () => {
-    const { data, error } = await client.profiles({ id: aliceProfileId }).locations.post(
-      { country: 'Slovakia', city: 'Bratislava' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { data, error } = await client
+      .profiles({ id: aliceProfileId })
+      .locations.post(
+        { country: 'Slovakia', city: 'Bratislava' },
+        { headers: { Cookie: aliceCookie } },
+      )
     expect(error).toBeNull()
     if (!data || 'message' in data) throw new Error('Expected location data')
     expect(data.country).toBe('Slovakia')
@@ -369,14 +376,14 @@ describe('POST /profiles/:id/locations', () => {
   })
 
   it('location appears in GET /profiles/:id/locations after adding', async () => {
-    const { data: created } = await client.profiles({ id: aliceProfileId }).locations.post(
-      { country: 'TestCountry' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { data: created } = await client
+      .profiles({ id: aliceProfileId })
+      .locations.post({ country: 'TestCountry' }, { headers: { Cookie: aliceCookie } })
+    if (!created || 'message' in created) throw new Error('Expected location data')
     const { data: list } = await client.profiles({ id: aliceProfileId }).locations.get({
       headers: { Cookie: aliceCookie },
     })
-    expect(list!.some(l => l.locationId === created!.locationId)).toBe(true)
+    expect(list!.some((l) => l.locationId === created.locationId)).toBe(true)
   })
 })
 
@@ -384,45 +391,48 @@ describe('DELETE /profiles/:id/locations/:locationId', () => {
   let locationId = ''
 
   beforeAll(async () => {
-    const { data } = await client.profiles({ id: aliceProfileId }).locations.post(
-      { country: 'DeleteMe' },
-      { headers: { Cookie: aliceCookie } },
-    )
-    locationId = data!.locationId
+    const { data } = await client
+      .profiles({ id: aliceProfileId })
+      .locations.post({ country: 'DeleteMe' }, { headers: { Cookie: aliceCookie } })
+    if (!data || 'message' in data) throw new Error('Expected location data')
+    locationId = data.locationId
   })
 
   it('returns 401 without a session cookie', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId }).delete()
+    const { error } = await client
+      .profiles({ id: aliceProfileId })
+      .locations({ locationId })
+      .delete()
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).locations({ locationId }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .locations({ locationId })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 for a non-existent locationId', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId: '00000000-0000-0000-0000-000000000000' }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: aliceProfileId })
+      .locations({ locationId: '00000000-0000-0000-0000-000000000000' })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(404)
   })
 
   it('returns 204 and soft-deletes the location from the profile', async () => {
-    const { error } = await client.profiles({ id: aliceProfileId }).locations({ locationId }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: aliceProfileId })
+      .locations({ locationId })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
 
     const { data: list } = await client.profiles({ id: aliceProfileId }).locations.get({
       headers: { Cookie: aliceCookie },
     })
-    expect(list!.some(l => l.locationId === locationId)).toBe(false)
+    expect(list!.some((l) => l.locationId === locationId)).toBe(false)
   })
 })
 
@@ -458,35 +468,40 @@ describe('GET /profiles/:id/reported/posts/:postId', () => {
 
     // Clean up all reports by alice's profiles
     await db.delete(reports).where(eq(reports.reporterId, reportingProfileId))
-    await client.posts({ id: reportedPostId }).reports.post(
-      { categoryId: spamCat!.categoryId },
-      { headers: { Cookie: aliceCookie } },
-    )
+    await client
+      .posts({ id: reportedPostId })
+      .reports.post({ categoryId: spamCat!.categoryId }, { headers: { Cookie: aliceCookie } })
   })
 
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: reportedPostId }).get()
+    const { error } = await client
+      .profiles({ id: reportingProfileId })
+      .reported.posts({ postId: reportedPostId })
+      .get()
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).reported.posts({ postId: reportedPostId }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .reported.posts({ postId: reportedPostId })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 204 when the profile has reported the post', async () => {
-    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: reportedPostId }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: reportingProfileId })
+      .reported.posts({ postId: reportedPostId })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
   })
 
   it('returns 404 when the profile has not reported the post', async () => {
-    const { error } = await client.profiles({ id: reportingProfileId }).reported.posts({ postId: unreportedPostId }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: reportingProfileId })
+      .reported.posts({ postId: unreportedPostId })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(404)
   })
 })
@@ -500,21 +515,26 @@ describe('GET /profiles/:id/reported/reviews/:reviewId', () => {
   })
 
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: testProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get()
+    const { error } = await client
+      .profiles({ id: testProfileId })
+      .reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' })
+      .get()
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 when the profile has not reported the review', async () => {
-    const { error } = await client.profiles({ id: testProfileId }).reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: testProfileId })
+      .reported.reviews({ reviewId: '00000000-0000-0000-0000-000000000000' })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(404)
   })
 })
@@ -528,21 +548,26 @@ describe('GET /profiles/:id/reported/messages/:messageId', () => {
   })
 
   it('returns 401 without auth', async () => {
-    const { error } = await client.profiles({ id: testProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get()
+    const { error } = await client
+      .profiles({ id: testProfileId })
+      .reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' })
+      .get()
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
-    const { error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 when the profile has not reported the message', async () => {
-    const { error } = await client.profiles({ id: testProfileId }).reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' }).get(
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .profiles({ id: testProfileId })
+      .reported.messages({ messageId: '00000000-0000-0000-0000-000000000000' })
+      .get({ headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(404)
   })
 })

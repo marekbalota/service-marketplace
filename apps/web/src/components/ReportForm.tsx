@@ -96,7 +96,9 @@ export function ReportForm({
                   disabled={mutation.isPending || categoriesLoading}
                 >
                   <SelectTrigger aria-invalid={fieldState.invalid}>
-                    <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}>
+                    <SelectValue
+                      placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}
+                    >
                       {selectedLabel}
                     </SelectValue>
                   </SelectTrigger>
@@ -146,12 +148,7 @@ export function ReportForm({
           <Flag className="size-4" />
           {mutation.isPending ? 'Submitting...' : 'Submit Report'}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={mutation.isPending}
-        >
+        <Button type="button" variant="outline" onClick={onCancel} disabled={mutation.isPending}>
           Cancel
         </Button>
       </div>

@@ -8,7 +8,9 @@ import { FavouriteButton } from '#/components/FavouriteButton'
 import { PostTypeBadge } from '#/components/PostTypeBadge'
 import type { api as ApiType } from '#/api'
 
-export type Post = NonNullable<Awaited<ReturnType<typeof ApiType.posts.get>>['data']>['items'][number]
+export type Post = NonNullable<
+  Awaited<ReturnType<typeof ApiType.posts.get>>['data']
+>['items'][number]
 
 const RATE_LABELS: Record<string, string> = {
   HOURLY: '/hr',
@@ -76,7 +78,9 @@ export function PostCard({
           <div className="mt-2 flex max-h-14 flex-wrap items-center gap-2 overflow-hidden">
             <PostTypeBadge postType={post.postType} />
             {post.categories.map((c) => (
-              <Badge key={c.name} variant="secondary">{c.name}</Badge>
+              <Badge key={c.name} variant="secondary">
+                {c.name}
+              </Badge>
             ))}
           </div>
         </CardHeader>

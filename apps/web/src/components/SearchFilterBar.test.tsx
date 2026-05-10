@@ -22,13 +22,7 @@ describe('SearchFilterBar', () => {
 
   it('calls onSearchChange when the input changes', () => {
     const onSearchChange = vi.fn()
-    render(
-      <SearchFilterBar
-        searchValue=""
-        onSearchChange={onSearchChange}
-        filters={mockFilters}
-      />,
-    )
+    render(<SearchFilterBar searchValue="" onSearchChange={onSearchChange} filters={mockFilters} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'hello' } })
     expect(onSearchChange).toHaveBeenCalledWith('hello')
   })
@@ -47,13 +41,7 @@ describe('SearchFilterBar', () => {
   })
 
   it('renders the mobile sheet trigger button', () => {
-    render(
-      <SearchFilterBar
-        searchValue=""
-        onSearchChange={vi.fn()}
-        filters={mockFilters}
-      />,
-    )
+    render(<SearchFilterBar searchValue="" onSearchChange={vi.fn()} filters={mockFilters} />)
     expect(screen.getByRole('button', { name: /open filters/i })).toBeInTheDocument()
   })
 })

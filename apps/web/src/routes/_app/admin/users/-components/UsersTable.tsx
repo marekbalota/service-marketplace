@@ -33,7 +33,11 @@ function UserCard({ user }: { user: User }) {
   const permissions = currentUser?.role?.permissions ?? []
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole])
   const canBan = hasPermissions(permissions, [Permissions.AdminUsersBan])
-  const canViewUser = hasAnyPermission(permissions, [Permissions.AdminUsersView, Permissions.AdminUsersImpersonate, Permissions.AdminPostsDeleteAny])
+  const canViewUser = hasAnyPermission(permissions, [
+    Permissions.AdminUsersView,
+    Permissions.AdminUsersImpersonate,
+    Permissions.AdminPostsDeleteAny,
+  ])
 
   const { data: assignableRoles = [] } = useQuery(assignableRolesQueryOptions)
   const roleIsEditable = assignableRoles.some((r) => r.roleId === user.role?.roleId)
@@ -82,7 +86,11 @@ function UserCard({ user }: { user: User }) {
             <div className="flex items-center gap-3 mb-2">
               <h3 className="font-semibold">{user.name}</h3>
               <Badge variant="secondary">{user.role?.name ?? 'User'}</Badge>
-              <Badge className={user.isBanned ? 'bg-banned-bg text-banned-fg' : 'bg-active-bg text-active-fg'}>
+              <Badge
+                className={
+                  user.isBanned ? 'bg-banned-bg text-banned-fg' : 'bg-active-bg text-active-fg'
+                }
+              >
                 {user.isBanned ? 'banned' : 'active'}
               </Badge>
             </div>
@@ -99,18 +107,24 @@ function UserCard({ user }: { user: User }) {
                   <Select
                     value={user.role?.roleId ?? ''}
                     disabled={roleMutation.isPending}
-                    onValueChange={(roleId) => { if (roleId) roleMutation.mutate(roleId) }}
+                    onValueChange={(roleId) => {
+                      if (roleId) roleMutation.mutate(roleId)
+                    }}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue>{user.role?.name ?? 'No role'}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {assignableRoles.map((r) => (
-                        <SelectItem key={r.roleId} value={r.roleId}>{r.name}</SelectItem>
+                        <SelectItem key={r.roleId} value={r.roleId}>
+                          {r.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {roleMutation.isPending && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                  {roleMutation.isPending && (
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  )}
                 </div>
               </div>
             )}
@@ -126,8 +140,9 @@ function UserCard({ user }: { user: User }) {
               </Link>
             )}
 
-            {canBan && roleIsEditable && (
-              user.isBanned ? (
+            {canBan &&
+              roleIsEditable &&
+              (user.isBanned ? (
                 <>
                   <Button
                     variant="outline"
@@ -163,8 +178,7 @@ function UserCard({ user }: { user: User }) {
                     onClose={() => setBanDialogOpen(false)}
                   />
                 </>
-              )
-            )}
+              ))}
           </div>
         </div>
       </CardContent>
@@ -206,7 +220,12 @@ export function UsersTable() {
           </div>
 
           {totalPages > 1 && (
-            <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-6" />
+            <PaginationBar
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              className="mt-6"
+            />
           )}
         </CardContent>
       </Card>

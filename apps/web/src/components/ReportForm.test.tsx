@@ -21,7 +21,9 @@ vi.mock('#/api', () => ({
 }))
 
 function renderForm(props: Partial<Parameters<typeof ReportForm>[0]> = {}) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   const onSuccess = props.onSuccess ?? vi.fn()
   const onCancel = props.onCancel ?? vi.fn()
   render(
@@ -114,7 +116,10 @@ describe('ReportForm', () => {
     await user.click(screen.getByRole('button', { name: /submit report/i }))
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
-    expect(mockOnReport).toHaveBeenCalledWith({ categoryId: FAKE_UUID, description: 'This is problematic.' })
+    expect(mockOnReport).toHaveBeenCalledWith({
+      categoryId: FAKE_UUID,
+      description: 'This is problematic.',
+    })
   })
 
   it('shows already-reported message from server on 409', async () => {

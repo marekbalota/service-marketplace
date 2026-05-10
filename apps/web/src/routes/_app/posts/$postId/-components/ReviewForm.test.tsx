@@ -44,9 +44,7 @@ vi.stubGlobal('URL', {
 })
 
 function renderForm(props = {}) {
-  return render(
-    <ReviewForm postId="post-1" onSuccess={vi.fn()} onCancel={vi.fn()} {...props} />,
-  )
+  return render(<ReviewForm postId="post-1" onSuccess={vi.fn()} onCancel={vi.fn()} {...props} />)
 }
 
 describe('ReviewForm', () => {
@@ -89,7 +87,7 @@ describe('ReviewForm', () => {
     expect(screen.getByText('Images (Optional)')).toBeInTheDocument()
     // ImagePickerGrid always renders at least the "+" add button
     const buttons = screen.getAllByRole('button')
-    expect(buttons.some(b => b.querySelector('svg'))).toBe(true)
+    expect(buttons.some((b) => b.querySelector('svg'))).toBe(true)
   })
 
   it('calls onCancel when the cancel button is clicked', () => {

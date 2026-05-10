@@ -47,9 +47,10 @@ describe('ImpersonationBanner', () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, impersonatedBy: null },
     } as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useMutation).mockImplementation(
-      (() => ({ mutate: vi.fn(), isPending: false })) as unknown as typeof useMutation,
-    )
+    vi.mocked(useMutation).mockImplementation((() => ({
+      mutate: vi.fn(),
+      isPending: false,
+    })) as unknown as typeof useMutation)
   })
 
   it('renders the banner when impersonatedBy is non-null', async () => {
@@ -63,9 +64,10 @@ describe('ImpersonationBanner', () => {
 
   it('clicking Exit Impersonation calls the mutation', async () => {
     const mockMutate = vi.fn()
-    vi.mocked(useMutation).mockImplementation(
-      (() => ({ mutate: mockMutate, isPending: false })) as unknown as typeof useMutation,
-    )
+    vi.mocked(useMutation).mockImplementation((() => ({
+      mutate: mockMutate,
+      isPending: false,
+    })) as unknown as typeof useMutation)
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, impersonatedBy: 'admin-id' },
     } as ReturnType<typeof useCurrentUser>)

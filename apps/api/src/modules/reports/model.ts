@@ -28,7 +28,9 @@ export const ReportsModel = {
   createParams: t.Object({ id: t.String() }),
   createResponse: createResponseShape,
   messageReportParams: t.Object({ threadId: t.String(), messageId: t.String() }),
-  categoriesQuery: t.Object({ targetType: t.Union([t.Literal('POST'), t.Literal('MESSAGE'), t.Literal('REVIEW')]) }),
+  categoriesQuery: t.Object({
+    targetType: t.Union([t.Literal('POST'), t.Literal('MESSAGE'), t.Literal('REVIEW')]),
+  }),
   categoriesResponse: t.Array(categoryShape),
 } as const
 

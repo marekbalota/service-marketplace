@@ -1,6 +1,11 @@
 import { render, screen, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { Header } from './Header'
 import type { User } from '#/types/api'
 
@@ -30,7 +35,10 @@ async function renderHeader() {
 describe('Header', () => {
   beforeEach(() => {
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+    })
   })
 
   it('shows Log in and Register links when user is null', async () => {
@@ -40,10 +48,21 @@ describe('Header', () => {
   })
 
   it('shows profile button and hides auth links when user is not null', async () => {
-    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', impersonatedBy: null, role: null, profiles: [] }
+    const user: User = {
+      userId: 'u1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      impersonatedBy: null,
+      role: null,
+      profiles: [],
+    }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'p1', name: 'Alice', email: 'alice@example.com' } as User['profiles'][number],
+      activeProfile: {
+        userProfileId: 'p1',
+        name: 'Alice',
+        email: 'alice@example.com',
+      } as User['profiles'][number],
       setActiveProfileId: vi.fn(),
     })
     await renderHeader()
@@ -52,9 +71,19 @@ describe('Header', () => {
   })
 
   it('shows profile button without name text when active profile is not yet available', async () => {
-    const user: User = { userId: 'u1', name: 'Alice', email: 'alice@example.com', impersonatedBy: null, role: null, profiles: [] }
+    const user: User = {
+      userId: 'u1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      impersonatedBy: null,
+      role: null,
+      profiles: [],
+    }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+    })
     await renderHeader()
     expect(screen.getByTestId('profile-menu-trigger')).toBeInTheDocument()
     expect(screen.queryByText(/^profile$/i)).not.toBeInTheDocument()
@@ -70,7 +99,10 @@ describe('Header', () => {
       profiles: [],
     }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+    })
     await renderHeader()
     expect(screen.getByTestId('impersonation-banner')).toBeInTheDocument()
   })
@@ -85,7 +117,10 @@ describe('Header', () => {
       profiles: [],
     }
     vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+    })
     await renderHeader()
     expect(screen.queryByTestId('impersonation-banner')).not.toBeInTheDocument()
   })

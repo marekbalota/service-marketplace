@@ -3,13 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { User, ChevronDown } from 'lucide-react'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '#/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
 import { UserProfilePanel } from './UserProfilePanel'
 import { ImpersonationBanner } from './ImpersonationBanner'
@@ -47,7 +41,13 @@ export function Header() {
               <>
                 <Sheet open={open} onOpenChange={setOpen}>
                   <SheetTrigger
-                    render={<Button variant="outline" className="gap-2" data-testid="profile-menu-trigger" />}
+                    render={
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        data-testid="profile-menu-trigger"
+                      />
+                    }
                   >
                     <User className="size-4" />
                     {activeProfile && (

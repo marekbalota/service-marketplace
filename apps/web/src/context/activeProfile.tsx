@@ -47,9 +47,7 @@ export function ActiveProfileProvider({ children }: { children: ReactNode }) {
   }, [user?.profiles, activeProfileId])
 
   const activeProfile =
-    user?.profiles.find((p) => p.userProfileId === activeProfileId) ??
-    user?.profiles[0] ??
-    null
+    user?.profiles.find((p) => p.userProfileId === activeProfileId) ?? user?.profiles[0] ?? null
 
   // Sync the resolved first-profile default back to localStorage so it persists on next load.
   // Guarded by `hydrated` so it doesn't overwrite the stored ID before it has been read.
@@ -68,14 +66,10 @@ export function ActiveProfileProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({ activeProfile, setActiveProfileId }),
-    [activeProfile, setActiveProfileId]
+    [activeProfile, setActiveProfileId],
   )
 
-  return (
-    <ActiveProfileContext.Provider value={value}>
-      {children}
-    </ActiveProfileContext.Provider>
-  )
+  return <ActiveProfileContext.Provider value={value}>{children}</ActiveProfileContext.Provider>
 }
 
 export function useActiveProfile(): {

@@ -19,30 +19,57 @@ import { RatingSelect } from './-components/RatingSelect'
 import { LocationSelect } from './-components/LocationSelect'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
-const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name', 'reviews-most', 'reviews-least'])
+const sortEnum = z.enum([
+  'newest',
+  'price-low',
+  'price-high',
+  'name',
+  'reviews-most',
+  'reviews-least',
+])
 const ratingRangeSchema = z.enum(['5-4', '4-3', '3-2', '2-1', 'none'])
 
 const searchSchema = z.object({
-  q:          z.string().optional().catch(undefined),
-  type:       postTypeEnum.optional().catch(undefined),
-  category:   z.union([z.string(), z.array(z.string())]).optional().catch(undefined),
-  sort:       sortEnum.optional().catch(undefined),
-  page:       z.number().int().positive().optional().catch(undefined),
+  q: z.string().optional().catch(undefined),
+  type: postTypeEnum.optional().catch(undefined),
+  category: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .catch(undefined),
+  sort: sortEnum.optional().catch(undefined),
+  page: z.number().int().positive().optional().catch(undefined),
   favourites: z.boolean().optional().catch(undefined),
-  rating:     z.union([ratingRangeSchema, z.array(ratingRangeSchema)]).optional().catch(undefined),
-  country:    z.string().optional().catch(undefined),
-  region:     z.string().optional().catch(undefined),
-  city:       z.string().optional().catch(undefined),
+  rating: z
+    .union([ratingRangeSchema, z.array(ratingRangeSchema)])
+    .optional()
+    .catch(undefined),
+  country: z.string().optional().catch(undefined),
+  region: z.string().optional().catch(undefined),
+  city: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/posts/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search: { q, type, category, sort, page, rating, country, region, city } }) =>
-    ({ q, type, category, sort, page, rating, country, region, city }),
-  loader: async ({ context: { queryClient }, deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city } }) => {
+  loaderDeps: ({ search: { q, type, category, sort, page, rating, country, region, city } }) => ({
+    q,
+    type,
+    category,
+    sort,
+    page,
+    rating,
+    country,
+    region,
+    city,
+  }),
+  loader: async ({
+    context: { queryClient },
+    deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city },
+  }) => {
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions),
-      queryClient.ensureQueryData(postsQueryOptions({ q, type, category, sort, page, rating, country, region, city })),
+      queryClient.ensureQueryData(
+        postsQueryOptions({ q, type, category, sort, page, rating, country, region, city }),
+      ),
     ])
   },
   pendingComponent: PageSkeleton,
@@ -82,21 +109,37 @@ function PageSkeleton() {
 }
 
 function HomePage() {
-  const { q = '', type = 'all', category, sort = 'newest', page = 1, favourites = false, rating, country, region, city } = Route.useSearch()
+  const {
+    q = '',
+    type = 'all',
+    category,
+    sort = 'newest',
+    page = 1,
+    favourites = false,
+    rating,
+    country,
+    region,
+    city,
+  } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
 
   const [inputValue, setInputValue] = useState(q)
-  useEffect(() => { setInputValue(q) }, [q])
+  useEffect(() => {
+    setInputValue(q)
+  }, [q])
 
   const searchDebouncer = useDebouncer(
-    (value: string) => navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
+    (value: string) =>
+      navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
     { wait: 400 },
   )
 
   const toggleFavourites = () => {
-    navigate({ search: (prev) => ({ ...prev, favourites: !favourites || undefined, page: undefined }) })
+    navigate({
+      search: (prev) => ({ ...prev, favourites: !favourites || undefined, page: undefined }),
+    })
   }
 
   useEffect(() => {
@@ -106,20 +149,28 @@ function HomePage() {
   }, [isAuthenticated, favourites, navigate])
 
   const filters: FilterItem[] = [
-    ...(isAuthenticated ? [{
-      label: 'Favourites',
-      control: (
-        <Button variant={favourites ? 'default' : 'outline'} className="w-full gap-2" onClick={toggleFavourites}>
-          <Heart className={cn('size-4', favourites && 'fill-red-500')} />
-          {favourites ? 'Favourites' : 'Show Favourites'}
-        </Button>
-      ),
-    }] : []),
-    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[160px]' },
-    { label: 'Category',  control: <CategorySelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Rating',    control: <RatingSelect />,   desktopWidth: 'w-[160px]' },
-    { label: 'Sort By',   control: <SortSelect />,     desktopWidth: 'w-[220px]' },
-    { label: 'All Locations', control: <LocationSelect />, desktopWidth: 'w-auto' },
+    ...(isAuthenticated
+      ? [
+          {
+            label: 'Favourites',
+            control: (
+              <Button
+                variant={favourites ? 'default' : 'outline'}
+                className="w-full gap-2"
+                onClick={toggleFavourites}
+              >
+                <Heart className={cn('size-4', favourites && 'fill-red-500')} />
+                {favourites ? 'Favourites' : 'Show Favourites'}
+              </Button>
+            ),
+          },
+        ]
+      : []),
+    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Locations', control: <LocationSelect />, desktopWidth: 'w-[240px]' },
   ]
 
   return (
@@ -138,7 +189,10 @@ function HomePage() {
             sheetDescription="Refine your search results"
             action={
               isAuthenticated ? (
-                <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}>
+                <Link
+                  to="/create-post"
+                  className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}
+                >
                   <Plus className="size-4" />
                   <span className="hidden sm:inline">New Post</span>
                 </Link>
@@ -149,7 +203,18 @@ function HomePage() {
       </div>
 
       <Suspense fallback={<PostsSkeleton />}>
-        <PostsList type={type} category={category} q={q} sort={sort} page={page} favouritesOnly={favourites} rating={rating} country={country} region={region} city={city} />
+        <PostsList
+          type={type}
+          category={category}
+          q={q}
+          sort={sort}
+          page={page}
+          favouritesOnly={favourites}
+          rating={rating}
+          country={country}
+          region={region}
+          city={city}
+        />
       </Suspense>
     </>
   )

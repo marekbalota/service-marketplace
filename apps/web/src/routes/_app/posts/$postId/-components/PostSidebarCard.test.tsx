@@ -40,7 +40,9 @@ describe('PostSidebarCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseSuspenseQuery.mockReturnValue({ data: basePost })
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<
+      typeof useActiveProfile
+    >)
   })
 
   it('renders location when present', async () => {
@@ -60,7 +62,11 @@ describe('PostSidebarCard', () => {
 
   it('shows SendMessageSection for authenticated non-owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
+      activeProfile: {
+        userProfileId: 'profile-visitor',
+        name: 'Alice',
+        email: 'alice@example.com',
+      },
     } as ReturnType<typeof useActiveProfile>)
     await act(async () => render(<PostSidebarCard postId="post-1" />))
     expect(screen.getByTestId('send-message-section')).toBeInTheDocument()

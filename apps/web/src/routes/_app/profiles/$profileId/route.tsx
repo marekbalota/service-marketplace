@@ -3,12 +3,12 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Suspense } from 'react'
-import { Star, Mail, Phone, Printer, MapPin } from 'lucide-react'
+import { Star, Mail, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { PostCard } from '#/components/PostCard'
 import { EmptyState } from '#/components/EmptyState'
 import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Separator } from '#/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '#/components/ui/tabs'
@@ -16,22 +16,27 @@ import { BackButton } from '#/components/BackButton'
 import { ImageLightbox } from '#/components/ImageLightbox'
 import { PaginationBar } from '#/components/PaginationBar'
 import {
-  profileQueryOptions, imagesQueryOptions, profileLocationsQueryOptions,
-  profilePostsQueryOptions, profilePostsCountQueryOptions,
+  profileQueryOptions,
+  imagesQueryOptions,
+  profilePostsQueryOptions,
+  profilePostsCountQueryOptions,
 } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
-import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 
 const searchSchema = z.object({
-  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived']).optional().catch(undefined),
   page: z.number().int().positive().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   validateSearch: searchSchema,
   loaderDeps: ({ search: { tab, page } }) => ({ tab, page }),
-  loader: async ({ context: { queryClient }, params: { profileId }, deps: { page: _page, tab: _tab } }) => {
+  loader: async ({
+    context: { queryClient },
+    params: { profileId },
+    deps: { page: _page, tab: _tab },
+  }) => {
     await queryClient.ensureQueryData(profileQueryOptions(profileId))
   },
   pendingComponent: ProfileViewSkeleton,
@@ -113,7 +118,12 @@ function ProfilePostsGrid({
         ))}
       </div>
       {totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-4" />
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="mt-4"
+        />
       )}
     </>
   )
@@ -128,7 +138,6 @@ function ProfileViewPage() {
 
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
-  const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -142,7 +151,10 @@ function ProfileViewPage() {
   })
 
   function handleTabChange(value: string) {
-    navigate({ search: () => ({ tab: value === 'archived' ? 'archived' : undefined }), replace: true })
+    navigate({
+      search: () => ({ tab: value === 'archived' ? 'archived' : undefined }),
+      replace: true,
+    })
   }
 
   return (
@@ -169,7 +181,9 @@ function ProfileViewPage() {
               <div className="space-y-3 text-sm">
                 {profile.bio && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bio</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Bio
+                    </p>
                     <p className="whitespace-pre-wrap">{profile.bio}</p>
                   </div>
                 )}
@@ -194,34 +208,11 @@ function ProfileViewPage() {
                     <Separator />
                     <div className="flex items-center gap-2">
                       <Star className="size-4 fill-star-filled text-star-filled shrink-0" />
-                      <span className="font-medium">
-                        {profile.averageRating.toFixed(1)} / 5.0
-                      </span>
+                      <span className="font-medium">{profile.averageRating.toFixed(1)} / 5.0</span>
                     </div>
                   </>
                 )}
               </div>
-
-              {locations.length > 0 && (
-                <>
-                  <Separator />
-                  <div className="space-y-2">
-                    <CardTitle className="text-sm">Locations</CardTitle>
-                    {locations.map(loc => {
-                      const detail = formatLocationDetail(loc)
-                      return (
-                        <div key={loc.locationId} className="flex items-start gap-2 text-sm">
-                          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{formatLocationDisplayName(loc)}</p>
-                            {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
 
               {images.length > 0 && (
                 <>
@@ -268,12 +259,22 @@ function ProfileViewPage() {
                 <>
                   <TabsContent value="active">
                     <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
-                      <ProfilePostsGrid profileId={profileId} page={page} archived={false} isOwner={isOwner} />
+                      <ProfilePostsGrid
+                        profileId={profileId}
+                        page={page}
+                        archived={false}
+                        isOwner={isOwner}
+                      />
                     </Suspense>
                   </TabsContent>
                   <TabsContent value="archived">
                     <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
-                      <ProfilePostsGrid profileId={profileId} page={page} archived={true} isOwner={isOwner} />
+                      <ProfilePostsGrid
+                        profileId={profileId}
+                        page={page}
+                        archived={true}
+                        isOwner={isOwner}
+                      />
                     </Suspense>
                   </TabsContent>
                 </>
@@ -284,7 +285,7 @@ function ProfileViewPage() {
       </div>
 
       <ImageLightbox
-        images={images.map(img => ({ src: img.link, alt: img.name }))}
+        images={images.map((img) => ({ src: img.link, alt: img.name }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

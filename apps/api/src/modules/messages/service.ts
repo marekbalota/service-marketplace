@@ -17,11 +17,14 @@ function deriveLabel(myRole: Role, postType: PostType): Label {
 
 export abstract class MessagesService {
   /** Returns the participant's role and whether the post has been deleted, or null if not a participant */
-  static async getRole(threadId: string, profileId: string): Promise<{ role: Role; postDeleted: boolean } | null> {
+  static async getRole(
+    threadId: string,
+    profileId: string,
+  ): Promise<{ role: Role; postDeleted: boolean } | null> {
     const [row] = await db
       .select({
-        initiatorId:   messageThreads.initiatorId,
-        authorId:      posts.authorId,
+        initiatorId: messageThreads.initiatorId,
+        authorId: posts.authorId,
         postDeletedAt: posts.deletedAt,
       })
       .from(messageThreads)
@@ -31,9 +34,7 @@ export abstract class MessagesService {
 
     if (!row) return null
     const role: Role | null =
-      row.initiatorId === profileId ? 'initiator' :
-      row.authorId    === profileId ? 'post_owner' :
-      null
+      row.initiatorId === profileId ? 'initiator' : row.authorId === profileId ? 'post_owner' : null
     if (!role) return null
     return { role, postDeleted: row.postDeletedAt !== null }
   }
@@ -55,15 +56,15 @@ export abstract class MessagesService {
 
     const rows = await db
       .select({
-        threadId:      messageThreads.threadId,
-        postId:        messageThreads.postId,
-        postTitle:     posts.postTitle,
-        postType:      posts.postType,
+        threadId: messageThreads.threadId,
+        postId: messageThreads.postId,
+        postTitle: posts.postTitle,
+        postType: posts.postType,
         postDeletedAt: posts.deletedAt,
-        authorId:      posts.authorId,
-        initiatorId:   messageThreads.initiatorId,
+        authorId: posts.authorId,
+        initiatorId: messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
-        authorName:    authorProfile.name,
+        authorName: authorProfile.name,
         lastMessage: sql<{ content: string; createdAt: string; senderId: string } | null>`
           (SELECT json_build_object(
             'content',   m.content,
@@ -88,15 +89,15 @@ export abstract class MessagesService {
       .innerJoin(posts, eq(messageThreads.postId, posts.postId))
       .innerJoin(initiatorProfile, eq(messageThreads.initiatorId, initiatorProfile.userProfileId))
       .innerJoin(authorProfile, eq(posts.authorId, authorProfile.userProfileId))
-      .where(and(
-        isNull(messageThreads.deletedAt),
-        or(
-          eq(messageThreads.initiatorId, profileId),
-          eq(posts.authorId, profileId),
+      .where(
+        and(
+          isNull(messageThreads.deletedAt),
+          or(eq(messageThreads.initiatorId, profileId), eq(posts.authorId, profileId)),
+          postId ? eq(messageThreads.postId, postId) : undefined,
         ),
-        postId ? eq(messageThreads.postId, postId) : undefined,
-      ))
-      .orderBy(desc(sql`
+      )
+      .orderBy(
+        desc(sql`
         COALESCE(
           (SELECT m.created_at FROM messages m
            WHERE m.thread_id = ${messageThreads.threadId}
@@ -104,7 +105,8 @@ export abstract class MessagesService {
            ORDER BY m.created_at DESC LIMIT 1),
           ${messageThreads.createdAt}
         )
-      `))
+      `),
+      )
 
     return rows.map((row) => {
       const myRole: Role = row.initiatorId === profileId ? 'initiator' : 'post_owner'
@@ -112,16 +114,16 @@ export abstract class MessagesService {
       const label = deriveLabel(myRole, row.postType)
       const last = row.lastMessage
       return {
-        threadId:       row.threadId,
-        postId:         row.postId,
-        postTitle:      row.postTitle,
-        postType:       row.postType,
+        threadId: row.threadId,
+        postId: row.postId,
+        postTitle: row.postTitle,
+        postType: row.postType,
         otherPartyName,
         lastMessage: last
           ? {
-              content:   last.content,
+              content: last.content,
               createdAt: new Date(`${last.createdAt}Z`), // Treat PostgreSQL timestamp as UTC
-              sentByMe:  last.senderId === profileId,
+              sentByMe: last.senderId === profileId,
             }
           : null,
         unreadCount: row.unreadCount,
@@ -149,15 +151,15 @@ export abstract class MessagesService {
 
     const [threadRow] = await db
       .select({
-        threadId:      messageThreads.threadId,
-        postId:        messageThreads.postId,
-        postTitle:     posts.postTitle,
-        postType:      posts.postType,
+        threadId: messageThreads.threadId,
+        postId: messageThreads.postId,
+        postTitle: posts.postTitle,
+        postType: posts.postType,
         postDeletedAt: posts.deletedAt,
-        authorId:      posts.authorId,
-        initiatorId:   messageThreads.initiatorId,
+        authorId: posts.authorId,
+        initiatorId: messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
-        authorName:    authorProfile.name,
+        authorName: authorProfile.name,
       })
       .from(messageThreads)
       .innerJoin(posts, eq(messageThreads.postId, posts.postId))
@@ -169,52 +171,55 @@ export abstract class MessagesService {
     if (!threadRow) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const myRole: Role | null =
-      threadRow.initiatorId === profileId ? 'initiator' :
-      threadRow.authorId === profileId    ? 'post_owner' :
-      null
+      threadRow.initiatorId === profileId
+        ? 'initiator'
+        : threadRow.authorId === profileId
+          ? 'post_owner'
+          : null
 
     if (!myRole) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     await db
       .update(messages)
       .set({ readAt: new Date() })
-      .where(and(
-        eq(messages.threadId, threadId),
-        sql`${messages.senderId} != ${profileId}::uuid`,
-        isNull(messages.readAt),
-        isNull(messages.deletedAt),
-      ))
+      .where(
+        and(
+          eq(messages.threadId, threadId),
+          sql`${messages.senderId} != ${profileId}::uuid`,
+          isNull(messages.readAt),
+          isNull(messages.deletedAt),
+        ),
+      )
 
     const msgRows = await db
       .select({
         messageId: messages.messageId,
-        content:   messages.content,
+        content: messages.content,
         createdAt: messages.createdAt,
-        senderId:  messages.senderId,
-        readAt:    messages.readAt,
+        senderId: messages.senderId,
+        readAt: messages.readAt,
       })
       .from(messages)
       .where(and(eq(messages.threadId, threadId), isNull(messages.deletedAt)))
       .orderBy(messages.createdAt)
 
-    const otherPartyName =
-      myRole === 'initiator' ? threadRow.authorName : threadRow.initiatorName
+    const otherPartyName = myRole === 'initiator' ? threadRow.authorName : threadRow.initiatorName
 
     return {
-      threadId:       threadRow.threadId,
-      postId:         threadRow.postId,
-      postTitle:      threadRow.postTitle,
-      postType:       threadRow.postType,
+      threadId: threadRow.threadId,
+      postId: threadRow.postId,
+      postTitle: threadRow.postTitle,
+      postType: threadRow.postType,
       otherPartyName,
       myRole,
-      label:       deriveLabel(myRole, threadRow.postType),
+      label: deriveLabel(myRole, threadRow.postType),
       postDeleted: threadRow.postDeletedAt !== null,
       messages: msgRows.map((m) => ({
         messageId: m.messageId,
-        content:   m.content,
+        content: m.content,
         createdAt: m.createdAt,
-        sentByMe:  m.senderId === profileId,
-        readAt:    m.readAt,
+        sentByMe: m.senderId === profileId,
+        readAt: m.readAt,
       })),
     }
   }
@@ -247,7 +252,7 @@ export abstract class MessagesService {
         await tx.insert(messages).values({
           threadId: thread!.threadId,
           senderId: body.profileId,
-          content:  body.content,
+          content: body.content,
         })
 
         return { threadId: thread!.threadId }
@@ -257,8 +262,12 @@ export abstract class MessagesService {
         (err && typeof err === 'object' && 'code' in err
           ? (err as { code: string }).code
           : undefined) ??
-        (err && typeof err === 'object' && 'cause' in err &&
-         err.cause && typeof err.cause === 'object' && 'code' in err.cause
+        (err &&
+        typeof err === 'object' &&
+        'cause' in err &&
+        err.cause &&
+        typeof err.cause === 'object' &&
+        'code' in err.cause
           ? (err.cause as { code: string }).code
           : undefined)
 
@@ -292,11 +301,10 @@ export abstract class MessagesService {
 
     return {
       messageId: inserted!.messageId,
-      content:   inserted!.content,
+      content: inserted!.content,
       createdAt: inserted!.createdAt,
-      sentByMe:  true,
-      readAt:    null,
+      sentByMe: true,
+      readAt: null,
     }
   }
-
 }

@@ -1,10 +1,10 @@
 import { mock, describe, it, expect, beforeAll } from 'bun:test'
 
 // Mock MinIO storage BEFORE any module that imports it is resolved.
-mock.module('../../storage', () => ({
+mock.module('../../lib/storage', () => ({
   uploadImage: async (_file: File, profileId: string) =>
     `http://localhost:9000/marketplace/profiles/${profileId}/test.jpg`,
-  initBucket:  async () => {},
+  initBucket: async () => {},
   minioClient: {},
 }))
 
@@ -24,11 +24,9 @@ let aliceProfileId: string
 let testImageId: string
 let urlImageId: string
 
-const fakeJpeg = new File(
-  [Buffer.from([0xff, 0xd8, 0xff, 0xe0])],
-  'photo.jpg',
-  { type: 'image/jpeg' },
-)
+const fakeJpeg = new File([Buffer.from([0xff, 0xd8, 0xff, 0xe0])], 'photo.jpg', {
+  type: 'image/jpeg',
+})
 
 beforeAll(async () => {
   const signInRes = await auth.api.signInEmail({
@@ -38,7 +36,7 @@ beforeAll(async () => {
   aliceCookie = signInRes.headers.get('set-cookie') ?? ''
 
   const { data } = await client.users.me.get({ headers: { Cookie: aliceCookie } })
-  const aliceProfile = data!.profiles.find(p => p.name === 'Alice Johnson') ?? data!.profiles[0]
+  const aliceProfile = data!.profiles.find((p) => p.name === 'Alice Johnson') ?? data!.profiles[0]
   aliceProfileId = aliceProfile?.userProfileId ?? ''
 })
 
@@ -50,7 +48,9 @@ describe('GET /profiles/:id/images', () => {
   })
 
   it('returns 200 with empty array for unknown profile', async () => {
-    const { data, error } = await client.profiles({ id: '00000000-0000-0000-0000-000000000000' }).images.get()
+    const { data, error } = await client
+      .profiles({ id: '00000000-0000-0000-0000-000000000000' })
+      .images.get()
     expect(error).toBeNull()
     expect(data).toHaveLength(0)
   })
@@ -87,7 +87,7 @@ describe('POST /images', () => {
 
   it('image appears in GET /profiles/:id/images', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).images.get()
-    const found = data!.find(img => img.imageId === testImageId)
+    const found = data!.find((img) => img.imageId === testImageId)
     expect(found).toBeDefined()
     expect(found!.link).toContain(aliceProfileId)
   })
@@ -100,22 +100,20 @@ describe('DELETE /images/:id', () => {
   })
 
   it('returns 404 when deleting a non-existent image', async () => {
-    const { error } = await client.images({ id: '00000000-0000-0000-0000-000000000000' }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .images({ id: '00000000-0000-0000-0000-000000000000' })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(404)
   })
 
   it('returns 204 and soft-deletes the image', async () => {
-    const { error } = await client.images({ id: testImageId }).delete(
-      undefined,
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .images({ id: testImageId })
+      .delete(undefined, { headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
 
     const { data } = await client.profiles({ id: aliceProfileId }).images.get()
-    const found = data!.find(img => img.imageId === testImageId)
+    const found = data!.find((img) => img.imageId === testImageId)
     expect(found).toBeUndefined()
   })
 })
@@ -145,14 +143,14 @@ describe('POST /images/url', () => {
     )
     expect(error).toBeNull()
     expect(data!.link).toBe(testUrl)
-    expect(data!.name).toBe(testUrl)
+    expect(data!.name).toBe('photo.jpg')
     expect(data!.userProfileId).toBe(aliceProfileId)
     urlImageId = data!.imageId
   })
 
   it('image appears in GET /profiles/:id/images', async () => {
     const { data } = await client.profiles({ id: aliceProfileId }).images.get()
-    const found = data!.find(img => img.imageId === urlImageId)
+    const found = data!.find((img) => img.imageId === urlImageId)
     expect(found).toBeDefined()
     expect(found!.link).toBe('https://example.com/photo.jpg')
   })

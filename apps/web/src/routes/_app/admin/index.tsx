@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { PageHeader } from '#/components/PageHeader';
-import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared';
-import { useCurrentUser } from '#/lib/queries/users';
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
+import { PageHeader } from '#/components/PageHeader'
+import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared'
+import { useCurrentUser } from '#/lib/queries/users'
 
 const adminOptions = [
   {
@@ -34,11 +34,11 @@ const adminOptions = [
     icon: FolderTree,
     path: '/admin/categories',
   },
-];
+]
 
 export const Route = createFileRoute('/_app/admin/')({
   component: AdminDashboard,
-});
+})
 
 function AdminDashboard() {
   return (
@@ -61,17 +61,23 @@ function AdminDashboard() {
               <div className="p-4 bg-blue-100 dark:bg-blue-500/20 rounded-lg border border-blue-200 dark:border-blue-400/30 hover:bg-blue-200 dark:hover:bg-blue-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-300">1,247</p>
                 <p className="text-sm text-muted-foreground mt-1">Total Users</p>
-                <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 font-medium">
+                  View Analytics →
+                </p>
               </div>
               <div className="p-4 bg-green-100 dark:bg-green-500/20 rounded-lg border border-green-200 dark:border-green-400/30 hover:bg-green-200 dark:hover:bg-green-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-green-600 dark:text-green-300">342</p>
                 <p className="text-sm text-muted-foreground mt-1">Active Posts</p>
-                <p className="text-xs text-green-600 dark:text-green-300 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-green-600 dark:text-green-300 mt-2 font-medium">
+                  View Analytics →
+                </p>
               </div>
               <div className="p-4 bg-orange-100 dark:bg-orange-500/20 rounded-lg border border-orange-200 dark:border-orange-400/30 hover:bg-orange-200 dark:hover:bg-orange-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-orange-600 dark:text-orange-300">1,856</p>
                 <p className="text-sm text-muted-foreground mt-1">Total Messages</p>
-                <p className="text-xs text-orange-600 dark:text-orange-300 mt-2 font-medium">View Analytics →</p>
+                <p className="text-xs text-orange-600 dark:text-orange-300 mt-2 font-medium">
+                  View Analytics →
+                </p>
               </div>
               <div className="p-4 bg-red-100 dark:bg-red-500/20 rounded-lg border border-red-200 dark:border-red-400/30">
                 <p className="text-3xl font-bold text-red-600 dark:text-red-300">12</p>
@@ -121,12 +127,12 @@ function AdminDashboard() {
         </Card>
       </div>
     </main>
-  );
+  )
 }
 
 function AdminOptions() {
-  const { data: user } = useCurrentUser();
-  const permissions = user?.role?.permissions ?? [];
+  const { data: user } = useCurrentUser()
+  const permissions = user?.role?.permissions ?? []
 
   const canManageUsers = hasAnyPermission(permissions, [
     Permissions.AdminUsersView,
@@ -134,22 +140,22 @@ function AdminOptions() {
     Permissions.AdminUsersAssignRole,
     Permissions.AdminUsersImpersonate,
     Permissions.AdminPostsDeleteAny,
-  ]);
-  const canManageRoles = hasPermissions(permissions, [Permissions.AdminRolesManage]);
-  const canManageCategories = hasPermissions(permissions, [Permissions.AdminCategoriesManage]);
+  ])
+  const canManageRoles = hasPermissions(permissions, [Permissions.AdminRolesManage])
+  const canManageCategories = hasPermissions(permissions, [Permissions.AdminCategoriesManage])
 
   const visibleOptions = adminOptions.filter((option) => {
-    if (option.id === 'users') return canManageUsers;
-    if (option.id === 'roles') return canManageRoles;
-    if (option.id === 'reports') return canManageUsers;
-    if (option.id === 'categories') return canManageCategories;
-    return true;
-  });
+    if (option.id === 'users') return canManageUsers
+    if (option.id === 'roles') return canManageRoles
+    if (option.id === 'reports') return canManageUsers
+    if (option.id === 'categories') return canManageCategories
+    return true
+  })
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {visibleOptions.map((option) => {
-        const Icon = option.icon;
+        const Icon = option.icon
         return (
           <Link key={option.id} to={option.path} className="block group hover:no-underline">
             <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
@@ -165,8 +171,8 @@ function AdminOptions() {
               </CardHeader>
             </Card>
           </Link>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

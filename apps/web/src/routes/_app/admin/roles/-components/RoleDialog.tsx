@@ -4,7 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from '#/components/ui/dialog'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -44,11 +48,12 @@ export function RoleDialog({
   defaultValues,
   onSubmit,
 }: RoleDialogProps) {
-  const { control, handleSubmit, watch, setValue, reset, setError, formState } = useForm<RoleValues>({
-    resolver: zodResolver(roleFormSchema),
-    mode: 'onTouched',
-    defaultValues: defaultValues ?? { name: '', description: '', permissionIds: [] as string[] },
-  })
+  const { control, handleSubmit, watch, setValue, reset, setError, formState } =
+    useForm<RoleValues>({
+      resolver: zodResolver(roleFormSchema),
+      mode: 'onTouched',
+      defaultValues: defaultValues ?? { name: '', description: '', permissionIds: [] as string[] },
+    })
 
   useEffect(() => {
     if (open) reset(defaultValues ?? { name: '', description: '', permissionIds: [] as string[] })
@@ -57,8 +62,9 @@ export function RoleDialog({
   const permissionIds = watch('permissionIds')
 
   const togglePermission = (id: string) => {
-    setValue('permissionIds',
-      permissionIds.includes(id) ? permissionIds.filter(p => p !== id) : [...permissionIds, id],
+    setValue(
+      'permissionIds',
+      permissionIds.includes(id) ? permissionIds.filter((p) => p !== id) : [...permissionIds, id],
     )
   }
 
@@ -122,7 +128,9 @@ export function RoleDialog({
                       checked={permissionIds.includes(permission.permissionId)}
                       disabled={!grantable}
                       className={grantable ? 'cursor-pointer' : 'cursor-not-allowed'}
-                      onCheckedChange={() => { if (grantable) togglePermission(permission.permissionId) }}
+                      onCheckedChange={() => {
+                        if (grantable) togglePermission(permission.permissionId)
+                      }}
                     />
                     <div className="flex-1">
                       <Label
@@ -142,13 +150,20 @@ export function RoleDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => { reset({ name: '', description: '', permissionIds: [] as string[] }); onOpenChange(false) }}
+              onClick={() => {
+                reset({ name: '', description: '', permissionIds: [] as string[] })
+                onOpenChange(false)
+              }}
               className="flex-1"
               disabled={formState.isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={formState.isSubmitting || !formState.isValid} className="flex-1">
+            <Button
+              type="submit"
+              disabled={formState.isSubmitting || !formState.isValid}
+              className="flex-1"
+            >
               {formState.isSubmitting && <Loader2 className="size-4 animate-spin mr-2" />}
               {submitLabel}
             </Button>

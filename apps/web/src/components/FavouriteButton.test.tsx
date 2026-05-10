@@ -9,7 +9,9 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useMutation: vi.fn((opts: { mutationFn: unknown }) =>
-      opts.mutationFn === undefined ? { mutate: mockAdd, isPending: false } : { mutate: mockAdd, isPending: false }
+      opts.mutationFn === undefined
+        ? { mutate: mockAdd, isPending: false }
+        : { mutate: mockAdd, isPending: false },
     ),
     useQuery: vi.fn(() => ({ data: undefined })),
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
@@ -31,7 +33,7 @@ vi.mock('#/api', () => ({
         post: vi.fn(),
         delete: vi.fn(),
       })),
-      { get: vi.fn() }
+      { get: vi.fn() },
     ),
   },
 }))

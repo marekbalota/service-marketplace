@@ -15,8 +15,8 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useQuery:       vi.fn(() => ({ data: [] })),
-    useMutation:    mockUseMutation,
+    useQuery: vi.fn(() => ({ data: [] })),
+    useMutation: mockUseMutation,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
@@ -24,7 +24,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 vi.mock('#/api', () => ({
   api: {
     profiles: vi.fn(() => ({
-      patch:     vi.fn(),
+      patch: vi.fn(),
       locations: Object.assign(
         vi.fn(() => ({ delete: vi.fn() })),
         { post: vi.fn(), get: vi.fn(() => ({ data: [] })) },
@@ -34,7 +34,7 @@ vi.mock('#/api', () => ({
       vi.fn(() => ({ delete: vi.fn() })),
       {
         post: vi.fn(),
-        url:  { post: vi.fn() },
+        url: { post: vi.fn() },
       },
     ),
   },
@@ -46,8 +46,8 @@ vi.mock('#/lib/queries/users', () => ({
 }))
 
 vi.mock('#/lib/queries/profiles', () => ({
-  imagesQueryOptions:           (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
-  profileQueryOptions:          (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions: (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
   profileLocationsQueryOptions: (id: string) => ({ queryKey: ['locations', 'profile', id] }),
 }))
 
@@ -55,20 +55,20 @@ import { Route } from './route'
 
 const baseUser = {
   userId: 'user-1',
-  name:   'Alice',
-  email:  'alice@example.com',
-  role:   null,
+  name: 'Alice',
+  email: 'alice@example.com',
+  role: null,
 }
 
 const alice = {
   userProfileId: 'profile-1',
-  name:          'Alice Johnson',
-  email:         'alice@example.com',
-  bio:           'Engineer',
-  phoneNumber:   '+1 555 0001',
-  fax:           null,
-  createdAt:     new Date('2024-01-01'),
-  updatedAt:     null,
+  name: 'Alice Johnson',
+  email: 'alice@example.com',
+  bio: 'Engineer',
+  phoneNumber: '+1 555 0001',
+  fax: null,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: null,
 }
 
 async function renderPage() {
@@ -86,10 +86,10 @@ describe('EditProfilePage', () => {
       data: { ...baseUser, profiles: [alice] },
     } as ReturnType<typeof useCurrentUser>)
     mockUseMutation.mockReturnValue({
-      mutate:    vi.fn(),
+      mutate: vi.fn(),
       isPending: false,
-      isError:   false,
-      error:     null,
+      isError: false,
+      error: null,
     })
   })
 
@@ -100,7 +100,9 @@ describe('EditProfilePage', () => {
 
   it('renders the page subtitle', async () => {
     await renderPage()
-    expect(screen.getByText(/update your profile information and manage your saved locations/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/update your profile information and manage your saved locations/i),
+    ).toBeInTheDocument()
   })
 
   it('renders the Basic Information card title', async () => {
@@ -140,10 +142,10 @@ describe('EditProfilePage', () => {
 
   it('shows error message when save mutation fails', async () => {
     mockUseMutation.mockReturnValue({
-      mutate:    vi.fn(),
+      mutate: vi.fn(),
       isPending: false,
-      isError:   true,
-      error:     new ApiError('Update failed'),
+      isError: true,
+      error: new ApiError('Update failed'),
     })
     await renderPage()
     expect(screen.getAllByText('Update failed').length).toBeGreaterThan(0)

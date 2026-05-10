@@ -2,11 +2,7 @@ import * as React from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { Badge } from '#/components/ui/badge'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '#/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import {
   Command,
   CommandEmpty,
@@ -200,7 +196,10 @@ export function MultiSelect({
               </Badge>
             </span>
             {/* Visible tags — clipped to a single row */}
-            <span ref={containerRef} className="flex flex-1 min-w-0 items-center gap-1 overflow-hidden">
+            <span
+              ref={containerRef}
+              className="flex flex-1 min-w-0 items-center gap-1 overflow-hidden"
+            >
               {visibleTags.map((item) => (
                 <Badge key={item.value} variant="secondary" className={tagBadgeClass}>
                   {item.label}
@@ -245,20 +244,27 @@ export function MultiSelect({
           )}
         />
       </PopoverTrigger>
-      <PopoverContent className="w-(--anchor-width) p-0" align="start" collisionAvoidance={{ side: 'flip' }} positionMethod="fixed">
+      <PopoverContent
+        className="w-(--anchor-width) p-0"
+        align="start"
+        collisionAvoidance={{ side: 'flip' }}
+        positionMethod="fixed"
+      >
         <Command shouldFilter={false} className="p-0">
-          {searchable && <CommandInput placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />}
+          {searchable && (
+            <CommandInput
+              placeholder={searchPlaceholder}
+              value={search}
+              onValueChange={setSearch}
+            />
+          )}
           {searchable && <div className="mt-1 h-px bg-border" />}
           <CommandList className="![scrollbar-width:thin] [&::-webkit-scrollbar]:!block [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
             <CommandEmpty>{emptyText}</CommandEmpty>
             {showControls && !search && (
               <CommandGroup className="p-0">
-                {value.length === 0 && (
-                  <CommandItem onSelect={selectAll}>Select all</CommandItem>
-                )}
-                {value.length > 0 && (
-                  <CommandItem onSelect={clearAll}>Clear selection</CommandItem>
-                )}
+                {value.length === 0 && <CommandItem onSelect={selectAll}>Select all</CommandItem>}
+                {value.length > 0 && <CommandItem onSelect={clearAll}>Clear selection</CommandItem>}
               </CommandGroup>
             )}
             <CommandGroup className="p-0">

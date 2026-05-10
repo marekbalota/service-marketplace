@@ -11,7 +11,7 @@ describe('FieldIconHeader', () => {
         iconBgClassName="bg-blue-100"
         iconClassName="text-blue-600"
         label="Title *"
-      />
+      />,
     )
     expect(screen.getByText('Title *')).toBeInTheDocument()
   })
@@ -24,7 +24,7 @@ describe('FieldIconHeader', () => {
         iconClassName="text-blue-600"
         label="Title *"
         htmlFor="postTitle"
-      />
+      />,
     )
     expect(screen.getByText('Title *').closest('label')).toHaveAttribute('for', 'postTitle')
   })

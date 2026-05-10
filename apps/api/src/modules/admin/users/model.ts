@@ -1,10 +1,10 @@
-import { t, type UnwrapSchema } from 'elysia';
+import { t, type UnwrapSchema } from 'elysia'
 
 const roleInfo = t.Object({
   roleId: t.String(),
   name: t.String(),
   priority: t.Number(),
-});
+})
 
 const userRow = t.Object({
   userId: t.String(),
@@ -15,17 +15,13 @@ const userRow = t.Object({
   banReason: t.Nullable(t.String()),
   banExpiration: t.Nullable(t.Date()),
   createdAt: t.Date(),
-});
+})
 
 export const AdminUsersModel = {
   // List users
   usersQuery: t.Object({
     search: t.Optional(t.String()),
-    sort: t.Optional(t.Union([
-      t.Literal('name'),
-      t.Literal('email'),
-      t.Literal('created'),
-    ])),
+    sort: t.Optional(t.Union([t.Literal('name'), t.Literal('email'), t.Literal('created')])),
     role: t.Optional(t.String()),
     isBanned: t.Optional(t.Boolean()),
     offset: t.Optional(t.Numeric()),
@@ -60,18 +56,20 @@ export const AdminUsersModel = {
 
   // List profiles for a user
   userProfilesParams: t.Object({ id: t.String() }),
-  userProfilesResponse: t.Array(t.Object({
-    userProfileId: t.String(),
-    accountId: t.String(),
-    name: t.String(),
-    email: t.String(),
-    bio: t.Nullable(t.String()),
-    phoneNumber: t.Nullable(t.String()),
-    fax: t.Nullable(t.String()),
-    createdAt: t.Date(),
-  })),
-} as const;
+  userProfilesResponse: t.Array(
+    t.Object({
+      userProfileId: t.String(),
+      accountId: t.String(),
+      name: t.String(),
+      email: t.String(),
+      bio: t.Nullable(t.String()),
+      phoneNumber: t.Nullable(t.String()),
+      fax: t.Nullable(t.String()),
+      createdAt: t.Date(),
+    }),
+  ),
+} as const
 
 export type AdminUsersModel = {
-  [k in keyof typeof AdminUsersModel]: UnwrapSchema<typeof AdminUsersModel[k]>;
-};
+  [k in keyof typeof AdminUsersModel]: UnwrapSchema<(typeof AdminUsersModel)[k]>
+}

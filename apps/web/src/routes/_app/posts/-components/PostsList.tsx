@@ -9,7 +9,18 @@ import { Route } from '../index'
 import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { postsQueryOptions, type RatingRange } from '../-queries/posts'
 
-export function PostsList({ type, category, q, sort, page, favouritesOnly, rating, country, region, city }: {
+export function PostsList({
+  type,
+  category,
+  q,
+  sort,
+  page,
+  favouritesOnly,
+  rating,
+  country,
+  region,
+  city,
+}: {
   type: 'all' | 'offer' | 'request'
   category?: string | string[]
   q: string
@@ -27,7 +38,9 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
 
   const activeProfileId = activeProfile?.userProfileId
   const profileId = favouritesOnly ? activeProfileId : undefined
-  const { data } = useSuspenseQuery(postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city }))
+  const { data } = useSuspenseQuery(
+    postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city }),
+  )
 
   const { data: favouritesData } = useQuery({
     ...favouritesQueryOptions(activeProfileId ?? ''),
@@ -55,7 +68,7 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
 
   const favouritePostIds = useMemo(() => {
     if (!isAuthenticated) return new Set<string>()
-    if (favouritesOnly) return new Set(data.items.map(p => p.postId))
+    if (favouritesOnly) return new Set(data.items.map((p) => p.postId))
     if (!favouritesData?.items) return new Set<string>()
     return new Set(favouritesData.items.map((f: { postId: string }) => f.postId))
   }, [isAuthenticated, favouritesData, favouritesOnly, data.items])
@@ -76,7 +89,9 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
           {favouritesOnly ? (
             <>
               <Heart className="mx-auto size-12 text-muted-foreground/50" />
-              <p className="mt-4 text-muted-foreground">No favourites found matching your criteria.</p>
+              <p className="mt-4 text-muted-foreground">
+                No favourites found matching your criteria.
+              </p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Browse posts and click the heart icon to add them to your favourites.
               </p>
@@ -99,7 +114,12 @@ export function PostsList({ type, category, q, sort, page, favouritesOnly, ratin
       )}
 
       {totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-8" />
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="mt-8"
+        />
       )}
     </main>
   )

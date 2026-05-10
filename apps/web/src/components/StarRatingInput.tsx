@@ -29,9 +29,7 @@ export function StarRatingInput({ value, onChange, disabled }: StarRatingInputPr
           <Star
             className={cn(
               'size-6',
-              star <= displayValue
-                ? 'fill-star-filled text-star-filled'
-                : 'text-star-empty'
+              star <= displayValue ? 'fill-star-filled text-star-filled' : 'text-star-empty',
             )}
           />
         </Button>

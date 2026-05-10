@@ -102,9 +102,11 @@ describe('DELETE /reviews/:id', () => {
   })
 
   it('returns 404 for non-existent review', async () => {
-    const { error } = await client.reviews({ id: '00000000-0000-0000-0000-000000000000' }).delete(undefined, {
-      headers: { Cookie: sessionCookie },
-    })
+    const { error } = await client
+      .reviews({ id: '00000000-0000-0000-0000-000000000000' })
+      .delete(undefined, {
+        headers: { Cookie: sessionCookie },
+      })
 
     expect(error?.status).toBe(404)
   })

@@ -9,9 +9,7 @@ import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 import { BackButton } from '#/components/BackButton'
 import { Button, buttonVariants } from '#/components/ui/button'
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '#/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { profileSchema, type ProfileFormValues } from '../../-components/profileSchema'
 import { ProfileFields } from '../../-components/ProfileFields'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
@@ -26,10 +24,15 @@ function CreateProfilePage() {
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const [uploadWarning, setUploadWarning] = useState<string | null>(null)
   const pendingFilesRef = useRef(pendingFiles)
-  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
-  useEffect(() => () => {
-    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
-  }, [])
+  useEffect(() => {
+    pendingFilesRef.current = pendingFiles
+  }, [pendingFiles])
+  useEffect(
+    () => () => {
+      for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+    },
+    [],
+  )
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -40,18 +43,21 @@ function CreateProfilePage() {
   const mutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
       const { data, error } = await api.profiles.post({
-        name:        values.name,
-        email:       values.email,
-        bio:         values.bio || undefined,
+        name: values.name,
+        email: values.email,
+        bio: values.bio || undefined,
         phoneNumber: values.phoneNumber || undefined,
-        fax:         values.fax || undefined,
+        fax: values.fax || undefined,
       })
       if (error) throw wrapEdenError(error, 'Failed to create profile.')
 
       let failedCount = 0
       if (data && 'userProfileId' in data) {
         for (const { file } of pendingFilesRef.current) {
-          const { error: uploadError } = await api.images.post({ file, profileId: data.userProfileId })
+          const { error: uploadError } = await api.images.post({
+            file,
+            profileId: data.userProfileId,
+          })
           if (uploadError) failedCount++
         }
       }
@@ -64,7 +70,7 @@ function CreateProfilePage() {
       if (failedCount > 0) {
         setUploadWarning(
           `Profile created! However, ${failedCount} image${failedCount > 1 ? 's' : ''} failed to upload. ` +
-          `Images are optional — you can add them later by editing the profile.`,
+            `Images are optional — you can add them later by editing the profile.`,
         )
       } else {
         navigate({ to: '/account-settings/profiles' })
@@ -74,13 +80,13 @@ function CreateProfilePage() {
 
   function addFile(file: File) {
     const preview = URL.createObjectURL(file)
-    setPendingFiles(prev => [...prev, { file, preview }])
+    setPendingFiles((prev) => [...prev, { file, preview }])
   }
 
   function removeFile(index: number) {
     const preview = pendingFiles[index]?.preview
     if (preview) URL.revokeObjectURL(preview)
-    setPendingFiles(prev => prev.filter((_, i) => i !== index))
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const onSubmit: SubmitHandler<ProfileFormValues> = (values) => mutation.mutate(values)
@@ -95,7 +101,10 @@ function CreateProfilePage() {
               <p className="font-medium">Profile created with a warning</p>
               <p className="mt-1 text-muted-foreground">{uploadWarning}</p>
             </div>
-            <Link to="/account-settings/profiles" className={buttonVariants({ variant: 'default' })}>
+            <Link
+              to="/account-settings/profiles"
+              className={buttonVariants({ variant: 'default' })}
+            >
               Go to Manage Profiles
             </Link>
           </CardContent>
@@ -110,9 +119,7 @@ function CreateProfilePage() {
 
       <div className="mb-6">
         <h2 className="mb-2">Add Profile</h2>
-        <p className="text-muted-foreground">
-          Create a new profile on your account
-        </p>
+        <p className="text-muted-foreground">Create a new profile on your account</p>
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -133,7 +140,7 @@ function CreateProfilePage() {
           </CardHeader>
           <CardContent>
             <ImagePickerGrid
-              previews={pendingFiles.map(f => f.preview)}
+              previews={pendingFiles.map((f) => f.preview)}
               onFilePicked={addFile}
               onRemove={removeFile}
             />

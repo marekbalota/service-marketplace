@@ -5,7 +5,11 @@ import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { ReportForm } from '#/components/ReportForm'
 import { api } from '#/api'
-import { threadDetailQueryOptions, threadsQueryOptions, hasReportedMessageQueryOptions } from '../../-queries/threads'
+import {
+  threadDetailQueryOptions,
+  threadsQueryOptions,
+  hasReportedMessageQueryOptions,
+} from '../../-queries/threads'
 import { ThreadHeader } from './ThreadHeader'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
@@ -25,7 +29,9 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
     },
     onSuccess: () => {
       setDraft('')
-      void queryClient.invalidateQueries({ queryKey: threadDetailQueryOptions(threadId, profileId).queryKey })
+      void queryClient.invalidateQueries({
+        queryKey: threadDetailQueryOptions(threadId, profileId).queryKey,
+      })
       void queryClient.invalidateQueries({ queryKey: threadsQueryOptions(profileId).queryKey })
     },
   })
@@ -77,7 +83,9 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
 
       <Dialog
         open={reportingMessageId !== null}
-        onOpenChange={(open) => { if (!open) setReportingMessageId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setReportingMessageId(null)
+        }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
@@ -88,11 +96,16 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
               targetType="MESSAGE"
               entityName="message"
               onReport={async (data) => {
-                const { error } = await api.threads({ threadId }).messages({ messageId: reportingMessageId }).reports.post(data)
+                const { error } = await api
+                  .threads({ threadId })
+                  .messages({ messageId: reportingMessageId })
+                  .reports.post(data)
                 if (error) throw wrapEdenError(error, 'Failed to submit report.')
               }}
               onSuccess={() => {
-                void queryClient.invalidateQueries({ queryKey: hasReportedMessageQueryOptions(reportingMessageId!, profileId).queryKey })
+                void queryClient.invalidateQueries({
+                  queryKey: hasReportedMessageQueryOptions(reportingMessageId!, profileId).queryKey,
+                })
                 setReportingMessageId(null)
               }}
               onCancel={() => setReportingMessageId(null)}

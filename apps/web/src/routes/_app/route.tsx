@@ -5,7 +5,7 @@ import { currentUserQueryOptions } from '#/lib/queries/users'
 
 export const Route = createFileRoute('/_app')({
   component: AppLayout,
-  beforeLoad: async ({ context : { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient } }) => {
     const user = await queryClient.fetchQuery(currentUserQueryOptions)
     return { user }
   },

@@ -36,7 +36,9 @@ vi.mock('#/context/activeProfile', () => ({
 
 vi.mock('#/api', () => ({
   api: {
-    posts: { get: vi.fn().mockResolvedValue({ data: { items: [], total: 0, totalPages: 1 }, error: null }) },
+    posts: {
+      get: vi.fn().mockResolvedValue({ data: { items: [], total: 0, totalPages: 1 }, error: null }),
+    },
     categories: { get: vi.fn().mockResolvedValue({ data: [], error: null }) },
     favourites: { get: vi.fn().mockResolvedValue({ data: { items: [] }, error: null }) },
     users: { me: { get: vi.fn().mockResolvedValue({ data: null, error: null }) } },
@@ -45,16 +47,27 @@ vi.mock('#/api', () => ({
 
 vi.mock('#/lib/queries/posts', () => ({
   categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
-  favouritesQueryOptions: () => ({ queryKey: ['favourites'], queryFn: async () => ({ items: [] }) }),
+  favouritesQueryOptions: () => ({
+    queryKey: ['favourites'],
+    queryFn: async () => ({ items: [] }),
+  }),
 }))
 
 vi.mock('./-queries/posts', () => ({
-  postsQueryOptions: () => ({ queryKey: ['posts'], queryFn: async () => ({ items: [], total: 0, totalPages: 1 }) }),
+  postsQueryOptions: () => ({
+    queryKey: ['posts'],
+    queryFn: async () => ({ items: [], total: 0, totalPages: 1 }),
+  }),
   PAGE_SIZE: 12,
 }))
 
 vi.mock('#/components/SearchFilterBar', () => ({
-  SearchFilterBar: ({ action, searchValue, onSearchChange, filters }: {
+  SearchFilterBar: ({
+    action,
+    searchValue,
+    onSearchChange,
+    filters,
+  }: {
     action?: React.ReactNode
     searchValue: string
     onSearchChange: (v: string) => void
@@ -67,7 +80,9 @@ vi.mock('#/components/SearchFilterBar', () => ({
         onChange={(e) => onSearchChange(e.target.value)}
       />
       {action}
-      {filters?.map((f, i) => <div key={i}>{f.control}</div>)}
+      {filters?.map((f, i) => (
+        <div key={i}>{f.control}</div>
+      ))}
     </div>
   ),
 }))
@@ -102,7 +117,11 @@ async function renderPage() {
   qc.setQueryData(['posts'], { items: [], total: 0, totalPages: 1 })
   const component = (Route as any).options?.component
   const rootRoute = createRootRoute({ component })
-  const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory(), context: { queryClient: qc } })
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory(),
+    context: { queryClient: qc },
+  })
   await act(async () => {
     render(
       <QueryClientProvider client={qc}>

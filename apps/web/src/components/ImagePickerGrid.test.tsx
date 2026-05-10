@@ -79,16 +79,14 @@ describe('ImagePickerGrid', () => {
     const file = new File(['not-an-image'], 'bad.txt', { type: 'text/plain' })
     fireEvent.change(input, { target: { files: [file] } })
 
-    await waitFor(() =>
-      expect(screen.getByText(/1 file could not be read/i)).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByText(/1 file could not be read/i)).toBeInTheDocument())
     expect(onFilePicked).not.toHaveBeenCalled()
   })
 
   it('accepts valid files and rejects invalid ones in a mixed batch', async () => {
     const calls: boolean[] = []
     vi.spyOn(globalThis, 'Image').mockImplementation(() => {
-      let idx = calls.length
+      const idx = calls.length
       calls.push(false)
       const img = {
         onload: null as (() => void) | null,
@@ -107,7 +105,7 @@ describe('ImagePickerGrid', () => {
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
     const good = new File(['data'], 'good.jpg', { type: 'image/jpeg' })
-    const bad  = new File(['x'], 'bad.txt',  { type: 'text/plain' })
+    const bad = new File(['x'], 'bad.txt', { type: 'text/plain' })
     fireEvent.change(input, { target: { files: [good, bad] } })
 
     await waitFor(() => expect(onFilePicked).toHaveBeenCalledTimes(1))

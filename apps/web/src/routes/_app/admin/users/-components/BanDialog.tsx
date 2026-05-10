@@ -21,19 +21,25 @@ import {
   SelectValue,
 } from '#/components/ui/select'
 
-const banFormSchema = z.object({
-  reason: z.string().min(1, 'Reason is required'),
-  durationType: z.enum(['permanent', 'until-date']),
-  expiresAt: z.string().optional(),
-}).superRefine((data, ctx) => {
-  if (data.durationType === 'until-date') {
-    if (!data.expiresAt) {
-      ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'Expiry date is required' })
-    } else if (new Date(data.expiresAt) <= new Date()) {
-      ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'Expiry date must be in the future' })
+const banFormSchema = z
+  .object({
+    reason: z.string().min(1, 'Reason is required'),
+    durationType: z.enum(['permanent', 'until-date']),
+    expiresAt: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.durationType === 'until-date') {
+      if (!data.expiresAt) {
+        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'Expiry date is required' })
+      } else if (new Date(data.expiresAt) <= new Date()) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['expiresAt'],
+          message: 'Expiry date must be in the future',
+        })
+      }
     }
-  }
-})
+  })
 
 type BanFormValues = z.infer<typeof banFormSchema>
 
@@ -75,7 +81,15 @@ export function BanDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => { if (!open) { reset(); onClose() } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          reset()
+          onClose()
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ban {userName}</DialogTitle>
@@ -105,13 +119,21 @@ export function BanDialog({
             render={({ field }) => (
               <Field>
                 <label className="text-sm font-medium">Duration</label>
-                <Select value={field.value} onValueChange={(v) => { field.onChange(v); field.onBlur() }}>
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => {
+                    field.onChange(v)
+                    field.onBlur()
+                  }}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue>{durationLabels[field.value]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(durationLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -140,10 +162,21 @@ export function BanDialog({
 
           <FieldError errors={[formState.errors.root]} />
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { reset(); onClose() }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                reset()
+                onClose()
+              }}
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={formState.isSubmitting || !formState.isValid}>
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={formState.isSubmitting || !formState.isValid}
+            >
               {formState.isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Ban User
             </Button>

@@ -39,7 +39,13 @@ type LocationFields = {
 type MutationBody = {
   price: string | undefined
   rateType: 'HOURLY' | 'DAILY' | 'FIXED' | undefined
-  location?: { country?: string; region?: string; city?: string; street?: string; houseNumber?: string }
+  location?: {
+    country?: string
+    region?: string
+    city?: string
+    street?: string
+    houseNumber?: string
+  }
   locationId?: string
 }
 
@@ -56,8 +62,7 @@ function buildMutationBody(fields: LocationFields): MutationBody {
     rateType,
   } = fields
 
-  const hasManualLocation =
-    isManualLocation && (country || region || city || street || houseNumber)
+  const hasManualLocation = isManualLocation && (country || region || city || street || houseNumber)
 
   return {
     price: price || undefined,
@@ -86,11 +91,16 @@ describe('create post mutation body', () => {
   it('sends location object when manual location fields are filled', () => {
     const body = buildMutationBody({
       isManualLocation: true,
-      country: 'Czech Republic', region: 'South Moravian', city: 'Brno',
+      country: 'Czech Republic',
+      region: 'South Moravian',
+      city: 'Brno',
     })
     expect(body.location).toEqual({
-      country: 'Czech Republic', region: 'South Moravian', city: 'Brno',
-      street: undefined, houseNumber: undefined,
+      country: 'Czech Republic',
+      region: 'South Moravian',
+      city: 'Brno',
+      street: undefined,
+      houseNumber: undefined,
     })
     expect(body.locationId).toBeUndefined()
   })

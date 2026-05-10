@@ -1,0 +1,132 @@
+import { useState } from 'react'
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useNavigate } from '@tanstack/react-router'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { authClient } from '#/auth'
+import { parseAuthErrorBody } from '#/lib/api-error'
+import { env } from '#/env'
+import { useAppTheme } from '#/lib/theme'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
+
+const registerSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.email('Please enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
+type RegisterValues = z.infer<typeof registerSchema>
+
+export function RegisterForm() {
+  const navigate = useNavigate()
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [challengeVisible, setChallengeVisible] = useState(false)
+  const theme = useAppTheme()
+  const form = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: '', email: '', password: '' },
+    mode: 'onTouched',
+  })
+
+  const onSubmit: SubmitHandler<RegisterValues> = async (values) => {
+    const { error } = await authClient.signUp.email(values, {
+      headers: { 'x-captcha-response': captchaToken! },
+    })
+    if (!error) {
+      void navigate({ to: '/verify-email', search: { email: values.email } })
+      return
+    }
+    if (error.status === 403) {
+      const body = parseAuthErrorBody(error)
+      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+        setCaptchaToken(null)
+        form.setError('root', { message: (body.message as string) ?? error.message })
+        return
+      }
+    }
+    setCaptchaToken(null)
+    form.setError('root', { message: error.message })
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <FieldGroup>
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-name">Full Name</FieldLabel>
+              <Input
+                {...field}
+                id="register-name"
+                type="text"
+                placeholder="John Doe"
+                autoComplete="name"
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
+          )}
+        />
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-email">Email</FieldLabel>
+              <Input
+                {...field}
+                id="register-email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
+          )}
+        />
+        <Controller
+          name="password"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-password">Password</FieldLabel>
+              <Input
+                {...field}
+                id="register-password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldError errors={[fieldState.error]} />
+            </Field>
+          )}
+        />
+      </FieldGroup>
+      <div className={challengeVisible ? undefined : '!hidden'}>
+        <Turnstile
+          siteKey={env.turnstileSiteKey}
+          onSuccess={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+          onBeforeInteractive={() => setChallengeVisible(true)}
+          options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
+        />
+      </div>
+      <FieldError errors={[form.formState.errors.root]} />
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={!captchaToken || form.formState.isSubmitting}
+      >
+        {form.formState.isSubmitting ? 'Registering…' : 'Register'}
+      </Button>
+    </form>
+  )
+}

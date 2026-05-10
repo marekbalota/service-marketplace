@@ -3,7 +3,7 @@ import { Button } from '#/components/ui/button'
 
 type ThemeMode = 'light' | 'dark' | 'auto'
 
-function getStoredMode(): ThemeMode {
+export function getStoredMode(): ThemeMode {
   const stored = window.localStorage.getItem('theme')
   if (stored === 'light' || stored === 'dark' || stored === 'auto') return stored
   return 'auto'

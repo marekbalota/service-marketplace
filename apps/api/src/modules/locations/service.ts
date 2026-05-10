@@ -12,11 +12,11 @@ export abstract class LocationsService {
 
     return db
       .select({
-        locationId:  locations.locationId,
-        country:     locations.country,
-        region:      locations.region,
-        city:        locations.city,
-        street:      locations.street,
+        locationId: locations.locationId,
+        country: locations.country,
+        region: locations.region,
+        city: locations.city,
+        street: locations.street,
         houseNumber: locations.houseNumber,
       })
       .from(profileLocations)
@@ -35,10 +35,7 @@ export abstract class LocationsService {
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     return db.transaction(async (tx) => {
-      const [inserted] = await tx
-        .insert(locations)
-        .values(body)
-        .returning()
+      const [inserted] = await tx.insert(locations).values(body).returning()
 
       await tx
         .insert(profileLocations)
@@ -46,11 +43,11 @@ export abstract class LocationsService {
         .onConflictDoNothing()
 
       return {
-        locationId:  inserted!.locationId,
-        country:     inserted!.country,
-        region:      inserted!.region,
-        city:        inserted!.city,
-        street:      inserted!.street,
+        locationId: inserted!.locationId,
+        country: inserted!.country,
+        region: inserted!.region,
+        city: inserted!.city,
+        street: inserted!.street,
         houseNumber: inserted!.houseNumber,
       }
     })
@@ -79,24 +76,28 @@ export abstract class LocationsService {
     const { field, country, region } = query
 
     const column =
-      field === 'country' ? locations.country :
-      field === 'region'  ? locations.region  :
-                            locations.city
+      field === 'country'
+        ? locations.country
+        : field === 'region'
+          ? locations.region
+          : locations.city
 
     const rows = await db
       .selectDistinct({ value: column })
       .from(locations)
       .innerJoin(posts, eq(posts.locationId, locations.locationId))
-      .where(and(
-        isNull(posts.deletedAt),
-        isNull(locations.deletedAt),
-        country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
-        region  ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})`  : undefined,
-      ))
+      .where(
+        and(
+          isNull(posts.deletedAt),
+          isNull(locations.deletedAt),
+          country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
+          region ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})` : undefined,
+        ),
+      )
       .orderBy(asc(column))
 
     return {
-      values: rows.map(r => r.value).filter((v): v is string => v !== null),
+      values: rows.map((r) => r.value).filter((v): v is string => v !== null),
     }
   }
 }

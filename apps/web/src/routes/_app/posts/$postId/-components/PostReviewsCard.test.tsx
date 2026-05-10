@@ -54,8 +54,12 @@ describe('PostReviewsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseSuspenseQuery.mockReturnValue({ data: basePost })
-    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<
+      typeof useActiveProfile
+    >)
   })
 
   it('renders review cards for each review', async () => {
@@ -64,8 +68,22 @@ describe('PostReviewsCard', () => {
         ...basePost,
         reviewCount: 2,
         reviews: [
-          { reviewId: 'r1', reviewerName: 'Alice', createdAt: new Date(), rating: 5, reviewDescription: null, reviewerId: 'p-alice' },
-          { reviewId: 'r2', reviewerName: 'Charlie', createdAt: new Date(), rating: 3, reviewDescription: null, reviewerId: 'p-charlie' },
+          {
+            reviewId: 'r1',
+            reviewerName: 'Alice',
+            createdAt: new Date(),
+            rating: 5,
+            reviewDescription: null,
+            reviewerId: 'p-alice',
+          },
+          {
+            reviewId: 'r2',
+            reviewerName: 'Charlie',
+            createdAt: new Date(),
+            rating: 3,
+            reviewDescription: null,
+            reviewerId: 'p-charlie',
+          },
         ],
       },
     })
@@ -76,9 +94,15 @@ describe('PostReviewsCard', () => {
 
   it('shows Leave a Review button for non-owner who has not reviewed', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
+      activeProfile: {
+        userProfileId: 'profile-visitor',
+        name: 'Alice',
+        email: 'alice@example.com',
+      },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostReviewsCard postId="post-1" />))
     expect(screen.getByRole('button', { name: /leave a review/i })).toBeInTheDocument()
   })
@@ -87,7 +111,9 @@ describe('PostReviewsCard', () => {
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-author', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u1' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u1' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostReviewsCard postId="post-1" />))
     expect(screen.queryByRole('button', { name: /leave a review/i })).not.toBeInTheDocument()
   })
@@ -99,14 +125,23 @@ describe('PostReviewsCard', () => {
         ...basePost,
         reviewCount: 1,
         reviews: [
-          { reviewId: 'r1', reviewerName: 'Alice', createdAt: new Date(), rating: 4, reviewDescription: null, reviewerId: profileId },
+          {
+            reviewId: 'r1',
+            reviewerName: 'Alice',
+            createdAt: new Date(),
+            rating: 4,
+            reviewDescription: null,
+            reviewerId: profileId,
+          },
         ],
       },
     })
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: profileId, name: 'Alice', email: 'alice@example.com' },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostReviewsCard postId="post-1" />))
     expect(screen.getByText(/already reviewed/i)).toBeInTheDocument()
   })

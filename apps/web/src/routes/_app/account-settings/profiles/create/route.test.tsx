@@ -13,7 +13,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useMutation:    mockUseMutation,
+    useMutation: mockUseMutation,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 vi.mock('#/api', () => ({
   api: {
     profiles: { post: vi.fn() },
-    images:   { post: vi.fn() },
+    images: { post: vi.fn() },
   },
 }))
 
@@ -43,10 +43,10 @@ async function renderPage() {
 describe('CreateProfilePage', () => {
   beforeEach(() => {
     mockUseMutation.mockReturnValue({
-      mutate:    vi.fn(),
+      mutate: vi.fn(),
       isPending: false,
-      isError:   false,
-      error:     null,
+      isError: false,
+      error: null,
     })
   })
 
@@ -77,10 +77,10 @@ describe('CreateProfilePage', () => {
 
   it('shows error message when mutation fails', async () => {
     mockUseMutation.mockReturnValue({
-      mutate:    vi.fn(),
+      mutate: vi.fn(),
       isPending: false,
-      isError:   true,
-      error:     new ApiError('Create failed'),
+      isError: true,
+      error: new ApiError('Create failed'),
     })
     await renderPage()
     expect(screen.getByText('Create failed')).toBeInTheDocument()

@@ -13,7 +13,13 @@ type ThreadHeaderProps = {
   myRole: 'initiator' | 'post_owner'
 }
 
-export function ThreadHeader({ otherPartyName, postTitle, postId, postDeleted, myRole }: ThreadHeaderProps) {
+export function ThreadHeader({
+  otherPartyName,
+  postTitle,
+  postId,
+  postDeleted,
+  myRole,
+}: ThreadHeaderProps) {
   const router = useRouter()
   const isPostOwner = myRole === 'post_owner'
 
@@ -29,7 +35,11 @@ export function ThreadHeader({ otherPartyName, postTitle, postId, postDeleted, m
         <ArrowLeft className="size-4" />
       </Button>
 
-      <ProfileAvatar name={otherPartyName} className="size-9 shrink-0" fallbackClassName="text-sm font-semibold" />
+      <ProfileAvatar
+        name={otherPartyName}
+        className="size-9 shrink-0"
+        fallbackClassName="text-sm font-semibold"
+      />
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-foreground">{otherPartyName}</p>

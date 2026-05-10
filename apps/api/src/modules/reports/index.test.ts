@@ -6,6 +6,7 @@ import { db } from '../../db'
 import { posts, reports, reportCategories } from '../../db/schema'
 import { postsRoutes } from '../posts'
 import { authRoutes } from '../auth'
+import { auth } from '../auth/service'
 import { profilesRoutes } from '../profiles'
 import { usersRoutes } from '../users'
 import { categoriesRoutes } from '../categories'
@@ -24,27 +25,22 @@ const app = new Elysia()
 const client = treaty(app)
 
 let sessionCookie = ''
-let ownPostId = ''    // post authored by alice (for 403 self-report test)
-let otherPostId = ''  // post NOT authored by alice (for 201/409/check tests)
+let ownPostId = '' // post authored by alice (for 403 self-report test)
+let otherPostId = '' // post NOT authored by alice (for 201/409/check tests)
 let spamCategoryId = ''
 
 beforeAll(async () => {
-  const signInRes = await app.handle(
-    new Request('http://localhost/api/auth/sign-in/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'alice@example.com', password: 'password123' }),
-    }),
-  )
+  const signInRes = await auth.api.signInEmail({
+    body: { email: 'alice@example.com', password: 'password123' },
+    asResponse: true,
+  })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  const meData = await (
-    await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))
-  ).json() as { profiles: { userProfileId: string }[] }
-  const aliceProfileId = meData.profiles[0]?.userProfileId ?? ''
+  const { data: meData } = await client.users.me.get({ headers: { Cookie: sessionCookie } })
+  const aliceProfileId = meData?.profiles[0]?.userProfileId ?? ''
 
   // Clean up any leftover reports from all of alice's profiles to avoid 409 in the 201 test
-  for (const profile of meData.profiles) {
+  for (const profile of meData?.profiles ?? []) {
     await db.delete(reports).where(eq(reports.reporterId, profile.userProfileId))
   }
 
@@ -59,12 +55,15 @@ beforeAll(async () => {
   // Ensure we have a valid post for the self-report test
   if (!ownPostId) {
     // Create a post for alice if none exists
-    const { data: createdPost } = await client.posts.post({
-      authorId: aliceProfileId,
-      postTitle: 'Test post for report test',
-      description: 'This is a test post for the self-report test',
-      postType: 'OFFER',
-    }, { headers: { Cookie: sessionCookie } })
+    const { data: createdPost } = await client.posts.post(
+      {
+        authorId: aliceProfileId,
+        postTitle: 'Test post for report test',
+        description: 'This is a test post for the self-report test',
+        postType: 'OFFER',
+      },
+      { headers: { Cookie: sessionCookie } },
+    )
     ownPostId = createdPost?.postId ?? ''
   }
 
@@ -127,26 +126,32 @@ describe('POST /posts/:id/reports', () => {
   })
 
   it('returns 404 for non-existent post', async () => {
-    const { error } = await client.posts({ id: '00000000-0000-0000-0000-000000000000' }).reports.post(
-      { categoryId: spamCategoryId, description: 'This is spam' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: '00000000-0000-0000-0000-000000000000' })
+      .reports.post(
+        { categoryId: spamCategoryId, description: 'This is spam' },
+        { headers: { Cookie: sessionCookie } },
+      )
     expect(error?.status).toBe(404)
   })
 
   it('returns 403 when reporter is the post author', async () => {
-    const { error } = await client.posts({ id: ownPostId }).reports.post(
-      { categoryId: spamCategoryId, description: 'Self-report attempt' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: ownPostId })
+      .reports.post(
+        { categoryId: spamCategoryId, description: 'Self-report attempt' },
+        { headers: { Cookie: sessionCookie } },
+      )
     expect(error?.status).toBe(403)
   })
 
   it('creates a report with valid data (201)', async () => {
-    const { data, error } = await client.posts({ id: otherPostId }).reports.post(
-      { categoryId: spamCategoryId, description: 'This post is spam' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { data, error } = await client
+      .posts({ id: otherPostId })
+      .reports.post(
+        { categoryId: spamCategoryId, description: 'This post is spam' },
+        { headers: { Cookie: sessionCookie } },
+      )
     expect(error).toBeNull()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((data as any)?.categoryId).toBe(spamCategoryId)
@@ -155,11 +160,12 @@ describe('POST /posts/:id/reports', () => {
   })
 
   it('returns 409 for duplicate report', async () => {
-    const { error } = await client.posts({ id: otherPostId }).reports.post(
-      { categoryId: spamCategoryId, description: 'Reported again' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: otherPostId })
+      .reports.post(
+        { categoryId: spamCategoryId, description: 'Reported again' },
+        { headers: { Cookie: sessionCookie } },
+      )
     expect(error?.status).toBe(409)
   })
 })
-

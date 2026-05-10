@@ -17,7 +17,10 @@ vi.mock('#/lib/queries/users', () => ({
 import { handleBanError } from './ban-handler'
 import { routerRef, queryClient } from '#/router'
 
-const mockRouterRef = routerRef as unknown as { invalidate: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> }
+const mockRouterRef = routerRef as unknown as {
+  invalidate: ReturnType<typeof vi.fn>
+  navigate: ReturnType<typeof vi.fn>
+}
 const mockQueryClient = queryClient as unknown as { removeQueries: ReturnType<typeof vi.fn> }
 
 describe('handleBanError', () => {
@@ -37,7 +40,14 @@ describe('handleBanError', () => {
   })
 
   it('removes user query, clears localStorage, invalidates router, and navigates to /banned', () => {
-    const error = { body: { code: 'BANNED', message: 'User is banned', reason: 'Spam', expiresAt: '2026-12-01T00:00:00Z' } }
+    const error = {
+      body: {
+        code: 'BANNED',
+        message: 'User is banned',
+        reason: 'Spam',
+        expiresAt: '2026-12-01T00:00:00Z',
+      },
+    }
     localStorage.setItem('activeProfileId', 'p1')
 
     const result = handleBanError(error)
@@ -50,7 +60,9 @@ describe('handleBanError', () => {
   })
 
   it('stores ban reason and expiresAt in sessionStorage', () => {
-    const error = { body: { code: 'BANNED', message: 'Account banned', reason: 'TOS violation', expiresAt: null } }
+    const error = {
+      body: { code: 'BANNED', message: 'Account banned', reason: 'TOS violation', expiresAt: null },
+    }
     handleBanError(error)
     const stored = JSON.parse(sessionStorage.getItem('banInfo') ?? '{}')
     expect(stored.reason).toBe('TOS violation')

@@ -39,7 +39,10 @@ export function hasReportedMessageQueryOptions(messageId: string, profileId: str
   return queryOptions({
     queryKey: ['profiles', profileId, 'reported', 'messages', messageId],
     queryFn: async () => {
-      const { status } = await api.profiles({ id: profileId }).reported.messages({ messageId }).get()
+      const { status } = await api
+        .profiles({ id: profileId })
+        .reported.messages({ messageId })
+        .get()
       return status === 204
     },
   })

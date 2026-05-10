@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter, redirect } from '@tanstack/react-router'
+import { createFileRoute, useRouter, redirect, useBlocker } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { FileText, AlignLeft, Tag } from 'lucide-react'
 import { FieldIconHeader } from '#/components/FieldIconHeader'
 import { PostTypeToggle } from '#/components/PostTypeToggle'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { api } from '#/api'
 import { categoriesQueryOptions, postDetailQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'
@@ -16,42 +16,37 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { MultiSelect } from '#/components/ui/multi-select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '#/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Field, FieldError } from '#/components/ui/field'
 import { Permissions, hasPermissions } from '@marketplace/shared'
 import { PricingField } from '#/components/PricingField'
 
 const schema = z.object({
-  postType:    z.enum(['OFFER', 'REQUEST']),
-  postTitle:   z.string().min(3, 'Title must be at least 3 characters'),
+  postType: z.enum(['OFFER', 'REQUEST']),
+  postTitle: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   categoryIds: z.array(z.string()),
-  price:       z.string().optional(),
-  rateType:    z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
+  price: z.string().optional(),
+  rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
 })
 
 type FormValues = z.infer<typeof schema>
 
 export const Route = createFileRoute('/_app/edit-post/$postId')({
-  beforeLoad: ({ context: { user }, location }) => {
+  beforeLoad: async ({ context: { user, queryClient }, params: { postId }, location }) => {
     if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
-    const canEdit = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn])
-    if (!canEdit) throw redirect({ to: '/' })
+    if (!hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn]))
+      throw redirect({ to: '/' })
+    const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId))
+    const isOwner = user.profiles.some((p) => p.userProfileId === post.authorId)
+    if (!isOwner) throw redirect({ to: '/posts/$postId', params: { postId } })
   },
-  loader: async ({ context: { queryClient, user }, params: { postId } }) => {
-    const [post] = await Promise.all([
+  loader: async ({ context: { queryClient }, params: { postId } }) => {
+    await Promise.all([
       queryClient.ensureQueryData(postDetailQueryOptions(postId)),
       queryClient.ensureQueryData(categoriesQueryOptions),
     ])
-    const isOwner = user?.profiles.some((p) => p.userProfileId === post.authorId) ?? false
-    if (!isOwner) throw redirect({ to: '/posts/$postId', params: { postId } })
   },
   pendingComponent: EditPostSkeleton,
   component: EditPostPage,
@@ -60,19 +55,62 @@ export const Route = createFileRoute('/_app/edit-post/$postId')({
 function EditPostSkeleton() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <Skeleton className="mb-4 h-9 w-24" />
-      <div className="rounded-xl border-0 shadow-lg p-6 space-y-6">
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-4 w-64" />
-        <Skeleton className="h-11 w-full" />
-        <Skeleton className="h-11 w-full" />
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-11 w-full" />
-        <div className="grid grid-cols-2 gap-4">
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-11 w-full" />
-        </div>
-      </div>
+      <Skeleton className="mb-4 h-9 w-20" />
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="space-y-1 pb-6">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-5 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-14" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+              <Skeleton className="h-11 w-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-11 w-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-6">
+              <Skeleton className="h-11 flex-1" />
+              <Skeleton className="h-11 flex-1" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   )
 }
@@ -89,23 +127,22 @@ function EditPostPage() {
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: {
-      postType:    post.postType as 'OFFER' | 'REQUEST',
-      postTitle:   post.postTitle,
+      postType: post.postType as 'OFFER' | 'REQUEST',
+      postTitle: post.postTitle,
       description: post.description,
       categoryIds: post.categories.map((c) => c.categoryId),
-      price:       post.price ?? '',
-      rateType:    (post.rateType ?? undefined) as 'HOURLY' | 'DAILY' | 'FIXED' | undefined,
+      price: post.price ?? '',
+      rateType: (post.rateType ?? undefined) as 'HOURLY' | 'DAILY' | 'FIXED' | undefined,
     },
   })
 
   const { isValid, isDirty } = form.formState
   const priceValue = form.watch('price')
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
-  const handleBack = () => {
-    if (isDirty) setShowDiscardDialog(true)
-    else router.history.back()
-  }
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => isDirty,
+    withResolver: true,
+  })
 
   useEffect(() => {
     if (!priceValue) {
@@ -116,12 +153,12 @@ function EditPostPage() {
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       const body = {
-        postTitle:   values.postTitle,
+        postTitle: values.postTitle,
         description: values.description,
-        postType:    values.postType,
+        postType: values.postType,
         categoryIds: values.categoryIds,
-        price:       values.price || null,
-        rateType:    values.rateType ?? null,
+        price: values.price || null,
+        rateType: values.rateType ?? null,
       }
       const { data, error } = await api.posts({ id: postId }).patch(body)
       if (error) throw wrapEdenError(error, 'Failed to update post.')
@@ -132,13 +169,14 @@ function EditPostPage() {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       router.history.back()
     },
+    onError: (error) => form.setError('root', { message: error.message }),
   })
 
   const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <BackButton onClick={handleBack} />
+      <BackButton onClick={() => router.history.back()} />
 
       <Card className="border-0 shadow-lg">
         <CardHeader className="space-y-1 pb-6">
@@ -156,7 +194,13 @@ function EditPostPage() {
               name="postTitle"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={FileText} iconBgClassName="bg-blue-100 dark:bg-blue-500/20" iconClassName="text-blue-600 dark:text-blue-300" label="Title *" htmlFor="postTitle" />
+                  <FieldIconHeader
+                    icon={FileText}
+                    iconBgClassName="bg-blue-100 dark:bg-blue-500/20"
+                    iconClassName="text-blue-600 dark:text-blue-300"
+                    label="Title *"
+                    htmlFor="postTitle"
+                  />
                   <Input
                     {...field}
                     id="postTitle"
@@ -174,7 +218,13 @@ function EditPostPage() {
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={AlignLeft} iconBgClassName="bg-muted" iconClassName="text-muted-foreground" label="Description *" htmlFor="description" />
+                  <FieldIconHeader
+                    icon={AlignLeft}
+                    iconBgClassName="bg-muted"
+                    iconClassName="text-muted-foreground"
+                    label="Description *"
+                    htmlFor="description"
+                  />
                   <Textarea
                     {...field}
                     id="description"
@@ -193,11 +243,19 @@ function EditPostPage() {
               name="categoryIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={Tag} iconBgClassName="bg-green-100 dark:bg-green-500/20" iconClassName="text-green-600 dark:text-green-300" label="Categories (Optional)" />
+                  <FieldIconHeader
+                    icon={Tag}
+                    iconBgClassName="bg-green-100 dark:bg-green-500/20"
+                    iconClassName="text-green-600 dark:text-green-300"
+                    label="Categories (Optional)"
+                  />
                   <MultiSelect
                     options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
                     value={field.value}
-                    onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                    onValueChange={(v) => {
+                      field.onChange(v)
+                      field.onBlur()
+                    }}
                     placeholder="Select categories"
                     searchPlaceholder="Search categories..."
                     searchable
@@ -211,15 +269,13 @@ function EditPostPage() {
 
             <PricingField control={form.control} priceValue={priceValue} />
 
-            {mutation.isError && (
-              <FieldError errors={[{ message: mutation.error?.message }]} />
-            )}
+            <FieldError errors={[form.formState.errors.root]} />
 
             <div className="flex gap-3 pt-6">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleBack}
+                onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
                 Cancel
@@ -237,13 +293,13 @@ function EditPostPage() {
       </Card>
 
       <ConfirmDialog
-        open={showDiscardDialog}
+        open={status === 'blocked'}
         title="Discard changes?"
         description="You have unsaved changes. Are you sure you want to leave?"
         confirmLabel="Discard"
         destructive
-        onConfirm={() => router.history.back()}
-        onClose={() => setShowDiscardDialog(false)}
+        onConfirm={() => proceed?.()}
+        onClose={() => reset?.()}
       />
     </main>
   )

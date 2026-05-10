@@ -53,11 +53,9 @@ beforeAll(async () => {
 
 describe('GET /locations/distinct — field=country', () => {
   it('returns 200 with values array', async () => {
-    const res = await app.handle(
-      new Request('http://localhost/locations/distinct?field=country'),
-    )
+    const res = await app.handle(new Request('http://localhost/locations/distinct?field=country'))
     expect(res.status).toBe(200)
-    const body = await res.json() as { values: unknown[] }
+    const body = (await res.json()) as { values: unknown[] }
     expect(Array.isArray(body.values)).toBe(true)
   })
 
@@ -131,16 +129,12 @@ describe('GET /locations/distinct — field=city', () => {
 
 describe('GET /locations/distinct — validation', () => {
   it('returns 422 when field is missing', async () => {
-    const res = await app.handle(
-      new Request('http://localhost/locations/distinct'),
-    )
-    expect(res.status).toBe(422)
+    const { error } = await client.locations.distinct.get({ query: {} as never })
+    expect(error?.status).toBe(422)
   })
 
   it('returns 422 for an invalid field value', async () => {
-    const res = await app.handle(
-      new Request('http://localhost/locations/distinct?field=street'),
-    )
-    expect(res.status).toBe(422)
+    const { error } = await client.locations.distinct.get({ query: { field: 'street' as never } })
+    expect(error?.status).toBe(422)
   })
 })

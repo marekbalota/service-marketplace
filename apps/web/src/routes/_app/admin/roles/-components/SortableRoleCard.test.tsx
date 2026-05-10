@@ -39,9 +39,7 @@ vi.mock('#/api', () => ({
   },
 }))
 
-const basePermissions = [
-  { permissionId: 'perm-1', name: 'posts:edit', description: 'Edit posts' },
-]
+const basePermissions = [{ permissionId: 'perm-1', name: 'posts:edit', description: 'Edit posts' }]
 
 const baseRole = {
   roleId: 'role-1',
@@ -53,7 +51,7 @@ const baseRole = {
   priority: 5,
 }
 
-const allGrantable = new Set(basePermissions.map(p => p.permissionId))
+const allGrantable = new Set(basePermissions.map((p) => p.permissionId))
 
 function renderCard(overrides: Partial<React.ComponentProps<typeof SortableRoleCard>> = {}) {
   const onDelete = vi.fn()

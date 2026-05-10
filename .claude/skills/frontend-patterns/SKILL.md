@@ -24,13 +24,13 @@ user-invocable: false
 
 Always use **Shadcn/UI components** (from `apps/web/src/components/ui/`) or project components (from `apps/web/src/components/`) instead of raw HTML elements.
 
-| Need | Use | Not |
-|------|-----|-----|
-| Clickable action | `<Button>` | `<button>` |
+| Need                        | Use                                      | Not                                    |
+| --------------------------- | ---------------------------------------- | -------------------------------------- |
+| Clickable action            | `<Button>`                               | `<button>`                             |
 | Navigation styled as button | `<Link className={buttonVariants(...)}>` | `<a>` or `<button onClick={navigate}>` |
-| Text input | `<Input>` | `<input>` |
-| Dropdown | `<Select>` / `<SelectTrigger>` etc. | `<select>` |
-| Loading placeholder | `<Skeleton>` | custom divs with pulse animation |
+| Text input                  | `<Input>`                                | `<input>`                              |
+| Dropdown                    | `<Select>` / `<SelectTrigger>` etc.      | `<select>`                             |
+| Loading placeholder         | `<Skeleton>`                             | custom divs with pulse animation       |
 
 ```tsx
 // Good
@@ -54,8 +54,8 @@ TanStack Start renders a server HTML shell before hydrating on the client. Two p
 ```tsx
 // Bad — produces null on server, stored value on client → React 19 warns
 //   "Can't perform a React state update on a component that hasn't mounted yet"
-const [id, setId] = useState<string | null>(
-  () => (typeof window !== 'undefined' ? localStorage.getItem('key') : null),
+const [id, setId] = useState<string | null>(() =>
+  typeof window !== 'undefined' ? localStorage.getItem('key') : null,
 )
 
 // Good — consistent initial value; read localStorage after mount
@@ -118,6 +118,7 @@ routes/
 ```
 
 **Rules:**
+
 - A standalone route with no children: use a **folder + `route.tsx`** (e.g. `my-postings/route.tsx`) or a flat file (`my-postings.tsx`) — both map to `/my-postings`.
 - `index.tsx` inside a folder means **index child route** (e.g. `posts/index.tsx` → `/posts/` as a child of a `posts` layout). Do not use `index.tsx` for standalone routes — it requires a parent layout and breaks the route tree if none exists.
 - Never have both `my-postings.tsx` and `my-postings/` — they resolve to the same path and cause an error.
@@ -133,6 +134,7 @@ routes/
 **Tier A — `lib/queries/<resource>.ts`** (shared across routes)
 
 Put a query option here when:
+
 - Two or more routes use it, OR
 - The same `queryKey` appears in two or more files (split-cache risk — both files write to the same cache slot but neither knows about the other's stale data).
 
@@ -194,8 +196,8 @@ Use `route.tsx` for standalone routes; use `index.tsx` only for an index child o
 
 ### Skeleton rule
 
-| Skeleton scope | Location |
-|----------------|----------|
+| Skeleton scope             | Location                                                                    |
+| -------------------------- | --------------------------------------------------------------------------- |
 | Used by two or more routes | `components/PostsGridSkeleton.tsx`, `components/PostCardSkeleton.tsx`, etc. |
 | Used only within one route | Inline function in the route file (e.g. `function ProfileDetailSkeleton()`) |
 
@@ -235,8 +237,7 @@ export const categoriesQueryOptions = queryOptions({
 
 ```ts
 export const Route = createFileRoute('/some-route')({
-  loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(categoriesQueryOptions),
+  loader: ({ context: { queryClient } }) => queryClient.ensureQueryData(categoriesQueryOptions),
   pendingComponent: MySkeletonComponent,
   component: MyPage,
 })
@@ -276,16 +277,16 @@ Always validate with a **Zod schema** passed directly to `validateSearch` (Zod v
 import { z } from 'zod'
 
 const sortEnum = z.enum(['newest', 'price-low', 'price-high', 'name'])
-type SortOption = z.infer<typeof sortEnum>  // infer the type — don't write it manually
+type SortOption = z.infer<typeof sortEnum> // infer the type — don't write it manually
 
 const searchSchema = z.object({
-  q:    z.string().optional().catch(undefined),
+  q: z.string().optional().catch(undefined),
   sort: sortEnum.optional().catch(undefined),
   page: z.number().int().positive().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/posts')({
-  validateSearch: searchSchema,  // schema.parse is called automatically
+  validateSearch: searchSchema, // schema.parse is called automatically
   component: PostsPage,
 })
 
@@ -294,7 +295,13 @@ function PostsPage() {
   const navigate = Route.useNavigate()
 
   const setSort = (value: SortOption) =>
-    navigate({ search: (prev) => ({ ...prev, sort: value === 'newest' ? undefined : value, page: undefined }) })
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        sort: value === 'newest' ? undefined : value,
+        page: undefined,
+      }),
+    })
 }
 ```
 
@@ -350,6 +357,7 @@ describe('buildPageNumbers', () => {
 ```
 
 **What to cover:**
+
 - Rendering: key text, badges, conditional elements
 - Interaction: clicks, toggles, input changes
 - Edge cases: empty arrays, null/undefined props, boundary values for pure functions
@@ -360,13 +368,13 @@ Run: `bun run test` from workspace root, or `vitest run` inside `apps/web/`.
 
 Use Zod at **trust boundaries** where the data source is external or uncontrolled:
 
-| Situation | Use Zod? |
-|-----------|----------|
-| `validateSearch` in TanStack Router | **Yes** — URL is user-controlled |
-| Form input (e.g. react-hook-form) | **Yes** — user-controlled |
-| External API response (third-party) | **Yes** — shape isn't guaranteed |
+| Situation                                | Use Zod?                                     |
+| ---------------------------------------- | -------------------------------------------- |
+| `validateSearch` in TanStack Router      | **Yes** — URL is user-controlled             |
+| Form input (e.g. react-hook-form)        | **Yes** — user-controlled                    |
+| External API response (third-party)      | **Yes** — shape isn't guaranteed             |
 | Eden Treaty response (`api.posts.get()`) | No — Elysia types flow through automatically |
-| Internal data passed between components | No — TypeScript already guarantees the shape |
+| Internal data passed between components  | No — TypeScript already guarantees the shape |
 
 **Prefer `.catch()` over `.default()`** for anything URL-facing so a bad link never breaks the page.
 

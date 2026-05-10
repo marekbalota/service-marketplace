@@ -56,7 +56,11 @@ async function renderSection(props = {}) {
 describe('SendMessageSection', () => {
   beforeEach(() => {
     vi.mocked(useQuery).mockReturnValue({ data: null, isLoading: false } as any)
-    vi.mocked(useMutation).mockReturnValue({ mutate: mockMutate, isPending: false, isError: false } as any)
+    vi.mocked(useMutation).mockReturnValue({
+      mutate: mockMutate,
+      isPending: false,
+      isError: false,
+    } as any)
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as any)
   })
 

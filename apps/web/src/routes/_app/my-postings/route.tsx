@@ -21,7 +21,7 @@ type Post = { postId: string; postTitle: string }
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
-  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/my-postings')({
@@ -32,7 +32,15 @@ export const Route = createFileRoute('/_app/my-postings')({
   component: MyPostingsPage,
 })
 
-function PostsGrid({ profileId, page, archived }: { profileId: string; page: number; archived: boolean }) {
+function PostsGrid({
+  profileId,
+  page,
+  archived,
+}: {
+  profileId: string
+  page: number
+  archived: boolean
+}) {
   const queryClient = useQueryClient()
   const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived))
   const navigate = Route.useNavigate()
@@ -51,7 +59,10 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
   })
 
   const setPage = (value: number) =>
-    navigate({ search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }), replace: true })
+    navigate({
+      search: (prev) => ({ ...prev, page: value === 1 ? undefined : value }),
+      replace: true,
+    })
 
   const posts = data?.items ?? []
   const totalPages = data?.totalPages ?? 1
@@ -83,7 +94,12 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
       </div>
 
       {totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-8" />
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="mt-8"
+        />
       )}
 
       <ConfirmDialog
@@ -93,7 +109,9 @@ function PostsGrid({ profileId, page, archived }: { profileId: string; page: num
         confirmLabel="Delete"
         destructive
         isPending={deleteMutation.isPending}
-        onConfirm={async () => { if (deleteTarget) await deleteMutation.mutateAsync(deleteTarget.postId) }}
+        onConfirm={async () => {
+          if (deleteTarget) await deleteMutation.mutateAsync(deleteTarget.postId)
+        }}
         onClose={() => setDeleteTarget(null)}
       />
     </>
@@ -113,7 +131,10 @@ function MyPostingsPage() {
   })
 
   function handleTabChange(value: string) {
-    navigate({ search: () => ({ tab: value === 'archived' ? 'archived' : undefined }), replace: true })
+    navigate({
+      search: () => ({ tab: value === 'archived' ? 'archived' : undefined }),
+      replace: true,
+    })
   }
 
   return (

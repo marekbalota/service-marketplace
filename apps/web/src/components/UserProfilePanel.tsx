@@ -1,12 +1,5 @@
 import { Link, useRouter, useNavigate } from '@tanstack/react-router'
-import {
-  Settings,
-  FileText,
-  MessageSquare,
-  Shield,
-  Search,
-  LogOut,
-} from 'lucide-react'
+import { Settings, FileText, MessageSquare, Shield, Search, LogOut } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Separator } from '#/components/ui/separator'
 import { SheetClose } from '#/components/ui/sheet'
@@ -57,7 +50,9 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
 
             <Select
               value={activeProfile?.userProfileId ?? ''}
-              onValueChange={(id) => { if (id) setActiveProfileId(id) }}
+              onValueChange={(id) => {
+                if (id) setActiveProfileId(id)
+              }}
             >
               <SelectTrigger className="!h-auto w-full px-3 py-3 [&_[data-slot=select-value]]:line-clamp-none">
                 <SelectValue>
@@ -66,7 +61,11 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               </SelectTrigger>
               <SelectContent>
                 {allProfiles.map((profile) => (
-                  <SelectItem key={profile.userProfileId} value={profile.userProfileId} className="py-3 pl-3 pr-10">
+                  <SelectItem
+                    key={profile.userProfileId}
+                    value={profile.userProfileId}
+                    className="py-3 pl-3 pr-10"
+                  >
                     <ProfileOption name={profile.name} />
                   </SelectItem>
                 ))}

@@ -1,4 +1,10 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import { Route } from '../index'
 
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'name' | 'reviews-most' | 'reviews-least'
@@ -20,7 +26,13 @@ export function SortSelect() {
     <Select
       value={sort}
       onValueChange={(v) =>
-        navigate({ search: (prev) => ({ ...prev, sort: v === 'newest' ? undefined : (v as SortOption), page: undefined }) })
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            sort: v === 'newest' ? undefined : (v as SortOption),
+            page: undefined,
+          }),
+        })
       }
     >
       <SelectTrigger className="w-full">
@@ -28,7 +40,9 @@ export function SortSelect() {
       </SelectTrigger>
       <SelectContent>
         {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([value, label]) => (
-          <SelectItem key={value} value={value}>{label}</SelectItem>
+          <SelectItem key={value} value={value}>
+            {label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>

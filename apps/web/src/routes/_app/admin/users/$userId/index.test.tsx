@@ -66,7 +66,12 @@ describe('UserDetailPage', () => {
         name: 'Admin',
         email: 'admin@example.com',
         impersonatedBy: null,
-        role: { roleId: 'r1', name: 'SuperAdmin', priority: 2, permissions: ['admin:users:impersonate'] },
+        role: {
+          roleId: 'r1',
+          name: 'SuperAdmin',
+          priority: 2,
+          permissions: ['admin:users:impersonate'],
+        },
         profiles: [],
       },
     } as unknown as ReturnType<typeof useCurrentUser>)
@@ -112,7 +117,9 @@ describe('UserDetailPage', () => {
   it('Impersonate User button is hidden when currentUser lacks admin:users:impersonate permission', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: {
-        userId: 'admin-1', name: 'Admin', email: 'admin@example.com',
+        userId: 'admin-1',
+        name: 'Admin',
+        email: 'admin@example.com',
         impersonatedBy: null,
         role: { roleId: 'r1', name: 'SuperAdmin', priority: 2, permissions: [] },
         profiles: [],
@@ -130,7 +137,9 @@ describe('UserDetailPage', () => {
   it('Impersonate User button is disabled when currentUser has permission but equal or lower priority', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: {
-        userId: 'admin-1', name: 'Admin', email: 'admin@example.com',
+        userId: 'admin-1',
+        name: 'Admin',
+        email: 'admin@example.com',
         impersonatedBy: null,
         role: { roleId: 'r1', name: 'User', priority: 0, permissions: ['admin:users:impersonate'] },
         profiles: [],
@@ -143,9 +152,16 @@ describe('UserDetailPage', () => {
   it('Impersonate User button is disabled when currentUser is already impersonating', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: {
-        userId: 'admin-1', name: 'Admin', email: 'admin@example.com',
+        userId: 'admin-1',
+        name: 'Admin',
+        email: 'admin@example.com',
         impersonatedBy: 'some-admin-id',
-        role: { roleId: 'r1', name: 'SuperAdmin', priority: 2, permissions: ['admin:users:impersonate'] },
+        role: {
+          roleId: 'r1',
+          name: 'SuperAdmin',
+          priority: 2,
+          permissions: ['admin:users:impersonate'],
+        },
         profiles: [],
       },
     } as unknown as ReturnType<typeof useCurrentUser>)
