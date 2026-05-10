@@ -88,6 +88,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       void navigate({ to: "/verify-email", search: { email: values.email } })
       return
     }
+    setCaptchaToken(null)
     form.setError("root", { message: error.message })
   }
 

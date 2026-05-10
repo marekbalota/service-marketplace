@@ -47,6 +47,7 @@ export function RegisterForm() {
         return
       }
     }
+    setCaptchaToken(null)
     form.setError("root", { message: error.message })
   }
 

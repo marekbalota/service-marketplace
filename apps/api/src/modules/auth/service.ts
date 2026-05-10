@@ -160,7 +160,9 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path)) {
+      // Internal auth.api.* calls (seed, tests) have no HTTP host header — skip CAPTCHA.
+      // CAPTCHA is a browser-facing control; internal callers are trusted by design.
+      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path) && ctx.headers?.get("host")) {
         const token = ctx.headers?.get("x-captcha-response");
         if (!token) {
           return new APIError("BAD_REQUEST", {

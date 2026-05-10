@@ -62,15 +62,18 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       })
       if (reviewError) throw wrapEdenError(reviewError, 'Failed to submit review.')
 
-      // Step 2: Upload images (best-effort — review is already created)
-      let imageFailCount = 0
-      for (const { file } of pendingFilesRef.current) {
-        const { error: imgError } = await api['review-images'].post({
-          file,
-          reviewId: result!.reviewId,
+      // Step 2: Upload images in parallel (best-effort — review is already created)
+      const uploadResults = await Promise.all(
+        pendingFilesRef.current.map(async ({ file }) => {
+          try {
+            const { error } = await api['review-images'].post({ file, reviewId: result!.reviewId })
+            return !error
+          } catch {
+            return false
+          }
         })
-        if (imgError) imageFailCount++
-      }
+      )
+      const imageFailCount = uploadResults.filter(success => !success).length
 
       return { imageFailCount }
     },

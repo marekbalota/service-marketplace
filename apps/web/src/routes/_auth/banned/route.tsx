@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 export const Route = createFileRoute('/_auth/banned')({
   component: BannedPage,
   beforeLoad: async () => {
-    if (!sessionStorage.getItem('banInfo')) {
+    if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem('banInfo')) {
       throw redirect({ to: '/' });
     }
   },

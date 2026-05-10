@@ -5,7 +5,7 @@ import {
   ForbiddenError, NotFoundError, InternalServerError,
   ErrorMessages, AuthErrorMessages,
 } from '../../lib/errors'
-import { uploadReviewImage, deleteUploadedImage } from '../../storage'
+import { uploadReviewImage, deleteUploadedImage } from '../../lib/storage'
 import { ProfilesService } from '../profiles/service'
 
 const reviewImageSelect = {

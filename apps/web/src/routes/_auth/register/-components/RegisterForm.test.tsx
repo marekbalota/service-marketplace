@@ -73,21 +73,14 @@ describe("RegisterForm", () => {
     await waitFor(() => {
       expect(authClient.signUp.email).toHaveBeenCalledWith(
         { name: "Alice", email: "alice@example.com", password: "password123" },
-        expect.objectContaining({
-          headers: { "x-captcha-response": "test-token" },
-          onSuccess: expect.any(Function),
-          onError: expect.any(Function),
-        }),
+        { headers: { "x-captcha-response": "test-token" } },
       )
     })
   })
 
   it("shows an error message when sign-up fails", async () => {
     const { authClient } = await import("#/auth")
-    vi.mocked(authClient.signUp.email).mockImplementationOnce((_creds, callbacks) => {
-      callbacks?.onError?.({ error: { message: "Email already taken" } } as never)
-      return Promise.resolve({ data: null, error: { message: "Email already taken" } })
-    })
+    vi.mocked(authClient.signUp.email).mockResolvedValueOnce({ data: null, error: { message: "Email already taken" } } as never)
 
     render(<RegisterForm />)
     act(() => { fireTurnstileSuccess?.("test-token") })
@@ -142,10 +135,7 @@ describe("RegisterForm", () => {
 
   it("navigates to /verify-email with email after successful registration", async () => {
     const { authClient } = await import("#/auth")
-    vi.mocked(authClient.signUp.email).mockImplementationOnce((_creds, callbacks) => {
-      callbacks?.onSuccess?.({} as never)
-      return Promise.resolve({ data: {}, error: null })
-    })
+    vi.mocked(authClient.signUp.email).mockResolvedValueOnce({ data: {}, error: null } as never)
 
     render(<RegisterForm />)
     act(() => { fireTurnstileSuccess?.("test-token") })

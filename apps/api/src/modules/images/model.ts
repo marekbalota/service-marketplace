@@ -21,7 +21,7 @@ export const ImagesModel = {
     profileId: t.String(),
   }),
   createUrlBody: t.Object({
-    url:       t.String(),
+    url:       t.String({ pattern: '^https?://' }),
     profileId: t.String(),
   }),
   createResponse: imageItem,

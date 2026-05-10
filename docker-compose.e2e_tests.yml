@@ -22,7 +22,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-marketplace_ci}
       BETTER_AUTH_URL: http://api:3001
-      CORS_ORIGIN: http://web:3000
+      FRONTEND_URL: http://web:3000
     healthcheck:
       test: ["CMD-SHELL", "bun run -e \"try { const r = await fetch('http://localhost:3001/'); process.exit(r.ok ? 0 : 1); } catch { process.exit(1); }\""]
       interval: 5s
@@ -51,7 +51,8 @@ services:
     profiles:
       - e2e
     environment:
-      VITE_DEV_API_PROXY: http://api:3001
+      VITE_API_URL: http://api:3001
+      VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
       BETTER_AUTH_URL: http://api:3001
     healthcheck:
       test: ["CMD-SHELL", "bun run -e \"try { const r = await fetch('http://localhost:3000/'); process.exit(r.ok ? 0 : 1); } catch { process.exit(1); }\""]
@@ -99,7 +100,7 @@ services:
         curl -s -o /dev/null -w 'web status: %{http_code}\n' http://web:3000/ &&
         curl -s -o /dev/null -w 'api status: %{http_code}\n' http://api:3001/ &&
         curl -s -o /dev/null -w 'api/auth status: %{http_code}\n' http://api:3001/api/auth/get-session &&
-        curl -s -o /dev/null -w 'web proxy -> api status: %{http_code}\n' http://web:3000/categories &&
+        curl -s -o /dev/null -w 'api/categories status: %{http_code}\n' http://api:3001/categories &&
         echo '--- End Diagnostics ---' &&
         npx playwright test --workers=1
       "
