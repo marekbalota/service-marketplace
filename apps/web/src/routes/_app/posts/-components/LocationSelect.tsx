@@ -42,7 +42,7 @@ export function LocationSelect() {
       <PopoverTrigger
         title={hasFilter ? label : undefined}
         className={cn(
-          'flex h-8 min-w-[120px] max-w-[180px] cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-transparent px-3 text-sm outline-none select-none transition-colors dark:bg-input/30',
+          'flex h-8 w-full cursor-pointer items-center gap-1.5 rounded-lg border border-input bg-transparent px-3 text-sm outline-none select-none transition-colors dark:bg-input/30',
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50',
           'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
           hasFilter && 'border-primary text-primary dark:border-primary',
@@ -54,7 +54,7 @@ export function LocationSelect() {
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-72 p-3"
+        className="w-(--anchor-width) p-3"
         align="start"
         collisionAvoidance={{ side: 'flip' }}
         positionMethod="fixed"

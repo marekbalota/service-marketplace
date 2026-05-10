@@ -55,7 +55,7 @@ export function ImagePickerGrid({
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {previews.map((preview, i) => (
-          <div key={preview} className="group relative">
+          <div key={i} className="group relative">
             <img
               src={preview}
               alt="Preview"

@@ -166,11 +166,11 @@ function HomePage() {
           },
         ]
       : []),
-    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[160px]' },
+    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[200px]' },
     { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[160px]' },
-    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[220px]' },
-    { label: 'All Locations', control: <LocationSelect />, desktopWidth: 'w-auto' },
+    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[200px]' },
+    { label: 'Locations', control: <LocationSelect />, desktopWidth: 'w-[240px]' },
   ]
 
   return (

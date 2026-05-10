@@ -10,9 +10,6 @@ export default defineConfig({
       '#': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  ssr: {
-    noExternal: ['zod'],
-  },
   test: {
     environment: 'jsdom',
     globals: true,

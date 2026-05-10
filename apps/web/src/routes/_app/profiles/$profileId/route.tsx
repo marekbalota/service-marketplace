@@ -3,12 +3,12 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Suspense } from 'react'
-import { Star, Mail, Phone, Printer, MapPin } from 'lucide-react'
+import { Star, Mail, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { PostCard } from '#/components/PostCard'
 import { EmptyState } from '#/components/EmptyState'
 import { PostsGridSkeleton } from '#/components/PostsGridSkeleton'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Separator } from '#/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '#/components/ui/tabs'
@@ -18,13 +18,11 @@ import { PaginationBar } from '#/components/PaginationBar'
 import {
   profileQueryOptions,
   imagesQueryOptions,
-  profileLocationsQueryOptions,
   profilePostsQueryOptions,
   profilePostsCountQueryOptions,
 } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
-import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 
 const searchSchema = z.object({
   tab: z.enum(['active', 'archived']).optional().catch(undefined),
@@ -140,7 +138,6 @@ function ProfileViewPage() {
 
   const { data: profile } = useSuspenseQuery(profileQueryOptions(profileId))
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
-  const { data: locations = [] } = useQuery(profileLocationsQueryOptions(profileId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -216,27 +213,6 @@ function ProfileViewPage() {
                   </>
                 )}
               </div>
-
-              {locations.length > 0 && (
-                <>
-                  <Separator />
-                  <div className="space-y-2">
-                    <CardTitle className="text-sm">Locations</CardTitle>
-                    {locations.map((loc) => {
-                      const detail = formatLocationDetail(loc)
-                      return (
-                        <div key={loc.locationId} className="flex items-start gap-2 text-sm">
-                          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{formatLocationDisplayName(loc)}</p>
-                            {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
 
               {images.length > 0 && (
                 <>
