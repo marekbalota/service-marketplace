@@ -3,20 +3,14 @@ x-bun-base: &bun-base
   working_dir: /app
   profiles: [integration]
   volumes: [.:/app]
-  environment: &bun-env
-    DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-marketplace_ci}
-    BETTER_AUTH_URL: http://localhost:3001
+  env_file: [.env.pipeline]
 
 services:
   db:
     image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-marketplace_ci}
+    env_file: [.env.pipeline]
     healthcheck:
-      test:
-        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-marketplace_ci}']
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 3s
       timeout: 5s
       retries: 10
@@ -40,7 +34,6 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
     environment:
-      <<: *bun-env
       CI: 'true'
     command: >
       sh -c "

@@ -11,9 +11,6 @@ workflow:
 
 variables:
   BUN_INSTALL_CACHE_DIR: /tmp/bun-cache
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_DB: marketplace_ci
 
 default:
   image: oven/bun:latest
@@ -78,7 +75,7 @@ frontend-unit-tests:
     policy: pull
   script:
     - bun install --frozen-lockfile
-    - cd apps/web && bun run test
+    - cd apps/web && bun --env-file=../../.env.pipeline run test
 
 backend-integration-tests:
   stage: unit & integration tests
@@ -93,12 +90,10 @@ backend-integration-tests:
     - docker:24-dind-rootless
   variables:
     DOCKER_HOST: 'unix:///runner/services/docker/docker.sock'
-    DATABASE_URL: 'postgresql://postgres:postgres@db:5432/marketplace_ci'
-    BETTER_AUTH_URL: 'http://localhost:3001'
   before_script:
     - apk add --no-cache curl
   script:
-    - docker compose -f docker-compose.unit_integration_tests.yml --profile integration up --build --exit-code-from integration-tests
+    - docker compose --env-file .env.pipeline -f docker-compose.unit_integration_tests.yml --profile integration up --build --exit-code-from integration-tests
   artifacts:
     when: always
     paths:
@@ -122,7 +117,7 @@ e2e-tests:
   before_script:
     - apk add --no-cache curl
   script:
-    - docker compose -f docker-compose.e2e_tests.yml --profile e2e up --build --exit-code-from playwright
+    - docker compose --env-file .env.pipeline -f docker-compose.e2e_tests.yml --profile e2e up --build --exit-code-from playwright
   artifacts:
     when: always
     paths:
