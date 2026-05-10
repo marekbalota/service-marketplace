@@ -5,6 +5,9 @@ test.describe('My Postings', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/my-postings')
+    // Wait for the _app layout to render (beforeLoad must complete)
+    // Use extended timeout — cold React Query cache can make the first API call slow
+    await expect(page.getByRole('banner')).toBeVisible({ timeout: 15000 })
   })
 
   test('shows the page heading and subtitle', async ({ page }) => {
@@ -24,6 +27,9 @@ test.describe('My Postings', () => {
 test.describe('Marketplace index', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
+    // Wait for the redirect to /posts and _app layout to finish loading
+    await page.waitForURL('/posts')
+    await expect(page.getByRole('banner')).toBeVisible()
   })
 
   test('shows the search input and filter controls', async ({ page }) => {
@@ -276,7 +282,7 @@ test.describe('Admin', () => {
   })
 
   test('shows the manage accounts page', async ({ page }) => {
-    await page.goto('/admin/users', { waitUntil: 'networkidle' })
+    await page.goto('/admin/users')
     await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
   })
 

@@ -183,7 +183,6 @@ describe('PATCH /admin/users/:id/ban', () => {
   })
 
   it('returns 422 for missing reason', async () => {
-     
     const { error } = await client['admin']
       .users({ id: regularUserId })
       .ban.patch({} as any, { headers: { Cookie: adminCookie } })
@@ -258,7 +257,6 @@ describe('PATCH /admin/users/:id/role', () => {
   })
 
   it('returns 422 for missing roleId', async () => {
-     
     const { error } = await client['admin']
       .users({ id: regularUserId })
       .role.patch({} as any, { headers: { Cookie: adminCookie } })
