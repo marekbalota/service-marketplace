@@ -16,12 +16,10 @@ import {
   CommandList,
 } from '#/components/ui/command'
 
-// Diacritic-insensitive match helper
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
-// Max items shown before the user types — keeps the list compact
 const MAX_INITIAL = 8
 
 export interface LocationComboboxProps {
@@ -48,7 +46,6 @@ export function LocationCombobox({
     ? options.filter((o) => normalize(o).includes(normalize(search)))
     : options
 
-  // Show up to MAX_INITIAL items before typing; up to 5× when filtering
   const displayed = search ? filtered.slice(0, MAX_INITIAL * 5) : filtered.slice(0, MAX_INITIAL)
 
   const handleClear = (e: React.MouseEvent) => {

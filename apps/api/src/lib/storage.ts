@@ -52,10 +52,10 @@ export async function uploadReviewImage(file: File, reviewId: string): Promise<s
   const ext    = rawExt === 'jpeg' ? 'jpg' : rawExt
   const key    = `reviews/${reviewId}/${randomUUID()}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
-  await minioClient.putObject(BUCKET, key, buffer, buffer.length, {
+  await minioClient.putObject(env.minio.bucket, key, buffer, buffer.length, {
     'Content-Type': file.type,
   })
-  return `${PUBLIC_URL}/${BUCKET}/${key}`
+  return `${env.minio.publicUrl}/${env.minio.bucket}/${key}`
 }
 
 /**
