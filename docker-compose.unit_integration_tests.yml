@@ -17,10 +17,19 @@ services:
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping']
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
   migrate:
     <<: *bun-base
     depends_on:
       db: { condition: service_healthy }
+      redis: { condition: service_healthy }
     command: >
       sh -c "
         bun install --frozen-lockfile &&
