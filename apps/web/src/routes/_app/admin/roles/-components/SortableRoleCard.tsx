@@ -10,7 +10,15 @@ import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card'
 import { RoleDialog, type RoleValues } from './RoleDialog'
 
-export type Role = { roleId: string; name: string; description: string | null; isDefault: boolean; permissions: string[]; userCount: number; priority: number }
+export type Role = {
+  roleId: string
+  name: string
+  description: string | null
+  isDefault: boolean
+  permissions: string[]
+  userCount: number
+  priority: number
+}
 export type Permission = { permissionId: string; name: string; description: string | null }
 
 interface SortableRoleCardProps {
@@ -39,7 +47,9 @@ export function SortableRoleCard({
 
   const updateMutation = useMutation({
     mutationFn: async ({ name, description, permissionIds }: RoleValues) => {
-      const { error } = await api.admin.roles({ id: role.roleId }).patch({ name, description, permissionIds })
+      const { error } = await api.admin
+        .roles({ id: role.roleId })
+        .patch({ name, description, permissionIds })
       if (error) throw wrapEdenError(error, 'Failed to update role.')
     },
     onSuccess: () => {
@@ -48,14 +58,10 @@ export function SortableRoleCard({
     },
   })
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: role.roleId, disabled: !canEdit })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: role.roleId,
+    disabled: !canEdit,
+  })
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -77,7 +83,7 @@ export function SortableRoleCard({
             <GripVertical className="size-5 text-muted-foreground" />
           </button>
         )}
-        <div className={canEdit ? "transition-all duration-200 ease-out group-hover:pl-10" : ""}>
+        <div className={canEdit ? 'transition-all duration-200 ease-out group-hover:pl-10' : ''}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
@@ -97,7 +103,12 @@ export function SortableRoleCard({
               <div className="flex gap-2">
                 {canEdit && (
                   <>
-                    <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditOpen(true)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setEditOpen(true)}
+                    >
                       <Edit className="size-4" />
                       Edit
                     </Button>
@@ -125,9 +136,11 @@ export function SortableRoleCard({
                           disabled={isPendingSetDefault}
                           onClick={() => onSetDefault(role.roleId)}
                         >
-                          {isPendingSetDefault
-                            ? <Loader2 className="size-4 animate-spin" />
-                            : <Star className="size-4" />}
+                          {isPendingSetDefault ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Star className="size-4" />
+                          )}
                           Set as Default
                         </Button>
                         <Button
@@ -137,9 +150,11 @@ export function SortableRoleCard({
                           disabled={isPendingDelete}
                           onClick={() => onDelete(role.roleId)}
                         >
-                          {isPendingDelete
-                            ? <Loader2 className="size-4 animate-spin" />
-                            : <Trash2 className="size-4" />}
+                          {isPendingDelete ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
                           Delete
                         </Button>
                       </>
@@ -154,11 +169,15 @@ export function SortableRoleCard({
               <p className="text-sm font-medium mb-3">Permissions ({role.permissions.length})</p>
               <div className="flex flex-wrap gap-2">
                 {role.permissions.map((permId) => {
-                  const perm = permissions.find(p => p.permissionId === permId)
+                  const perm = permissions.find((p) => p.permissionId === permId)
                   return perm ? (
-                    <Badge key={permId} variant="secondary">{perm.description ?? perm.name}</Badge>
+                    <Badge key={permId} variant="secondary">
+                      {perm.description ?? perm.name}
+                    </Badge>
                   ) : (
-                    <Badge key={permId} variant="secondary">{permId}</Badge>
+                    <Badge key={permId} variant="secondary">
+                      {permId}
+                    </Badge>
                   )
                 })}
               </div>

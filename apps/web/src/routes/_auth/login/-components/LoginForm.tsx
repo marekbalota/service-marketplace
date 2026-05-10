@@ -1,31 +1,30 @@
-import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useState, useEffect } from "react"
-import { useNavigate, Link } from "@tanstack/react-router"
-import { Turnstile } from "@marsidev/react-turnstile"
-import { authClient } from "#/auth"
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from '@tanstack/react-router'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
 import { handleBanError } from '#/lib/ban-handler'
 import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
-import { env } from "#/env"
-import { useAppTheme } from "#/lib/theme"
-import { Button } from "#/components/ui/button"
-import { Checkbox } from "#/components/ui/checkbox"
-import { Input } from "#/components/ui/input"
-import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
-import { Label } from "#/components/ui/label"
-import { currentUserQueryOptions } from "#/lib/queries/users"
+import { env } from '#/env'
+import { useAppTheme } from '#/lib/theme'
+import { Button } from '#/components/ui/button'
+import { Checkbox } from '#/components/ui/checkbox'
+import { Input } from '#/components/ui/input'
+import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
+import { Label } from '#/components/ui/label'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 
 const loginSchema = z.object({
-  email: z.email("Please enter a valid email"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean(),
 })
 
 type LoginValues = z.infer<typeof loginSchema>
-
 
 export function LoginForm({ redirect }: { redirect?: string }) {
   const navigate = useNavigate()
@@ -35,8 +34,8 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const theme = useAppTheme()
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", rememberMe: false },
-    mode: "onTouched",
+    defaultValues: { email: '', password: '', rememberMe: false },
+    mode: 'onTouched',
   })
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     return () => clearInterval(id)
   }, [rateLimitSeconds])
 
-  const watchedEmail = form.watch("email")
+  const watchedEmail = form.watch('email')
   const isValidEmail = z.email().safeParse(watchedEmail).success
 
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
@@ -62,10 +61,10 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       password: values.password,
       rememberMe: values.rememberMe,
       fetchOptions: {
-        headers: { "x-captcha-response": captchaToken! },
+        headers: { 'x-captcha-response': captchaToken! },
         onError: (ctx) => {
           if (ctx.response.status === 429) {
-            const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "300", 10)
+            const retryAfter = parseInt(ctx.response.headers.get('X-Retry-After') ?? '300', 10)
             setRateLimitSeconds(retryAfter)
           }
         },
@@ -82,14 +81,14 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       const body = parseAuthErrorBody(error)
       if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
         setCaptchaToken(null)
-        form.setError("root", { message: body.message as string ?? error.message })
+        form.setError('root', { message: (body.message as string) ?? error.message })
         return
       }
-      void navigate({ to: "/verify-email", search: { email: values.email } })
+      void navigate({ to: '/verify-email', search: { email: values.email } })
       return
     }
     setCaptchaToken(null)
-    form.setError("root", { message: error.message })
+    form.setError('root', { message: error.message })
   }
 
   return (
@@ -161,14 +160,14 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           Forgot your password?
         </Link>
       </div>
-      <div className={challengeVisible ? undefined : "!hidden"}>
+      <div className={challengeVisible ? undefined : '!hidden'}>
         <Turnstile
           siteKey={env.turnstileSiteKey}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
           onError={() => setCaptchaToken(null)}
           onBeforeInteractive={() => setChallengeVisible(true)}
-          options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+          options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
         />
       </div>
       <FieldError errors={[form.formState.errors.root]} />
@@ -180,8 +179,8 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         {rateLimitSeconds > 0
           ? `Try again in ${formatCountdown(rateLimitSeconds)}`
           : form.formState.isSubmitting
-            ? "Signing in…"
-            : "Log in"}
+            ? 'Signing in…'
+            : 'Log in'}
       </Button>
     </form>
   )

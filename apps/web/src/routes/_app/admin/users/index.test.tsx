@@ -31,9 +31,12 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 vi.mock('#/api', () => ({
   api: {
     admin: {
-      users: Object.assign(vi.fn(() => ({})), {
-        get: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }),
+      users: Object.assign(
+        vi.fn(() => ({})),
+        {
+          get: vi.fn().mockResolvedValue({ data: [], error: null }),
+        },
+      ),
       roles: { get: vi.fn().mockResolvedValue({ data: [], error: null }) },
     },
   },

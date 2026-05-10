@@ -10,7 +10,9 @@ import { UsersTable } from './UsersTable'
 
 const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
 const mockUseNavigate = vi.hoisted(() => vi.fn(() => vi.fn()))
-const mockUseSearch = vi.hoisted(() => vi.fn(() => ({ q: '', role: 'all', status: 'all', page: 1 })))
+const mockUseSearch = vi.hoisted(() =>
+  vi.fn(() => ({ q: '', role: 'all', status: 'all', page: 1 })),
+)
 
 vi.mock('../index', () => ({
   Route: {
@@ -52,13 +54,16 @@ vi.mock('#/lib/queries/users', () => ({
 vi.mock('#/api', () => ({
   api: {
     admin: {
-      users: Object.assign(vi.fn(() => ({
-        role: { patch: vi.fn().mockResolvedValue({ error: null }) },
-        ban: { patch: vi.fn().mockResolvedValue({ error: null }) },
-        unban: { patch: vi.fn().mockResolvedValue({ error: null }) },
-      })), {
-        get: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }),
+      users: Object.assign(
+        vi.fn(() => ({
+          role: { patch: vi.fn().mockResolvedValue({ error: null }) },
+          ban: { patch: vi.fn().mockResolvedValue({ error: null }) },
+          unban: { patch: vi.fn().mockResolvedValue({ error: null }) },
+        })),
+        {
+          get: vi.fn().mockResolvedValue({ data: [], error: null }),
+        },
+      ),
       roles: {
         assignable: { get: vi.fn().mockResolvedValue({ data: [], error: null }) },
       },
@@ -107,9 +112,9 @@ describe('UsersTable', () => {
       isFetching: false,
     })
     await renderTable()
-    expect(screen.getByText('12')).toBeInTheDocument()  // Total Users
-    expect(screen.getByText('9')).toBeInTheDocument()   // Active Users (12 - 3)
-    expect(screen.getByText('3')).toBeInTheDocument()   // Banned
+    expect(screen.getByText('12')).toBeInTheDocument() // Total Users
+    expect(screen.getByText('9')).toBeInTheDocument() // Active Users (12 - 3)
+    expect(screen.getByText('3')).toBeInTheDocument() // Banned
   })
 
   it('renders a user card for each user', async () => {

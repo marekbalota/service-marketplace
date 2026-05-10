@@ -1,23 +1,23 @@
-import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useState } from "react"
-import { CheckCircle2, XCircle } from "lucide-react"
-import { Link } from "@tanstack/react-router"
-import { authClient } from "#/auth"
-import { Button, buttonVariants } from "#/components/ui/button"
-import { Input } from "#/components/ui/input"
-import { Field, FieldError, FieldLabel } from "#/components/ui/field"
-import { Card, CardContent, CardHeader } from "#/components/ui/card"
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useState } from 'react'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { authClient } from '#/auth'
+import { Button, buttonVariants } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Field, FieldError, FieldLabel } from '#/components/ui/field'
+import { Card, CardContent, CardHeader } from '#/components/ui/card'
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
   })
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
@@ -31,8 +31,8 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
   const [succeeded, setSucceeded] = useState(false)
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { newPassword: "", confirmPassword: "" },
-    mode: "onTouched",
+    defaultValues: { newPassword: '', confirmPassword: '' },
+    mode: 'onTouched',
   })
 
   const onSubmit: SubmitHandler<ResetPasswordValues> = async (values) => {
@@ -41,7 +41,7 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
       token: token!,
     })
     if (error) {
-      form.setError("root", { message: error.message ?? "An unexpected error occurred" })
+      form.setError('root', { message: error.message ?? 'An unexpected error occurred' })
       return
     }
     setSucceeded(true)
@@ -60,7 +60,7 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             This reset link is invalid or has expired.
           </p>
-          <Link to="/forgot-password" className={buttonVariants({ className: "w-full" })}>
+          <Link to="/forgot-password" className={buttonVariants({ className: 'w-full' })}>
             Request a new link
           </Link>
         </CardContent>
@@ -81,7 +81,7 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             Your password has been reset. You can now sign in with your new password.
           </p>
-          <Link to="/login" className={buttonVariants({ className: "w-full" })}>
+          <Link to="/login" className={buttonVariants({ className: 'w-full' })}>
             Sign in
           </Link>
         </CardContent>
@@ -134,7 +134,7 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           />
           <FieldError errors={[form.formState.errors.root]} />
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Resetting…" : "Reset password"}
+            {form.formState.isSubmitting ? 'Resetting…' : 'Reset password'}
           </Button>
         </form>
       </CardContent>

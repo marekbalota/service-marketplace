@@ -3,7 +3,7 @@ import { Permissions, hasAnyPermission } from '@marketplace/shared'
 
 export const Route = createFileRoute('/_app/admin')({
   component: AdminLayout,
-  beforeLoad: async ({ context : { user }, location }) => {
+  beforeLoad: async ({ context: { user }, location }) => {
     if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
     const permissions = user?.role?.permissions ?? []
     const hasAdminAccess = hasAnyPermission(permissions, [

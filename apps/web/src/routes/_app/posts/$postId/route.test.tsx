@@ -80,12 +80,16 @@ describe('PostDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseSuspenseQuery.mockReturnValue({ data: basePost })
-    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
   })
 
   it('renders the post title', async () => {
     await renderPage()
-    expect(screen.getByRole('heading', { level: 1, name: /expert lawn care service/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: /expert lawn care service/i }),
+    ).toBeInTheDocument()
   })
 
   it('renders the Description section', async () => {
@@ -125,7 +129,11 @@ describe('PostDetailPage', () => {
   it('does not show Edit button for non-owner', async () => {
     const { useActiveProfile } = await import('#/context/activeProfile')
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
+      activeProfile: {
+        userProfileId: 'profile-visitor',
+        name: 'Alice',
+        email: 'alice@example.com',
+      },
     } as ReturnType<typeof useActiveProfile>)
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { userId: 'u1' },

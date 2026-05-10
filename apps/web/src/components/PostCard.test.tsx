@@ -1,7 +1,12 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { PostCard, type Post } from './PostCard'
 
 vi.mock('#/lib/queries/users', () => ({
@@ -14,9 +19,12 @@ vi.mock('#/context/activeProfile', () => ({
 
 vi.mock('#/api', () => ({
   api: {
-    favourites: Object.assign(vi.fn(() => ({ post: vi.fn(), delete: vi.fn() })), {
-      get: vi.fn(),
-    }),
+    favourites: Object.assign(
+      vi.fn(() => ({ post: vi.fn(), delete: vi.fn() })),
+      {
+        get: vi.fn(),
+      },
+    ),
   },
 }))
 

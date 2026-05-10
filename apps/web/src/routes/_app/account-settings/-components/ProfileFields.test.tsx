@@ -12,7 +12,7 @@ function Wrapper({ defaultValues }: { defaultValues?: Partial<ProfileFormValues>
     mode: 'onTouched',
   })
   return (
-    <form onSubmit={form.handleSubmit(() => {})}>
+    <form noValidate onSubmit={form.handleSubmit(() => {})}>
       <ProfileFields control={form.control} />
       <button type="submit">Submit</button>
     </form>
@@ -54,7 +54,10 @@ describe('ProfileFields', () => {
     render(<Wrapper defaultValues={{ name: 'Alice', email: 'bad' }} />)
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('email@example.com')).toHaveAttribute('aria-invalid', 'true')
+      expect(screen.getByPlaceholderText('email@example.com')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
     })
   })
 })

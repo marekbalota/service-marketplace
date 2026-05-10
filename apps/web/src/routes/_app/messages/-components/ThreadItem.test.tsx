@@ -1,13 +1,20 @@
 import { act, render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { ThreadItem } from './ThreadItem'
 import type { Thread } from '../-queries/threads'
 
 async function renderWithRouter(ui: React.ReactElement) {
   const rootRoute = createRootRoute({ component: () => ui })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
-  await act(async () => { render(<RouterProvider router={router} />) })
+  await act(async () => {
+    render(<RouterProvider router={router} />)
+  })
 }
 
 const baseThread: Thread = {
@@ -15,7 +22,11 @@ const baseThread: Thread = {
   postId: 'post-1',
   postTitle: 'Math Tutoring',
   otherPartyName: 'Bob Smith',
-  lastMessage: { content: 'Is this still available?', createdAt: new Date(Date.now() - 5 * 60 * 1000), sentByMe: false },
+  lastMessage: {
+    content: 'Is this still available?',
+    createdAt: new Date(Date.now() - 5 * 60 * 1000),
+    sentByMe: false,
+  },
   unreadCount: 0,
   myRole: 'initiator',
   postDeleted: false,

@@ -1,24 +1,23 @@
-import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useState, useEffect } from "react"
-import { CheckCircle2 } from "lucide-react"
-import { Turnstile } from "@marsidev/react-turnstile"
-import { authClient } from "#/auth"
-import { env } from "#/env"
-import { useAppTheme } from "#/lib/theme"
-import { formatCountdown } from "#/lib/format"
-import { Button } from "#/components/ui/button"
-import { Input } from "#/components/ui/input"
-import { Field, FieldError, FieldLabel } from "#/components/ui/field"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card"
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useState, useEffect } from 'react'
+import { CheckCircle2 } from 'lucide-react'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { authClient } from '#/auth'
+import { env } from '#/env'
+import { useAppTheme } from '#/lib/theme'
+import { formatCountdown } from '#/lib/format'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Field, FieldError, FieldLabel } from '#/components/ui/field'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 
 const forgotPasswordSchema = z.object({
-  email: z.email("Please enter a valid email"),
+  email: z.email('Please enter a valid email'),
 })
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
-
 
 export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) {
   const [confirmed, setConfirmed] = useState(false)
@@ -28,8 +27,8 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
   const theme = useAppTheme()
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: defaultEmail ?? "" },
-    mode: "onTouched",
+    defaultValues: { email: defaultEmail ?? '' },
+    mode: 'onTouched',
   })
 
   useEffect(() => {
@@ -50,10 +49,10 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
     const { error } = await authClient.requestPasswordReset({
       email: values.email,
       fetchOptions: {
-        headers: { "x-captcha-response": captchaToken! },
+        headers: { 'x-captcha-response': captchaToken! },
         onError: (ctx) => {
           if (ctx.response.status === 429) {
-            const retryAfter = parseInt(ctx.response.headers.get("X-Retry-After") ?? "3600", 10)
+            const retryAfter = parseInt(ctx.response.headers.get('X-Retry-After') ?? '3600', 10)
             setRateLimitSeconds(retryAfter)
           }
         },
@@ -62,7 +61,7 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
     if (error?.status === 429) return
     if (error) {
       setCaptchaToken(null)
-      form.setError("root", { message: error.message })
+      form.setError('root', { message: error.message })
       return
     }
     setConfirmed(true)
@@ -110,14 +109,14 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
               </Field>
             )}
           />
-          <div className={challengeVisible ? undefined : "!hidden"}>
+          <div className={challengeVisible ? undefined : '!hidden'}>
             <Turnstile
               siteKey={env.turnstileSiteKey}
               onSuccess={setCaptchaToken}
               onExpire={() => setCaptchaToken(null)}
               onError={() => setCaptchaToken(null)}
               onBeforeInteractive={() => setChallengeVisible(true)}
-              options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+              options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
             />
           </div>
           <FieldError errors={[form.formState.errors.root]} />
@@ -129,8 +128,8 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
             {rateLimitSeconds > 0
               ? `Try again in ${formatCountdown(rateLimitSeconds)}`
               : form.formState.isSubmitting
-                ? "Sending…"
-                : "Send reset link"}
+                ? 'Sending…'
+                : 'Send reset link'}
           </Button>
         </form>
       </CardContent>

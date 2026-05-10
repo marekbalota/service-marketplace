@@ -7,14 +7,9 @@ export function NotFound() {
         404
       </p>
       <h1 className="mb-4 text-3xl font-semibold text-foreground">Page not found</h1>
-      <p className="mb-8 text-muted-foreground">
-        The page you're looking for doesn't exist.
-      </p>
+      <p className="mb-8 text-muted-foreground">The page you're looking for doesn't exist.</p>
       <div className="flex gap-2 justify-center">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-        >
+        <Button variant="outline" onClick={() => window.history.back()}>
           Go Back
         </Button>
       </div>

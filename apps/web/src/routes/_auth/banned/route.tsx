@@ -1,38 +1,38 @@
-import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router';
-import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
+import { Button } from '#/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 
 export const Route = createFileRoute('/_auth/banned')({
   component: BannedPage,
   beforeLoad: async () => {
     if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem('banInfo')) {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/' })
     }
   },
-});
+})
 
 interface BanInfo {
-  reason?: string | null;
-  expiresAt?: string | null;
+  reason?: string | null
+  expiresAt?: string | null
 }
 
 function BannedPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [banInfo] = useState<BanInfo>(() => {
-    const stored = sessionStorage.getItem('banInfo');
-    return stored ? JSON.parse(stored) : {};
-  });
+    const stored = sessionStorage.getItem('banInfo')
+    return stored ? JSON.parse(stored) : {}
+  })
 
   const handleUnderstand = () => {
-    sessionStorage.removeItem('banInfo');
-    navigate({ to: '/' });
-  };
+    sessionStorage.removeItem('banInfo')
+    navigate({ to: '/' })
+  }
 
   const formattedExpiration = banInfo.expiresAt
     ? new Date(banInfo.expiresAt).toLocaleString()
-    : 'Permanent';
+    : 'Permanent'
 
   return (
     <Card className="w-full max-w-md">
@@ -64,5 +64,5 @@ function BannedPage() {
         </Button>
       </CardContent>
     </Card>
-  );
+  )
 }

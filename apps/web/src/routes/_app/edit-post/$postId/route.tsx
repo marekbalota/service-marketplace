@@ -16,25 +16,19 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { MultiSelect } from '#/components/ui/multi-select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '#/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Field, FieldError } from '#/components/ui/field'
 import { Permissions, hasPermissions } from '@marketplace/shared'
 import { PricingField } from '#/components/PricingField'
 
 const schema = z.object({
-  postType:    z.enum(['OFFER', 'REQUEST']),
-  postTitle:   z.string().min(3, 'Title must be at least 3 characters'),
+  postType: z.enum(['OFFER', 'REQUEST']),
+  postTitle: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   categoryIds: z.array(z.string()),
-  price:       z.string().optional(),
-  rateType:    z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
+  price: z.string().optional(),
+  rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -133,12 +127,12 @@ function EditPostPage() {
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: {
-      postType:    post.postType as 'OFFER' | 'REQUEST',
-      postTitle:   post.postTitle,
+      postType: post.postType as 'OFFER' | 'REQUEST',
+      postTitle: post.postTitle,
       description: post.description,
       categoryIds: post.categories.map((c) => c.categoryId),
-      price:       post.price ?? '',
-      rateType:    (post.rateType ?? undefined) as 'HOURLY' | 'DAILY' | 'FIXED' | undefined,
+      price: post.price ?? '',
+      rateType: (post.rateType ?? undefined) as 'HOURLY' | 'DAILY' | 'FIXED' | undefined,
     },
   })
 
@@ -159,12 +153,12 @@ function EditPostPage() {
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       const body = {
-        postTitle:   values.postTitle,
+        postTitle: values.postTitle,
         description: values.description,
-        postType:    values.postType,
+        postType: values.postType,
         categoryIds: values.categoryIds,
-        price:       values.price || null,
-        rateType:    values.rateType ?? null,
+        price: values.price || null,
+        rateType: values.rateType ?? null,
       }
       const { data, error } = await api.posts({ id: postId }).patch(body)
       if (error) throw wrapEdenError(error, 'Failed to update post.')
@@ -200,7 +194,13 @@ function EditPostPage() {
               name="postTitle"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={FileText} iconBgClassName="bg-blue-100 dark:bg-blue-500/20" iconClassName="text-blue-600 dark:text-blue-300" label="Title *" htmlFor="postTitle" />
+                  <FieldIconHeader
+                    icon={FileText}
+                    iconBgClassName="bg-blue-100 dark:bg-blue-500/20"
+                    iconClassName="text-blue-600 dark:text-blue-300"
+                    label="Title *"
+                    htmlFor="postTitle"
+                  />
                   <Input
                     {...field}
                     id="postTitle"
@@ -218,7 +218,13 @@ function EditPostPage() {
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={AlignLeft} iconBgClassName="bg-muted" iconClassName="text-muted-foreground" label="Description *" htmlFor="description" />
+                  <FieldIconHeader
+                    icon={AlignLeft}
+                    iconBgClassName="bg-muted"
+                    iconClassName="text-muted-foreground"
+                    label="Description *"
+                    htmlFor="description"
+                  />
                   <Textarea
                     {...field}
                     id="description"
@@ -237,11 +243,19 @@ function EditPostPage() {
               name="categoryIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader icon={Tag} iconBgClassName="bg-green-100 dark:bg-green-500/20" iconClassName="text-green-600 dark:text-green-300" label="Categories (Optional)" />
+                  <FieldIconHeader
+                    icon={Tag}
+                    iconBgClassName="bg-green-100 dark:bg-green-500/20"
+                    iconClassName="text-green-600 dark:text-green-300"
+                    label="Categories (Optional)"
+                  />
                   <MultiSelect
                     options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
                     value={field.value}
-                    onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                    onValueChange={(v) => {
+                      field.onChange(v)
+                      field.onBlur()
+                    }}
                     placeholder="Select categories"
                     searchPlaceholder="Search categories..."
                     searchable

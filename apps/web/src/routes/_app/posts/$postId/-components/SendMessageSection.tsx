@@ -8,7 +8,13 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '#/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '#/components/ui/dialog'
 import { cn } from '#/lib/utils'
 import { existingThreadQueryOptions } from '../-queries/threads'
 import { useCurrentUser } from '#/lib/queries/users'
@@ -35,7 +41,10 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
     },
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ['threads'] })
-      void router.navigate({ to: '/messages/$threadId', params: { threadId: (data as { threadId: string }).threadId } })
+      void router.navigate({
+        to: '/messages/$threadId',
+        params: { threadId: (data as { threadId: string }).threadId },
+      })
     },
   })
 
@@ -83,7 +92,12 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
         <MessageSquare className="size-4" />
         Send Message
       </Button>
-      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose() }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) handleClose()
+        }}
+      >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Send Message</DialogTitle>
@@ -102,10 +116,7 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
             <Button variant="outline" onClick={handleClose} disabled={send.isPending}>
               Cancel
             </Button>
-            <Button
-              disabled={!draft.trim() || send.isPending}
-              onClick={() => send.mutate()}
-            >
+            <Button disabled={!draft.trim() || send.isPending} onClick={() => send.mutate()}>
               {send.isPending ? 'Sending...' : 'Send'}
             </Button>
           </DialogFooter>

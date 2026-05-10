@@ -1,16 +1,17 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const WEB_URL = process.env.FRONTEND_URL ?? 'http://localhost:3000'
+const API_URL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001'
+
 export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [
-    ['list'], 
-    ['html', { outputFolder: 'playwright-report' }]] : 'list',
+  reporter: process.env.CI ? [['list'], ['html', { outputFolder: 'playwright-report' }]] : 'list',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
+    baseURL: WEB_URL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -19,7 +20,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  
+
   ...(process.env.CI
     ? {}
     : {
@@ -27,14 +28,14 @@ export default defineConfig({
           {
             command: 'bun run dev',
             cwd: './apps/api',
-            url: 'http://localhost:3001',
-            reuseExistingServer: false,
+            url: API_URL,
+            reuseExistingServer: true,
           },
           {
             command: 'bun run dev',
             cwd: './apps/web',
-            url: 'http://localhost:3000',
-            reuseExistingServer: false,
+            url: WEB_URL,
+            reuseExistingServer: true,
           },
         ],
       }),

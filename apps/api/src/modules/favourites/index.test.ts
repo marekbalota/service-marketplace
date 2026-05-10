@@ -30,7 +30,11 @@ beforeAll(async () => {
   })
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
-  const meData = await (await app.handle(new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }))).json() as { profiles: { userProfileId: string }[] }
+  const meData = (await (
+    await app.handle(
+      new Request('http://localhost/users/me', { headers: { Cookie: sessionCookie } }),
+    )
+  ).json()) as { profiles: { userProfileId: string }[] }
   profileId = meData.profiles[0]?.userProfileId ?? ''
 
   const { data: post } = await client.posts.post(
@@ -70,29 +74,26 @@ describe('POST /favourites/:postId', () => {
   })
 
   it('returns 404 for non-existent post', async () => {
-    const { error } = await client.favourites({ postId: '00000000-0000-0000-0000-000000000000' }).post(
-      { profileId },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .favourites({ postId: '00000000-0000-0000-0000-000000000000' })
+      .post({ profileId }, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(404)
   })
 
   it('adds a favourite and returns 201', async () => {
-    const { data, error } = await client.favourites({ postId }).post(
-      { profileId },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { data, error } = await client
+      .favourites({ postId })
+      .post({ profileId }, { headers: { Cookie: sessionCookie } })
     expect(error).toBeNull()
     expect(data!.postId).toBe(postId)
     expect(typeof data!.userProfileId).toBe('string')
   })
 
   it('returns 409 for duplicate favourite', async () => {
-    const { error } = await client.favourites({ postId }).post(
-      { profileId },
-      { headers: { Cookie: sessionCookie } },
-    )
-    expect((error?.status as number)).toBe(409)
+    const { error } = await client
+      .favourites({ postId })
+      .post({ profileId }, { headers: { Cookie: sessionCookie } })
+    expect(error?.status as number).toBe(409)
   })
 })
 
@@ -103,10 +104,9 @@ describe('DELETE /favourites/:postId', () => {
   })
 
   it('removes a favourite and returns 204', async () => {
-    const { error } = await client.favourites({ postId }).delete(
-      { profileId },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .favourites({ postId })
+      .delete({ profileId }, { headers: { Cookie: sessionCookie } })
     expect(error).toBeNull()
 
     const { data } = await client.favourites.get({
@@ -118,11 +118,9 @@ describe('DELETE /favourites/:postId', () => {
   })
 
   it('returns 404 for non-existent favourite', async () => {
-    const { error } = await client.favourites({ postId: '00000000-0000-0000-0000-000000000000' }).delete(
-      { profileId },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .favourites({ postId: '00000000-0000-0000-0000-000000000000' })
+      .delete({ profileId }, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(404)
   })
 })
-

@@ -34,10 +34,15 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   // Image state — same pattern as profile create/edit
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
   const pendingFilesRef = useRef(pendingFiles)
-  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
-  useEffect(() => () => {
-    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
-  }, [])
+  useEffect(() => {
+    pendingFilesRef.current = pendingFiles
+  }, [pendingFiles])
+  useEffect(
+    () => () => {
+      for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+    },
+    [],
+  )
 
   const {
     control,
@@ -71,9 +76,9 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
           } catch {
             return false
           }
-        })
+        }),
       )
-      const imageFailCount = uploadResults.filter(success => !success).length
+      const imageFailCount = uploadResults.filter((success) => !success).length
 
       return { imageFailCount }
     },
@@ -93,13 +98,13 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
 
   function addFile(file: File) {
     const preview = URL.createObjectURL(file)
-    setPendingFiles(prev => [...prev, { file, preview }])
+    setPendingFiles((prev) => [...prev, { file, preview }])
   }
 
   function removeFile(index: number) {
     const preview = pendingFiles[index]?.preview
     if (preview) URL.revokeObjectURL(preview)
-    setPendingFiles(prev => prev.filter((_, i) => i !== index))
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const onSubmit: SubmitHandler<ReviewFormData> = (data) => {
@@ -108,7 +113,11 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-lg border bg-card p-4">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4 rounded-lg border bg-card p-4"
+    >
       <div className="space-y-2">
         <Label>Your Rating *</Label>
         <Controller
@@ -147,7 +156,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       <div className="space-y-2">
         <Label>Images (Optional)</Label>
         <ImagePickerGrid
-          previews={pendingFiles.map(f => f.preview)}
+          previews={pendingFiles.map((f) => f.preview)}
           onFilePicked={addFile}
           onRemove={removeFile}
         />

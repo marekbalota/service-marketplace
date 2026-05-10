@@ -49,8 +49,8 @@ export const imagesRoutes = new Elysia({ prefix: '/images' })
       set.status = 204
     },
     {
-      auth:     true,
-      params:   ImagesModel.deleteParams,
+      auth: true,
+      params: ImagesModel.deleteParams,
       response: {
         204: t.Void(),
         ...unauthorizedResponse,

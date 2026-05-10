@@ -28,7 +28,13 @@ function ThreadListSkeleton() {
   )
 }
 
-function ThreadSidebar({ profileId, activeThreadId }: { profileId: string; activeThreadId?: string }) {
+function ThreadSidebar({
+  profileId,
+  activeThreadId,
+}: {
+  profileId: string
+  activeThreadId?: string
+}) {
   const { data: threads } = useSuspenseQuery(threadsQueryOptions(profileId))
 
   if (threads.length === 0) {
@@ -46,7 +52,11 @@ function ThreadSidebar({ profileId, activeThreadId }: { profileId: string; activ
   return (
     <div className="space-y-0.5 p-2">
       {threads.map((thread) => (
-        <ThreadItem key={thread.threadId} thread={thread} isActive={thread.threadId === activeThreadId} />
+        <ThreadItem
+          key={thread.threadId}
+          thread={thread}
+          isActive={thread.threadId === activeThreadId}
+        />
       ))}
     </div>
   )

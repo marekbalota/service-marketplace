@@ -1,4 +1,5 @@
 ## Functional requirements:
+
 - Users can register for an account using an email and password.
 - Users can log in and log out.
 - Users can switch between theirs active user profiles.
@@ -17,6 +18,7 @@
 - Users get notify by email when they register or receive message
 
 ## Nonfunctional requirements:
+
 - User passwords must be hashed before being saved to the database.
 - Only the creator of a post and admins can edit or delete it.
 - The website should be responsive (usable on both desktop and mobile devices).

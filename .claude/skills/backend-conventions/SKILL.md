@@ -75,16 +75,15 @@ import { db } from '../../db'
 Thin controller — only wires validation schemas and service calls. Always use `async/await` and declare response codes:
 
 ```ts
-export const postsRoutes = new Elysia({ prefix: '/posts' })
-  .get(
-    '/',
-    async ({ query }) => await PostsService.findAll(query),
-    {
-      query: PostsModel.findAllQuery,
-      response: { 200: PostsModel.findAllResponse },
-      detail: { summary: 'List posts', operationId: 'listPosts', tags: ['Posts'] },
-    },
-  )
+export const postsRoutes = new Elysia({ prefix: '/posts' }).get(
+  '/',
+  async ({ query }) => await PostsService.findAll(query),
+  {
+    query: PostsModel.findAllQuery,
+    response: { 200: PostsModel.findAllResponse },
+    detail: { summary: 'List posts', operationId: 'listPosts', tags: ['Posts'] },
+  },
+)
 ```
 
 ## OpenAPI / Swagger
@@ -129,7 +128,7 @@ describe('GET /posts', () => {
   it('returns 200 with items, total, and totalPages', async () => {
     const res = await app.handle(new Request('http://localhost/posts?size=5'))
     expect(res.status).toBe(200)
-    const body = await res.json() as { items: unknown[]; total: number; totalPages: number }
+    const body = (await res.json()) as { items: unknown[]; total: number; totalPages: number }
     expect(Array.isArray(body.items)).toBe(true)
     expect(typeof body.total).toBe('number')
   })
@@ -142,6 +141,7 @@ describe('GET /posts', () => {
 ```
 
 **What to cover for each route:**
+
 - Happy path: correct status + response shape
 - Each filter/query param: filters actually constrain results
 - Validation: invalid param values return 422

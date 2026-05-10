@@ -44,7 +44,7 @@ describe('useActiveProfile', () => {
       makeQueryResult([
         { userProfileId: 'p1', name: 'Alice' },
         { userProfileId: 'p2', name: 'Bob' },
-      ])
+      ]),
     )
     const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
@@ -56,7 +56,7 @@ describe('useActiveProfile', () => {
       makeQueryResult([
         { userProfileId: 'p1', name: 'Alice' },
         { userProfileId: 'p2', name: 'Bob' },
-      ])
+      ]),
     )
     const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p2')
@@ -64,18 +64,14 @@ describe('useActiveProfile', () => {
 
   it('falls back to first profile and updates localStorage when stored ID is not in profiles', () => {
     localStorage.setItem('activeProfileId', 'p-deleted')
-    mockUseCurrentUser.mockReturnValue(
-      makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }])
-    )
+    mockUseCurrentUser.mockReturnValue(makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }]))
     const { result } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
     expect(localStorage.getItem('activeProfileId')).toBe('p1')
   })
 
   it('clears activeProfile and localStorage when user becomes null', () => {
-    mockUseCurrentUser.mockReturnValue(
-      makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }])
-    )
+    mockUseCurrentUser.mockReturnValue(makeQueryResult([{ userProfileId: 'p1', name: 'Alice' }]))
     const { result, rerender } = renderHook(() => useActiveProfile(), { wrapper })
     expect(result.current.activeProfile?.userProfileId).toBe('p1')
 
@@ -91,7 +87,7 @@ describe('useActiveProfile', () => {
       makeQueryResult([
         { userProfileId: 'p1', name: 'Alice' },
         { userProfileId: 'p2', name: 'Bob' },
-      ])
+      ]),
     )
     const { result } = renderHook(() => useActiveProfile(), { wrapper })
 

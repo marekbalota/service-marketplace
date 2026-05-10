@@ -15,12 +15,7 @@ interface ImageLightboxProps {
   onClose: () => void
 }
 
-export function ImageLightbox({
-  images,
-  initialIndex = 0,
-  open,
-  onClose,
-}: ImageLightboxProps) {
+export function ImageLightbox({ images, initialIndex = 0, open, onClose }: ImageLightboxProps) {
   const [index, setIndex] = React.useState(initialIndex)
 
   // Sync index when the lightbox opens with a new initialIndex
@@ -32,22 +27,33 @@ export function ImageLightbox({
   const current = images[index]
 
   function prev() {
-    setIndex(i => (i - 1 + total) % total)
+    setIndex((i) => (i - 1 + total) % total)
   }
 
   function next() {
-    setIndex(i => (i + 1) % total)
+    setIndex((i) => (i + 1) % total)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); prev() }
-    if (e.key === 'ArrowRight') { e.preventDefault(); next() }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      prev()
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      next()
+    }
   }
 
   if (!current) return null
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose()
+      }}
+    >
       <DialogContent
         showCloseButton
         className="flex max-w-[95vw] flex-col items-center gap-3 p-6 sm:max-w-[95vw]"

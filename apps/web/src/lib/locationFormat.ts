@@ -8,9 +8,8 @@ export interface LocationFields {
 
 export function formatLocationDisplayName(loc: LocationFields): string {
   return (
-    [loc.street, loc.houseNumber, loc.city, loc.region, loc.country]
-      .filter(Boolean)
-      .join(', ') || 'Unknown location'
+    [loc.street, loc.houseNumber, loc.city, loc.region, loc.country].filter(Boolean).join(', ') ||
+    'Unknown location'
   )
 }
 
@@ -19,8 +18,8 @@ export function formatLocationDetail(
 ): string {
   return [
     loc.country && `Country: ${loc.country}`,
-    loc.region  && `• Region: ${loc.region}`,
-    loc.city    && `• City: ${loc.city}`,
+    loc.region && `• Region: ${loc.region}`,
+    loc.city && `• City: ${loc.city}`,
   ]
     .filter(Boolean)
     .join(' ')

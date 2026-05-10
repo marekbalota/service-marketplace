@@ -1,11 +1,7 @@
 import { ChevronDown, MapPin } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '#/lib/utils'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '#/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import { Button } from '#/components/ui/button'
 import { Route } from '../index'
 import { locationsDistinctQueryOptions } from '../-queries/locations'
@@ -35,9 +31,9 @@ export function LocationSelect() {
       search: (prev) => ({
         ...prev,
         country: undefined,
-        region:  undefined,
-        city:    undefined,
-        page:    undefined,
+        region: undefined,
+        city: undefined,
+        page: undefined,
       }),
     })
 
@@ -76,9 +72,9 @@ export function LocationSelect() {
                   search: (prev) => ({
                     ...prev,
                     country: val,
-                    region:  undefined,
-                    city:    undefined,
-                    page:    undefined,
+                    region: undefined,
+                    city: undefined,
+                    page: undefined,
                   }),
                 })
               }
@@ -98,8 +94,8 @@ export function LocationSelect() {
                   search: (prev) => ({
                     ...prev,
                     region: val,
-                    city:   undefined,
-                    page:   undefined,
+                    city: undefined,
+                    page: undefined,
                   }),
                 })
               }

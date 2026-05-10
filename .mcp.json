@@ -6,13 +6,7 @@
     },
     "shadcn": {
       "command": "cmd",
-      "args": [
-        "/c",
-        "bunx",
-        "--bun",
-        "shadcn@latest",
-        "mcp"
-      ]
+      "args": ["/c", "bunx", "--bun", "shadcn@latest", "mcp"]
     }
   }
 }

@@ -46,7 +46,13 @@ describe('PaginationBar', () => {
 
   it('shows an ellipsis when there is a gap in the page sequence', () => {
     render(<PaginationBar page={1} totalPages={10} onPageChange={vi.fn()} />)
-    expect(screen.getAllByRole('generic').some(el => el.textContent?.includes('…') || el.getAttribute('aria-label') === 'More pages')).toBe(true)
+    expect(
+      screen
+        .getAllByRole('generic')
+        .some(
+          (el) => el.textContent?.includes('…') || el.getAttribute('aria-label') === 'More pages',
+        ),
+    ).toBe(true)
   })
 
   it('does not render page buttons for middle pages when gap exists', () => {
@@ -57,7 +63,7 @@ describe('PaginationBar', () => {
 
   it('accepts a className prop and applies it to the wrapper', () => {
     const { container } = render(
-      <PaginationBar page={1} totalPages={3} onPageChange={vi.fn()} className="mt-8" />
+      <PaginationBar page={1} totalPages={3} onPageChange={vi.fn()} className="mt-8" />,
     )
     expect(container.firstChild).toHaveClass('mt-8')
   })

@@ -10,13 +10,13 @@ const OPTIONS = [
 
 /** Mocks offsetWidth so measurement-based overflow tests work in JSDOM. */
 function mockOffsetWidth(tagPx: number, overflowPx: number, containerPx: number) {
-  return vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(
-    function (this: HTMLElement) {
-      if ('mTag' in this.dataset) return tagPx
-      if ('mOverflow' in this.dataset) return overflowPx
-      return containerPx
-    },
-  )
+  return vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if ('mTag' in this.dataset) return tagPx
+    if ('mOverflow' in this.dataset) return overflowPx
+    return containerPx
+  })
 }
 
 describe('MultiSelect', () => {
@@ -26,16 +26,12 @@ describe('MultiSelect', () => {
   })
 
   it('shows "N selected" in text mode when items are selected', () => {
-    render(
-      <MultiSelect options={OPTIONS} value={['a', 'b']} displayMode="text" />,
-    )
+    render(<MultiSelect options={OPTIONS} value={['a', 'b']} displayMode="text" />)
     expect(screen.getByText('2 selected')).toBeInTheDocument()
   })
 
   it('shows tag badges with labels in tags mode', () => {
-    render(
-      <MultiSelect options={OPTIONS} value={['a', 'b']} displayMode="tags" />,
-    )
+    render(<MultiSelect options={OPTIONS} value={['a', 'b']} displayMode="tags" />)
     // Real tags have labelled Remove buttons; the measurement span (aria-hidden) does not
     expect(screen.getByRole('button', { name: 'Remove Option A' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Remove Option B' })).toBeInTheDocument()
@@ -47,9 +43,7 @@ describe('MultiSelect', () => {
     // tag0 + tag1 (50+4gap=54) + overflowW = 144 > 100 → break → visibleCount=1, overflow=2
     const mock = mockOffsetWidth(50, 36, 100)
     try {
-      render(
-        <MultiSelect options={OPTIONS} value={['a', 'b', 'c']} displayMode="tags" />,
-      )
+      render(<MultiSelect options={OPTIONS} value={['a', 'b', 'c']} displayMode="tags" />)
       // Only Option A has a Remove button (real visible tag)
       expect(screen.getByRole('button', { name: 'Remove Option A' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Remove Option B' })).not.toBeInTheDocument()
@@ -95,27 +89,13 @@ describe('MultiSelect', () => {
   })
 
   it('does not render × buttons on tags when disabled', () => {
-    render(
-      <MultiSelect
-        options={OPTIONS}
-        value={['a']}
-        displayMode="tags"
-        disabled
-      />,
-    )
-    expect(
-      screen.queryByRole('button', { name: 'Remove Option A' }),
-    ).not.toBeInTheDocument()
+    render(<MultiSelect options={OPTIONS} value={['a']} displayMode="tags" disabled />)
+    expect(screen.queryByRole('button', { name: 'Remove Option A' })).not.toBeInTheDocument()
   })
 
   it('applies tagClassName to tag badges', () => {
     render(
-      <MultiSelect
-        options={OPTIONS}
-        value={['a']}
-        displayMode="tags"
-        tagClassName="bg-red-500"
-      />,
+      <MultiSelect options={OPTIONS} value={['a']} displayMode="tags" tagClassName="bg-red-500" />,
     )
     const removeBtn = screen.getByRole('button', { name: 'Remove Option A' })
     expect(removeBtn.closest('.bg-red-500')).toBeInTheDocument()
@@ -131,13 +111,7 @@ describe('MultiSelect', () => {
 
   it('calls onValueChange with item added when an unselected option is clicked', () => {
     const handleChange = vi.fn()
-    render(
-      <MultiSelect
-        options={OPTIONS}
-        value={[]}
-        onValueChange={handleChange}
-      />,
-    )
+    render(<MultiSelect options={OPTIONS} value={[]} onValueChange={handleChange} />)
     fireEvent.click(screen.getByRole('combobox'))
     fireEvent.click(screen.getByText('Option B'))
     expect(handleChange).toHaveBeenCalledWith(['b'])
@@ -145,41 +119,21 @@ describe('MultiSelect', () => {
 
   it('calls onValueChange with item removed when a selected option is clicked', () => {
     const handleChange = vi.fn()
-    render(
-      <MultiSelect
-        options={OPTIONS}
-        value={['a', 'b']}
-        onValueChange={handleChange}
-      />,
-    )
+    render(<MultiSelect options={OPTIONS} value={['a', 'b']} onValueChange={handleChange} />)
     fireEvent.click(screen.getByRole('combobox'))
     fireEvent.click(screen.getByText('Option A'))
     expect(handleChange).toHaveBeenCalledWith(['b'])
   })
 
   it('renders CommandInput when searchable is true', () => {
-    render(
-      <MultiSelect
-        options={OPTIONS}
-        searchable
-        searchPlaceholder="Find option..."
-      />,
-    )
+    render(<MultiSelect options={OPTIONS} searchable searchPlaceholder="Find option..." />)
     fireEvent.click(screen.getByRole('combobox'))
     expect(screen.getByPlaceholderText('Find option...')).toBeInTheDocument()
   })
 
   it('does not render CommandInput when searchable is false', () => {
-    render(
-      <MultiSelect
-        options={OPTIONS}
-        searchable={false}
-        searchPlaceholder="Find option..."
-      />,
-    )
+    render(<MultiSelect options={OPTIONS} searchable={false} searchPlaceholder="Find option..." />)
     fireEvent.click(screen.getByRole('combobox'))
-    expect(
-      screen.queryByPlaceholderText('Find option...'),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Find option...')).not.toBeInTheDocument()
   })
 })

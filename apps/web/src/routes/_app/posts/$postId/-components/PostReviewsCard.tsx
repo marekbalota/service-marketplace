@@ -28,7 +28,7 @@ export function PostReviewsCard({ postId }: { postId: string }) {
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null)
 
   const hasReviewed = post.reviews.some(
-    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId
+    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId,
   )
   const showReviewButton = !isOwner && activeProfile && !hasReviewed
 
@@ -50,7 +50,12 @@ export function PostReviewsCard({ postId }: { postId: string }) {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
             {showReviewButton && (
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowReviewForm(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowReviewForm(true)}
+              >
                 <Star className="size-4" />
                 Leave a Review
               </Button>
@@ -67,16 +72,25 @@ export function PostReviewsCard({ postId }: { postId: string }) {
             <EmptyState message="No reviews yet." />
           ) : (
             <div className="space-y-4">
-              {post.reviews.map((review: { reviewId: string; reviewerName: string; createdAt: Date; rating: number; reviewDescription: string | null; reviewerId: string }) => (
-                <ReviewCard
-                  key={review.reviewId}
-                  review={review}
-                  onDelete={(id) => setDeletingReviewId(id)}
-                  isDeleting={deleteMutation.isPending}
-                  onReport={(id) => setReportingReviewId(id)}
-                  isAuthenticated={isAuthenticated}
-                />
-              ))}
+              {post.reviews.map(
+                (review: {
+                  reviewId: string
+                  reviewerName: string
+                  createdAt: Date
+                  rating: number
+                  reviewDescription: string | null
+                  reviewerId: string
+                }) => (
+                  <ReviewCard
+                    key={review.reviewId}
+                    review={review}
+                    onDelete={(id) => setDeletingReviewId(id)}
+                    isDeleting={deleteMutation.isPending}
+                    onReport={(id) => setReportingReviewId(id)}
+                    isAuthenticated={isAuthenticated}
+                  />
+                ),
+              )}
             </div>
           )}
         </CardContent>
@@ -84,7 +98,9 @@ export function PostReviewsCard({ postId }: { postId: string }) {
 
       <Dialog
         open={showReviewForm}
-        onOpenChange={(open) => { if (!open) setShowReviewForm(false) }}
+        onOpenChange={(open) => {
+          if (!open) setShowReviewForm(false)
+        }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
@@ -102,7 +118,9 @@ export function PostReviewsCard({ postId }: { postId: string }) {
 
       <Dialog
         open={reportingReviewId !== null}
-        onOpenChange={(open) => { if (!open) setReportingReviewId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setReportingReviewId(null)
+        }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
@@ -118,7 +136,10 @@ export function PostReviewsCard({ postId }: { postId: string }) {
               }}
               onSuccess={() => {
                 void queryClient.invalidateQueries({
-                  queryKey: hasReportedReviewQueryOptions(reportingReviewId!, activeProfile?.userProfileId ?? '').queryKey,
+                  queryKey: hasReportedReviewQueryOptions(
+                    reportingReviewId!,
+                    activeProfile?.userProfileId ?? '',
+                  ).queryKey,
                 })
                 setReportingReviewId(null)
               }}
@@ -135,7 +156,9 @@ export function PostReviewsCard({ postId }: { postId: string }) {
         confirmLabel="Delete"
         destructive
         isPending={deleteMutation.isPending}
-        onConfirm={() => { if (deletingReviewId) deleteMutation.mutate(deletingReviewId) }}
+        onConfirm={() => {
+          if (deletingReviewId) deleteMutation.mutate(deletingReviewId)
+        }}
         onClose={() => setDeletingReviewId(null)}
       />
     </>

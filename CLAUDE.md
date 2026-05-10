@@ -4,16 +4,16 @@ A service marketplace where users post offers or requests for services (e.g. tut
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 19, TanStack Start (SPA mode), Tailwind CSS v4, Shadcn/UI |
-| Backend | ElysiaJS |
-| ORM | Drizzle ORM |
-| Database | PostgreSQL 17 |
-| Runtime | Bun |
-| Data Fetching | TanStack Query v5 |
-| Validation | Zod v4 |
-| Testing | Vitest, Testing Library |
+| Layer         | Technology                                                      |
+| ------------- | --------------------------------------------------------------- |
+| Frontend      | React 19, TanStack Start (SPA mode), Tailwind CSS v4, Shadcn/UI |
+| Backend       | ElysiaJS                                                        |
+| ORM           | Drizzle ORM                                                     |
+| Database      | PostgreSQL 17                                                   |
+| Runtime       | Bun                                                             |
+| Data Fetching | TanStack Query v5                                               |
+| Validation    | Zod v4                                                          |
+| Testing       | Vitest, Testing Library                                         |
 
 ## Project Structure
 

@@ -22,9 +22,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   }
 })
 
-const mockGetSession = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ data: null, error: null }),
-)
+const mockGetSession = vi.hoisted(() => vi.fn().mockResolvedValue({ data: null, error: null }))
 const mockSendVerificationEmail = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ data: {}, error: null }),
 )
@@ -108,7 +106,9 @@ describe('VerifyEmailPage', () => {
   it('shows countdown in resend button after click', async () => {
     await renderPage()
     fireEvent.click(screen.getByRole('button', { name: /resend verification email/i }))
-    await act(async () => { vi.advanceTimersByTime(1000) })
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
     expect(screen.getByRole('button', { name: /resend \(59s\)/i })).toBeInTheDocument()
   })
 
@@ -131,7 +131,9 @@ describe('VerifyEmailPage', () => {
       error: null,
     })
     await renderPage()
-    await act(async () => { vi.advanceTimersByTime(3100) })
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+    })
     await waitFor(() => {
       expect(mockInvalidateQueries).toHaveBeenCalled()
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/' })
@@ -141,7 +143,9 @@ describe('VerifyEmailPage', () => {
   it('polling: does not navigate when getSession throws', async () => {
     mockGetSession.mockRejectedValue(new Error('network error'))
     await renderPage()
-    await act(async () => { vi.advanceTimersByTime(3100) })
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+    })
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
@@ -150,5 +154,4 @@ describe('VerifyEmailPage', () => {
     const link = screen.getByRole('link', { name: /already have an account/i })
     expect(link).toHaveAttribute('href', '/login')
   })
-
 })

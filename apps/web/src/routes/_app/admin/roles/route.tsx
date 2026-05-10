@@ -63,7 +63,7 @@ function CreateRoleAction({ userPermissionNames }: { userPermissionNames: string
   const queryClient = useQueryClient()
 
   const grantablePermissionIds = new Set(
-    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+    permissions.filter((p) => userPermissionNames.includes(p.name)).map((p) => p.permissionId),
   )
 
   const createMutation = useMutation({

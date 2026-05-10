@@ -1,11 +1,7 @@
 import * as React from 'react'
 import { ChevronDown, Loader2, X } from 'lucide-react'
 import { cn } from '#/lib/utils'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '#/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import { Button } from '#/components/ui/button'
 import {
   Command,
@@ -17,7 +13,10 @@ import {
 } from '#/components/ui/command'
 
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
 }
 
 const MAX_INITIAL = 8
@@ -79,9 +78,7 @@ export function LocationCombobox({
         <span className={cn('flex-1 truncate text-left', !value && 'text-muted-foreground')}>
           {value ?? placeholder}
         </span>
-        {isFetching && (
-          <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
-        )}
+        {isFetching && <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />}
         {value && !disabled && !isFetching && (
           <Button
             type="button"

@@ -9,7 +9,7 @@ export function PostTypeBadge({ postType }: { postType: 'OFFER' | 'REQUEST' }) {
       className={cn(
         isOffer
           ? 'bg-offer-bg text-offer-fg hover:bg-offer-bg'
-          : 'border-request-border text-request-fg'
+          : 'border-request-border text-request-fg',
       )}
     >
       {isOffer ? 'Offering' : 'Requesting'}

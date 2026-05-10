@@ -1,13 +1,13 @@
 import { mock, describe, it, expect, beforeAll } from 'bun:test'
 
 // Mock MinIO storage BEFORE any module that imports it is resolved.
-mock.module('../../storage', () => ({
+mock.module('../../lib/storage', () => ({
   uploadReviewImage: async (_file: File, reviewId: string) =>
     `http://localhost:9000/marketplace/reviews/${reviewId}/test.jpg`,
   uploadImage: async (_file: File, profileId: string) =>
     `http://localhost:9000/marketplace/profiles/${profileId}/test.jpg`,
   deleteUploadedImage: async () => {},
-  initBucket:  async () => {},
+  initBucket: async () => {},
   minioClient: {},
 }))
 
@@ -35,11 +35,9 @@ const app = new Elysia()
 
 const client = treaty<typeof app>(app)
 
-const fakeJpeg = new File(
-  [Buffer.from([0xff, 0xd8, 0xff, 0xe0])],
-  'review-photo.jpg',
-  { type: 'image/jpeg' },
-)
+const fakeJpeg = new File([Buffer.from([0xff, 0xd8, 0xff, 0xe0])], 'review-photo.jpg', {
+  type: 'image/jpeg',
+})
 
 let sessionCookie = ''
 let bobCookie = ''
@@ -128,26 +126,23 @@ describe('DELETE /review-images/:id', () => {
   })
 
   it('returns 403 when deleting a review image owned by another user', async () => {
-    const { error } = await client['review-images']({ id: reviewImageId }).delete(
-      undefined,
-      { headers: { Cookie: bobCookie } },
-    )
+    const { error } = await client['review-images']({ id: reviewImageId }).delete(undefined, {
+      headers: { Cookie: bobCookie },
+    })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 for a non-existent review image', async () => {
-    const { error } = await client['review-images']({ id: '00000000-0000-0000-0000-000000000000' }).delete(
-      undefined,
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client['review-images']({
+      id: '00000000-0000-0000-0000-000000000000',
+    }).delete(undefined, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(404)
   })
 
   it('returns 204 and soft-deletes the review image', async () => {
-    const { error } = await client['review-images']({ id: reviewImageId }).delete(
-      undefined,
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client['review-images']({ id: reviewImageId }).delete(undefined, {
+      headers: { Cookie: sessionCookie },
+    })
     expect(error).toBeNull()
 
     const { data: post } = await client.posts({ id: postId }).get()

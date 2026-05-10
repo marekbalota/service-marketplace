@@ -47,9 +47,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
             <div className="flex items-center gap-2">
-              {isAuthenticated && !isOwner && (
-                <FavouriteButton postId={postId} />
-              )}
+              {isAuthenticated && !isOwner && <FavouriteButton postId={postId} />}
               {isAuthenticated && !isOwner && !!activeProfile && !hasReported && (
                 <Button
                   variant="ghost"
@@ -65,7 +63,10 @@ export function PostInfoCard({ postId }: { postId: string }) {
                 <Link
                   to="/edit-post/$postId"
                   params={{ postId }}
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0 gap-2')}
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'sm' }),
+                    'shrink-0 gap-2',
+                  )}
                 >
                   <Pencil className="size-4" />
                   Edit
@@ -103,7 +104,9 @@ export function PostInfoCard({ postId }: { postId: string }) {
 
       <Dialog
         open={showReportForm}
-        onOpenChange={(open) => { if (!open) setShowReportForm(false) }}
+        onOpenChange={(open) => {
+          if (!open) setShowReportForm(false)
+        }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
@@ -120,7 +123,8 @@ export function PostInfoCard({ postId }: { postId: string }) {
               }}
               onSuccess={() => {
                 void queryClient.invalidateQueries({
-                  queryKey: hasReportedPostQueryOptions(postId, activeProfile.userProfileId).queryKey,
+                  queryKey: hasReportedPostQueryOptions(postId, activeProfile.userProfileId)
+                    .queryKey,
                 })
                 setShowReportForm(false)
               }}

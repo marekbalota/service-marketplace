@@ -53,11 +53,9 @@ beforeAll(async () => {
 
 describe('GET /locations/distinct — field=country', () => {
   it('returns 200 with values array', async () => {
-    const res = await app.handle(
-      new Request('http://localhost/locations/distinct?field=country'),
-    )
+    const res = await app.handle(new Request('http://localhost/locations/distinct?field=country'))
     expect(res.status).toBe(200)
-    const body = await res.json() as { values: unknown[] }
+    const body = (await res.json()) as { values: unknown[] }
     expect(Array.isArray(body.values)).toBe(true)
   })
 

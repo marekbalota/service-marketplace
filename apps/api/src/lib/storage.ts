@@ -3,9 +3,9 @@ import { randomUUID } from 'crypto'
 import { env } from './env'
 
 export const minioClient = new Client({
-  endPoint:  env.minio.endpoint,
-  port:      env.minio.port,
-  useSSL:    env.minio.useSSL,
+  endPoint: env.minio.endpoint,
+  port: env.minio.port,
+  useSSL: env.minio.useSSL,
   accessKey: env.minio.accessKey,
   secretKey: env.minio.secretKey,
 })
@@ -18,12 +18,14 @@ export async function initBucket(): Promise<void> {
   }
   const policy = JSON.stringify({
     Version: '2012-10-17',
-    Statement: [{
-      Effect:    'Allow',
-      Principal: { AWS: ['*'] },
-      Action:    ['s3:GetObject'],
-      Resource:  [`arn:aws:s3:::${env.minio.bucket}/*`],
-    }],
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { AWS: ['*'] },
+        Action: ['s3:GetObject'],
+        Resource: [`arn:aws:s3:::${env.minio.bucket}/*`],
+      },
+    ],
   })
   await minioClient.setBucketPolicy(env.minio.bucket, policy)
 }
@@ -34,8 +36,8 @@ export async function initBucket(): Promise<void> {
  */
 export async function uploadImage(file: File, profileId: string): Promise<string> {
   const rawExt = file.type.split('/')[1] ?? 'jpg'
-  const ext    = rawExt === 'jpeg' ? 'jpg' : rawExt
-  const key    = `profiles/${profileId}/${randomUUID()}.${ext}`
+  const ext = rawExt === 'jpeg' ? 'jpg' : rawExt
+  const key = `profiles/${profileId}/${randomUUID()}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
   await minioClient.putObject(env.minio.bucket, key, buffer, buffer.length, {
     'Content-Type': file.type,
@@ -49,8 +51,8 @@ export async function uploadImage(file: File, profileId: string): Promise<string
  */
 export async function uploadReviewImage(file: File, reviewId: string): Promise<string> {
   const rawExt = file.type.split('/')[1] ?? 'jpg'
-  const ext    = rawExt === 'jpeg' ? 'jpg' : rawExt
-  const key    = `reviews/${reviewId}/${randomUUID()}.${ext}`
+  const ext = rawExt === 'jpeg' ? 'jpg' : rawExt
+  const key = `reviews/${reviewId}/${randomUUID()}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
   await minioClient.putObject(env.minio.bucket, key, buffer, buffer.length, {
     'Content-Type': file.type,

@@ -1,9 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router"
-import { z } from "zod"
-import { currentUserQueryOptions } from "#/lib/queries/users"
-import { ResetPasswordForm } from "./-components/ResetPasswordForm"
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { z } from 'zod'
+import { currentUserQueryOptions } from '#/lib/queries/users'
+import { ResetPasswordForm } from './-components/ResetPasswordForm'
 
-export const Route = createFileRoute("/_auth/reset-password")({
+export const Route = createFileRoute('/_auth/reset-password')({
   validateSearch: z.object({
     token: z.string().min(1).optional(),
     error: z.string().optional(),
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_auth/reset-password")({
   beforeLoad: async ({ context: { queryClient } }) => {
     const user = await queryClient.fetchQuery(currentUserQueryOptions)
     if (user) {
-      throw redirect({ to: "/" })
+      throw redirect({ to: '/' })
     }
   },
 })

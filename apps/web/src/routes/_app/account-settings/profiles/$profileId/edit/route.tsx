@@ -8,9 +8,7 @@ import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { BackButton } from '#/components/BackButton'
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '#/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
@@ -28,7 +26,7 @@ import {
 export const Route = createFileRoute('/_app/account-settings/profiles/$profileId/edit')({
   loader: async ({ context: { queryClient }, params }) => {
     const user = await queryClient.ensureQueryData(currentUserQueryOptions)
-    const isOwner = user?.profiles.some(p => p.userProfileId === params.profileId)
+    const isOwner = user?.profiles.some((p) => p.userProfileId === params.profileId)
     if (!isOwner) throw redirect({ to: '/account-settings/profiles' })
   },
   pendingComponent: EditSkeleton,
@@ -60,7 +58,7 @@ function EditProfilePage() {
   const queryClient = useQueryClient()
 
   const { data: user } = useCurrentUser()
-  const profile = user?.profiles.find(p => p.userProfileId === profileId)
+  const profile = user?.profiles.find((p) => p.userProfileId === profileId)
   if (!profile) return null
 
   const { data: images = [] } = useQuery(imagesQueryOptions(profileId))
@@ -70,10 +68,15 @@ function EditProfilePage() {
   const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
 
   const pendingFilesRef = useRef(pendingFiles)
-  useEffect(() => { pendingFilesRef.current = pendingFiles }, [pendingFiles])
-  useEffect(() => () => {
-    for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
-  }, [])
+  useEffect(() => {
+    pendingFilesRef.current = pendingFiles
+  }, [pendingFiles])
+  useEffect(
+    () => () => {
+      for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
+    },
+    [],
+  )
 
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null)
@@ -82,11 +85,11 @@ function EditProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name:        profile.name,
-      email:       profile.email,
-      bio:         profile.bio ?? '',
+      name: profile.name,
+      email: profile.email,
+      bio: profile.bio ?? '',
       phoneNumber: profile.phoneNumber ?? '',
-      fax:         profile.fax ?? '',
+      fax: profile.fax ?? '',
     },
     mode: 'onTouched',
   })
@@ -94,23 +97,30 @@ function EditProfilePage() {
   const saveMutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
       const { error } = await api.profiles({ id: profileId }).patch({
-        name:        values.name,
-        email:       values.email,
-        bio:         values.bio || null,
+        name: values.name,
+        email: values.email,
+        bio: values.bio || null,
         phoneNumber: values.phoneNumber || null,
-        fax:         values.fax || null,
+        fax: values.fax || null,
       })
       if (error) throw wrapEdenError(error, 'Failed to update profile.')
 
       await Promise.all(
         pendingFiles.map(({ file }) =>
-          api.images.post({ file, profileId }).then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to upload image.') })
+          api.images.post({ file, profileId }).then(({ error }) => {
+            if (error) throw wrapEdenError(error, 'Failed to upload image.')
+          }),
         ),
       )
 
       await Promise.all(
-        pendingDeletes.map(imageId =>
-          api.images({ id: imageId }).delete().then(({ error }) => { if (error) throw wrapEdenError(error, 'Failed to delete image.') })
+        pendingDeletes.map((imageId) =>
+          api
+            .images({ id: imageId })
+            .delete()
+            .then(({ error }) => {
+              if (error) throw wrapEdenError(error, 'Failed to delete image.')
+            }),
         ),
       )
     },
@@ -125,10 +135,10 @@ function EditProfilePage() {
   const addLocationMutation = useMutation({
     mutationFn: async ({ country, region, city, street, houseNumber }: typeof newLocation) => {
       const { error } = await api.profiles({ id: profileId }).locations.post({
-        country:     country     || undefined,
-        region:      region      || undefined,
-        city:        city        || undefined,
-        street:      street      || undefined,
+        country: country || undefined,
+        region: region || undefined,
+        city: city || undefined,
+        street: street || undefined,
         houseNumber: houseNumber || undefined,
       })
       if (error) throw wrapEdenError(error, 'Failed to add location.')
@@ -144,9 +154,7 @@ function EditProfilePage() {
 
   const deleteLocationMutation = useMutation({
     mutationFn: async (locationId: string) => {
-      const { error } = await api.profiles({ id: profileId })
-        .locations({ locationId })
-        .delete()
+      const { error } = await api.profiles({ id: profileId }).locations({ locationId }).delete()
       if (error) throw wrapEdenError(error, 'Failed to remove location.')
     },
     onSuccess: () => {
@@ -157,25 +165,22 @@ function EditProfilePage() {
     },
   })
 
-  const visibleImages = images.filter(img => !pendingDeletes.includes(img.imageId))
-  const previews = [
-    ...visibleImages.map(img => img.link),
-    ...pendingFiles.map(f => f.preview),
-  ]
+  const visibleImages = images.filter((img) => !pendingDeletes.includes(img.imageId))
+  const previews = [...visibleImages.map((img) => img.link), ...pendingFiles.map((f) => f.preview)]
 
   function addFile(file: File) {
     const preview = URL.createObjectURL(file)
-    setPendingFiles(prev => [...prev, { file, preview }])
+    setPendingFiles((prev) => [...prev, { file, preview }])
   }
 
   function removeImage(index: number) {
     if (index < visibleImages.length) {
-      setPendingDeletes(prev => [...prev, visibleImages[index]!.imageId])
+      setPendingDeletes((prev) => [...prev, visibleImages[index]!.imageId])
     } else {
       const pendingIndex = index - visibleImages.length
       const preview = pendingFiles[pendingIndex]?.preview
       if (preview) URL.revokeObjectURL(preview)
-      setPendingFiles(prev => prev.filter((_, i) => i !== pendingIndex))
+      setPendingFiles((prev) => prev.filter((_, i) => i !== pendingIndex))
     }
   }
 
@@ -221,16 +226,14 @@ function EditProfilePage() {
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle>Saved Locations</CardTitle>
-                <CardDescription>
-                  Manage locations you frequently use for posts
-                </CardDescription>
+                <CardDescription>Manage locations you frequently use for posts</CardDescription>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="gap-2 shrink-0"
-                onClick={() => setShowAddLocation(v => !v)}
+                onClick={() => setShowAddLocation((v) => !v)}
               >
                 <Plus className="size-4" />
                 Add Location
@@ -241,11 +244,18 @@ function EditProfilePage() {
             {showAddLocation && (
               <AddLocationForm
                 value={newLocation}
-                onChange={patch => setNewLocation(v => ({ ...v, ...patch }))}
+                onChange={(patch) => setNewLocation((v) => ({ ...v, ...patch }))}
                 onSave={() => addLocationMutation.mutate(newLocation)}
-                onCancel={() => { setShowAddLocation(false); setNewLocation(EMPTY_LOCATION) }}
+                onCancel={() => {
+                  setShowAddLocation(false)
+                  setNewLocation(EMPTY_LOCATION)
+                }}
                 isPending={addLocationMutation.isPending}
-                error={addLocationMutation.isError ? (addLocationMutation.error as Error).message : undefined}
+                error={
+                  addLocationMutation.isError
+                    ? (addLocationMutation.error as Error).message
+                    : undefined
+                }
               />
             )}
 
@@ -255,7 +265,7 @@ function EditProfilePage() {
               </p>
             ) : (
               <div className="space-y-2">
-                {locations.map(loc => (
+                {locations.map((loc) => (
                   <div
                     key={loc.locationId}
                     className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
@@ -283,9 +293,7 @@ function EditProfilePage() {
         </Card>
 
         {saveMutation.isError && (
-          <p className="text-sm text-destructive">
-            {(saveMutation.error as Error).message}
-          </p>
+          <p className="text-sm text-destructive">{(saveMutation.error as Error).message}</p>
         )}
         <div className="flex gap-3 justify-end">
           <Button
@@ -309,7 +317,9 @@ function EditProfilePage() {
         confirmLabel="Remove"
         destructive
         isPending={deleteLocationMutation.isPending}
-        onConfirm={() => { if (deleteLocationId) deleteLocationMutation.mutate(deleteLocationId) }}
+        onConfirm={() => {
+          if (deleteLocationId) deleteLocationMutation.mutate(deleteLocationId)
+        }}
         onClose={() => setDeleteLocationId(null)}
       />
     </main>

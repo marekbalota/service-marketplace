@@ -1,7 +1,12 @@
 import React from 'react'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { UserProfilePanel } from './UserProfilePanel'
 import type { User } from '#/types/api'
 
@@ -45,8 +50,13 @@ vi.mock('#/components/ui/sheet', async (importOriginal) => {
   const actual = await importOriginal<typeof import('#/components/ui/sheet')>()
   return {
     ...actual,
-    SheetClose: ({ render: renderProp, children }: { render?: React.ReactElement; children?: React.ReactNode }) =>
-      renderProp ? React.cloneElement(renderProp, {}, children) : <>{children}</>,
+    SheetClose: ({
+      render: renderProp,
+      children,
+    }: {
+      render?: React.ReactElement
+      children?: React.ReactNode
+    }) => (renderProp ? React.cloneElement(renderProp, {}, children) : <>{children}</>),
   }
 })
 
@@ -90,9 +100,17 @@ describe('UserProfilePanel', () => {
     mockInvalidate.mockReset()
     mockSetQueryData.mockReset()
     mockClear.mockReset()
-    vi.mocked(useStopImpersonating).mockReturnValue({ mutate: mockStopImpersonatingMutate, isPending: false } as unknown as ReturnType<typeof useStopImpersonating>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as unknown as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: baseProfile, setActiveProfileId: vi.fn() })
+    vi.mocked(useStopImpersonating).mockReturnValue({
+      mutate: mockStopImpersonatingMutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof useStopImpersonating>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: baseUser } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: baseProfile,
+      setActiveProfileId: vi.fn(),
+    })
   })
 
   it('renders Browse Postings and My Postings navigation links', async () => {
@@ -135,7 +153,10 @@ describe('UserProfilePanel', () => {
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { ...baseUser, profiles: [] },
     } as unknown as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null, setActiveProfileId: vi.fn() })
+    vi.mocked(useActiveProfile).mockReturnValue({
+      activeProfile: null,
+      setActiveProfileId: vi.fn(),
+    })
     await renderPanel()
     expect(screen.queryByText('Switch Profile')).not.toBeInTheDocument()
   })

@@ -25,7 +25,9 @@ describe('AdminDashboard', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('renders Admin Dashboard heading', async () => {
-    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await renderPage()
     expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument()
   })

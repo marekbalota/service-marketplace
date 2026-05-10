@@ -1,10 +1,10 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import { z } from "zod"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card"
-import { LoginForm } from "./-components/LoginForm"
-import { currentUserQueryOptions } from "#/lib/queries/users"
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { z } from 'zod'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
+import { LoginForm } from './-components/LoginForm'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 
-export const Route = createFileRoute("/_auth/login")({
+export const Route = createFileRoute('/_auth/login')({
   validateSearch: z.object({ redirect: z.string().optional() }),
   component: LoginPage,
   beforeLoad: async ({ context: { queryClient }, search }) => {
@@ -27,7 +27,7 @@ function LoginPage() {
         <LoginForm redirect={redirect} />
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don't have an account?{' '}
             <Link to="/register" className="font-medium hover:text-foreground">
               Create one
             </Link>

@@ -10,17 +10,21 @@ export function formatLocation(loc: {
   street?: string | null
   houseNumber?: string | null
 }): string {
-  return [loc.country, loc.region, loc.city, loc.street, loc.houseNumber]
-    .filter(Boolean)
-    .join(', ')
+  return [loc.country, loc.region, loc.city, loc.street, loc.houseNumber].filter(Boolean).join(', ')
 }
 
 export function getInitials(name: string): string {
-  return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 }
 
 export function formatCountdown(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, "0")}`
+  return `${m}:${s.toString().padStart(2, '0')}`
 }

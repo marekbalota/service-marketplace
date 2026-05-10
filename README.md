@@ -2,13 +2,13 @@
 
 A full-stack monorepo where users post offers or requests for services (e.g. tutoring, plumbing, design). Posts are organised by category and users can rate each other through reviews.
 
-| Layer | Tech |
-|-------|------|
-| Frontend | TanStack Start (SPA), React 19, Tailwind CSS v4, Shadcn/UI |
-| Backend | ElysiaJS, Drizzle ORM |
-| Database | PostgreSQL 17 |
-| File Storage | MinIO (S3-compatible) |
-| Runtime | Bun |
+| Layer        | Tech                                                       |
+| ------------ | ---------------------------------------------------------- |
+| Frontend     | TanStack Start (SPA), React 19, Tailwind CSS v4, Shadcn/UI |
+| Backend      | ElysiaJS, Drizzle ORM                                      |
+| Database     | PostgreSQL 17                                              |
+| File Storage | MinIO (S3-compatible)                                      |
+| Runtime      | Bun                                                        |
 
 ## Prerequisites
 
@@ -49,19 +49,18 @@ bun run --filter api db:migrate
 bun run --filter api db:seed
 ```
 
-
 ### 6. Start the development servers
 
 ```bash
 bun run dev
 ```
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:3000 |
-| API | http://localhost:3001 |
+| Service            | URL                           |
+| ------------------ | ----------------------------- |
+| Frontend           | http://localhost:3000         |
+| API                | http://localhost:3001         |
 | API docs (Swagger) | http://localhost:3001/swagger |
-| MinIO console | http://localhost:9001 |
+| MinIO console      | http://localhost:9001         |
 
 ## Project Structure
 

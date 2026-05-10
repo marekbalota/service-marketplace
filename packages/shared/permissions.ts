@@ -22,20 +22,20 @@ export const Permissions = {
 
   // Admin - Category Management
   AdminCategoriesManage: 'admin:categories:manage',
-} as const;
+} as const
 
-export type Permission = typeof Permissions[keyof typeof Permissions];
+export type Permission = (typeof Permissions)[keyof typeof Permissions]
 
 /**
  * Check if a user has all required permissions
  */
 export function hasPermissions(userPermissions: string[], required: Permission[]): boolean {
-  return required.every((p) => userPermissions.includes(p));
+  return required.every((p) => userPermissions.includes(p))
 }
 
 /**
  * Check if a user has any of the required permissions
  */
 export function hasAnyPermission(userPermissions: string[], required: Permission[]): boolean {
-  return required.some((p) => userPermissions.includes(p));
+  return required.some((p) => userPermissions.includes(p))
 }

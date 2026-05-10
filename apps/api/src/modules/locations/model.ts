@@ -1,19 +1,19 @@
 import { t, type UnwrapSchema } from 'elysia'
 
 const locationItem = t.Object({
-  locationId:  t.String(),
-  country:     t.Nullable(t.String()),
-  region:      t.Nullable(t.String()),
-  city:        t.Nullable(t.String()),
-  street:      t.Nullable(t.String()),
+  locationId: t.String(),
+  country: t.Nullable(t.String()),
+  region: t.Nullable(t.String()),
+  city: t.Nullable(t.String()),
+  street: t.Nullable(t.String()),
   houseNumber: t.Nullable(t.String()),
 })
 
 export const LocationsModel = {
   distinctQuery: t.Object({
-    field:   t.Union([t.Literal('country'), t.Literal('region'), t.Literal('city')]),
+    field: t.Union([t.Literal('country'), t.Literal('region'), t.Literal('city')]),
     country: t.Optional(t.String()),
-    region:  t.Optional(t.String()),
+    region: t.Optional(t.String()),
   }),
   distinctResponse: t.Object({
     values: t.Array(t.String()),
@@ -21,10 +21,10 @@ export const LocationsModel = {
   profileLocationsParams: t.Object({ id: t.String() }),
   profileLocationsResponse: t.Array(locationItem),
   addBody: t.Object({
-    country:     t.Optional(t.String()),
-    region:      t.Optional(t.String()),
-    city:        t.Optional(t.String()),
-    street:      t.Optional(t.String()),
+    country: t.Optional(t.String()),
+    region: t.Optional(t.String()),
+    city: t.Optional(t.String()),
+    street: t.Optional(t.String()),
     houseNumber: t.Optional(t.String()),
   }),
   addResponse: locationItem,
@@ -32,5 +32,5 @@ export const LocationsModel = {
 } as const
 
 export type LocationsModel = {
-  [k in keyof typeof LocationsModel]: UnwrapSchema<typeof LocationsModel[k]>
+  [k in keyof typeof LocationsModel]: UnwrapSchema<(typeof LocationsModel)[k]>
 }

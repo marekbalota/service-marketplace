@@ -30,7 +30,10 @@ export function FavouriteButton({
     enabled: isAuthenticated && !!profileId && initialIsFavourite === undefined,
   })
 
-  const isFavourite = initialIsFavourite ?? (favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ?? false)
+  const isFavourite =
+    initialIsFavourite ??
+    favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ??
+    false
 
   const addMutation = useMutation({
     mutationFn: async () => {
@@ -79,15 +82,10 @@ export function FavouriteButton({
         'transition-colors',
         isFavourite
           ? 'text-red-500 hover:text-red-600'
-          : 'text-muted-foreground hover:text-red-500'
+          : 'text-muted-foreground hover:text-red-500',
       )}
     >
-      <Heart
-        className={cn(
-          'size-5 transition-all',
-          isFavourite && 'fill-red-500 text-red-500'
-        )}
-      />
+      <Heart className={cn('size-5 transition-all', isFavourite && 'fill-red-500 text-red-500')} />
     </Button>
   )
 }

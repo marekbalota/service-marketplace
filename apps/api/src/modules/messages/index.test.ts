@@ -23,11 +23,11 @@ const app = new Elysia()
 const client = treaty(app)
 
 // Alice owns posts; Bob initiates a thread on Alice's post
-let aliceCookie  = ''
-let bobCookie    = ''
+let aliceCookie = ''
+let bobCookie = ''
 let aliceProfile = ''
-let bobProfile   = ''
-let alicePostId  = ''
+let bobProfile = ''
+let alicePostId = ''
 
 beforeAll(async () => {
   const aliceRes = await auth.api.signInEmail({
@@ -48,7 +48,9 @@ beforeAll(async () => {
   const { data: bobMeData } = await client.users.me.get({ headers: { Cookie: bobCookie } })
   bobProfile = bobMeData!.profiles[0]?.userProfileId ?? ''
 
-  const { data: alicePosts } = await client.profiles({ id: aliceProfile }).posts.get({ headers: { Cookie: aliceCookie } })
+  const { data: alicePosts } = await client
+    .profiles({ id: aliceProfile })
+    .posts.get({ headers: { Cookie: aliceCookie } })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   alicePostId = (alicePosts?.items?.[0] as any)?.postId ?? ''
 
@@ -69,8 +71,8 @@ describe('POST /threads', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client.threads.post({
       profileId: bobProfile,
-      postId:    alicePostId,
-      content:   'Hello, is this still available?',
+      postId: alicePostId,
+      content: 'Hello, is this still available?',
     })
     expect(error?.status).toBe(401)
   })
@@ -126,7 +128,7 @@ describe('GET /threads', () => {
 
   it('returns 403 when profileId does not belong to session user', async () => {
     const { error } = await client.threads.get({
-      query:   { profileId: '00000000-0000-0000-0000-000000000000' },
+      query: { profileId: '00000000-0000-0000-0000-000000000000' },
       headers: { Cookie: bobCookie },
     })
     expect(error?.status).toBe(403)
@@ -134,7 +136,7 @@ describe('GET /threads', () => {
 
   it("returns Bob's threads — includes the created thread", async () => {
     const { data, error } = await client.threads.get({
-      query:   { profileId: bobProfile },
+      query: { profileId: bobProfile },
       headers: { Cookie: bobCookie },
     })
     expect(error).toBeNull()
@@ -150,7 +152,7 @@ describe('GET /threads', () => {
 
   it("returns Alice's threads with myRole = post_owner", async () => {
     const { data } = await client.threads.get({
-      query:   { profileId: aliceProfile },
+      query: { profileId: aliceProfile },
       headers: { Cookie: aliceCookie },
     })
     expect(Array.isArray(data)).toBe(true)
@@ -160,7 +162,7 @@ describe('GET /threads', () => {
 
   it('filters by postId — returns only the matching thread', async () => {
     const { data } = await client.threads.get({
-      query:   { profileId: bobProfile, postId: alicePostId },
+      query: { profileId: bobProfile, postId: alicePostId },
       headers: { Cookie: bobCookie },
     })
     expect(data!.length).toBe(1)
@@ -169,7 +171,7 @@ describe('GET /threads', () => {
 
   it('unreadCount is a non-negative number', async () => {
     const { data } = await client.threads.get({
-      query:   { profileId: bobProfile },
+      query: { profileId: bobProfile },
       headers: { Cookie: bobCookie },
     })
     expect(data![0]!.unreadCount).toBeGreaterThanOrEqual(0)
@@ -181,7 +183,7 @@ describe('GET /threads/:threadId', () => {
 
   beforeAll(async () => {
     const { data } = await client.threads.get({
-      query:   { profileId: bobProfile, postId: alicePostId },
+      query: { profileId: bobProfile, postId: alicePostId },
       headers: { Cookie: bobCookie },
     })
     threadId = data?.[0]?.threadId ?? ''
@@ -204,7 +206,7 @@ describe('GET /threads/:threadId', () => {
     const carolProfile = carolMeData!.profiles[0]?.userProfileId ?? ''
 
     const { error } = await client.threads({ threadId }).get({
-      query:   { profileId: carolProfile },
+      query: { profileId: carolProfile },
       headers: { Cookie: carolCookie },
     })
     expect(error?.status).toBe(403)
@@ -212,7 +214,7 @@ describe('GET /threads/:threadId', () => {
 
   it('returns 200 with thread and messages for Bob (initiator)', async () => {
     const { data, error } = await client.threads({ threadId }).get({
-      query:   { profileId: bobProfile },
+      query: { profileId: bobProfile },
       headers: { Cookie: bobCookie },
     })
     expect(error).toBeNull()
@@ -224,7 +226,7 @@ describe('GET /threads/:threadId', () => {
 
   it('returns 200 with myRole = post_owner for Alice', async () => {
     const { data, error } = await client.threads({ threadId }).get({
-      query:   { profileId: aliceProfile },
+      query: { profileId: aliceProfile },
       headers: { Cookie: aliceCookie },
     })
     expect(error).toBeNull()
@@ -233,11 +235,11 @@ describe('GET /threads/:threadId', () => {
 
   it('marks messages as read — Alice opens thread, then unreadCount drops to 0', async () => {
     await client.threads({ threadId }).get({
-      query:   { profileId: aliceProfile },
+      query: { profileId: aliceProfile },
       headers: { Cookie: aliceCookie },
     })
     const { data } = await client.threads.get({
-      query:   { profileId: aliceProfile },
+      query: { profileId: aliceProfile },
       headers: { Cookie: aliceCookie },
     })
     const thread = data!.find((t) => t.threadId === threadId)
@@ -250,7 +252,7 @@ describe('POST /threads/:threadId/messages', () => {
 
   beforeAll(async () => {
     const { data } = await client.threads.get({
-      query:   { profileId: bobProfile, postId: alicePostId },
+      query: { profileId: bobProfile, postId: alicePostId },
       headers: { Cookie: bobCookie },
     })
     threadId = data?.[0]?.threadId ?? ''
@@ -259,7 +261,7 @@ describe('POST /threads/:threadId/messages', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client.threads({ threadId }).messages.post({
       profileId: aliceProfile,
-      content:   'Hi Bob!',
+      content: 'Hi Bob!',
     })
     expect(error?.status).toBe(401)
   })
@@ -273,18 +275,22 @@ describe('POST /threads/:threadId/messages', () => {
     const { data: carolMeData } = await client.users.me.get({ headers: { Cookie: carolCookie } })
     const carolProfile = carolMeData!.profiles[0]?.userProfileId ?? ''
 
-    const { error } = await client.threads({ threadId }).messages.post(
-      { profileId: carolProfile, content: 'Intruder!' },
-      { headers: { Cookie: carolCookie } },
-    )
+    const { error } = await client
+      .threads({ threadId })
+      .messages.post(
+        { profileId: carolProfile, content: 'Intruder!' },
+        { headers: { Cookie: carolCookie } },
+      )
     expect(error?.status).toBe(403)
   })
 
   it('allows Alice (post owner) to reply — returns 201', async () => {
-    const { data, error } = await client.threads({ threadId }).messages.post(
-      { profileId: aliceProfile, content: 'Yes, still available!' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { data, error } = await client
+      .threads({ threadId })
+      .messages.post(
+        { profileId: aliceProfile, content: 'Yes, still available!' },
+        { headers: { Cookie: aliceCookie } },
+      )
     expect(error).toBeNull()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (data as any)?.messageId).toBe('string')
@@ -293,20 +299,21 @@ describe('POST /threads/:threadId/messages', () => {
   })
 
   it('allows Bob (initiator) to reply — returns 201', async () => {
-    const { data, error } = await client.threads({ threadId }).messages.post(
-      { profileId: bobProfile, content: 'Great, I will take it!' },
-      { headers: { Cookie: bobCookie } },
-    )
+    const { data, error } = await client
+      .threads({ threadId })
+      .messages.post(
+        { profileId: bobProfile, content: 'Great, I will take it!' },
+        { headers: { Cookie: bobCookie } },
+      )
     expect(error).toBeNull()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (data as any)?.messageId).toBe('string')
   })
 
   it('returns 422 for empty content', async () => {
-    const { error } = await client.threads({ threadId }).messages.post(
-      { profileId: aliceProfile, content: '' },
-      { headers: { Cookie: aliceCookie } },
-    )
+    const { error } = await client
+      .threads({ threadId })
+      .messages.post({ profileId: aliceProfile, content: '' }, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(422)
   })
 })

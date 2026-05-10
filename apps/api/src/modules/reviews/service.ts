@@ -2,7 +2,13 @@ import { db } from '../../db'
 import { reviews, posts } from '../../db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import type { ReviewsModel } from './model'
-import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ErrorMessages,
+  AuthErrorMessages,
+} from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 
 export abstract class ReviewsService {
@@ -66,13 +72,11 @@ export abstract class ReviewsService {
         .where(eq(reviews.reviewId, reviewId))
         .limit(1)
 
-      if (!review || review.deletedAt !== null) throw new NotFoundError(ErrorMessages.reviewNotFound)
+      if (!review || review.deletedAt !== null)
+        throw new NotFoundError(ErrorMessages.reviewNotFound)
       if (review.reviewerId !== reviewerId) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
-      await tx
-        .update(reviews)
-        .set({ deletedAt: new Date() })
-        .where(eq(reviews.reviewId, reviewId))
+      await tx.update(reviews).set({ deletedAt: new Date() }).where(eq(reviews.reviewId, reviewId))
     })
   }
 

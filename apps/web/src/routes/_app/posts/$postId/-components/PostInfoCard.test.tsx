@@ -18,12 +18,19 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
-  return { ...actual, Link: ({ children, to }: { children: React.ReactNode; to?: string }) => <a href={to ?? '#'}>{children}</a> }
+  return {
+    ...actual,
+    Link: ({ children, to }: { children: React.ReactNode; to?: string }) => (
+      <a href={to ?? '#'}>{children}</a>
+    ),
+  }
 })
 
 vi.mock('#/lib/queries/users', () => ({ useCurrentUser: vi.fn() }))
 vi.mock('#/context/activeProfile', () => ({ useActiveProfile: vi.fn() }))
-vi.mock('#/components/FavouriteButton', () => ({ FavouriteButton: () => <button>Favourite</button> }))
+vi.mock('#/components/FavouriteButton', () => ({
+  FavouriteButton: () => <button>Favourite</button>,
+}))
 vi.mock('#/api', () => ({
   api: {
     posts: vi.fn(() => ({ reports: { post: vi.fn() } })),
@@ -51,33 +58,51 @@ describe('PostInfoCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseSuspenseQuery.mockReturnValue({ data: basePost })
-    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<
+      typeof useActiveProfile
+    >)
   })
 
   it('shows Edit link for the post owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'profile-author', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u1' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u1' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostInfoCard postId="post-1" />))
     expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
   })
 
   it('does not show Edit link for non-owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
+      activeProfile: {
+        userProfileId: 'profile-visitor',
+        name: 'Alice',
+        email: 'alice@example.com',
+      },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostInfoCard postId="post-1" />))
     expect(screen.queryByRole('link', { name: /edit/i })).not.toBeInTheDocument()
   })
 
   it('shows Report post button for authenticated non-owner', async () => {
     vi.mocked(useActiveProfile).mockReturnValue({
-      activeProfile: { userProfileId: 'profile-visitor', name: 'Alice', email: 'alice@example.com' },
+      activeProfile: {
+        userProfileId: 'profile-visitor',
+        name: 'Alice',
+        email: 'alice@example.com',
+      },
     } as ReturnType<typeof useActiveProfile>)
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { userId: 'u2' } } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
     await act(async () => render(<PostInfoCard postId="post-1" />))
     expect(screen.getByRole('button', { name: /report post/i })).toBeInTheDocument()
   })

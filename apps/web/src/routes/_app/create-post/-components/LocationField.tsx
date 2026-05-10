@@ -22,7 +22,12 @@ interface LocationFieldProps<T extends FieldValues> {
   onToggle: () => void
 }
 
-export function LocationField<T extends FieldValues>({ control: controlProp, profileId, isManualLocation, onToggle }: LocationFieldProps<T>) {
+export function LocationField<T extends FieldValues>({
+  control: controlProp,
+  profileId,
+  isManualLocation,
+  onToggle,
+}: LocationFieldProps<T>) {
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
   const control = controlProp as Control<FieldValues, any>
   const { data: previousLocations = [] } = useQuery(profileLocationsQueryOptions(profileId))
@@ -50,13 +55,18 @@ export function LocationField<T extends FieldValues>({ control: controlProp, pro
             <div className="space-y-2">
               <Select
                 value={field.value}
-                onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                onValueChange={(v) => {
+                  field.onChange(v)
+                  field.onBlur()
+                }}
                 disabled={previousLocations.length === 0}
               >
                 <SelectTrigger className="!h-11 w-full">
                   <SelectValue placeholder="Select from your previous locations">
                     {field.value
-                      ? formatLocation(previousLocations.find((l) => l.locationId === field.value) ?? {}) || undefined
+                      ? formatLocation(
+                          previousLocations.find((l) => l.locationId === field.value) ?? {},
+                        ) || undefined
                       : undefined}
                   </SelectValue>
                 </SelectTrigger>
@@ -86,7 +96,12 @@ export function LocationField<T extends FieldValues>({ control: controlProp, pro
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="country">Country</FieldLabel>
-                    <Input {...field} id="country" placeholder="e.g., Czech Republic" aria-invalid={fieldState.invalid} />
+                    <Input
+                      {...field}
+                      id="country"
+                      placeholder="e.g., Czech Republic"
+                      aria-invalid={fieldState.invalid}
+                    />
                     <FieldError errors={[fieldState.error]} />
                   </Field>
                 )}
@@ -97,7 +112,12 @@ export function LocationField<T extends FieldValues>({ control: controlProp, pro
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="region">Region/State</FieldLabel>
-                    <Input {...field} id="region" placeholder="e.g., South Moravian Region" aria-invalid={fieldState.invalid} />
+                    <Input
+                      {...field}
+                      id="region"
+                      placeholder="e.g., South Moravian Region"
+                      aria-invalid={fieldState.invalid}
+                    />
                     <FieldError errors={[fieldState.error]} />
                   </Field>
                 )}
@@ -109,7 +129,12 @@ export function LocationField<T extends FieldValues>({ control: controlProp, pro
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="city">City</FieldLabel>
-                  <Input {...field} id="city" placeholder="e.g., Brno" aria-invalid={fieldState.invalid} />
+                  <Input
+                    {...field}
+                    id="city"
+                    placeholder="e.g., Brno"
+                    aria-invalid={fieldState.invalid}
+                  />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}

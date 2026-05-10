@@ -2,7 +2,11 @@ import { Controller, type Control, type FieldValues } from 'react-hook-form'
 import { Field, FieldLabel } from '#/components/ui/field'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 
-export function PostTypeToggle<T extends FieldValues>({ control: controlProp }: { control: Control<T, any> }) {
+export function PostTypeToggle<T extends FieldValues>({
+  control: controlProp,
+}: {
+  control: Control<T, any>
+}) {
   const control = controlProp as Control<FieldValues, any>
   return (
     <Controller
@@ -13,7 +17,10 @@ export function PostTypeToggle<T extends FieldValues>({ control: controlProp }: 
           <FieldLabel className="text-base font-semibold">Type *</FieldLabel>
           <ToggleGroup
             value={field.value ? [field.value] : []}
-            onValueChange={(vals) => { const v = vals[vals.length - 1]; if (v) field.onChange(v) }}
+            onValueChange={(vals) => {
+              const v = vals[vals.length - 1]
+              if (v) field.onChange(v)
+            }}
             className="grid grid-cols-2 overflow-hidden rounded-lg border p-0"
           >
             {(['OFFER', 'REQUEST'] as const).map((type) => (

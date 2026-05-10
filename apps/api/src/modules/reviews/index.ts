@@ -2,7 +2,12 @@ import { Elysia, t } from 'elysia'
 import { ReviewsModel } from './model'
 import { ReviewsService } from './service'
 import { authRoutes } from '../auth'
-import { conflictResponse, forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
+import {
+  conflictResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  unauthorizedResponse,
+} from '../../lib/errors'
 import { ReportsModel } from '../reports/model'
 import { ReportsService } from '../reports/service'
 
@@ -25,7 +30,11 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
         ...notFoundResponse,
         ...conflictResponse,
       },
-      detail: { summary: 'Create a review for a post', operationId: 'createReview', tags: ['Reviews'] },
+      detail: {
+        summary: 'Create a review for a post',
+        operationId: 'createReview',
+        tags: ['Reviews'],
+      },
     },
   )
   .delete(
@@ -41,7 +50,7 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
         204: t.Void(),
         ...unauthorizedResponse,
         ...forbiddenResponse,
-        ...notFoundResponse
+        ...notFoundResponse,
       },
       detail: { summary: 'Delete a review', operationId: 'deleteReview', tags: ['Reviews'] },
     },
@@ -67,4 +76,3 @@ export const reviewsRoutes = new Elysia({ prefix: '/reviews' })
       detail: { summary: 'Report a review', operationId: 'createReviewReport', tags: ['Reports'] },
     },
   )
-

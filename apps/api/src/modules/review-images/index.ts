@@ -22,7 +22,11 @@ export const reviewImagesRoutes = new Elysia({ prefix: '/review-images' })
         ...forbiddenResponse,
         ...notFoundResponse,
       },
-      detail: { summary: 'Upload an image for a review', operationId: 'createReviewImage', tags: ['Reviews'] },
+      detail: {
+        summary: 'Upload an image for a review',
+        operationId: 'createReviewImage',
+        tags: ['Reviews'],
+      },
     },
   )
   .delete(
@@ -40,6 +44,10 @@ export const reviewImagesRoutes = new Elysia({ prefix: '/review-images' })
         ...forbiddenResponse,
         ...notFoundResponse,
       },
-      detail: { summary: 'Delete a review image', operationId: 'deleteReviewImage', tags: ['Reviews'] },
+      detail: {
+        summary: 'Delete a review image',
+        operationId: 'deleteReviewImage',
+        tags: ['Reviews'],
+      },
     },
   )

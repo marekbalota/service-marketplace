@@ -19,6 +19,9 @@ describe('PostTypeToggle', () => {
 
   it('reflects the default value', () => {
     render(<Wrapper defaultType="REQUEST" />)
-    expect(screen.getByText('Requesting Service').closest('button')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Requesting Service').closest('button')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })

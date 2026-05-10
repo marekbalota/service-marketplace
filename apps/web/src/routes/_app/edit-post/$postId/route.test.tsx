@@ -37,7 +37,10 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 
 vi.mock('#/api', () => ({
   api: {
-    posts: vi.fn(() => ({ patch: vi.fn().mockResolvedValue({ data: {}, error: null }), get: vi.fn() })),
+    posts: vi.fn(() => ({
+      patch: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      get: vi.fn(),
+    })),
   },
 }))
 
@@ -86,7 +89,9 @@ describe('EditPostPage', () => {
 
   it('pre-fills the form with the existing description', async () => {
     await renderPage()
-    expect(screen.getByDisplayValue('Professional lawn care with attention to detail.')).toBeInTheDocument()
+    expect(
+      screen.getByDisplayValue('Professional lawn care with attention to detail.'),
+    ).toBeInTheDocument()
   })
 
   it('renders "Edit Posting" card title', async () => {

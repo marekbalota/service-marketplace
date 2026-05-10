@@ -2,7 +2,13 @@ import { db } from '../../db'
 import { reports, posts, messages, reviews, reportCategories } from '../../db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import type { ReportsModel } from './model'
-import { NotFoundError, ForbiddenError, ConflictError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ErrorMessages,
+  AuthErrorMessages,
+} from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 import { MessagesService } from '../messages/service'
 
@@ -58,28 +64,49 @@ export abstract class ReportsService {
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
-        .where(and(eq(reports.postId, postId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+        .where(
+          and(
+            eq(reports.postId, postId),
+            eq(reports.reporterId, reporterId),
+            isNull(reports.deletedAt),
+          ),
+        )
         .limit(1)
 
       if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
 
       const [report] = await tx
         .insert(reports)
-        .values({ postId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
+        .values({
+          postId,
+          reporterId,
+          categoryId: body.categoryId,
+          description: body.description ?? null,
+        })
         .returning()
 
       return report!
     })
   }
 
-  static async hasReportedPost(accountId: string, profileId: string, postId: string): Promise<boolean> {
+  static async hasReportedPost(
+    accountId: string,
+    profileId: string,
+    postId: string,
+  ): Promise<boolean> {
     const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.postId, postId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
+      .where(
+        and(
+          eq(reports.postId, postId),
+          eq(reports.reporterId, profileId),
+          isNull(reports.deletedAt),
+        ),
+      )
       .limit(1)
 
     return !!report
@@ -117,28 +144,49 @@ export abstract class ReportsService {
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
-        .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+        .where(
+          and(
+            eq(reports.messageId, messageId),
+            eq(reports.reporterId, reporterId),
+            isNull(reports.deletedAt),
+          ),
+        )
         .limit(1)
 
       if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
 
       const [report] = await tx
         .insert(reports)
-        .values({ messageId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
+        .values({
+          messageId,
+          reporterId,
+          categoryId: body.categoryId,
+          description: body.description ?? null,
+        })
         .returning()
 
       return report!
     })
   }
 
-  static async hasReportedMessage(accountId: string, profileId: string, messageId: string): Promise<boolean> {
+  static async hasReportedMessage(
+    accountId: string,
+    profileId: string,
+    messageId: string,
+  ): Promise<boolean> {
     const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.messageId, messageId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
+      .where(
+        and(
+          eq(reports.messageId, messageId),
+          eq(reports.reporterId, profileId),
+          isNull(reports.deletedAt),
+        ),
+      )
       .limit(1)
 
     return !!report
@@ -180,28 +228,49 @@ export abstract class ReportsService {
       const [existing] = await tx
         .select({ reportId: reports.reportId })
         .from(reports)
-        .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, reporterId), isNull(reports.deletedAt)))
+        .where(
+          and(
+            eq(reports.reviewId, reviewId),
+            eq(reports.reporterId, reporterId),
+            isNull(reports.deletedAt),
+          ),
+        )
         .limit(1)
 
       if (existing) throw new ConflictError(ErrorMessages.alreadyReported)
 
       const [report] = await tx
         .insert(reports)
-        .values({ reviewId, reporterId, categoryId: body.categoryId, description: body.description ?? null })
+        .values({
+          reviewId,
+          reporterId,
+          categoryId: body.categoryId,
+          description: body.description ?? null,
+        })
         .returning()
 
       return report!
     })
   }
 
-  static async hasReportedReview(accountId: string, profileId: string, reviewId: string): Promise<boolean> {
+  static async hasReportedReview(
+    accountId: string,
+    profileId: string,
+    reviewId: string,
+  ): Promise<boolean> {
     const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
     const [report] = await db
       .select({ reportId: reports.reportId })
       .from(reports)
-      .where(and(eq(reports.reviewId, reviewId), eq(reports.reporterId, profileId), isNull(reports.deletedAt)))
+      .where(
+        and(
+          eq(reports.reviewId, reviewId),
+          eq(reports.reporterId, profileId),
+          isNull(reports.deletedAt),
+        ),
+      )
       .limit(1)
 
     return !!report
@@ -216,5 +285,4 @@ export abstract class ReportsService {
     if (!profiles.length) throw new ForbiddenError(AuthErrorMessages.forbidden)
     return this.createForReview(reviewId, profiles[0]!.userProfileId, body)
   }
-
 }

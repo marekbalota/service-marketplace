@@ -14,10 +14,13 @@ interface BanError {
 export function handleBanError(error: unknown): boolean {
   const banInfo = extractBanInfo(error)
   if (banInfo) {
-    sessionStorage.setItem('banInfo', JSON.stringify({
-      reason: banInfo.reason,
-      expiresAt: banInfo.expiresAt,
-    }))
+    sessionStorage.setItem(
+      'banInfo',
+      JSON.stringify({
+        reason: banInfo.reason,
+        expiresAt: banInfo.expiresAt,
+      }),
+    )
     queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
     localStorage.removeItem(STORAGE_KEY)
     if (routerRef) {
@@ -35,8 +38,8 @@ function extractBanInfo(error: unknown): BanError | null {
   const body = parseAuthErrorBody(error)
   if (body?.code !== ErrorCodes.Banned) return null
   return {
-    message: body.message as string ?? 'Account banned',
-    reason: body.reason as string ?? null,
-    expiresAt: body.expiresAt as string ?? null,
+    message: (body.message as string) ?? 'Account banned',
+    reason: (body.reason as string) ?? null,
+    expiresAt: (body.expiresAt as string) ?? null,
   }
 }

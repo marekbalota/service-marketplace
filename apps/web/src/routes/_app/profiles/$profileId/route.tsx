@@ -16,22 +16,29 @@ import { BackButton } from '#/components/BackButton'
 import { ImageLightbox } from '#/components/ImageLightbox'
 import { PaginationBar } from '#/components/PaginationBar'
 import {
-  profileQueryOptions, imagesQueryOptions, profileLocationsQueryOptions,
-  profilePostsQueryOptions, profilePostsCountQueryOptions,
+  profileQueryOptions,
+  imagesQueryOptions,
+  profileLocationsQueryOptions,
+  profilePostsQueryOptions,
+  profilePostsCountQueryOptions,
 } from '#/lib/queries/profiles'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
 
 const searchSchema = z.object({
-  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived']).optional().catch(undefined),
   page: z.number().int().positive().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/profiles/$profileId')({
   validateSearch: searchSchema,
   loaderDeps: ({ search: { tab, page } }) => ({ tab, page }),
-  loader: async ({ context: { queryClient }, params: { profileId }, deps: { page: _page, tab: _tab } }) => {
+  loader: async ({
+    context: { queryClient },
+    params: { profileId },
+    deps: { page: _page, tab: _tab },
+  }) => {
     await queryClient.ensureQueryData(profileQueryOptions(profileId))
   },
   pendingComponent: ProfileViewSkeleton,
@@ -113,7 +120,12 @@ function ProfilePostsGrid({
         ))}
       </div>
       {totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-4" />
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="mt-4"
+        />
       )}
     </>
   )
@@ -142,7 +154,10 @@ function ProfileViewPage() {
   })
 
   function handleTabChange(value: string) {
-    navigate({ search: () => ({ tab: value === 'archived' ? 'archived' : undefined }), replace: true })
+    navigate({
+      search: () => ({ tab: value === 'archived' ? 'archived' : undefined }),
+      replace: true,
+    })
   }
 
   return (
@@ -169,7 +184,9 @@ function ProfileViewPage() {
               <div className="space-y-3 text-sm">
                 {profile.bio && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bio</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Bio
+                    </p>
                     <p className="whitespace-pre-wrap">{profile.bio}</p>
                   </div>
                 )}
@@ -194,9 +211,7 @@ function ProfileViewPage() {
                     <Separator />
                     <div className="flex items-center gap-2">
                       <Star className="size-4 fill-star-filled text-star-filled shrink-0" />
-                      <span className="font-medium">
-                        {profile.averageRating.toFixed(1)} / 5.0
-                      </span>
+                      <span className="font-medium">{profile.averageRating.toFixed(1)} / 5.0</span>
                     </div>
                   </>
                 )}
@@ -207,7 +222,7 @@ function ProfileViewPage() {
                   <Separator />
                   <div className="space-y-2">
                     <CardTitle className="text-sm">Locations</CardTitle>
-                    {locations.map(loc => {
+                    {locations.map((loc) => {
                       const detail = formatLocationDetail(loc)
                       return (
                         <div key={loc.locationId} className="flex items-start gap-2 text-sm">
@@ -268,12 +283,22 @@ function ProfileViewPage() {
                 <>
                   <TabsContent value="active">
                     <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
-                      <ProfilePostsGrid profileId={profileId} page={page} archived={false} isOwner={isOwner} />
+                      <ProfilePostsGrid
+                        profileId={profileId}
+                        page={page}
+                        archived={false}
+                        isOwner={isOwner}
+                      />
                     </Suspense>
                   </TabsContent>
                   <TabsContent value="archived">
                     <Suspense fallback={<PostsGridSkeleton count={6} columns={2} />}>
-                      <ProfilePostsGrid profileId={profileId} page={page} archived={true} isOwner={isOwner} />
+                      <ProfilePostsGrid
+                        profileId={profileId}
+                        page={page}
+                        archived={true}
+                        isOwner={isOwner}
+                      />
                     </Suspense>
                   </TabsContent>
                 </>
@@ -284,7 +309,7 @@ function ProfileViewPage() {
       </div>
 
       <ImageLightbox
-        images={images.map(img => ({ src: img.link, alt: img.name }))}
+        images={images.map((img) => ({ src: img.link, alt: img.name }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

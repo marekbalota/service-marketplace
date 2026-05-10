@@ -33,14 +33,14 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
   const grantablePermissionIds = new Set(
-    permissions.filter(p => userPermissionNames.includes(p.name)).map(p => p.permissionId)
+    permissions.filter((p) => userPermissionNames.includes(p.name)).map((p) => p.permissionId),
   )
   const queryClient = useQueryClient()
 
   const [roles, setRoles] = useState<Role[]>(rolesData)
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null)
   const [settingDefaultRoleId, setSettingDefaultRoleId] = useState<string | null>(null)
-  const sortableRoles = roles.filter(r => r.priority < userPriority)
+  const sortableRoles = roles.filter((r) => r.priority < userPriority)
 
   useEffect(() => {
     setRoles(rolesData)
@@ -86,12 +86,12 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = sortableRoles.findIndex(r => r.roleId === active.id)
-    const newIndex = sortableRoles.findIndex(r => r.roleId === over.id)
+    const oldIndex = sortableRoles.findIndex((r) => r.roleId === active.id)
+    const newIndex = sortableRoles.findIndex((r) => r.roleId === over.id)
     if (oldIndex === -1 || newIndex === -1) return
 
     const newSortableRoles = arrayMove(sortableRoles, oldIndex, newIndex)
-    const nonSortableRoles = roles.filter(r => r.priority >= userPriority)
+    const nonSortableRoles = roles.filter((r) => r.priority >= userPriority)
     setRoles([...nonSortableRoles, ...newSortableRoles])
 
     const targetRole = sortableRoles[oldIndex]!
@@ -112,32 +112,44 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard value={roles.length} label="Total Roles" />
         <StatCard value={permissions.length} label="Available Permissions" />
-        <StatCard value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0)} label="Total Users with Roles" />
+        <StatCard
+          value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0)}
+          label="Total Users with Roles"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 mb-6">
-        {roles.filter(r => r.priority >= userPriority).map((role) => (
-          <SortableRoleCard
-            key={role.roleId}
-            role={role}
-            {...sharedCardProps}
-            isPendingDelete={false}
-            isPendingSetDefault={false}
-            canEdit={false}
-          />
-        ))}
+        {roles
+          .filter((r) => r.priority >= userPriority)
+          .map((role) => (
+            <SortableRoleCard
+              key={role.roleId}
+              role={role}
+              {...sharedCardProps}
+              isPendingDelete={false}
+              isPendingSetDefault={false}
+              canEdit={false}
+            />
+          ))}
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={sortableRoles.map(r => r.roleId)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={sortableRoles.map((r) => r.roleId)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="grid grid-cols-1 gap-6">
             {sortableRoles.map((role) => (
               <SortableRoleCard
                 key={role.roleId}
                 role={role}
                 {...sharedCardProps}
-                isPendingDelete={deleteRoleMutation.isPending && deleteRoleMutation.variables === role.roleId}
-                isPendingSetDefault={setDefaultMutation.isPending && setDefaultMutation.variables === role.roleId}
+                isPendingDelete={
+                  deleteRoleMutation.isPending && deleteRoleMutation.variables === role.roleId
+                }
+                isPendingSetDefault={
+                  setDefaultMutation.isPending && setDefaultMutation.variables === role.roleId
+                }
                 canEdit={true}
               />
             ))}

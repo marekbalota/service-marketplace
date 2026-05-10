@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import {
-  User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Smartphone, MessageSquare, Plus,
+  User,
+  Bell,
+  Key,
+  Shield,
+  LogOut,
+  Users,
+  Mail,
+  Lock,
+  Smartphone,
+  MessageSquare,
+  Plus,
 } from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -15,56 +25,76 @@ import { ChangePasswordDialog } from './-components/ChangePasswordDialog'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
-  loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(currentUserQueryOptions),
+  loader: ({ context: { queryClient } }) => queryClient.ensureQueryData(currentUserQueryOptions),
   pendingComponent: AccountSettingsHubSkeleton,
   component: AccountSettingsHubPage,
 })
 
 const SECTIONS = [
-  { id: 'account-information',  label: 'Account Information',       icon: User        },
-  { id: 'notifications',        label: 'Notifications',             icon: Bell        },
-  { id: 'connected-accounts',   label: 'Connected Accounts',        icon: Key    },
-  { id: 'two-factor-auth',      label: 'Two-Factor Authentication', icon: Shield },
-  { id: 'login-management',     label: 'Login Management',          icon: LogOut      },
-  { id: 'user-profiles',        label: 'User Profiles',             icon: Users       },
+  { id: 'account-information', label: 'Account Information', icon: User },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'connected-accounts', label: 'Connected Accounts', icon: Key },
+  { id: 'two-factor-auth', label: 'Two-Factor Authentication', icon: Shield },
+  { id: 'login-management', label: 'Login Management', icon: LogOut },
+  { id: 'user-profiles', label: 'User Profiles', icon: Users },
 ] as const
 
-type SectionId = typeof SECTIONS[number]['id']
+type SectionId = (typeof SECTIONS)[number]['id']
 
 const NOTIFICATION_ROWS = [
   {
-    id:          'notif-email',
-    label:       'Email Notifications',
+    id: 'notif-email',
+    label: 'Email Notifications',
     description: 'Receive emails about new messages and activity',
-    icon:        Bell,
+    icon: Bell,
   },
   {
-    id:          'notif-messages',
-    label:       'Message Notifications',
+    id: 'notif-messages',
+    label: 'Message Notifications',
     description: 'Get notified when you receive a new message',
-    icon:        Mail,
+    icon: Mail,
   },
   {
-    id:          'notif-reviews',
-    label:       'Review Notifications',
+    id: 'notif-reviews',
+    label: 'Review Notifications',
     description: 'Get notified when someone reviews your post',
-    icon:        Bell,
+    icon: Bell,
   },
 ] as const
 
 const OAUTH_PROVIDERS = [
-  { id: 'google',    label: 'Google',    className: 'bg-white text-gray-900 border-gray-300 hover:bg-white'          },
-  { id: 'facebook',  label: 'Facebook',  className: 'bg-blue-600 text-white border-blue-600 hover:bg-blue-600'       },
-  { id: 'github',    label: 'GitHub',    className: 'bg-gray-900 text-white border-gray-900 hover:bg-gray-900'       },
-  { id: 'microsoft', label: 'Microsoft', className: 'bg-blue-500 text-white border-blue-500 hover:bg-blue-500'       },
-  { id: 'apple',     label: 'Apple',     className: 'bg-black text-white border-black hover:bg-black'                },
+  {
+    id: 'google',
+    label: 'Google',
+    className: 'bg-white text-gray-900 border-gray-300 hover:bg-white',
+  },
+  {
+    id: 'facebook',
+    label: 'Facebook',
+    className: 'bg-blue-600 text-white border-blue-600 hover:bg-blue-600',
+  },
+  {
+    id: 'github',
+    label: 'GitHub',
+    className: 'bg-gray-900 text-white border-gray-900 hover:bg-gray-900',
+  },
+  {
+    id: 'microsoft',
+    label: 'Microsoft',
+    className: 'bg-blue-500 text-white border-blue-500 hover:bg-blue-500',
+  },
+  { id: 'apple', label: 'Apple', className: 'bg-black text-white border-black hover:bg-black' },
 ] as const
 
 const TWO_FA_METHODS = [
-  { id: 'email',         label: 'Email',             description: 'Receive a code via email',                      icon: Mail        },
-  { id: 'authenticator', label: 'Authenticator App', description: 'Use an app like Google Authenticator or Authy', icon: Smartphone  },
-  { id: 'sms',           label: 'SMS',               description: 'Receive a code via text message',               icon: MessageSquare },
+  { id: 'email', label: 'Email', description: 'Receive a code via email', icon: Mail },
+  {
+    id: 'authenticator',
+    label: 'Authenticator App',
+    description: 'Use an app like Google Authenticator or Authy',
+    icon: Smartphone,
+  },
+  { id: 'sms', label: 'SMS', description: 'Receive a code via text message', icon: MessageSquare },
 ] as const
 
 function AccountSettingsHubSkeleton() {
@@ -104,28 +134,34 @@ function AccountSettingsHubPage() {
   const observersRef = useRef<IntersectionObserver[]>([])
 
   useEffect(() => {
-    observersRef.current.forEach(o => o.disconnect())
+    observersRef.current.forEach((o) => o.disconnect())
     observersRef.current = []
 
     SECTIONS.forEach(({ id }) => {
       const el = document.getElementById(id)
       if (!el) return
       const observer = new IntersectionObserver(
-        ([entry]) => { if (entry?.isIntersecting) setActiveSection(id as SectionId) },
+        ([entry]) => {
+          if (entry?.isIntersecting) setActiveSection(id as SectionId)
+        },
         { rootMargin: '-10% 0px -80% 0px', threshold: 0 },
       )
       observer.observe(el)
       observersRef.current.push(observer)
     })
 
-    return () => { observersRef.current.forEach(o => o.disconnect()) }
+    return () => {
+      observersRef.current.forEach((o) => o.disconnect())
+    }
   }, [])
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Account Settings</h1>
-        <p className="mt-1 text-muted-foreground">Manage your account preferences and security settings</p>
+        <p className="mt-1 text-muted-foreground">
+          Manage your account preferences and security settings
+        </p>
       </div>
 
       <div className="flex gap-8">
@@ -154,7 +190,6 @@ function AccountSettingsHubPage() {
 
         {/* Main content */}
         <div className="flex-1 space-y-8 min-w-0">
-
           {/* 1 — Account Information */}
           <Card id="account-information">
             <CardHeader>
@@ -177,7 +212,7 @@ function AccountSettingsHubPage() {
                   title="Coming soon"
                   onClick={() => setShowChangeEmail(true)}
                 >
-                  Change
+                  Change Email
                 </Button>
               </div>
               <Separator />
@@ -196,7 +231,7 @@ function AccountSettingsHubPage() {
                   title="Coming soon"
                   onClick={() => setShowChangePassword(true)}
                 >
-                  Change
+                  Change Password
                 </Button>
               </div>
             </CardContent>
@@ -214,7 +249,9 @@ function AccountSettingsHubPage() {
                   <div className="flex items-center gap-3">
                     <Icon className="size-5 text-muted-foreground shrink-0" />
                     <div>
-                      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
+                      <Label htmlFor={id} className="text-sm font-medium">
+                        {label}
+                      </Label>
                       <p className="text-sm text-muted-foreground">{description}</p>
                     </div>
                   </div>
@@ -231,7 +268,9 @@ function AccountSettingsHubPage() {
               <CardDescription>Link your OAuth providers for easy sign-in</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Available</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Available
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {OAUTH_PROVIDERS.map(({ id, label, className }) => (
                   <Button
@@ -266,7 +305,9 @@ function AccountSettingsHubPage() {
                       <p className="text-sm text-muted-foreground">{description}</p>
                     </div>
                   </div>
-                  <Button size="sm" disabled title="Coming soon">Enable</Button>
+                  <Button size="sm" disabled title="Coming soon">
+                    Enable
+                  </Button>
                 </div>
               ))}
             </CardContent>
@@ -302,17 +343,20 @@ function AccountSettingsHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {user?.profiles.length ?? 0} Active {(user?.profiles.length ?? 0) === 1 ? 'Profile' : 'Profiles'}
+                    {user?.profiles.length ?? 0} Active{' '}
+                    {(user?.profiles.length ?? 0) === 1 ? 'Profile' : 'Profiles'}
                   </p>
                   <p className="text-xs text-muted-foreground">Profiles for posting services</p>
                 </div>
               </div>
-              <Link to="/account-settings/profiles" className={buttonVariants({ variant: 'outline', className: 'w-full' })}>
+              <Link
+                to="/account-settings/profiles"
+                className={buttonVariants({ variant: 'outline', className: 'w-full' })}
+              >
                 Manage Profiles
               </Link>
             </CardContent>
           </Card>
-
         </div>
       </div>
 

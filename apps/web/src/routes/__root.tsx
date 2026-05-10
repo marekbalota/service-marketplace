@@ -1,9 +1,4 @@
-import {
-  HeadContent,
-  Outlet,
-  Scripts,
-  createRootRouteWithContext
-} from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -24,19 +19,17 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       {
-        charSet: 'utf-8'
+        charSet: 'utf-8',
       },
       {
         name: 'viewport',
-        content: 'width=device-width, initial-scale=1'
+        content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Marketplace for Services'
+        title: 'Marketplace for Services',
       },
     ],
-    links: [
-      { rel: 'stylesheet', href: appCss }
-    ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   notFoundComponent: NotFound,
   errorComponent: DefaultCatchBoundary,
@@ -61,9 +54,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <ActiveProfileProvider>
-              {children}
-            </ActiveProfileProvider>
+            <ActiveProfileProvider>{children}</ActiveProfileProvider>
           </TooltipProvider>
           <Toaster />
           <ReactQueryDevtools buttonPosition="bottom-left" />

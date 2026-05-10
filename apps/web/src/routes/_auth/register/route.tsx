@@ -1,17 +1,17 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { RegisterForm } from "./-components/RegisterForm";
-import { currentUserQueryOptions } from "#/lib/queries/users";
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
+import { RegisterForm } from './-components/RegisterForm'
+import { currentUserQueryOptions } from '#/lib/queries/users'
 
-export const Route = createFileRoute("/_auth/register")({
+export const Route = createFileRoute('/_auth/register')({
   component: RegisterPage,
-  beforeLoad: async ({ context : { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient } }) => {
     const user = await queryClient.fetchQuery(currentUserQueryOptions)
     if (user) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: '/' })
     }
   },
-});
+})
 
 function RegisterPage() {
   return (
@@ -24,7 +24,7 @@ function RegisterPage() {
         <RegisterForm />
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <Link to="/login" className="font-medium hover:text-foreground">
               Sign in
             </Link>
@@ -32,5 +32,5 @@ function RegisterPage() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -34,11 +34,18 @@ export function MessageBubble({
   })
 
   return (
-    <div className={cn('group flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}>
+    <div
+      className={cn('group flex flex-col gap-1', message.sentByMe ? 'items-end' : 'items-start')}
+    >
       {!message.sentByMe && (
         <span className="px-1 text-xs text-muted-foreground">{otherPartyName}</span>
       )}
-      <div className={cn('flex w-full items-center gap-1', message.sentByMe ? 'flex-row-reverse' : 'flex-row')}>
+      <div
+        className={cn(
+          'flex w-full items-center gap-1',
+          message.sentByMe ? 'flex-row-reverse' : 'flex-row',
+        )}
+      >
         <div
           className={cn(
             'max-w-[75%] rounded-2xl px-4 py-2 text-sm',

@@ -71,13 +71,17 @@ describe('VerifyEmailCallbackPage', () => {
 
     it('navigates to / after 1.5s', async () => {
       await renderPage()
-      await act(async () => { vi.advanceTimersByTime(1600) })
+      await act(async () => {
+        vi.advanceTimersByTime(1600)
+      })
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/' })
     })
 
     it('does not navigate before 1.5s', async () => {
       await renderPage()
-      await act(async () => { vi.advanceTimersByTime(1000) })
+      await act(async () => {
+        vi.advanceTimersByTime(1000)
+      })
       expect(mockNavigate).not.toHaveBeenCalled()
     })
   })
@@ -89,9 +93,7 @@ describe('VerifyEmailCallbackPage', () => {
 
     it('renders "Link expired or invalid" heading', async () => {
       await renderPage()
-      expect(
-        screen.getByRole('heading', { name: /link expired or invalid/i }),
-      ).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /link expired or invalid/i })).toBeInTheDocument()
     })
 
     it('renders link expiry explanation', async () => {
@@ -111,7 +113,9 @@ describe('VerifyEmailCallbackPage', () => {
 
     it('does not navigate automatically', async () => {
       await renderPage()
-      await act(async () => { vi.advanceTimersByTime(2000) })
+      await act(async () => {
+        vi.advanceTimersByTime(2000)
+      })
       expect(mockNavigate).not.toHaveBeenCalled()
     })
   })

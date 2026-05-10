@@ -79,9 +79,7 @@ describe('ImagePickerGrid', () => {
     const file = new File(['not-an-image'], 'bad.txt', { type: 'text/plain' })
     fireEvent.change(input, { target: { files: [file] } })
 
-    await waitFor(() =>
-      expect(screen.getByText(/1 file could not be read/i)).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByText(/1 file could not be read/i)).toBeInTheDocument())
     expect(onFilePicked).not.toHaveBeenCalled()
   })
 
@@ -107,7 +105,7 @@ describe('ImagePickerGrid', () => {
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
     const good = new File(['data'], 'good.jpg', { type: 'image/jpeg' })
-    const bad  = new File(['x'], 'bad.txt',  { type: 'text/plain' })
+    const bad = new File(['x'], 'bad.txt', { type: 'text/plain' })
     fireEvent.change(input, { target: { files: [good, bad] } })
 
     await waitFor(() => expect(onFilePicked).toHaveBeenCalledTimes(1))

@@ -25,7 +25,7 @@ const config = defineConfig({
         enabled: true,
       },
       router: {
-        routeFileIgnorePattern: "\\.test\\.(ts|tsx)$",
+        routeFileIgnorePattern: '\\.test\\.(ts|tsx)$',
       },
     }),
     viteReact(),

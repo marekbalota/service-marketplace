@@ -18,10 +18,10 @@ import { rolesQueryOptions } from '#/lib/queries/admin'
 import { UsersTable } from './-components/UsersTable'
 
 const searchSchema = z.object({
-  q:      z.string().optional().catch(undefined),
-  role:   z.string().optional().catch(undefined),
+  q: z.string().optional().catch(undefined),
+  role: z.string().optional().catch(undefined),
   status: z.enum(['all', 'active', 'banned']).optional().catch(undefined),
-  page:   z.number().int().positive().optional().catch(undefined),
+  page: z.number().int().positive().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/admin/users/')({
@@ -53,7 +53,13 @@ function RoleSelect() {
       value={role}
       onValueChange={(value) => {
         if (!value) return
-        navigate({ search: (prev) => ({ ...prev, role: value === 'all' ? undefined : value, page: undefined }) })
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            role: value === 'all' ? undefined : value,
+            page: undefined,
+          }),
+        })
       }}
     >
       <SelectTrigger className="w-full">
@@ -61,7 +67,9 @@ function RoleSelect() {
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
         {Object.entries(roleLabels).map(([value, label]) => (
-          <SelectItem key={value} value={value}>{label}</SelectItem>
+          <SelectItem key={value} value={value}>
+            {label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>
@@ -90,7 +98,9 @@ function StatusSelect() {
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
         {Object.entries(STATUS_LABELS).map(([value, label]) => (
-          <SelectItem key={value} value={value}>{label}</SelectItem>
+          <SelectItem key={value} value={value}>
+            {label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>

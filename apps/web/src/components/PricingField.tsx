@@ -18,11 +18,14 @@ interface PricingFieldProps<T extends FieldValues> {
 
 const RATE_TYPES = [
   { value: 'HOURLY', label: 'Hourly Rate' },
-  { value: 'DAILY',  label: 'Daily Rate'  },
-  { value: 'FIXED',  label: 'Fixed Price' },
+  { value: 'DAILY', label: 'Daily Rate' },
+  { value: 'FIXED', label: 'Fixed Price' },
 ] as const
 
-export function PricingField<T extends FieldValues>({ control: controlProp, priceValue }: PricingFieldProps<T>) {
+export function PricingField<T extends FieldValues>({
+  control: controlProp,
+  priceValue,
+}: PricingFieldProps<T>) {
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
   const control = controlProp as Control<FieldValues, any>
   return (
@@ -60,17 +63,22 @@ export function PricingField<T extends FieldValues>({ control: controlProp, pric
               <FieldLabel>Rate Type</FieldLabel>
               <Select
                 value={field.value ?? ''}
-                onValueChange={(v) => { field.onChange(v); field.onBlur() }}
+                onValueChange={(v) => {
+                  field.onChange(v)
+                  field.onBlur()
+                }}
                 disabled={!priceValue}
               >
                 <SelectTrigger className="!h-11 w-full">
                   <SelectValue placeholder="Select rate type">
-                    {RATE_TYPES.find(r => r.value === field.value)?.label}
+                    {RATE_TYPES.find((r) => r.value === field.value)?.label}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {RATE_TYPES.map(r => (
-                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  {RATE_TYPES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

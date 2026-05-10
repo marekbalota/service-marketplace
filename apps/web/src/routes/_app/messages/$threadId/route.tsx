@@ -40,9 +40,7 @@ function ThreadPage() {
   }
 
   if (!activeProfile) {
-    return (
-      <EmptyState message="No active profile. Set up a profile to use messages." />
-    )
+    return <EmptyState message="No active profile. Set up a profile to use messages." />
   }
 
   return (

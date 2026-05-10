@@ -2,15 +2,20 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '#/components/ui/dialog'
 
 export function ChangeEmailDialog({
   open,
   onOpenChange,
 }: {
-  open:          boolean
-  onOpenChange:  (open: boolean) => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -30,8 +35,12 @@ export function ChangeEmailDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled title="Coming soon">Change Email</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled title="Coming soon">
+            Change Email
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

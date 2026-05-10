@@ -69,7 +69,7 @@ export function PaginationBar({
                 {item}
               </PaginationLink>
             </PaginationItem>
-          )
+          ),
         )}
 
         <PaginationItem>

@@ -14,7 +14,9 @@ test.describe('My Postings', () => {
 
   test('shows posts or an empty state after data loads', async ({ page }) => {
     await expect(
-      page.getByText("You haven't created any postings yet.").or(page.locator('main .grid').first()),
+      page
+        .getByText("You haven't created any postings yet.")
+        .or(page.locator('main .grid').first()),
     ).toBeVisible()
   })
 })
@@ -48,7 +50,7 @@ test.describe('Marketplace index', () => {
     const totalBefore = parseInt(totalText!.match(/\d+/)![0]!)
 
     await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
-    await page.waitForResponse(resp => resp.url().includes('/posts') && resp.status() === 200)
+    await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
 
     const filteredText = await page.getByText(/\d+ service/).textContent()
     const totalAfter = parseInt(filteredText!.match(/\d+/)![0]!)
@@ -58,7 +60,7 @@ test.describe('Marketplace index', () => {
 
   test('shows empty state when search yields no results', async ({ page }) => {
     await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
-    await page.waitForResponse(resp => resp.url().includes('/posts') && resp.status() === 200)
+    await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
 
     await expect(page.getByText('No services found matching your criteria.')).toBeVisible()
   })
@@ -84,7 +86,9 @@ test.describe('Marketplace index', () => {
     await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
   })
 
-  test('post detail page shows the post title, description section and author', async ({ page }) => {
+  test('post detail page shows the post title, description section and author', async ({
+    page,
+  }) => {
     await expect(page.locator('main .grid > a').first()).toBeVisible()
     const titleText = await page.locator('main .grid > a').first().locator('h3').textContent()
     await page.locator('main .grid > a').first().click()
@@ -112,11 +116,11 @@ test.describe('Account Settings — Profile CRUD', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/account-settings')
+    await page.goto('/account-settings/profiles')
   })
 
-  test('shows the Account Settings heading', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /account settings/i })).toBeVisible()
+  test('shows the Manage Profiles heading', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /manage profiles/i })).toBeVisible()
   })
 
   test('shows at least one existing profile card', async ({ page }) => {
@@ -125,35 +129,37 @@ test.describe('Account Settings — Profile CRUD', () => {
 
   test('create — navigates to create page and back', async ({ page }) => {
     await page.getByRole('link', { name: /add profile/i }).click()
-    await expect(page).toHaveURL('/account-settings/create')
-    await expect(page.getByText(/add a new profile to your account/i)).toBeVisible()
+    await expect(page).toHaveURL('/account-settings/profiles/create')
+    await expect(page.getByText(/create a new profile on your account/i)).toBeVisible()
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page).toHaveURL('/account-settings')
+    await expect(page).toHaveURL('/account-settings/profiles')
   })
 
   test('create — fills form and submits, new profile appears in list', async ({ page }) => {
     const uniqueEmail = `e2e-profile-${Date.now()}@example.com`
     await page.getByRole('link', { name: /add profile/i }).click()
-    await expect(page).toHaveURL('/account-settings/create')
+    await expect(page).toHaveURL('/account-settings/profiles/create')
     await page.getByPlaceholder('e.g., John Smith').fill('E2E Test Profile')
     await page.getByPlaceholder('email@example.com').fill(uniqueEmail)
     await page.getByRole('button', { name: /create profile/i }).click()
-    await page.waitForURL('/account-settings')
+    await page.waitForURL('/account-settings/profiles')
     await expect(page.getByRole('heading', { name: 'E2E Test Profile' }).first()).toBeVisible()
   })
 
   test('edit — navigates to edit page, updates name, returns to list', async ({ page }) => {
-    // Click Edit on the first profile that is NOT active (to avoid conflict)
     const editLinks = page.getByRole('link', { name: /^edit$/i })
     await editLinks.first().click()
-    await expect(page).toHaveURL(/\/account-settings\/[^/]+\/edit/)
+    await expect(page).toHaveURL(/\/account-settings\/profiles\/[^/]+\/edit/)
     await expect(page.getByText(/update your profile information/i)).toBeVisible()
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page).toHaveURL('/account-settings')
+    await expect(page).toHaveURL('/account-settings/profiles')
   })
 
   test('view — navigates to public profile view page', async ({ page }) => {
-    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
     await expect(page).toHaveURL(/\/profiles\/[^/]+/)
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
   })
@@ -173,7 +179,7 @@ test.describe('Create Post', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
     await page.goto('/create-post')
@@ -186,9 +192,9 @@ test.describe('Create Post', () => {
   test('creates a post and redirects to My Postings', async ({ page }) => {
     const uniqueTitle = `E2E Lawn Care ${Date.now()}`
     await page.getByPlaceholder(/Professional Lawn Care Service/i).fill(uniqueTitle)
-    await page.getByPlaceholder(/Describe your service offering or request in detail/i).fill(
-      'This is an e2e test post with enough text to pass the 10 character minimum.',
-    )
+    await page
+      .getByPlaceholder(/Describe your service offering or request in detail/i)
+      .fill('This is an e2e test post with enough text to pass the 10 character minimum.')
     await page.getByRole('button', { name: /create posting/i }).click()
     await page.waitForURL('/my-postings')
     await expect(page.getByText(uniqueTitle)).toBeVisible()
@@ -199,7 +205,7 @@ test.describe('Messages', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
     // Wait for user data to load so activeProfile is set in localStorage before navigating elsewhere
@@ -219,7 +225,9 @@ test.describe('Messages', () => {
     await page.getByPlaceholder('Search services, providers, or keywords...').fill('Carol White')
     await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
     // Wait for post cards to be visible (not just in DOM)
-    await expect(page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first()).toBeVisible({ timeout: 10000 })
+    await expect(
+      page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first(),
+    ).toBeVisible({ timeout: 10000 })
 
     // Click on the first post card by Carol
     const carolPost = page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first()
@@ -243,7 +251,9 @@ test.describe('Messages', () => {
       await goToChat.click()
     } else {
       await sendMessageBtn.click()
-      await page.getByPlaceholder(/write your message/i).fill('Hello, I am interested in this service!')
+      await page
+        .getByPlaceholder(/write your message/i)
+        .fill('Hello, I am interested in this service!')
       await page.getByRole('button', { name: /^send$/i }).click()
     }
 
@@ -255,7 +265,7 @@ test.describe('Admin', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
-    await page.getByLabel(/password/i).fill('admin123')
+    await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
   })
@@ -266,7 +276,7 @@ test.describe('Admin', () => {
   })
 
   test('shows the manage accounts page', async ({ page }) => {
-    await page.goto('/admin/users')
+    await page.goto('/admin/users', { waitUntil: 'networkidle' })
     await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
   })
 
@@ -291,7 +301,10 @@ test.describe('Admin', () => {
 
   test('View button navigates to user detail page', async ({ page }) => {
     await page.goto('/admin/users')
-    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
     await expect(page).toHaveURL(/\/admin\/users\/[0-9a-f-]+$/)
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
@@ -302,7 +315,10 @@ test.describe('Admin', () => {
     await page.getByRole('button', { name: /^create role$/i }).click()
     await page.getByLabel(/role name/i).fill(roleName)
     await page.getByLabel(/description/i).fill('Created by e2e test')
-    await page.getByRole('button', { name: /^create role$/i }).last().click()
+    await page
+      .getByRole('button', { name: /^create role$/i })
+      .last()
+      .click()
     await expect(page.getByText(roleName)).toBeVisible()
   })
 
@@ -327,10 +343,7 @@ test.describe('Banned page', () => {
     // Seed the ban info that the banned page reads from sessionStorage
     await page.goto('/')
     await page.evaluate(() => {
-      sessionStorage.setItem(
-        'banInfo',
-        JSON.stringify({ reason: 'E2E test ban', expiresAt: null }),
-      )
+      sessionStorage.setItem('banInfo', JSON.stringify({ reason: 'E2E test ban', expiresAt: null }))
     })
     await page.goto('/banned')
 
@@ -352,17 +365,19 @@ test.describe('Authentication', () => {
     await page.goto('/register')
     await page.getByLabel(/name/i).fill(testName)
     await page.getByRole('textbox', { name: /email/i }).fill(testEmail)
-    await page.getByLabel(/password/i).fill(testPassword)
+    await page.locator('input[type="password"]').fill(testPassword)
     await page.getByRole('button', { name: /register/i }).click()
 
     await page.waitForURL(/\/verify-email/)
-    await expect(page.getByText(new RegExp(`We sent a verification link to ${testEmail}`))).toBeVisible()
+    await expect(
+      page.getByText(new RegExp(`We sent a verification link to ${testEmail}`)),
+    ).toBeVisible()
   })
 
   test('login — fills form, submits, lands on home page logged in', async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
     await page.waitForURL('/posts')
@@ -379,7 +394,7 @@ test.describe('Authentication', () => {
   test('logout — clears session, shows login link in header', async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
 
@@ -396,7 +411,7 @@ test.describe('Email verification', () => {
     await page.goto('/register')
     await page.getByLabel(/full name/i).fill('E2E Verify User')
     await page.getByRole('textbox', { name: /email/i }).fill(uniqueEmail)
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /register/i }).click()
 
     await page.waitForURL('/verify-email**')
@@ -406,9 +421,7 @@ test.describe('Email verification', () => {
 
   test('invalid verification link shows error state on callback page', async ({ page }) => {
     await page.goto('/verify-email/callback?error=invalid_token')
-    await expect(
-      page.getByRole('heading', { name: /link expired or invalid/i }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /link expired or invalid/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /go to sign in/i })).toBeVisible()
   })
 
@@ -422,7 +435,7 @@ test.describe('Email verification', () => {
   test('login with unverified account redirects to /verify-email', async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('unverified@example.com')
-    await page.getByLabel(/password/i).fill('password123')
+    await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
     await page.waitForURL('/verify-email**')
@@ -439,7 +452,7 @@ test.describe('User Impersonation', () => {
     const page = await context.newPage()
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
-    await page.getByLabel(/password/i).fill('admin123')
+    await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
 
@@ -458,7 +471,7 @@ test.describe('User Impersonation', () => {
     // Step 1: Admin logs in and navigates to Alice's detail page
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
-    await page.getByLabel(/password/i).fill('admin123')
+    await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
     await page.goto(`/admin/users/${aliceUserId}`)
@@ -483,10 +496,12 @@ test.describe('User Impersonation', () => {
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
 
-  test('logout while impersonating stops impersonation and navigates to admin user page', async ({ page }) => {
+  test('logout while impersonating stops impersonation and navigates to admin user page', async ({
+    page,
+  }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
-    await page.getByLabel(/password/i).fill('admin123')
+    await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
     await page.waitForURL('/posts')
     await page.goto(`/admin/users/${aliceUserId}`)

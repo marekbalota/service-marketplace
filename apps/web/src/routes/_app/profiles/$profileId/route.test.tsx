@@ -26,18 +26,18 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
   return {
     ...actual,
-    useParams:   vi.fn(() => ({ profileId: 'profile-1' })),
-    useRouter:   vi.fn(() => ({ history: { back: vi.fn() } })),
-    useSearch:   vi.fn(() => ({ tab: undefined, page: undefined })),
+    useParams: vi.fn(() => ({ profileId: 'profile-1' })),
+    useRouter: vi.fn(() => ({ history: { back: vi.fn() } })),
+    useSearch: vi.fn(() => ({ tab: undefined, page: undefined })),
     useNavigate: vi.fn(() => vi.fn()),
   }
 })
 
 vi.mock('#/lib/queries/profiles', () => ({
-  profileQueryOptions:           (id: string) => ({ queryKey: ['profiles', id] }),
-  imagesQueryOptions:            (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
-  profileLocationsQueryOptions:  (id: string) => ({ queryKey: ['locations', 'profile', id] }),
-  profilePostsQueryOptions:      (id: string, page: number, archived: boolean, pageSize = 12) => ({
+  profileQueryOptions: (id: string) => ({ queryKey: ['profiles', id] }),
+  imagesQueryOptions: (id: string) => ({ queryKey: ['profiles', id, 'images'] }),
+  profileLocationsQueryOptions: (id: string) => ({ queryKey: ['locations', 'profile', id] }),
+  profilePostsQueryOptions: (id: string, page: number, archived: boolean, pageSize = 12) => ({
     queryKey: ['profiles', id, 'posts', { page, archived, pageSize }],
   }),
   profilePostsCountQueryOptions: (id: string) => ({ queryKey: ['profiles', id, 'posts', 'count'] }),
@@ -55,13 +55,13 @@ vi.mock('#/context/activeProfile', () => ({
 
 const profile = {
   userProfileId: 'profile-1',
-  name:          'Alice Johnson',
-  email:         'alice@example.com',
-  bio:           'Software engineer',
-  phoneNumber:   '+1 555 0001',
-  fax:           '+1 555 0002',
-  createdAt:     new Date('2024-01-01'),
-  updatedAt:     null,
+  name: 'Alice Johnson',
+  email: 'alice@example.com',
+  bio: 'Software engineer',
+  phoneNumber: '+1 555 0001',
+  fax: '+1 555 0002',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: null,
   averageRating: 4.5,
 }
 
@@ -89,8 +89,12 @@ describe('ProfileViewPage', () => {
       }
       return { data: profile }
     })
-    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<typeof useCurrentUser>)
-    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<typeof useActiveProfile>)
+    vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
+      typeof useCurrentUser
+    >)
+    vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<
+      typeof useActiveProfile
+    >)
   })
 
   it('renders the profile name as page heading', async () => {
@@ -98,9 +102,9 @@ describe('ProfileViewPage', () => {
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
   })
 
-  it('renders the Basic Information card title', async () => {
+  it('renders the Bio label', async () => {
     await renderPage()
-    expect(screen.getByText('Basic Information')).toBeInTheDocument()
+    expect(screen.getByText('Bio')).toBeInTheDocument()
   })
 
   it('renders member since date in subtitle area', async () => {
@@ -144,7 +148,9 @@ describe('ProfileViewPage', () => {
   })
 
   it('shows Active and Archived tabs for authenticated users', async () => {
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'other-user' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { id: 'other-user' },
+    } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'other-profile', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)
@@ -154,7 +160,9 @@ describe('ProfileViewPage', () => {
   })
 
   it('renders posts heading for authenticated user', async () => {
-    vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'some-user' } } as unknown as ReturnType<typeof useCurrentUser>)
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { id: 'some-user' },
+    } as unknown as ReturnType<typeof useCurrentUser>)
     vi.mocked(useActiveProfile).mockReturnValue({
       activeProfile: { userProfileId: 'other-profile', name: 'Bob', email: 'bob@example.com' },
     } as ReturnType<typeof useActiveProfile>)

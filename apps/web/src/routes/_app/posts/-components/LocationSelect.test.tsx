@@ -9,7 +9,7 @@ const mockUseNavigate = vi.hoisted(() => vi.fn())
 // Route is imported directly from '../index' by LocationSelect — mock that module
 vi.mock('../index', () => ({
   Route: {
-    useSearch:   mockUseSearch,
+    useSearch: mockUseSearch,
     useNavigate: mockUseNavigate,
   },
 }))
@@ -42,8 +42,8 @@ describe('LocationSelect', () => {
   it('renders the city label when city search param is set', () => {
     mockUseSearch.mockReturnValue({
       country: 'Slovakia',
-      region:  'Bratislava Region',
-      city:    'Bratislava',
+      region: 'Bratislava Region',
+      city: 'Bratislava',
     })
     render(<LocationSelect />)
     expect(screen.getByText('Bratislava')).toBeInTheDocument()
@@ -58,8 +58,8 @@ describe('LocationSelect', () => {
   it('renders the region label when country and region are set but not city', () => {
     mockUseSearch.mockReturnValue({
       country: 'Slovakia',
-      region:  'Bratislava Region',
-      city:    undefined,
+      region: 'Bratislava Region',
+      city: undefined,
     })
     render(<LocationSelect />)
     expect(screen.getByText('Bratislava Region')).toBeInTheDocument()

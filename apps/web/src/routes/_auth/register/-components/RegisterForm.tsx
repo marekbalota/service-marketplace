@@ -1,21 +1,21 @@
-import { useState } from "react"
-import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useNavigate } from "@tanstack/react-router"
-import { Turnstile } from "@marsidev/react-turnstile"
-import { authClient } from "#/auth"
-import { parseAuthErrorBody } from "#/lib/api-error"
-import { env } from "#/env"
-import { useAppTheme } from "#/lib/theme"
-import { Button } from "#/components/ui/button"
-import { Input } from "#/components/ui/input"
-import { Field, FieldError, FieldGroup, FieldLabel } from "#/components/ui/field"
+import { useState } from 'react'
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useNavigate } from '@tanstack/react-router'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { authClient } from '#/auth'
+import { parseAuthErrorBody } from '#/lib/api-error'
+import { env } from '#/env'
+import { useAppTheme } from '#/lib/theme'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 
 const registerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.email("Please enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, 'Name is required'),
+  email: z.email('Please enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 type RegisterValues = z.infer<typeof registerSchema>
@@ -27,28 +27,28 @@ export function RegisterForm() {
   const theme = useAppTheme()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "" },
-    mode: "onTouched",
+    defaultValues: { name: '', email: '', password: '' },
+    mode: 'onTouched',
   })
 
   const onSubmit: SubmitHandler<RegisterValues> = async (values) => {
     const { error } = await authClient.signUp.email(values, {
-      headers: { "x-captcha-response": captchaToken! },
+      headers: { 'x-captcha-response': captchaToken! },
     })
     if (!error) {
-      void navigate({ to: "/verify-email", search: { email: values.email } })
+      void navigate({ to: '/verify-email', search: { email: values.email } })
       return
     }
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
       if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
         setCaptchaToken(null)
-        form.setError("root", { message: body.message as string ?? error.message })
+        form.setError('root', { message: (body.message as string) ?? error.message })
         return
       }
     }
     setCaptchaToken(null)
-    form.setError("root", { message: error.message })
+    form.setError('root', { message: error.message })
   }
 
   return (
@@ -109,19 +109,23 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
-      <div className={challengeVisible ? undefined : "!hidden"}>
+      <div className={challengeVisible ? undefined : '!hidden'}>
         <Turnstile
           siteKey={env.turnstileSiteKey}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
           onError={() => setCaptchaToken(null)}
           onBeforeInteractive={() => setChallengeVisible(true)}
-          options={{ retry: "auto", refreshExpired: "auto", theme, size: "flexible" }}
+          options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
         />
       </div>
       <FieldError errors={[form.formState.errors.root]} />
-      <Button type="submit" className="w-full" disabled={!captchaToken || form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? "Registering…" : "Register"}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={!captchaToken || form.formState.isSubmitting}
+      >
+        {form.formState.isSubmitting ? 'Registering…' : 'Register'}
       </Button>
     </form>
   )

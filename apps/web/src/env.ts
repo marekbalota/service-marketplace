@@ -4,6 +4,6 @@ function required(key: string, value: string | undefined): string {
 }
 
 export const env = {
-  apiUrl: required("VITE_API_URL", import.meta.env.VITE_API_URL),
-  turnstileSiteKey: required("VITE_TURNSTILE_SITE_KEY", import.meta.env.VITE_TURNSTILE_SITE_KEY),
+  apiUrl: required('VITE_API_URL', import.meta.env.VITE_API_URL),
+  turnstileSiteKey: required('VITE_TURNSTILE_SITE_KEY', import.meta.env.VITE_TURNSTILE_SITE_KEY),
 }

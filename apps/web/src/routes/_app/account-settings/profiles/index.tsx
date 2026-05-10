@@ -77,19 +77,28 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
         size="sm"
         className="w-24 gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
         disabled={mutation.isPending}
-        onClick={() => { setErrorMsg(null); mutation.mutate() }}
+        onClick={() => {
+          setErrorMsg(null)
+          mutation.mutate()
+        }}
       >
         <Trash2 className="size-4" />
         Delete
       </Button>
-      {errorMsg && (
-        <p className="max-w-48 text-right text-xs text-destructive">{errorMsg}</p>
-      )}
+      {errorMsg && <p className="max-w-48 text-right text-xs text-destructive">{errorMsg}</p>}
     </div>
   )
 }
 
-function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isActive: boolean; isOnly: boolean }) {
+function ProfileCard({
+  profile,
+  isActive,
+  isOnly,
+}: {
+  profile: UserProfile
+  isActive: boolean
+  isOnly: boolean
+}) {
   const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
   const visibleImages = images.slice(0, 3)
   const extraCount = images.length - visibleImages.length
@@ -105,10 +114,12 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold">{profile.name}</h3>
                 {isActive && (
-                  <span className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
-                    'bg-active-bg text-active-fg border-active-border',
-                  )}>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
+                      'bg-active-bg text-active-fg border-active-border',
+                    )}
+                  >
                     <CheckCircle2 className="size-3" />
                     Active
                   </span>
@@ -182,7 +193,7 @@ function ProfileCard({ profile, isActive, isOnly }: { profile: UserProfile; isAc
       </CardContent>
 
       <ImageLightbox
-        images={images.map(img => ({ src: img.link, alt: img.name }))}
+        images={images.map((img) => ({ src: img.link, alt: img.name }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

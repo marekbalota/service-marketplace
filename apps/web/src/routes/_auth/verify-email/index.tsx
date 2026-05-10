@@ -94,9 +94,7 @@ function VerifyEmailPage() {
             {cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend verification email'}
           </Button>
         )}
-        {resendError && (
-          <p className="text-center text-sm text-destructive">{resendError}</p>
-        )}
+        {resendError && <p className="text-center text-sm text-destructive">{resendError}</p>}
         <div className="text-center">
           <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
             Already have an account? Sign in

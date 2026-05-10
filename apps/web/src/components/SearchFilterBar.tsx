@@ -67,9 +67,7 @@ export function SearchFilterBar({
           <SheetContent>
             <SheetHeader>
               <SheetTitle>{sheetTitle}</SheetTitle>
-              {sheetDescription && (
-                <SheetDescription>{sheetDescription}</SheetDescription>
-              )}
+              {sheetDescription && <SheetDescription>{sheetDescription}</SheetDescription>}
             </SheetHeader>
             <div className="mt-4 space-y-4 px-4">
               {filters.map(({ label, control }) => (

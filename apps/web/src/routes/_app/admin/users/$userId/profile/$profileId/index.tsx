@@ -16,11 +16,15 @@ import { PaginationBar } from '#/components/PaginationBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '#/components/ui/tabs'
 import { hasPermissions, Permissions } from '@marketplace/shared'
 import { useCurrentUser } from '#/lib/queries/users'
-import { profileQueryOptions, profilePostsQueryOptions, profilePostsCountQueryOptions } from '#/lib/queries/profiles'
+import {
+  profileQueryOptions,
+  profilePostsQueryOptions,
+  profilePostsCountQueryOptions,
+} from '#/lib/queries/profiles'
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
-  tab:  z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_app/admin/users/$userId/profile/$profileId/')({
@@ -43,7 +47,11 @@ function ProfileInfoCard({ profileId }: { profileId: string }) {
     <Card className="mb-6">
       <CardContent className="pt-2">
         <div className="flex items-start gap-4">
-          <ProfileAvatar name={profile.name} className="size-16 shrink-0 shadow-md" fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-lg" />
+          <ProfileAvatar
+            name={profile.name}
+            className="size-16 shrink-0 shadow-md"
+            fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-lg"
+          />
           <div className="flex-1">
             <h1 className="text-xl font-semibold mb-0.5">{profile.name}</h1>
             <p className="text-sm text-muted-foreground mb-1">{profile.email}</p>
@@ -130,7 +138,12 @@ function ProfilePostsList({
       </div>
 
       {totalPages > 1 && (
-        <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} className="mt-6" />
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="mt-6"
+        />
       )}
 
       <ConfirmDialog
