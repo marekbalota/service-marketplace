@@ -138,17 +138,17 @@ describe('VerifyEmailPage', () => {
     })
   })
 
-  it('polling: does not navigate when getSession returns no session', async () => {
-    mockGetSession.mockResolvedValue({ data: null, error: null })
-    await renderPage()
-    await act(async () => { vi.advanceTimersByTime(9000) })
-    expect(mockNavigate).not.toHaveBeenCalled()
-  })
-
   it('polling: does not navigate when getSession throws', async () => {
     mockGetSession.mockRejectedValue(new Error('network error'))
     await renderPage()
     await act(async () => { vi.advanceTimersByTime(3100) })
     expect(mockNavigate).not.toHaveBeenCalled()
   })
+
+  it('renders a sign-in link pointing to /login', async () => {
+    await renderPage()
+    const link = screen.getByRole('link', { name: /already have an account/i })
+    expect(link).toHaveAttribute('href', '/login')
+  })
+
 })

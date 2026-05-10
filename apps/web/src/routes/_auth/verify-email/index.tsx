@@ -99,7 +99,7 @@ function VerifyEmailPage() {
         )}
         <div className="text-center">
           <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
-            Wrong email? Sign in with a different account
+            Already have an account? Sign in
           </Link>
         </div>
       </CardContent>
