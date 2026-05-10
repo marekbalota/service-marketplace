@@ -19,7 +19,10 @@ vi.mock('#/context/activeProfile', () => ({
 }))
 
 vi.mock('#/api', () => ({
-  api: { reviews: { post: vi.fn() } },
+  api: {
+    reviews: { post: vi.fn() },
+    'review-images': { post: vi.fn() },
+  },
 }))
 
 vi.mock('#/components/StarRatingInput', () => ({
@@ -33,6 +36,12 @@ vi.mock('#/components/StarRatingInput', () => ({
     </div>
   ),
 }))
+
+// ImagePickerGrid uses URL.createObjectURL — stub it in tests
+vi.stubGlobal('URL', {
+  createObjectURL: vi.fn(() => 'blob:mock'),
+  revokeObjectURL: vi.fn(),
+})
 
 function renderForm(props = {}) {
   return render(
@@ -73,6 +82,14 @@ describe('ReviewForm', () => {
         expect.objectContaining({ rating: 4, description: 'Great service!' }),
       )
     })
+  })
+
+  it('renders the Images section with an add button', () => {
+    renderForm()
+    expect(screen.getByText('Images (Optional)')).toBeInTheDocument()
+    // ImagePickerGrid always renders at least the "+" add button
+    const buttons = screen.getAllByRole('button')
+    expect(buttons.some(b => b.querySelector('svg'))).toBe(true)
   })
 
   it('calls onCancel when the cancel button is clicked', () => {

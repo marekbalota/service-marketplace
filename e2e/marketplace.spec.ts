@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('My Postings', () => {
+  test.use({ storageState: 'e2e/.auth/alice.json' })
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
@@ -112,6 +114,8 @@ test.describe('Marketplace index', () => {
 })
 
 test.describe('Account Settings — Profile CRUD', () => {
+  test.use({ storageState: 'e2e/.auth/alice.json' })
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')

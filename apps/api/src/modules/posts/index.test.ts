@@ -427,3 +427,43 @@ describe("GET /posts — categoryIds filter", () => {
     expect(all!.total).toBe(unfiltered!.total);
   });
 });
+
+describe("GET /posts — location filter", () => {
+  it("filters by country — all returned items have a matching location", async () => {
+    const { data, error } = await client.posts.get({ query: { country: "Slovakia" } });
+    expect(error).toBeNull();
+    // All items must have a location with country = Slovakia
+    // (posts without location are excluded by the SQL WHERE condition)
+    for (const item of data!.items) {
+      expect(item.location).not.toBeNull();
+      expect(item.location!.country).toBe("Slovakia");
+    }
+  });
+
+  it("case-insensitive: country=slovakia matches country=Slovakia", async () => {
+    const { data: lower } = await client.posts.get({ query: { country: "slovakia" } });
+    const { data: exact } = await client.posts.get({ query: { country: "Slovakia" } });
+    expect(lower!.total).toBe(exact!.total);
+  });
+
+  it("combined country + city filter narrows results", async () => {
+    const { data: countryOnly } = await client.posts.get({ query: { country: "Slovakia" } });
+    const { data: withCity } = await client.posts.get({ query: { country: "Slovakia", city: "Trenčín" } });
+
+    if (countryOnly!.total === 0) return; // no seeded Slovak posts — skip
+    expect(withCity!.total).toBeLessThanOrEqual(countryOnly!.total);
+  });
+
+  it("returns empty items for a country that has no posts", async () => {
+    const { data, error } = await client.posts.get({ query: { country: "Nonexistent Country XYZ" } });
+    expect(error).toBeNull();
+    expect(data!.items).toHaveLength(0);
+    expect(data!.total).toBe(0);
+  });
+
+  it("diacritic-insensitive: city=Trencin matches city=Trenčín", async () => {
+    const { data: accent } = await client.posts.get({ query: { country: "Slovakia", city: "Trenčín" } });
+    const { data: noAccent } = await client.posts.get({ query: { country: "Slovakia", city: "Trencin" } });
+    expect(noAccent!.total).toBe(accent!.total);
+  });
+});

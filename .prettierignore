@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+.output
+.nitro
+.tanstack
+.vinxi
+coverage
+apps/api/drizzle
+apps/web/src/routeTree.gen.ts
+*.min.js
+*.min.css
+bun.lock
+pnpm-lock.yaml
+package-lock.json

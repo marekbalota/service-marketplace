@@ -20,8 +20,10 @@ import { errorsPlugin } from "./lib/errors";
 import { favouritesRoutes } from "./modules/favourites";
 import { messagesRoutes } from "./modules/messages";
 import { reviewsRoutes } from "./modules/reviews";
+import { reviewImagesRoutes } from "./modules/review-images";
 import { reportCategoriesRoutes } from "./modules/reports";
 import { initBucket } from "./lib/storage";
+import { locationsRoutes } from "./modules/locations";
 
 export const app = new Elysia()
   .use(errorsPlugin)
@@ -51,6 +53,7 @@ export const app = new Elysia()
         { name: "Messages",   description: "Message threads and chat messages" },
         { name: "Reviews",    description: "Post reviews and ratings" },
         { name: "Reports",    description: "Post reports" },
+        { name: "Locations",  description: "Distinct location values for filtering" },
       ],
     },
   }))
@@ -60,6 +63,7 @@ export const app = new Elysia()
   .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)
+  .use(reviewImagesRoutes)
   .use(categoriesRoutes)
   .use(profilesRoutes)
   .use(imagesRoutes)
@@ -69,6 +73,7 @@ export const app = new Elysia()
   .use(favouritesRoutes)
   .use(messagesRoutes)
   .use(reportCategoriesRoutes)
+  .use(locationsRoutes)
   .listen(3001);
 
 initBucket().catch((err) => console.error('[MinIO] bucket init failed:', err))
