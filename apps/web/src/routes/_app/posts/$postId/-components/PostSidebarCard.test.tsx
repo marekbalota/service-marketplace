@@ -7,7 +7,11 @@ const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
-  return { ...actual, useSuspenseQuery: mockUseSuspenseQuery }
+  return {
+    ...actual,
+    useSuspenseQuery: mockUseSuspenseQuery,
+    useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+  }
 })
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {

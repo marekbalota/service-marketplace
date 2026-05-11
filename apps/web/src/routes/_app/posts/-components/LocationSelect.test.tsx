@@ -22,6 +22,11 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   }
 })
 
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return { ...actual, useMatch: vi.fn(() => ({})) }
+})
+
 // ── Import component after mocks ──────────────────────────────────────────────
 
 import { LocationSelect } from './LocationSelect'

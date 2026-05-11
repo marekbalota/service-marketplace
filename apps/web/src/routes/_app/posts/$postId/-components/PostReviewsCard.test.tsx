@@ -75,6 +75,7 @@ describe('PostReviewsCard', () => {
             rating: 5,
             reviewDescription: null,
             reviewerId: 'p-alice',
+            images: [],
           },
           {
             reviewId: 'r2',
@@ -83,6 +84,7 @@ describe('PostReviewsCard', () => {
             rating: 3,
             reviewDescription: null,
             reviewerId: 'p-charlie',
+            images: [],
           },
         ],
       },
@@ -132,6 +134,7 @@ describe('PostReviewsCard', () => {
             rating: 4,
             reviewDescription: null,
             reviewerId: profileId,
+            images: [],
           },
         ],
       },

@@ -21,6 +21,14 @@ vi.mock('./ImpersonationBanner', () => ({
   ImpersonationBanner: () => <div data-testid="impersonation-banner">Impersonation Banner</div>,
 }))
 
+vi.mock('#/lib/queries/auth', () => ({
+  useStopImpersonating: () => ({ mutate: vi.fn() }),
+}))
+
+vi.mock('#/router', () => ({
+  queryClient: { setQueryData: vi.fn(), clear: vi.fn() },
+}))
+
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 
