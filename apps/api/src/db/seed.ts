@@ -969,18 +969,293 @@ async function seed() {
     },
   ]
 
+  const insertedReviews: { reviewId: string }[] = []
   for (const review of reviewsData) {
     const postId = insertedPosts[review.postIndex]?.postId
     if (!postId) {
       continue
     }
-    await db.insert(schema.reviews).values({
-      reviewerId: review.reviewerId,
-      postId,
-      rating: review.rating,
-      reviewDescription: review.reviewDescription,
-    })
+    const [inserted] = await db
+      .insert(schema.reviews)
+      .values({
+        reviewerId: review.reviewerId,
+        postId,
+        rating: review.rating,
+        reviewDescription: review.reviewDescription,
+      })
+      .returning()
+    insertedReviews.push(inserted!)
   }
+
+  // ── Message threads, messages, and reports ──
+  console.log('\n  Seeding threads, messages, and reports...')
+
+  const allReportCats = await db.select().from(schema.reportCategories)
+  const catMap = new Map(allReportCats.map((c) => [`${c.targetType}:${c.value}`, c.categoryId]))
+  const cat = (type: 'POST' | 'MESSAGE' | 'REVIEW', value: string) =>
+    catMap.get(`${type}:${value}`)!
+
+  // Thread 1 — Bob contacts Alice about math tutoring (post 0)
+  const [t1] = await db
+    .insert(schema.messageThreads)
+    .values({ postId: insertedPosts[0]!.postId, initiatorId: bobProfile.userProfileId })
+    .returning()
+  const t1msgs = await db
+    .insert(schema.messages)
+    .values([
+      {
+        senderId: bobProfile.userProfileId,
+        threadId: t1!.threadId,
+        content: "Hi Alice, I'm interested in calculus tutoring. Do you have slots available?",
+      },
+      {
+        senderId: aliceProfile.userProfileId,
+        threadId: t1!.threadId,
+        content: 'Hi! Yes, I have Tuesday and Thursday afternoons free. What level are you at?',
+      },
+      {
+        senderId: bobProfile.userProfileId,
+        threadId: t1!.threadId,
+        content:
+          'Actually forget this. Visit tutoring-deals.cz — same quality, way cheaper. Just spreading the word.',
+      },
+    ])
+    .returning()
+  const t1SpamMsg = t1msgs[2]!
+
+  // Thread 2 — Carol contacts Bob about plumbing (post 10)
+  const [t2] = await db
+    .insert(schema.messageThreads)
+    .values({ postId: insertedPosts[10]!.postId, initiatorId: carolProfile.userProfileId })
+    .returning()
+  const t2msgs = await db
+    .insert(schema.messages)
+    .values([
+      {
+        senderId: carolProfile.userProfileId,
+        threadId: t2!.threadId,
+        content: 'Hi, can you give me a quote for a full bathroom reno?',
+      },
+      {
+        senderId: bobProfile.userProfileId,
+        threadId: t2!.threadId,
+        content:
+          'Sure! First send a €100 gift card to secure the slot — new policy for all clients.',
+      },
+    ])
+    .returning()
+  const t2ScamMsg = t2msgs[1]!
+
+  // Thread 3 — Frank contacts Carol about logo design (post 16)
+  const [t3] = await db
+    .insert(schema.messageThreads)
+    .values({ postId: insertedPosts[16]!.postId, initiatorId: frankProfile.userProfileId })
+    .returning()
+  const t3msgs = await db
+    .insert(schema.messages)
+    .values([
+      {
+        senderId: frankProfile.userProfileId,
+        threadId: t3!.threadId,
+        content:
+          "Logo done tonight for 50 CZK. Take it or leave it. Stop wasting people's time with overpriced garbage.",
+      },
+      {
+        senderId: carolProfile.userProfileId,
+        threadId: t3!.threadId,
+        content: "That's not how pricing works. My minimum for brand identity is €350 as stated.",
+      },
+    ])
+    .returning()
+  const t3RudeMsg = t3msgs[0]!
+
+  // Thread 4 — David contacts Elena about Python tutoring (post 2)
+  const [t4] = await db
+    .insert(schema.messageThreads)
+    .values({ postId: insertedPosts[2]!.postId, initiatorId: davidProfile.userProfileId })
+    .returning()
+  const t4msgs = await db
+    .insert(schema.messages)
+    .values([
+      {
+        senderId: davidProfile.userProfileId,
+        threadId: t4!.threadId,
+        content:
+          "Don't waste money on this. Elena knows nothing about Python and is scamming everyone. Reporting this account.",
+      },
+      {
+        senderId: elenaProfile.userProfileId,
+        threadId: t4!.threadId,
+        content: "I'd appreciate you not sending messages like this. Please keep communication respectful.",
+      },
+    ])
+    .returning()
+  const t4HarassMsg = t4msgs[0]!
+
+  // Thread 5 — Alice contacts David about handyman (post 24)
+  const [t5] = await db
+    .insert(schema.messageThreads)
+    .values({ postId: insertedPosts[24]!.postId, initiatorId: aliceProfile.userProfileId })
+    .returning()
+  await db.insert(schema.messages).values([
+    {
+      senderId: aliceProfile.userProfileId,
+      threadId: t5!.threadId,
+      content: 'Hi David, could you help with hanging shelves and mounting a TV?',
+    },
+    {
+      senderId: davidProfile.userProfileId,
+      threadId: t5!.threadId,
+      content: 'Of course! I can come Thursday afternoon. Should take about 2 hours.',
+    },
+    {
+      senderId: aliceProfile.userProfileId,
+      threadId: t5!.threadId,
+      content: 'Perfect, Thursday at 3pm works great. See you then!',
+    },
+  ])
+
+  // POST reports — mix of statuses and categories
+  await db.insert(schema.reports).values([
+    {
+      reporterId: aliceProfile.userProfileId,
+      postId: insertedPosts[10]!.postId, // Bob's Plumbing Repairs
+      categoryId: cat('POST', 'spam'),
+      description: 'Post keeps getting reposted and links to suspicious external payment sites.',
+      status: 'pending',
+    },
+    {
+      reporterId: frankProfile.userProfileId,
+      postId: insertedPosts[16]!.postId, // Carol's Logo Design
+      categoryId: cat('POST', 'scam'),
+      description: 'Contacted via this listing and was asked for upfront payment via gift cards.',
+      status: 'pending',
+    },
+    {
+      reporterId: elenaProfile.userProfileId,
+      postId: insertedPosts[11]!.postId, // Bob's Bathroom Renovation
+      categoryId: cat('POST', 'misleading'),
+      description: 'Claims full renovation but refused to include tiling when I asked for a quote.',
+      status: 'resolved',
+    },
+    {
+      reporterId: bobProfile.userProfileId,
+      postId: insertedPosts[0]!.postId, // Alice's Math Tutoring
+      categoryId: cat('POST', 'other'),
+      description: 'This post is a duplicate of another active listing by the same user.',
+      status: 'dismissed',
+    },
+    {
+      reporterId: davidProfile.userProfileId,
+      postId: insertedPosts[2]!.postId, // Elena's Python Tutoring
+      categoryId: cat('POST', 'inappropriate-content'),
+      description: null,
+      status: 'pending',
+    },
+    {
+      reporterId: aliceProfile.userProfileId,
+      postId: insertedPosts[12]!.postId, // Bob's Emergency Plumber
+      categoryId: cat('POST', 'spam'),
+      description: 'Same user has three nearly identical plumbing ads running simultaneously.',
+      status: 'resolved',
+    },
+    {
+      reporterId: carolProfile.userProfileId,
+      postId: insertedPosts[24]!.postId, // David's Handyman
+      categoryId: cat('POST', 'misleading'),
+      description: 'Showed up without proper tools and left after 30 minutes without finishing.',
+      status: 'pending',
+    },
+    {
+      reporterId: elenaProfile.userProfileId,
+      postId: insertedPosts[26]!.postId, // Frank's Flat Pack Assembly
+      categoryId: cat('POST', 'harmful-language'),
+      description: 'Description contains a dismissive attack on competitor services.',
+      status: 'dismissed',
+    },
+    {
+      reporterId: davidProfile.userProfileId,
+      postId: insertedPosts[17]!.postId, // Carol's UI/UX Design
+      categoryId: cat('POST', 'scam'),
+      description: 'Delivered nothing after taking a deposit. No response since.',
+      status: 'pending',
+    },
+  ])
+
+  // MESSAGE reports
+  await db.insert(schema.reports).values([
+    {
+      reporterId: aliceProfile.userProfileId,
+      messageId: t1SpamMsg.messageId,
+      categoryId: cat('MESSAGE', 'spam'),
+      description: 'Used a private thread to advertise a competing service.',
+      status: 'pending',
+    },
+    {
+      reporterId: carolProfile.userProfileId,
+      messageId: t2ScamMsg.messageId,
+      categoryId: cat('MESSAGE', 'scam'),
+      description: 'Requested payment via gift card. Classic scam pattern.',
+      status: 'resolved',
+    },
+    {
+      reporterId: carolProfile.userProfileId,
+      messageId: t3RudeMsg.messageId,
+      categoryId: cat('MESSAGE', 'inappropriate'),
+      description: 'Extremely rude and aggressive, insulted my work and made unreasonable demands.',
+      status: 'dismissed',
+    },
+    {
+      reporterId: elenaProfile.userProfileId,
+      messageId: t4HarassMsg.messageId,
+      categoryId: cat('MESSAGE', 'harassment'),
+      description: 'Sent a false accusation calling me a scammer with no basis.',
+      status: 'pending',
+    },
+  ])
+
+  // REVIEW reports
+  // insertedReviews indices: 0=Bob on Alice tutoring, 1=Carol on Alice tutoring,
+  //   2=Frank on Elena Python, 3=David on Bob plumbing, 4=Alice on Bob plumbing,
+  //   5=Elena on Carol logo, 6=Frank on Carol logo, 7=Carol on David handyman, 8=Bob on David handyman
+  await db.insert(schema.reports).values([
+    {
+      reporterId: aliceProfile.userProfileId,
+      reviewId: insertedReviews[0]!.reviewId, // Bob's review on Alice's tutoring
+      categoryId: cat('REVIEW', 'fake-review'),
+      description: 'This person never booked a session with me. Completely fabricated review.',
+      status: 'pending',
+    },
+    {
+      reporterId: aliceProfile.userProfileId,
+      reviewId: insertedReviews[1]!.reviewId, // Carol's review on Alice's tutoring
+      categoryId: cat('REVIEW', 'misleading'),
+      description: 'Misrepresents the session — we only covered one topic, not "all areas".',
+      status: 'resolved',
+    },
+    {
+      reporterId: elenaProfile.userProfileId,
+      reviewId: insertedReviews[2]!.reviewId, // Frank's review on Elena's Python
+      categoryId: cat('REVIEW', 'spam'),
+      description: 'This review is a copy-paste from another platform and is not genuine.',
+      status: 'dismissed',
+    },
+    {
+      reporterId: carolProfile.userProfileId,
+      reviewId: insertedReviews[5]!.reviewId, // Elena's review on Carol's logo
+      categoryId: cat('REVIEW', 'inappropriate'),
+      description: 'Contains a personal attack unrelated to the quality of the work delivered.',
+      status: 'pending',
+    },
+    {
+      reporterId: bobProfile.userProfileId,
+      reviewId: insertedReviews[3]!.reviewId, // David's review on Bob's plumbing
+      categoryId: cat('REVIEW', 'fake-review'),
+      description: null,
+      status: 'pending',
+    },
+  ])
+  console.log('  Created 5 threads, messages, and 18 reports (9 post, 4 message, 5 review)')
 
   // Assign permissions to roles
   console.log('  Assigning permissions to roles...')
@@ -1028,6 +1303,8 @@ async function seed() {
   console.log('   20 categories')
   console.log(`   ${postsData.length} posts (${locationCount} with locations)`)
   console.log(`   ${reviewsData.length} reviews`)
+  console.log('   5 message threads with messages')
+  console.log('   18 reports (9 post, 4 message, 5 review) with mixed statuses')
 
   await client.end()
 }
