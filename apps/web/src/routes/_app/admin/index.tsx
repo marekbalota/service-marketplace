@@ -22,7 +22,7 @@ const adminOptions = [
   },
   {
     id: 'reports',
-    title: 'Manage Reports and Bans',
+    title: 'Manage Reports',
     description: 'Review user reports, moderate content, and manage bans',
     icon: Flag,
     path: '/admin/reports',
