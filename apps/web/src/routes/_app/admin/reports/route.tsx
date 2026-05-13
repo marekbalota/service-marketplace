@@ -99,13 +99,15 @@ function TypeSelect() {
 }
 
 function CategorySelect() {
-  const { type = 'all', category = 'all' } = Route.useSearch()
-  const navigate = Route.useNavigate()
-  const { data: categories = [] } = useQuery(
-    reportCategoriesQueryOptions(type as 'POST' | 'MESSAGE' | 'REVIEW'),
-  )
-
+  const { type = 'all' } = Route.useSearch()
   if (type === 'all') return null
+  return <CategorySelectInner type={type} />
+}
+
+function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) {
+  const { category = 'all' } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const { data: categories = [] } = useQuery(reportCategoriesQueryOptions(type))
 
   return (
     <Select
