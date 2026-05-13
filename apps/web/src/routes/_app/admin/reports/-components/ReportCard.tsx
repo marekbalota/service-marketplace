@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Ban, Eye } from 'lucide-react'
+import { Ban, Eye, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
@@ -9,6 +9,7 @@ import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { BanDialog } from '../../users/-components/BanDialog'
 import { UnbanDialog } from '../../users/-components/UnbanDialog'
+import { MessageContextDialog } from './MessageContextDialog'
 import type { AdminReportsModel } from 'api'
 
 type ReportItem = AdminReportsModel['reportsResponse']['items'][number]
@@ -29,6 +30,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
   const queryClient = useQueryClient()
   const [banDialogOpen, setBanDialogOpen] = useState(false)
   const [unbanDialogOpen, setUnbanDialogOpen] = useState(false)
+  const [messageContextOpen, setMessageContextOpen] = useState(false)
 
   const banMutation = useMutation({
     mutationFn: async ({ reason, expiresAt }: { reason: string; expiresAt?: Date }) => {
@@ -110,10 +112,33 @@ export function ReportCard({ report }: { report: ReportItem }) {
             </div>
           </div>
 
-          {isPending && (
-            <Button variant="outline" size="sm" className="gap-2 shrink-0" disabled>
-              <Eye className="size-4" />
-              View
+          {report.targetType === 'MESSAGE' ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 shrink-0"
+                onClick={() => setMessageContextOpen(true)}
+              >
+                <Eye className="size-4" />
+                View
+              </Button>
+              <MessageContextDialog
+                reportId={report.reportId}
+                open={messageContextOpen}
+                onClose={() => setMessageContextOpen(false)}
+              />
+            </>
+          ) : (
+            <Button variant="outline" size="sm" className="gap-2 shrink-0" asChild>
+              <a
+                href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink className="size-4" />
+                View
+              </a>
             </Button>
           )}
         </div>

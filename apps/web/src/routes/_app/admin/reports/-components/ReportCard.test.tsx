@@ -12,6 +12,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
       mutateAsync: vi.fn().mockResolvedValue(undefined),
       isPending: false,
     })),
+    useQuery: vi.fn(() => ({ data: undefined, isLoading: true })),
   }
 })
 
@@ -25,6 +26,7 @@ vi.mock('#/api', () => ({
       reports: vi.fn(() => ({
         resolve: { patch: vi.fn().mockResolvedValue({ error: null }) },
         dismiss: { patch: vi.fn().mockResolvedValue({ error: null }) },
+        'message-context': { get: vi.fn().mockResolvedValue({ data: { messages: [] }, error: null }) },
       })),
     },
   },
@@ -42,6 +44,8 @@ const baseReport = {
   description: 'This post is spam.',
   createdAt: new Date('2024-04-01'),
   status: 'pending' as const,
+  postId: 'post-abc',
+  reviewPostId: null,
 }
 
 describe('ReportCard', () => {
@@ -62,22 +66,44 @@ describe('ReportCard', () => {
 
   it('shows action buttons for pending reports', () => {
     render(<ReportCard report={baseReport} />)
-    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /view/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /ban user/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /dismiss/i })).toBeInTheDocument()
   })
 
-  it('does not show action buttons for resolved reports', () => {
+  it('does not show ban/dismiss for resolved reports but still shows view', () => {
     render(<ReportCard report={{ ...baseReport, status: 'resolved' }} />)
     expect(screen.queryByRole('button', { name: /ban/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /view/i })).toBeInTheDocument()
   })
 
-  it('does not show action buttons for dismissed reports', () => {
+  it('does not show ban/dismiss for dismissed reports but still shows view', () => {
     render(<ReportCard report={{ ...baseReport, status: 'dismissed' }} />)
     expect(screen.queryByRole('button', { name: /ban/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /view/i })).toBeInTheDocument()
+  })
+
+  it('view link points to the post for POST reports', () => {
+    render(<ReportCard report={baseReport} />)
+    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute('href', '/posts/post-abc')
+  })
+
+  it('view link points to the review post for REVIEW reports', () => {
+    render(<ReportCard report={{ ...baseReport, targetType: 'REVIEW', postId: null, reviewPostId: 'post-xyz' }} />)
+    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute('href', '/posts/post-xyz')
+  })
+
+  it('view button opens MessageContextDialog for MESSAGE reports', async () => {
+    render(<ReportCard report={{ ...baseReport, targetType: 'MESSAGE', postId: null }} />)
+    const viewBtn = screen.getByRole('button', { name: /view/i })
+    expect(viewBtn).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(viewBtn)
+    })
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Message Context')).toBeInTheDocument()
   })
 
   it('shows Unban User when reported user is already banned', () => {
@@ -93,11 +119,6 @@ describe('ReportCard', () => {
     })
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByText(/Ban Bob Smith/i)).toBeInTheDocument()
-  })
-
-  it('view button is disabled', () => {
-    render(<ReportCard report={baseReport} />)
-    expect(screen.getByRole('button', { name: /view/i })).toBeDisabled()
   })
 
   it('does not show Ban/Unban when reportedUserId is null', () => {

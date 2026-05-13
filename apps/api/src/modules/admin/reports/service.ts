@@ -1,6 +1,6 @@
 import { db } from '../../../db'
-import { reports, reportCategories, posts, messages, reviews, users, userProfiles } from '../../../db/schema'
-import { eq, and, isNull, count } from 'drizzle-orm'
+import { reports, reportCategories, posts, messages, messageThreads, reviews, users, userProfiles } from '../../../db/schema'
+import { eq, and, isNull, count, lte, desc } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../../lib/errors'
@@ -91,6 +91,7 @@ export abstract class AdminReportsService {
           msgSenderUserId: msgSenderUser.id,
           msgSenderUserIsBanned: msgSenderUser.isBanned,
           reviewCreatedAt: reviews.createdAt,
+          reviewPostId: reviews.postId,
           reviewerProfileName: reviewerProfile.name,
           reviewerUserId: reviewerUser.id,
           reviewerUserIsBanned: reviewerUser.isBanned,
@@ -161,6 +162,8 @@ export abstract class AdminReportsService {
           description: row.description,
           createdAt: row.createdAt,
           status: row.status,
+          postId: row.postId ?? null,
+          reviewPostId: row.reviewPostId ?? null,
         }
       })
 
@@ -188,6 +191,53 @@ export abstract class AdminReportsService {
       .update(reports)
       .set({ status: 'resolved' })
       .where(eq(reports.reportId, reportId))
+  }
+
+  static async getMessageContext(reportId: string) {
+    const [report] = await db
+      .select({ messageId: reports.messageId })
+      .from(reports)
+      .where(and(eq(reports.reportId, reportId), isNull(reports.deletedAt)))
+      .limit(1)
+
+    if (!report) throw new NotFoundError(ErrorMessages.reportNotFound)
+    if (!report.messageId) throw new NotFoundError(ErrorMessages.reportNotFound)
+
+    const [reportedMsg] = await db
+      .select({ threadId: messages.threadId, createdAt: messages.createdAt })
+      .from(messages)
+      .where(eq(messages.messageId, report.messageId))
+      .limit(1)
+
+    if (!reportedMsg) throw new NotFoundError(ErrorMessages.reportNotFound)
+
+    const contextSenderProfile = alias(userProfiles, 'context_sender_profile')
+
+    const rows = await db
+      .select({
+        messageId: messages.messageId,
+        content: messages.content,
+        createdAt: messages.createdAt,
+        senderName: contextSenderProfile.name,
+      })
+      .from(messages)
+      .innerJoin(contextSenderProfile, eq(messages.senderId, contextSenderProfile.userProfileId))
+      .where(
+        and(
+          eq(messages.threadId, reportedMsg.threadId),
+          isNull(messages.deletedAt),
+          lte(messages.createdAt, reportedMsg.createdAt),
+        ),
+      )
+      .orderBy(desc(messages.createdAt))
+      .limit(6)
+
+    return {
+      messages: rows.reverse().map((row) => ({
+        ...row,
+        isReported: row.messageId === report.messageId,
+      })),
+    }
   }
 
   static async dismiss(reportId: string) {

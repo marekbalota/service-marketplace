@@ -16,6 +16,16 @@ const reportItem = t.Object({
   description: t.Nullable(t.String()),
   createdAt: t.Date(),
   status: reportStatus,
+  postId: t.Nullable(t.String()),
+  reviewPostId: t.Nullable(t.String()),
+})
+
+const messageContextMessage = t.Object({
+  messageId: t.String(),
+  senderName: t.String(),
+  content: t.String(),
+  createdAt: t.Date(),
+  isReported: t.Boolean(),
 })
 
 export const AdminReportsModel = {
@@ -36,6 +46,10 @@ export const AdminReportsModel = {
   }),
 
   reportParams: t.Object({ id: t.String() }),
+
+  messageContextResponse: t.Object({
+    messages: t.Array(messageContextMessage),
+  }),
 } as const
 
 export type AdminReportsModel = {

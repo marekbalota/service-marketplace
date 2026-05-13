@@ -23,6 +23,31 @@ export const adminReportsRoutes = new Elysia({ prefix: '/admin/reports' })
     },
     detail: { summary: 'List reports', operationId: 'listAdminReports', tags: ['Admin'] },
   })
+  .get(
+    '/:id/message-context',
+    async ({ params }) => AdminReportsService.getMessageContext(params.id),
+    {
+      authWithPermissions: [
+        Permissions.AdminUsersView,
+        Permissions.AdminUsersBan,
+        Permissions.AdminUsersAssignRole,
+        Permissions.AdminUsersImpersonate,
+        Permissions.AdminPostsDeleteAny,
+      ],
+      params: AdminReportsModel.reportParams,
+      response: {
+        200: AdminReportsModel.messageContextResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+      },
+      detail: {
+        summary: 'Get message context for a report',
+        operationId: 'getReportMessageContext',
+        tags: ['Admin'],
+      },
+    },
+  )
   .patch(
     '/:id/resolve',
     async ({ params, set }) => {
