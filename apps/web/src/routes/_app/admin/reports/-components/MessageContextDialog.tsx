@@ -11,7 +11,7 @@ type Props = {
 }
 
 export function MessageContextDialog({ reportId, open, onClose }: Props) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'reports', reportId, 'message-context'],
     queryFn: async () => {
       const { data, error } = await api.admin
@@ -34,6 +34,10 @@ export function MessageContextDialog({ reportId, open, onClose }: Props) {
           <div className="flex justify-center py-8">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
+        ) : isError ? (
+          <p className="py-6 text-center text-sm text-destructive">
+            Failed to load message context.
+          </p>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
             {data?.messages.map((msg) => (

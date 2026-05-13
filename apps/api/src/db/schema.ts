@@ -18,7 +18,7 @@ import { relations, sql } from 'drizzle-orm'
 export const postTypeEnum = pgEnum('post_type', ['REQUEST', 'OFFER'])
 export const rateTypeEnum = pgEnum('rate_type', ['HOURLY', 'DAILY', 'FIXED'])
 export const reportTargetTypeEnum = pgEnum('report_target_type', ['POST', 'MESSAGE', 'REVIEW'])
-export const reportStatusEnum = pgEnum('report_status', ['pending', 'resolved', 'dismissed'])
+export const reportStatusEnum = pgEnum('report_status', ['PENDING', 'RESOLVED', 'DISMISSED'])
 
 // Tables
 
@@ -287,7 +287,7 @@ export const reports = pgTable(
       .notNull()
       .references(() => userProfiles.userProfileId),
     postId: uuid('post_id').references(() => posts.postId),
-    messageId: uuid('message_id').references(() => messages.messageId),
+    messageId: uuid('message_id').references(() => messages.messageId, { onDelete: 'set null' }),
     reviewId: uuid('review_id').references(() => reviews.reviewId),
     categoryId: uuid('category_id')
       .notNull()

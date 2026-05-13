@@ -43,7 +43,7 @@ const baseReport = {
   categoryLabel: 'Spam',
   description: 'This post is spam.',
   createdAt: new Date('2024-04-01'),
-  status: 'pending' as const,
+  status: 'PENDING' as const,
   postId: 'post-abc',
   reviewPostId: null,
 }
@@ -57,7 +57,7 @@ describe('ReportCard', () => {
     render(<ReportCard report={baseReport} />)
     expect(screen.getByText('Test Service Post')).toBeInTheDocument()
     expect(screen.getByText('Post')).toBeInTheDocument()
-    expect(screen.getByText('pending')).toBeInTheDocument()
+    expect(screen.getByText('Pending')).toBeInTheDocument()
     expect(screen.getByText(/Bob Smith/)).toBeInTheDocument()
     expect(screen.getByText(/Alice Johnson/)).toBeInTheDocument()
     expect(screen.getByText(/Spam/)).toBeInTheDocument()
@@ -72,14 +72,14 @@ describe('ReportCard', () => {
   })
 
   it('does not show ban/dismiss for resolved reports but still shows view', () => {
-    render(<ReportCard report={{ ...baseReport, status: 'resolved' }} />)
+    render(<ReportCard report={{ ...baseReport, status: 'RESOLVED' }} />)
     expect(screen.queryByRole('button', { name: /ban/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /view/i })).toBeInTheDocument()
   })
 
   it('does not show ban/dismiss for dismissed reports but still shows view', () => {
-    render(<ReportCard report={{ ...baseReport, status: 'dismissed' }} />)
+    render(<ReportCard report={{ ...baseReport, status: 'DISMISSED' }} />)
     expect(screen.queryByRole('button', { name: /ban/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /view/i })).toBeInTheDocument()

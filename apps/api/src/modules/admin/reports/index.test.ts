@@ -120,7 +120,7 @@ describe('GET /admin/reports', () => {
     expect(item!.reportedItem).toBe('Post to be reported')
     expect(item!.reporterName).toBeTruthy()
     expect(item!.reportedUserId).toBeTruthy()
-    expect(item!.status).toBe('pending')
+    expect(item!.status).toBe('PENDING')
   })
 
   it('filters by targetType', async () => {
@@ -134,17 +134,17 @@ describe('GET /admin/reports', () => {
 
   it('filters by status', async () => {
     const { data, error } = await client.admin.reports.get({
-      query: { status: 'pending' },
+      query: { status: 'PENDING' },
       headers: { Cookie: adminCookie },
     })
     expect(error).toBeNull()
-    expect(data!.items.every((r) => r.status === 'pending')).toBe(true)
+    expect(data!.items.every((r) => r.status === 'PENDING')).toBe(true)
   })
 
   it('stats are consistent — totalPending matches pending filter count', async () => {
     const { data: all } = await client.admin.reports.get({ headers: { Cookie: adminCookie } })
     const { data: pending } = await client.admin.reports.get({
-      query: { status: 'pending' },
+      query: { status: 'PENDING' },
       headers: { Cookie: adminCookie },
     })
     expect(all!.totalPending).toBe(pending!.total)
@@ -178,7 +178,7 @@ describe('PATCH /admin/reports/:id/resolve', () => {
     expect(error).toBeNull()
 
     const { data } = await client.admin.reports.get({
-      query: { status: 'resolved' },
+      query: { status: 'RESOLVED' },
       headers: { Cookie: adminCookie },
     })
     expect(data!.items.some((r) => r.reportId === testReportId)).toBe(true)
@@ -242,7 +242,7 @@ describe('PATCH /admin/reports/:id/dismiss', () => {
     expect(error).toBeNull()
 
     const { data } = await client.admin.reports.get({
-      query: { status: 'dismissed' },
+      query: { status: 'DISMISSED' },
       headers: { Cookie: adminCookie },
     })
     expect(data!.items.some((r) => r.reportId === dismissTargetId)).toBe(true)

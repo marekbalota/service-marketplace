@@ -15,9 +15,15 @@ import type { AdminReportsModel } from 'api'
 type ReportItem = AdminReportsModel['reportsResponse']['items'][number]
 
 const STATUS_CLASSES: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
-  resolved: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  dismissed: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+  PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  RESOLVED: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  DISMISSED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+}
+
+const STATUS_DISPLAY: Record<string, string> = {
+  PENDING: 'Pending',
+  RESOLVED: 'Resolved',
+  DISMISSED: 'Dismissed',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -76,7 +82,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
     onError: (err) => toast.error(err.message),
   })
 
-  const isPending = report.status === 'pending'
+  const isPending = report.status === 'PENDING'
   const canBan = isPending && report.reportedUserId !== null
 
   return (
@@ -89,7 +95,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Badge variant="outline" className="capitalize">
                 {TYPE_LABELS[report.targetType] ?? report.targetType}
               </Badge>
-              <Badge className={STATUS_CLASSES[report.status]}>{report.status}</Badge>
+              <Badge className={STATUS_CLASSES[report.status]}>{STATUS_DISPLAY[report.status] ?? report.status}</Badge>
             </div>
             <div className="space-y-1 text-sm text-muted-foreground">
               {report.reportedUserName && (

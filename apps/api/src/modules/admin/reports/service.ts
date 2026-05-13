@@ -1,6 +1,6 @@
 import { db } from '../../../db'
-import { reports, reportCategories, posts, messages, messageThreads, reviews, users, userProfiles } from '../../../db/schema'
-import { eq, and, isNull, count } from 'drizzle-orm'
+import { reports, reportCategories, posts, messages, reviews, users, userProfiles } from '../../../db/schema'
+import { eq, and, isNull, count, desc } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../../lib/errors'
@@ -44,19 +44,19 @@ export abstract class AdminReportsService {
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'pending')))
+        .where(and(listConditions, eq(reports.status, 'PENDING')))
 
       const [resolvedRow] = await tx
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'resolved')))
+        .where(and(listConditions, eq(reports.status, 'RESOLVED')))
 
       const [dismissedRow] = await tx
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'dismissed')))
+        .where(and(listConditions, eq(reports.status, 'DISMISSED')))
 
       const total = totalRow?.total ?? 0
       const totalPending = pendingRow?.total ?? 0
@@ -102,7 +102,7 @@ export abstract class AdminReportsService {
         .leftJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
         .leftJoin(reviewerUser, eq(reviewerProfile.accountId, reviewerUser.id))
         .where(listConditions)
-        .orderBy(reports.createdAt)
+        .orderBy(desc(reports.createdAt))
         .offset(offset)
         .limit(PAGE_SIZE)
 
@@ -182,7 +182,7 @@ export abstract class AdminReportsService {
 
     await db
       .update(reports)
-      .set({ status: 'resolved' })
+      .set({ status: 'RESOLVED' })
       .where(eq(reports.reportId, reportId))
   }
 
@@ -244,7 +244,7 @@ export abstract class AdminReportsService {
 
     await db
       .update(reports)
-      .set({ status: 'dismissed' })
+      .set({ status: 'DISMISSED' })
       .where(eq(reports.reportId, reportId))
   }
 }

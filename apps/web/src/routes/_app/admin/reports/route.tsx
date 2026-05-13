@@ -21,7 +21,7 @@ import { ReportsContent } from './-components/ReportsContent'
 const searchSchema = z.object({
   type: z.enum(['all', 'POST', 'MESSAGE', 'REVIEW']).optional().catch(undefined),
   category: z.string().optional().catch(undefined),
-  status: z.enum(['all', 'pending', 'resolved', 'dismissed']).optional().catch(undefined),
+  status: z.enum(['all', 'PENDING', 'RESOLVED', 'DISMISSED']).optional().catch(undefined),
   page: z.number().int().positive().optional().catch(undefined),
 })
 
@@ -41,13 +41,8 @@ export const Route = createFileRoute('/_app/admin/reports')({
       throw redirect({ to: '/admin' })
     }
   },
-  loader: ({ context: { queryClient }, location }) => {
-    const search = searchSchema.parse(new URLSearchParams(location.search))
-    const type = search.type ?? 'all'
-    const category = search.category ?? 'all'
-    const status = search.status ?? 'all'
-    const page = search.page ?? 1
-    void queryClient.prefetchQuery(adminReportsQueryOptions({ targetType: type, categoryId: category, status, page }))
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery(adminReportsQueryOptions({ targetType: 'all', categoryId: 'all', status: 'all', page: 1 }))
   },
   component: ManageReports,
 })
@@ -61,9 +56,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   all: 'All Statuses',
-  pending: 'Pending',
-  resolved: 'Resolved',
-  dismissed: 'Dismissed',
+  PENDING: 'Pending',
+  RESOLVED: 'Resolved',
+  DISMISSED: 'Dismissed',
 }
 
 function TypeSelect() {
@@ -152,7 +147,7 @@ function StatusSelect() {
         navigate({
           search: (prev) => ({
             ...prev,
-            status: value === 'all' ? undefined : (value as 'pending' | 'resolved' | 'dismissed'),
+            status: value === 'all' ? undefined : (value as 'PENDING' | 'RESOLVED' | 'DISMISSED'),
             page: undefined,
           }),
         })

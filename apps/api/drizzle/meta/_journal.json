@@ -131,8 +131,22 @@
     {
       "idx": 18,
       "version": "7",
-      "when": 1747094400000,
+      "when": 1778085191576,
       "tag": "0018_add_report_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778085291576,
+      "tag": "0019_reports_message_fk_set_null",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778085391576,
+      "tag": "0020_report_status_uppercase",
       "breakpoints": true
     }
   ]

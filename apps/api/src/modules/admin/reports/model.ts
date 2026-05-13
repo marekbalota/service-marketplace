@@ -1,6 +1,6 @@
 import { t, type UnwrapSchema } from 'elysia'
 
-const reportStatus = t.Union([t.Literal('pending'), t.Literal('resolved'), t.Literal('dismissed')])
+const reportStatus = t.Union([t.Literal('PENDING'), t.Literal('RESOLVED'), t.Literal('DISMISSED')])
 
 const reportTargetType = t.Union([t.Literal('POST'), t.Literal('MESSAGE'), t.Literal('REVIEW')])
 

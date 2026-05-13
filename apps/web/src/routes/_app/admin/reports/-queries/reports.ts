@@ -4,7 +4,7 @@ import { api } from '#/api'
 export type ReportsParams = {
   targetType: 'POST' | 'MESSAGE' | 'REVIEW' | 'all'
   categoryId: string
-  status: 'pending' | 'resolved' | 'dismissed' | 'all'
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED' | 'all'
   page: number
 }
 

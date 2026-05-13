@@ -1122,63 +1122,63 @@ async function seed() {
       postId: insertedPosts[10]!.postId, // Bob's Plumbing Repairs
       categoryId: cat('POST', 'spam'),
       description: 'Post keeps getting reposted and links to suspicious external payment sites.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: frankProfile.userProfileId,
       postId: insertedPosts[16]!.postId, // Carol's Logo Design
       categoryId: cat('POST', 'scam'),
       description: 'Contacted via this listing and was asked for upfront payment via gift cards.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: elenaProfile.userProfileId,
       postId: insertedPosts[11]!.postId, // Bob's Bathroom Renovation
       categoryId: cat('POST', 'misleading'),
       description: 'Claims full renovation but refused to include tiling when I asked for a quote.',
-      status: 'resolved',
+      status: 'RESOLVED',
     },
     {
       reporterId: bobProfile.userProfileId,
       postId: insertedPosts[0]!.postId, // Alice's Math Tutoring
       categoryId: cat('POST', 'other'),
       description: 'This post is a duplicate of another active listing by the same user.',
-      status: 'dismissed',
+      status: 'DISMISSED',
     },
     {
       reporterId: davidProfile.userProfileId,
       postId: insertedPosts[2]!.postId, // Elena's Python Tutoring
       categoryId: cat('POST', 'inappropriate-content'),
       description: null,
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: aliceProfile.userProfileId,
       postId: insertedPosts[12]!.postId, // Bob's Emergency Plumber
       categoryId: cat('POST', 'spam'),
       description: 'Same user has three nearly identical plumbing ads running simultaneously.',
-      status: 'resolved',
+      status: 'RESOLVED',
     },
     {
       reporterId: carolProfile.userProfileId,
       postId: insertedPosts[24]!.postId, // David's Handyman
       categoryId: cat('POST', 'misleading'),
       description: 'Showed up without proper tools and left after 30 minutes without finishing.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: elenaProfile.userProfileId,
       postId: insertedPosts[26]!.postId, // Frank's Flat Pack Assembly
       categoryId: cat('POST', 'harmful-language'),
       description: 'Description contains a dismissive attack on competitor services.',
-      status: 'dismissed',
+      status: 'DISMISSED',
     },
     {
       reporterId: davidProfile.userProfileId,
       postId: insertedPosts[17]!.postId, // Carol's UI/UX Design
       categoryId: cat('POST', 'scam'),
       description: 'Delivered nothing after taking a deposit. No response since.',
-      status: 'pending',
+      status: 'PENDING',
     },
   ])
 
@@ -1189,28 +1189,28 @@ async function seed() {
       messageId: t1SpamMsg.messageId,
       categoryId: cat('MESSAGE', 'spam'),
       description: 'Used a private thread to advertise a competing service.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: carolProfile.userProfileId,
       messageId: t2ScamMsg.messageId,
       categoryId: cat('MESSAGE', 'scam'),
       description: 'Requested payment via gift card. Classic scam pattern.',
-      status: 'resolved',
+      status: 'RESOLVED',
     },
     {
       reporterId: carolProfile.userProfileId,
       messageId: t3RudeMsg.messageId,
       categoryId: cat('MESSAGE', 'inappropriate'),
       description: 'Extremely rude and aggressive, insulted my work and made unreasonable demands.',
-      status: 'dismissed',
+      status: 'DISMISSED',
     },
     {
       reporterId: elenaProfile.userProfileId,
       messageId: t4HarassMsg.messageId,
       categoryId: cat('MESSAGE', 'harassment'),
       description: 'Sent a false accusation calling me a scammer with no basis.',
-      status: 'pending',
+      status: 'PENDING',
     },
   ])
 
@@ -1224,35 +1224,35 @@ async function seed() {
       reviewId: insertedReviews[0]!.reviewId, // Bob's review on Alice's tutoring
       categoryId: cat('REVIEW', 'fake-review'),
       description: 'This person never booked a session with me. Completely fabricated review.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: aliceProfile.userProfileId,
       reviewId: insertedReviews[1]!.reviewId, // Carol's review on Alice's tutoring
       categoryId: cat('REVIEW', 'misleading'),
       description: 'Misrepresents the session — we only covered one topic, not "all areas".',
-      status: 'resolved',
+      status: 'RESOLVED',
     },
     {
       reporterId: elenaProfile.userProfileId,
       reviewId: insertedReviews[2]!.reviewId, // Frank's review on Elena's Python
       categoryId: cat('REVIEW', 'spam'),
       description: 'This review is a copy-paste from another platform and is not genuine.',
-      status: 'dismissed',
+      status: 'DISMISSED',
     },
     {
       reporterId: carolProfile.userProfileId,
       reviewId: insertedReviews[5]!.reviewId, // Elena's review on Carol's logo
       categoryId: cat('REVIEW', 'inappropriate'),
       description: 'Contains a personal attack unrelated to the quality of the work delivered.',
-      status: 'pending',
+      status: 'PENDING',
     },
     {
       reporterId: bobProfile.userProfileId,
       reviewId: insertedReviews[3]!.reviewId, // David's review on Bob's plumbing
       categoryId: cat('REVIEW', 'fake-review'),
       description: null,
-      status: 'pending',
+      status: 'PENDING',
     },
   ])
   console.log('  Created 5 threads, messages, and 18 reports (9 post, 4 message, 5 review)')
