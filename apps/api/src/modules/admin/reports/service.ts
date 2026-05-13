@@ -1,6 +1,6 @@
 import { db } from '../../../db'
 import { reports, reportCategories, posts, messages, messageThreads, reviews, users, userProfiles } from '../../../db/schema'
-import { eq, and, isNull, count, lte, desc } from 'drizzle-orm'
+import { eq, and, isNull, count } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../../lib/errors'
@@ -213,7 +213,11 @@ export abstract class AdminReportsService {
 
     const contextSenderProfile = alias(userProfiles, 'context_sender_profile')
 
-    const rows = await db
+    // Fetch all non-deleted messages in the thread ordered chronologically,
+    // then slice in JS. Avoids timestamp precision loss (JS Date is ms, DB is µs)
+    // that would cause lte comparisons to silently exclude messages with the
+    // same sub-millisecond timestamp as the reported message.
+    const allMessages = await db
       .select({
         messageId: messages.messageId,
         content: messages.content,
@@ -222,18 +226,14 @@ export abstract class AdminReportsService {
       })
       .from(messages)
       .innerJoin(contextSenderProfile, eq(messages.senderId, contextSenderProfile.userProfileId))
-      .where(
-        and(
-          eq(messages.threadId, reportedMsg.threadId),
-          isNull(messages.deletedAt),
-          lte(messages.createdAt, reportedMsg.createdAt),
-        ),
-      )
-      .orderBy(desc(messages.createdAt))
-      .limit(6)
+      .where(and(eq(messages.threadId, reportedMsg.threadId), isNull(messages.deletedAt)))
+      .orderBy(messages.createdAt)
+
+    const reportedIdx = allMessages.findIndex((m) => m.messageId === report.messageId)
+    const start = Math.max(0, reportedIdx - 5)
 
     return {
-      messages: rows.reverse().map((row) => ({
+      messages: allMessages.slice(start, reportedIdx + 1).map((row) => ({
         ...row,
         isReported: row.messageId === report.messageId,
       })),
