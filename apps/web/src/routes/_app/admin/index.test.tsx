@@ -38,7 +38,7 @@ describe('AdminDashboard', () => {
     } as unknown as ReturnType<typeof useCurrentUser>)
     await renderPage()
     expect(screen.getByText('Manage Accounts')).toBeInTheDocument()
-    expect(screen.getByText('Manage Reports and Bans')).toBeInTheDocument()
+    expect(screen.getByText('Manage Reports')).toBeInTheDocument()
   })
 
   it('shows Manage Roles when user has AdminRolesManage', async () => {
