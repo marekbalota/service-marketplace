@@ -17,17 +17,11 @@ const reviewerUser = alias(users, 'reviewer_user')
 
 type ReportsQuery = AdminReportsModel['reportsQuery']
 
-function buildBaseConditions(query: ReportsQuery) {
+function buildListConditions(query: ReportsQuery) {
   return and(
     isNull(reports.deletedAt),
     query.targetType ? eq(reportCategories.targetType, query.targetType) : undefined,
     query.categoryId ? eq(reports.categoryId, query.categoryId) : undefined,
-  )
-}
-
-function buildListConditions(query: ReportsQuery) {
-  return and(
-    buildBaseConditions(query),
     query.status ? eq(reports.status, query.status) : undefined,
   )
 }
@@ -37,7 +31,6 @@ export abstract class AdminReportsService {
     const page = Math.max(1, query.page ?? 1)
     const offset = (page - 1) * PAGE_SIZE
 
-    const baseConditions = buildBaseConditions(query)
     const listConditions = buildListConditions(query)
 
     return db.transaction(async (tx) => {
@@ -51,19 +44,19 @@ export abstract class AdminReportsService {
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(baseConditions, eq(reports.status, 'pending')))
+        .where(and(listConditions, eq(reports.status, 'pending')))
 
       const [resolvedRow] = await tx
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(baseConditions, eq(reports.status, 'resolved')))
+        .where(and(listConditions, eq(reports.status, 'resolved')))
 
       const [dismissedRow] = await tx
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(baseConditions, eq(reports.status, 'dismissed')))
+        .where(and(listConditions, eq(reports.status, 'dismissed')))
 
       const total = totalRow?.total ?? 0
       const totalPending = pendingRow?.total ?? 0
