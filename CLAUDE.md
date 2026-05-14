@@ -57,6 +57,10 @@ Schema is defined in `apps/api/src/db/schema.ts`. The ERD (`docs/erd.puml`) is t
 - `reviews.rating` is constrained to values 1–5.
 - Junction tables (`role_permissions`, `post_categories`, `post_locations`, `favourites`) use composite primary keys.
 
+## Internationalisation (i18n)
+
+Supports EN/SK/CS via react-i18next. Always use `useTranslation()` + `t('key')` for UI strings — never hardcode English. Keys are type-safe (`src/i18next.d.ts`); translations live in `src/translations/{en,sk,cs}.json` — add new keys to all three. Zod validation errors are translated globally via `src/lib/zodErrorMap.ts` — use `.min(3)` not `.min(3, 'message')`. Do not translate user-generated content or database-driven content (categories).
+
 ## Code Conventions
 
 - All TypeScript — no `any` unless unavoidable.
