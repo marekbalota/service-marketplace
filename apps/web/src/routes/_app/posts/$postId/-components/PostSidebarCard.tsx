@@ -57,7 +57,7 @@ export function PostSidebarCard({ postId }: { postId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t('posts.detail.rateType')}</p>
                   <p className="font-medium">
-                    {t(`posts.rateType.${post.rateType.toLowerCase()}`)}
+                    {t(`posts.rateType.${post.rateType.toLowerCase()}` as 'posts.rateType.hourly' | 'posts.rateType.daily' | 'posts.rateType.fixed')}
                   </p>
                 </div>
               </div>
