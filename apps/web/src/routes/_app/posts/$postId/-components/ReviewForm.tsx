@@ -15,7 +15,7 @@ import { useActiveProfile } from '#/context/activeProfile'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 
 const reviewSchema = z.object({
-  rating: z.number().min(1, 'Rating is required').max(5),
+  rating: z.number().min(1).max(5),
   description: z.string().max(500).optional(),
 })
 

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import i18n from '#/lib/i18n'
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -13,12 +14,17 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    newPassword: z.string().min(8),
     confirmPassword: z.string(),
   })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+  .superRefine((d, ctx) => {
+    if (d.newPassword !== d.confirmPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: i18n.t('validation.passwordsMismatch'),
+        path: ['confirmPassword'],
+      })
+    }
   })
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>

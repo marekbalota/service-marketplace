@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 export const profileSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address'),
+  name: z.string().min(1),
+  email: z.string().email(),
   bio: z.string().optional(),
   phoneNumber: z.string().optional(),
   fax: z.string().optional(),

@@ -35,7 +35,7 @@ export function ThreadItem({ thread, isActive }: { thread: Thread; isActive?: bo
           </p>
           {thread.lastMessage && (
             <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
-              {formatRelativeTime(thread.lastMessage.createdAt, t)}
+              {formatRelativeTime(thread.lastMessage.createdAt, t as (key: string, opts?: Record<string, unknown>) => string)}
             </span>
           )}
         </div>

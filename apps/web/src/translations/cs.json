@@ -567,5 +567,17 @@
   "imagePicker": {
     "rejected_one": "{{count}} soubor byl odmítnut — povoleny jsou pouze obrázky.",
     "rejected_other": "{{count}} souborů bylo odmítnuto — povoleny jsou pouze obrázky."
+  },
+  "validation": {
+    "required": "Toto pole je povinné",
+    "email": "Zadejte platnou e-mailovou adresu",
+    "minLength": "Musí obsahovat alespoň {{min}} znaků",
+    "maxLength": "Může obsahovat nejvýše {{max}} znaků",
+    "numberMin": "Musí být alespoň {{min}}",
+    "numberMax": "Musí být nejvýše {{max}}",
+    "selectOption": "Vyberte platnou možnost",
+    "passwordsMismatch": "Hesla se neshodují",
+    "expiryRequired": "Datum vypršení je povinné",
+    "expiryFuture": "Datum vypršení musí být v budoucnosti"
   }
 }

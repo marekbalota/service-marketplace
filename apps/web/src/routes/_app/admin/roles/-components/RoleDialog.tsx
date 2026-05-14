@@ -19,8 +19,8 @@ import { Field, FieldError } from '#/components/ui/field'
 import type { Permission } from './SortableRoleCard'
 
 const roleFormSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
+  name: z.string().min(1),
+  description: z.string().min(1),
   permissionIds: z.array(z.string()),
 })
 

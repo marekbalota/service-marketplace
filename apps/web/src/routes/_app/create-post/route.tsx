@@ -27,8 +27,8 @@ import { PricingField } from '#/components/PricingField'
 
 const schema = z.object({
   postType: z.enum(['OFFER', 'REQUEST']),
-  postTitle: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  postTitle: z.string().min(3),
+  description: z.string().min(10),
   categoryIds: z.array(z.string()),
   price: z.string().optional(),
   rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),

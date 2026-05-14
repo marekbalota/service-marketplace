@@ -3,6 +3,7 @@ import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import i18n from '#/lib/i18n'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -24,19 +25,19 @@ import {
 
 const banFormSchema = z
   .object({
-    reason: z.string().min(1, 'Reason is required'),
+    reason: z.string().min(1),
     durationType: z.enum(['permanent', 'until-date']),
     expiresAt: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.durationType === 'until-date') {
       if (!data.expiresAt) {
-        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'Expiry date is required' })
+        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: i18n.t('validation.expiryRequired') })
       } else if (new Date(data.expiresAt) <= new Date()) {
         ctx.addIssue({
           code: 'custom',
           path: ['expiresAt'],
-          message: 'Expiry date must be in the future',
+          message: i18n.t('validation.expiryFuture'),
         })
       }
     }

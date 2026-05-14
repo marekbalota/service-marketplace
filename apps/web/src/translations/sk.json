@@ -567,5 +567,17 @@
   "imagePicker": {
     "rejected_one": "{{count}} súbor bol odmietnutý — iba obrázky sú povolené.",
     "rejected_other": "{{count}} súborov bolo odmietnutých — iba obrázky sú povolené."
+  },
+  "validation": {
+    "required": "Toto pole je povinné",
+    "email": "Zadajte platnú e-mailovú adresu",
+    "minLength": "Musí obsahovať aspoň {{min}} znakov",
+    "maxLength": "Môže obsahovať najviac {{max}} znakov",
+    "numberMin": "Musí byť aspoň {{min}}",
+    "numberMax": "Musí byť najviac {{max}}",
+    "selectOption": "Vyberte platnú možnosť",
+    "passwordsMismatch": "Heslá sa nezhodujú",
+    "expiryRequired": "Dátum vypršania je povinný",
+    "expiryFuture": "Dátum vypršania musí byť v budúcnosti"
   }
 }

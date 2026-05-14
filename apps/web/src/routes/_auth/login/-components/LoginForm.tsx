@@ -20,8 +20,8 @@ import { Label } from '#/components/ui/label'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 
 const loginSchema = z.object({
-  email: z.email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email(),
+  password: z.string().min(1),
   rememberMe: z.boolean(),
 })
 

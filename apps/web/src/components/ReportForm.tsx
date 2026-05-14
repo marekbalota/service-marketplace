@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import i18n from '#/lib/i18n'
 import { Flag } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
@@ -18,13 +19,13 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { reportCategoriesQueryOptions } from '#/lib/queries/reports'
 
 const baseSchema = z.object({
-  categoryId: z.uuid('Please select a category'),
+  categoryId: z.uuid(),
   description: z.string().max(1000).optional(),
 })
 
 const schemaWithRequiredDescription = baseSchema.superRefine((data, ctx) => {
   if (!data.description?.trim()) {
-    ctx.addIssue({ code: 'custom', message: 'Description is required', path: ['description'] })
+    ctx.addIssue({ code: 'custom', message: i18n.t('validation.required'), path: ['description'] })
   }
 })
 

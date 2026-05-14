@@ -14,9 +14,9 @@ import { Input } from '#/components/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 
 const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.email('Please enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(1),
+  email: z.email(),
+  password: z.string().min(8),
 })
 
 type RegisterValues = z.infer<typeof registerSchema>

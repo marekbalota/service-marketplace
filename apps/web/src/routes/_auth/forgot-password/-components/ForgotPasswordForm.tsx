@@ -15,7 +15,7 @@ import { Field, FieldError, FieldLabel } from '#/components/ui/field'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 
 const forgotPasswordSchema = z.object({
-  email: z.email('Please enter a valid email'),
+  email: z.email(),
 })
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
