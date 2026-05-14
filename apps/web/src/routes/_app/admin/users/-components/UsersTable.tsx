@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Ban, Eye, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { EmptyState } from '#/components/EmptyState'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -29,6 +30,7 @@ import type { AdminUsersModel } from 'api'
 type User = AdminUsersModel['usersResponse']['items'][number]
 
 function UserCard({ user }: { user: User }) {
+  const { t } = useTranslation()
   const { data: currentUser } = useCurrentUser()
   const permissions = currentUser?.role?.permissions ?? []
   const canAssignRole = hasPermissions(permissions, [Permissions.AdminUsersAssignRole])
@@ -91,12 +93,12 @@ function UserCard({ user }: { user: User }) {
                   user.isBanned ? 'bg-banned-bg text-banned-fg' : 'bg-active-bg text-active-fg'
                 }
               >
-                {user.isBanned ? 'banned' : 'active'}
+                {user.isBanned ? t('admin.users.banned') : t('admin.users.active')}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-1">{user.email}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+              <span>{t('admin.users.joined', { date: new Date(user.createdAt).toLocaleDateString() })}</span>
             </div>
           </div>
 
@@ -136,7 +138,7 @@ function UserCard({ user }: { user: User }) {
                 className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' gap-2'}
               >
                 <Eye className="size-4" />
-                View
+                {t('common.view')}
               </Link>
             )}
 
@@ -151,7 +153,7 @@ function UserCard({ user }: { user: User }) {
                     onClick={() => setUnbanDialogOpen(true)}
                   >
                     {unbanMutation.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
-                    Unban
+                    {t('admin.users.unban')}
                   </Button>
                   <UnbanDialog
                     open={unbanDialogOpen}
@@ -169,7 +171,7 @@ function UserCard({ user }: { user: User }) {
                     onClick={() => setBanDialogOpen(true)}
                   >
                     <Ban className="size-4 mr-2" />
-                    Ban
+                    {t('admin.users.ban')}
                   </Button>
                   <BanDialog
                     open={banDialogOpen}
@@ -187,6 +189,7 @@ function UserCard({ user }: { user: User }) {
 }
 
 export function UsersTable() {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { q = '', role = 'all', status = 'all', page = 1 } = Route.useSearch()
   const { data: usersData } = useSuspenseQuery(usersQueryOptions({ search: q, role, status, page }))
@@ -202,21 +205,21 @@ export function UsersTable() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard value={total} label="Total Users" />
-        <StatCard value={total - totalBanned} label="Active Users" />
-        <StatCard value={totalBanned} label="Banned" />
+        <StatCard value={total} label={t('admin.users.totalUsers')} />
+        <StatCard value={total - totalBanned} label={t('admin.users.activeUsers')} />
+        <StatCard value={totalBanned} label={t('admin.users.banned')} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>User Accounts ({total})</CardTitle>
+          <CardTitle>{t('admin.users.userAccounts', { count: total })}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {users.map((user) => (
               <UserCard key={user.userId} user={user} />
             ))}
-            {users.length === 0 && <EmptyState message="No accounts found." />}
+            {users.length === 0 && <EmptyState message={t('admin.users.noAccounts')} />}
           </div>
 
           {totalPages > 1 && (

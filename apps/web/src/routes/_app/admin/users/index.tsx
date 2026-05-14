@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { BackButton } from '#/components/BackButton'
 import { PageHeader } from '#/components/PageHeader'
 import { SearchFilterBar } from '#/components/SearchFilterBar'
@@ -32,19 +33,14 @@ export const Route = createFileRoute('/_app/admin/users/')({
   component: ManageAccounts,
 })
 
-const STATUS_LABELS: Record<string, string> = {
-  all: 'All Statuses',
-  active: 'Active',
-  banned: 'Banned',
-}
-
 function RoleSelect() {
+  const { t } = useTranslation()
   const { role = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: allRoles = [] } = useQuery(rolesQueryOptions)
 
   const roleLabels: Record<string, string> = {
-    all: 'All Roles',
+    all: t('admin.users.allRoles'),
     ...Object.fromEntries(allRoles.map((r) => [r.name, r.name])),
   }
 
@@ -63,7 +59,7 @@ function RoleSelect() {
       }}
     >
       <SelectTrigger className="w-full">
-        <SelectValue>{roleLabels[role] ?? 'All Roles'}</SelectValue>
+        <SelectValue>{roleLabels[role] ?? t('admin.users.allRoles')}</SelectValue>
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
         {Object.entries(roleLabels).map(([value, label]) => (
@@ -77,8 +73,15 @@ function RoleSelect() {
 }
 
 function StatusSelect() {
+  const { t } = useTranslation()
   const { status = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const STATUS_LABELS: Record<string, string> = {
+    all: t('admin.users.allStatuses'),
+    active: t('admin.users.active'),
+    banned: t('admin.users.banned'),
+  }
 
   return (
     <Select
@@ -161,32 +164,33 @@ function StatsAndListSkeleton() {
 }
 
 function ManageAccounts() {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { q = '' } = Route.useSearch()
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/admin' })} label="Back to Admin" />
+      <BackButton onClick={() => navigate({ to: '/admin' })} label={t('admin.backToAdmin')} />
 
       <PageHeader
-        title="Manage Accounts"
-        description="View and manage user accounts, roles, and permissions"
+        title={t('admin.users.title')}
+        description={t('admin.users.subtitle')}
       />
 
       <Card className="mb-6">
         <CardContent>
           <SearchFilterBar
-            searchPlaceholder="Search by name or email..."
+            searchPlaceholder={t('admin.users.searchPlaceholder')}
             searchValue={q}
             onSearchChange={(value) =>
               navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
             }
             filters={[
-              { label: 'Role', control: <RoleSelect />, desktopWidth: 'w-[180px]' },
-              { label: 'Status', control: <StatusSelect />, desktopWidth: 'w-[160px]' },
+              { label: t('admin.users.role'), control: <RoleSelect />, desktopWidth: 'w-[180px]' },
+              { label: t('admin.users.status'), control: <StatusSelect />, desktopWidth: 'w-[160px]' },
             ]}
-            sheetTitle="Filter Accounts"
-            sheetDescription="Narrow the list by role or status"
+            sheetTitle={t('admin.users.filterTitle')}
+            sheetDescription={t('admin.users.filterSubtitle')}
           />
         </CardContent>
       </Card>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,6 +21,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) {
+  const { t } = useTranslation()
   const [confirmed, setConfirmed] = useState(false)
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -74,9 +76,9 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
             <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
           </div>
-          <CardTitle className="text-2xl">Check your email</CardTitle>
+          <CardTitle className="text-2xl">{t('auth.forgotPassword.successTitle')}</CardTitle>
           <CardDescription>
-            If an account with that email exists, you'll receive a reset link shortly.
+            {t('auth.forgotPassword.successMessage')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -86,8 +88,8 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Reset your password</CardTitle>
-        <CardDescription>Enter your email to receive a reset link</CardDescription>
+        <CardTitle className="text-2xl">{t('auth.forgotPassword.title')}</CardTitle>
+        <CardDescription>{t('auth.forgotPassword.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -96,12 +98,12 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="forgot-email">Email</FieldLabel>
+                <FieldLabel htmlFor="forgot-email">{t('auth.forgotPassword.email')}</FieldLabel>
                 <Input
                   {...field}
                   id="forgot-email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t('auth.forgotPassword.emailPlaceholder')}
                   autoComplete="email"
                   aria-invalid={fieldState.invalid}
                 />
@@ -126,10 +128,10 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
             disabled={!captchaToken || form.formState.isSubmitting || rateLimitSeconds > 0}
           >
             {rateLimitSeconds > 0
-              ? `Try again in ${formatCountdown(rateLimitSeconds)}`
+              ? t('auth.forgotPassword.tryAgain', { time: formatCountdown(rateLimitSeconds) })
               : form.formState.isSubmitting
-                ? 'Sending…'
-                : 'Send reset link'}
+                ? t('auth.forgotPassword.submitting')
+                : t('auth.forgotPassword.submit')}
           </Button>
         </form>
       </CardContent>

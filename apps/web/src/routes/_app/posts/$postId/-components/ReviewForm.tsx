@@ -3,6 +3,7 @@ import { wrapEdenError } from '#/lib/api-error'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { StarRatingInput } from '#/components/StarRatingInput'
 import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
@@ -27,6 +28,7 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { activeProfile } = useActiveProfile()
   const [error, setError] = useState<string | null>(null)
@@ -87,7 +89,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
       setPendingFiles([])
       if (imageFailCount > 0) {
-        setError(`Review submitted, but ${imageFailCount} image(s) failed to upload.`)
+        setError(t('posts.review.imageWarning', { count: imageFailCount }))
       }
       onSuccess()
     },
@@ -119,7 +121,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       className="space-y-4 rounded-lg border bg-card p-4"
     >
       <div className="space-y-2">
-        <Label>Your Rating *</Label>
+        <Label>{t('posts.review.rating')}</Label>
         <Controller
           name="rating"
           control={control}
@@ -135,14 +137,14 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Review (Optional)</Label>
+        <Label htmlFor="description">{t('posts.review.description')}</Label>
         <Controller
           name="description"
           control={control}
           render={({ field }) => (
             <Textarea
               id="description"
-              placeholder="Share your experience..."
+              placeholder={t('posts.review.descriptionPlaceholder')}
               maxLength={500}
               disabled={mutation.isPending}
               {...field}
@@ -154,7 +156,7 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Images (Optional)</Label>
+        <Label>{t('posts.review.images')}</Label>
         <ImagePickerGrid
           previews={pendingFiles.map((f) => f.preview)}
           onFilePicked={addFile}
@@ -166,10 +168,10 @@ export function ReviewForm({ postId, onSuccess, onCancel }: ReviewFormProps) {
 
       <div className="flex gap-2">
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Submitting...' : 'Submit Review'}
+          {mutation.isPending ? t('posts.review.submitting') : t('posts.review.submit')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={mutation.isPending}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>

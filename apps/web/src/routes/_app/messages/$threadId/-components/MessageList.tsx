@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageBubble } from './MessageBubble'
 
 type Message = {
@@ -18,6 +19,7 @@ export function MessageList({
   otherPartyName: string
   onReport: (messageId: string) => void
 }) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function MessageList({
     <div ref={containerRef} className="flex-1 space-y-4 overflow-y-auto p-4 min-h-0">
       {messages.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No messages yet. Say hello!
+          {t('messages.noMessagesYet')}
         </p>
       )}
       {messages.map((msg) => (

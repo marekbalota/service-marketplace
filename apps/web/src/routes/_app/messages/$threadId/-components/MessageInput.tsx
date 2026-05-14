@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
 
@@ -16,6 +17,7 @@ export function MessageInput({
   onChange: (value: string) => void
   onSend: () => void
 }) {
+  const { t } = useTranslation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -30,7 +32,7 @@ export function MessageInput({
       <div className="flex items-end gap-2">
         <Textarea
           ref={textareaRef}
-          placeholder="Write a message…"
+          placeholder={t('messages.writePlaceholder')}
           value={draft}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -42,13 +44,13 @@ export function MessageInput({
           className="h-10 w-10 shrink-0"
           onClick={onSend}
           disabled={!draft.trim() || isPending}
-          aria-label="Send message"
+          aria-label={t('messages.send')}
         >
           <Send className="size-5" />
         </Button>
       </div>
       {isError && (
-        <p className="mt-1 text-xs text-destructive">Failed to send. Please try again.</p>
+        <p className="mt-1 text-xs text-destructive">{t('messages.sendFailed')}</p>
       )}
     </div>
   )

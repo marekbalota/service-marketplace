@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   closestCenter,
@@ -30,6 +31,7 @@ interface RolesContentProps {
 }
 
 export function RolesContent({ userPriority, userPermissionNames }: RolesContentProps) {
+  const { t } = useTranslation()
   const { data: rolesData = [] } = useSuspenseQuery(rolesQueryOptions)
   const { data: permissions = [] } = useSuspenseQuery(permissionsQueryOptions)
   const grantablePermissionIds = new Set(
@@ -110,11 +112,11 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard value={roles.length} label="Total Roles" />
-        <StatCard value={permissions.length} label="Available Permissions" />
+        <StatCard value={roles.length} label={t('admin.roles.totalRoles')} />
+        <StatCard value={permissions.length} label={t('admin.roles.totalPermissions')} />
         <StatCard
           value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0)}
-          label="Total Users with Roles"
+          label={t('admin.roles.totalUsersWithRoles')}
         />
       </div>
 
@@ -159,9 +161,9 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
 
       <ConfirmDialog
         open={deletingRoleId !== null}
-        title="Delete role?"
-        description="This will permanently remove this role. This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('admin.roles.deleteTitle')}
+        description={t('admin.roles.deleteMessage')}
+        confirmLabel={t('common.delete')}
         destructive
         onConfirm={() => deleteRoleMutation.mutateAsync(deletingRoleId!)}
         onClose={() => setDeletingRoleId(null)}
@@ -169,9 +171,9 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
 
       <ConfirmDialog
         open={settingDefaultRoleId !== null}
-        title="Set as default role?"
-        description="New users will be assigned this role automatically. The current default role will no longer be the default."
-        confirmLabel="Set as Default"
+        title={t('admin.roles.setDefaultTitle')}
+        description={t('admin.roles.setDefaultMessage')}
+        confirmLabel={t('admin.roles.setDefault')}
         onConfirm={() => setDefaultMutation.mutateAsync(settingDefaultRoleId!)}
         onClose={() => setSettingDefaultRoleId(null)}
       />

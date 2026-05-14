@@ -3,6 +3,7 @@ import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { DollarSign, Flag, Pencil } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -17,13 +18,8 @@ import { cn } from '#/lib/utils'
 import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { hasReportedPostQueryOptions } from '../-queries/posts'
 
-const RATE_LABELS: Record<string, string> = {
-  HOURLY: '/hr',
-  DAILY: '/day',
-  FIXED: 'fixed',
-}
-
 export function PostInfoCard({ postId }: { postId: string }) {
+  const { t } = useTranslation()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
@@ -31,6 +27,12 @@ export function PostInfoCard({ postId }: { postId: string }) {
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user != null
   const [showReportForm, setShowReportForm] = useState(false)
+
+  const RATE_LABELS: Record<string, string> = {
+    HOURLY: t('posts.rateType.perHour'),
+    DAILY: t('posts.rateType.perDay'),
+    FIXED: t('posts.rateType.fixed'),
+  }
 
   const { data: hasReported } = useQuery({
     ...hasReportedPostQueryOptions(postId, activeProfile?.userProfileId ?? ''),
@@ -53,7 +55,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
                   variant="ghost"
                   size="icon"
                   className="shrink-0 text-muted-foreground hover:text-destructive"
-                  aria-label="Report post"
+                  aria-label={t('posts.detail.reportPost')}
                   onClick={() => setShowReportForm(true)}
                 >
                   <Flag className="size-4" />
@@ -69,7 +71,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
                   )}
                 >
                   <Pencil className="size-4" />
-                  Edit
+                  {t('common.edit')}
                 </Link>
               )}
             </div>
@@ -97,7 +99,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
           )}
         </CardHeader>
         <CardContent>
-          <h2 className="mb-2 text-lg font-medium">Description</h2>
+          <h2 className="mb-2 text-lg font-medium">{t('posts.detail.description')}</h2>
           <p className="text-muted-foreground">{post.description}</p>
         </CardContent>
       </Card>
@@ -110,7 +112,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Report Post</DialogTitle>
+            <DialogTitle>{t('posts.detail.reportPost')}</DialogTitle>
           </DialogHeader>
           {activeProfile && (
             <ReportForm

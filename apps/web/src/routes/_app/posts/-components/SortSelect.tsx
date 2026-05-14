@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Select,
   SelectContent,
@@ -9,18 +10,19 @@ import { Route } from '../index'
 
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'name' | 'reviews-most' | 'reviews-least'
 
-const SORT_LABELS: Record<SortOption, string> = {
-  newest: 'Newest First',
-  'price-low': 'Price: Low to High',
-  'price-high': 'Price: High to Low',
-  name: 'Name: A to Z',
-  'reviews-most': 'Reviews: Most First',
-  'reviews-least': 'Reviews: Fewest First',
-}
-
 export function SortSelect() {
+  const { t } = useTranslation()
   const { sort = 'newest' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const SORT_LABELS: Record<SortOption, string> = {
+    newest: t('posts.sort.newest'),
+    'price-low': t('posts.sort.priceLow'),
+    'price-high': t('posts.sort.priceHigh'),
+    name: t('posts.sort.nameAz'),
+    'reviews-most': t('posts.sort.reviewsMost'),
+    'reviews-least': t('posts.sort.reviewsFewest'),
+  }
 
   return (
     <Select

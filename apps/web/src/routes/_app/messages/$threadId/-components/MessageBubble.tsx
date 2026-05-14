@@ -1,5 +1,6 @@
 import { Flag } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -22,6 +23,7 @@ export function MessageBubble({
   otherPartyName: string
   onReport?: () => void
 }) {
+  const { t } = useTranslation()
   const { activeProfile } = useActiveProfile()
   const profileId = activeProfile?.userProfileId
 
@@ -62,7 +64,7 @@ export function MessageBubble({
             size="icon"
             className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
             onClick={onReport}
-            aria-label="Report message"
+            aria-label={t('messages.reportMessage')}
             tabIndex={-1}
           >
             <Flag className="size-3.5" />

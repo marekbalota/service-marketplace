@@ -4,6 +4,7 @@ import { Edit, Trash2, GripVertical, Star, Loader2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { Button } from '#/components/ui/button'
 import { Badge } from '#/components/ui/badge'
@@ -42,6 +43,7 @@ export function SortableRoleCard({
   isPendingDelete,
   isPendingSetDefault,
 }: SortableRoleCardProps) {
+  const { t } = useTranslation()
   const [editOpen, setEditOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -76,7 +78,7 @@ export function SortableRoleCard({
           <button
             type="button"
             className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted cursor-grab active:cursor-grabbing transition-all duration-200 ease-out z-10"
-            aria-label="Drag to reorder"
+            aria-label={t('admin.roles.dragToReorder')}
             {...attributes}
             {...listeners}
           >
@@ -90,11 +92,11 @@ export function SortableRoleCard({
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle>{role.name}</CardTitle>
                   {role.isDefault && (
-                    <Badge className="bg-purple-100 text-purple-800">default</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">{t('admin.roles.defaultBadge')}</Badge>
                   )}
                   {role.userCount > 0 && (
                     <Badge variant="outline">
-                      {role.userCount} user{role.userCount !== 1 ? 's' : ''}
+                      {t('admin.roles.userCount', { count: role.userCount })}
                     </Badge>
                   )}
                 </div>
@@ -110,14 +112,14 @@ export function SortableRoleCard({
                       onClick={() => setEditOpen(true)}
                     >
                       <Edit className="size-4" />
-                      Edit
+                      {t('common.edit')}
                     </Button>
                     <RoleDialog
                       open={editOpen}
                       onOpenChange={setEditOpen}
-                      title="Edit Role"
-                      description="Modify role permissions and details"
-                      submitLabel="Save Changes"
+                      title={t('admin.roles.editTitle')}
+                      description={t('admin.roles.editDesc')}
+                      submitLabel={t('common.save')}
                       permissions={permissions}
                       grantablePermissionIds={grantablePermissionIds}
                       defaultValues={{
@@ -141,7 +143,7 @@ export function SortableRoleCard({
                           ) : (
                             <Star className="size-4" />
                           )}
-                          Set as Default
+                          {t('admin.roles.setDefault')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -155,7 +157,7 @@ export function SortableRoleCard({
                           ) : (
                             <Trash2 className="size-4" />
                           )}
-                          Delete
+                          {t('common.delete')}
                         </Button>
                       </>
                     )}
@@ -166,7 +168,7 @@ export function SortableRoleCard({
           </CardHeader>
           <CardContent>
             <div>
-              <p className="text-sm font-medium mb-3">Permissions ({role.permissions.length})</p>
+              <p className="text-sm font-medium mb-3">{t('admin.roles.permissionsCount', { count: role.permissions.length })}</p>
               <div className="flex flex-wrap gap-2">
                 {role.permissions.map((permId) => {
                   const perm = permissions.find((p) => p.permissionId === permId)

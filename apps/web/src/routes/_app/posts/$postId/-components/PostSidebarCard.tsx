@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { DollarSign, MapPin, Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useActiveProfile } from '#/context/activeProfile'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
@@ -10,6 +11,7 @@ import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { SendMessageSection } from './SendMessageSection'
 
 export function PostSidebarCard({ postId }: { postId: string }) {
+  const { t } = useTranslation()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
   const isOwner = activeProfile?.userProfileId === post.authorId
@@ -19,7 +21,7 @@ export function PostSidebarCard({ postId }: { postId: string }) {
     <div className="space-y-4 lg:col-start-3 lg:row-start-1 lg:row-span-2">
       <Card>
         <CardHeader>
-          <h2 className="text-base font-medium">Post Details</h2>
+          <h2 className="text-base font-medium">{t('posts.detail.postDetails')}</h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <Link
@@ -29,7 +31,7 @@ export function PostSidebarCard({ postId }: { postId: string }) {
           >
             <ProfileAvatar name={post.authorName} className="size-10 shrink-0" />
             <div>
-              <p className="text-sm text-muted-foreground">Posted by</p>
+              <p className="text-sm text-muted-foreground">{t('posts.detail.postedBy')}</p>
               <p className="font-medium group-hover:text-primary">{post.authorName}</p>
             </div>
           </Link>
@@ -40,7 +42,7 @@ export function PostSidebarCard({ postId }: { postId: string }) {
               <div className="flex items-center gap-3">
                 <MapPin className="size-5 shrink-0 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="text-sm text-muted-foreground">{t('posts.detail.location')}</p>
                   <p className="font-medium">{locationText}</p>
                 </div>
               </div>
@@ -53,9 +55,9 @@ export function PostSidebarCard({ postId }: { postId: string }) {
               <div className="flex items-center gap-3">
                 <DollarSign className="size-5 shrink-0 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Rate Type</p>
+                  <p className="text-sm text-muted-foreground">{t('posts.detail.rateType')}</p>
                   <p className="font-medium">
-                    {post.rateType.charAt(0) + post.rateType.slice(1).toLowerCase()}
+                    {t(`posts.rateType.${post.rateType.toLowerCase()}`)}
                   </p>
                 </div>
               </div>
@@ -68,10 +70,9 @@ export function PostSidebarCard({ postId }: { postId: string }) {
               <div className="flex items-center gap-3">
                 <Star className="size-5 shrink-0 fill-star-filled text-star-filled" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Rating</p>
+                  <p className="text-sm text-muted-foreground">{t('posts.detail.rating')}</p>
                   <p className="font-medium">
-                    {post.averageRating!.toFixed(1)} ({post.reviewCount}{' '}
-                    {post.reviewCount === 1 ? 'review' : 'reviews'})
+                    {post.averageRating!.toFixed(1)} ({t('posts.detail.reviews', { count: post.reviewCount })})
                   </p>
                 </div>
               </div>

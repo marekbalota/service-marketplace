@@ -5,6 +5,7 @@ import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { FileText, AlignLeft, Tag } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { FieldIconHeader } from '#/components/FieldIconHeader'
 import { PostTypeToggle } from '#/components/PostTypeToggle'
 import { useEffect } from 'react'
@@ -116,6 +117,7 @@ function EditPostSkeleton() {
 }
 
 function EditPostPage() {
+  const { t } = useTranslation()
   const { postId } = Route.useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -180,9 +182,9 @@ function EditPostPage() {
 
       <Card className="border-0 shadow-lg">
         <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl">Edit Posting</CardTitle>
+          <CardTitle className="text-2xl">{t('editPost.title')}</CardTitle>
           <CardDescription className="text-base">
-            Update your service posting details
+            {t('editPost.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -198,13 +200,13 @@ function EditPostPage() {
                     icon={FileText}
                     iconBgClassName="bg-blue-100 dark:bg-blue-500/20"
                     iconClassName="text-blue-600 dark:text-blue-300"
-                    label="Title *"
+                    label={t('createPost.titleLabel')}
                     htmlFor="postTitle"
                   />
                   <Input
                     {...field}
                     id="postTitle"
-                    placeholder="e.g., Professional Lawn Care Service"
+                    placeholder={t('createPost.titlePlaceholder')}
                     className="h-11"
                     aria-invalid={fieldState.invalid}
                   />
@@ -222,13 +224,13 @@ function EditPostPage() {
                     icon={AlignLeft}
                     iconBgClassName="bg-muted"
                     iconClassName="text-muted-foreground"
-                    label="Description *"
+                    label={t('createPost.descriptionLabel')}
                     htmlFor="description"
                   />
                   <Textarea
                     {...field}
                     id="description"
-                    placeholder="Describe your service offering or request in detail..."
+                    placeholder={t('createPost.descriptionPlaceholder')}
                     rows={5}
                     className="resize-none"
                     aria-invalid={fieldState.invalid}
@@ -247,7 +249,7 @@ function EditPostPage() {
                     icon={Tag}
                     iconBgClassName="bg-green-100 dark:bg-green-500/20"
                     iconClassName="text-green-600 dark:text-green-300"
-                    label="Categories (Optional)"
+                    label={t('createPost.categories')}
                   />
                   <MultiSelect
                     options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
@@ -256,8 +258,8 @@ function EditPostPage() {
                       field.onChange(v)
                       field.onBlur()
                     }}
-                    placeholder="Select categories"
-                    searchPlaceholder="Search categories..."
+                    placeholder={t('createPost.categories')}
+                    searchPlaceholder={t('createPost.searchCategories')}
                     searchable
                     displayMode="tags"
                     aria-invalid={fieldState.invalid}
@@ -278,14 +280,14 @@ function EditPostPage() {
                 onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending || !isValid}
                 className="h-11 flex-1"
               >
-                {mutation.isPending ? 'Saving…' : 'Save Changes'}
+                {mutation.isPending ? t('editPost.submitting') : t('editPost.submit')}
               </Button>
             </div>
           </form>
@@ -294,9 +296,9 @@ function EditPostPage() {
 
       <ConfirmDialog
         open={status === 'blocked'}
-        title="Discard changes?"
-        description="You have unsaved changes. Are you sure you want to leave?"
-        confirmLabel="Discard"
+        title={t('editPost.discardTitle')}
+        description={t('editPost.discardMessage')}
+        confirmLabel={t('editPost.discard')}
         destructive
         onConfirm={() => proceed?.()}
         onClose={() => reset?.()}

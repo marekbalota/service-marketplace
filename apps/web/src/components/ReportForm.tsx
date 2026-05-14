@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -46,6 +47,7 @@ export function ReportForm({
   onSuccess,
   onCancel,
 }: ReportFormProps) {
+  const { t } = useTranslation()
   const [serverError, setServerError] = useState<string | null>(null)
 
   const schema = descriptionRequired ? schemaWithRequiredDescription : baseSchema
@@ -86,7 +88,7 @@ export function ReportForm({
             const selectedLabel = categories.find((c) => c.categoryId === field.value)?.label
             return (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Report Category *</FieldLabel>
+                <FieldLabel>{t('report.category')}</FieldLabel>
                 <Select
                   value={field.value}
                   onValueChange={(v) => {
@@ -97,7 +99,7 @@ export function ReportForm({
                 >
                   <SelectTrigger aria-invalid={fieldState.invalid}>
                     <SelectValue
-                      placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}
+                      placeholder={categoriesLoading ? t('common.loading') : t('report.selectReason')}
                     >
                       {selectedLabel}
                     </SelectValue>
@@ -121,9 +123,9 @@ export function ReportForm({
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>{descriptionRequired ? 'Description *' : 'Description'}</FieldLabel>
+              <FieldLabel>{descriptionRequired ? t('report.descriptionRequired') : t('report.description')}</FieldLabel>
               <Textarea
-                placeholder="Provide any additional details..."
+                placeholder={t('report.descriptionPlaceholder')}
                 maxLength={1000}
                 rows={3}
                 aria-invalid={fieldState.invalid}
@@ -146,10 +148,10 @@ export function ReportForm({
           className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Flag className="size-4" />
-          {mutation.isPending ? 'Submitting...' : 'Submit Report'}
+          {mutation.isPending ? t('common.submitting') : t('report.submit')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={mutation.isPending}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>

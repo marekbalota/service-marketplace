@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
 import { ReportForm } from '#/components/ReportForm'
@@ -15,6 +16,7 @@ import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
 
 export function ChatInterface({ threadId, profileId }: { threadId: string; profileId: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState('')
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null)
@@ -55,7 +57,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
       {thread.postDeleted && (
         <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-2 text-sm text-muted-foreground shrink-0">
           <Trash2 className="size-4 shrink-0" />
-          <span>The post for this conversation has been deleted. This thread is read-only.</span>
+          <span>{t('messages.deletedPost')}</span>
         </div>
       )}
 
@@ -68,7 +70,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
       {thread.postDeleted ? (
         <div className="border-t bg-card p-3 shrink-0">
           <p className="py-1 text-center text-sm text-muted-foreground">
-            Replies are disabled for archived threads.
+            {t('messages.archivedThread')}
           </p>
         </div>
       ) : (
@@ -89,7 +91,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Report Message</DialogTitle>
+            <DialogTitle>{t('messages.reportMessage')}</DialogTitle>
           </DialogHeader>
           {reportingMessageId && (
             <ReportForm

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { Link, useRouter } from '@tanstack/react-router'
 import { MessageSquare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '#/api'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -20,6 +21,7 @@ import { existingThreadQueryOptions } from '../-queries/threads'
 import { useCurrentUser } from '#/lib/queries/users'
 
 export function SendMessageSection({ postId, profileId }: { postId: string; profileId: string }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -64,10 +66,10 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
           <TooltipTrigger render={<span className="w-full" />}>
             <Button className="w-full gap-2" disabled>
               <MessageSquare className="size-4" />
-              Send Message
+              {t('posts.detail.sendMessage')}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Messages are not accessible during impersonation</TooltipContent>
+          <TooltipContent>{t('posts.detail.impersonationMessage')}</TooltipContent>
         </Tooltip>
       </div>
     )
@@ -81,7 +83,7 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
         className={cn(buttonVariants(), 'w-full gap-2')}
       >
         <MessageSquare className="size-4" />
-        Go to Chat
+        {t('posts.detail.goToChat')}
       </Link>
     )
   }
@@ -90,7 +92,7 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
     <>
       <Button className="w-full gap-2" onClick={() => setOpen(true)}>
         <MessageSquare className="size-4" />
-        Send Message
+        {t('posts.detail.sendMessage')}
       </Button>
       <Dialog
         open={open}
@@ -100,24 +102,24 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Send Message</DialogTitle>
+            <DialogTitle>{t('posts.detail.sendMessage')}</DialogTitle>
           </DialogHeader>
           <Textarea
-            placeholder="Write your message..."
+            placeholder={t('posts.detail.messagePlaceholder')}
             value={draft}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
             rows={4}
             className="resize-none"
           />
           {send.isError && (
-            <p className="text-sm text-destructive">Failed to send message. Please try again.</p>
+            <p className="text-sm text-destructive">{t('posts.detail.failedMessage')}</p>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={handleClose} disabled={send.isPending}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button disabled={!draft.trim() || send.isPending} onClick={() => send.mutate()}>
-              {send.isPending ? 'Sending...' : 'Send'}
+              {send.isPending ? t('posts.detail.sending') : t('posts.detail.send')}
             </Button>
           </DialogFooter>
         </DialogContent>

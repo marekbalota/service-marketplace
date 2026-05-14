@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Plus,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -30,37 +31,16 @@ export const Route = createFileRoute('/_app/account-settings/')({
   component: AccountSettingsHubPage,
 })
 
-const SECTIONS = [
-  { id: 'account-information', label: 'Account Information', icon: User },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'connected-accounts', label: 'Connected Accounts', icon: Key },
-  { id: 'two-factor-auth', label: 'Two-Factor Authentication', icon: Shield },
-  { id: 'login-management', label: 'Login Management', icon: LogOut },
-  { id: 'user-profiles', label: 'User Profiles', icon: Users },
+const SECTION_IDS = [
+  'account-information',
+  'notifications',
+  'connected-accounts',
+  'two-factor-auth',
+  'login-management',
+  'user-profiles',
 ] as const
 
-type SectionId = (typeof SECTIONS)[number]['id']
-
-const NOTIFICATION_ROWS = [
-  {
-    id: 'notif-email',
-    label: 'Email Notifications',
-    description: 'Receive emails about new messages and activity',
-    icon: Bell,
-  },
-  {
-    id: 'notif-messages',
-    label: 'Message Notifications',
-    description: 'Get notified when you receive a new message',
-    icon: Mail,
-  },
-  {
-    id: 'notif-reviews',
-    label: 'Review Notifications',
-    description: 'Get notified when someone reviews your post',
-    icon: Bell,
-  },
-] as const
+type SectionId = (typeof SECTION_IDS)[number]
 
 const OAUTH_PROVIDERS = [
   {
@@ -84,17 +64,6 @@ const OAUTH_PROVIDERS = [
     className: 'bg-blue-500 text-white border-blue-500 hover:bg-blue-500',
   },
   { id: 'apple', label: 'Apple', className: 'bg-black text-white border-black hover:bg-black' },
-] as const
-
-const TWO_FA_METHODS = [
-  { id: 'email', label: 'Email', description: 'Receive a code via email', icon: Mail },
-  {
-    id: 'authenticator',
-    label: 'Authenticator App',
-    description: 'Use an app like Google Authenticator or Authy',
-    icon: Smartphone,
-  },
-  { id: 'sms', label: 'SMS', description: 'Receive a code via text message', icon: MessageSquare },
 ] as const
 
 function AccountSettingsHubSkeleton() {
@@ -127,22 +96,64 @@ function AccountSettingsHubSkeleton() {
 }
 
 function AccountSettingsHubPage() {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const [activeSection, setActiveSection] = useState<SectionId>('account-information')
   const [showChangeEmail, setShowChangeEmail] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const observersRef = useRef<IntersectionObserver[]>([])
 
+  const SECTIONS = [
+    { id: 'account-information' as const, label: t('accountSettings.sections.accountInformation'), icon: User },
+    { id: 'notifications' as const, label: t('accountSettings.sections.notifications'), icon: Bell },
+    { id: 'connected-accounts' as const, label: t('accountSettings.sections.connectedAccounts'), icon: Key },
+    { id: 'two-factor-auth' as const, label: t('accountSettings.sections.twoFactorAuth'), icon: Shield },
+    { id: 'login-management' as const, label: t('accountSettings.sections.loginManagement'), icon: LogOut },
+    { id: 'user-profiles' as const, label: t('accountSettings.sections.userProfiles'), icon: Users },
+  ]
+
+  const NOTIFICATION_ROWS = [
+    {
+      id: 'notif-email',
+      label: t('accountSettings.emailNotifications'),
+      description: t('accountSettings.emailNotificationsDesc'),
+      icon: Bell,
+    },
+    {
+      id: 'notif-messages',
+      label: t('accountSettings.messageNotifications'),
+      description: t('accountSettings.messageNotificationsDesc'),
+      icon: Mail,
+    },
+    {
+      id: 'notif-reviews',
+      label: t('accountSettings.reviewNotifications'),
+      description: t('accountSettings.reviewNotificationsDesc'),
+      icon: Bell,
+    },
+  ]
+
+  const TWO_FA_METHODS = [
+    { id: 'email', label: t('accountSettings.twoFactorEmail'), description: t('accountSettings.twoFactorEmailDesc'), icon: Mail },
+    {
+      id: 'authenticator',
+      label: t('accountSettings.twoFactorApp'),
+      description: t('accountSettings.twoFactorAppDesc'),
+      icon: Smartphone,
+    },
+    { id: 'sms', label: t('accountSettings.twoFactorSms'), description: t('accountSettings.twoFactorSmsDesc'), icon: MessageSquare },
+  ]
+
   useEffect(() => {
     observersRef.current.forEach((o) => o.disconnect())
     observersRef.current = []
 
-    SECTIONS.forEach(({ id }) => {
+    SECTION_IDS.forEach((id) => {
       const el = document.getElementById(id)
       if (!el) return
       const observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry?.isIntersecting) setActiveSection(id as SectionId)
+          if (entry?.isIntersecting) setActiveSection(id)
         },
         { rootMargin: '-10% 0px -80% 0px', threshold: 0 },
       )
@@ -158,9 +169,9 @@ function AccountSettingsHubPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Account Settings</h1>
+        <h1 className="text-2xl font-semibold">{t('accountSettings.title')}</h1>
         <p className="mt-1 text-muted-foreground">
-          Manage your account preferences and security settings
+          {t('accountSettings.subtitle')}
         </p>
       </div>
 
@@ -193,15 +204,15 @@ function AccountSettingsHubPage() {
           {/* 1 — Account Information */}
           <Card id="account-information">
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Update your email and password</CardDescription>
+              <CardTitle>{t('accountSettings.accountInfo')}</CardTitle>
+              <CardDescription>{t('accountSettings.accountInfoSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Mail className="size-5 text-muted-foreground shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">Email Address</p>
+                    <p className="text-sm font-medium">{t('accountSettings.email')}</p>
                     <p className="text-sm text-muted-foreground">{user?.email ?? '—'}</p>
                   </div>
                 </div>
@@ -209,10 +220,10 @@ function AccountSettingsHubPage() {
                   variant="outline"
                   size="sm"
                   disabled
-                  title="Coming soon"
+                  title={t('accountSettings.comingSoon')}
                   onClick={() => setShowChangeEmail(true)}
                 >
-                  Change Email
+                  {t('accountSettings.changeEmail')}
                 </Button>
               </div>
               <Separator />
@@ -220,7 +231,7 @@ function AccountSettingsHubPage() {
                 <div className="flex items-center gap-3">
                   <Lock className="size-5 text-muted-foreground shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">Password</p>
+                    <p className="text-sm font-medium">{t('accountSettings.password')}</p>
                     <p className="text-sm text-muted-foreground">••••••••</p>
                   </div>
                 </div>
@@ -228,10 +239,10 @@ function AccountSettingsHubPage() {
                   variant="outline"
                   size="sm"
                   disabled
-                  title="Coming soon"
+                  title={t('accountSettings.comingSoon')}
                   onClick={() => setShowChangePassword(true)}
                 >
-                  Change Password
+                  {t('accountSettings.changePassword')}
                 </Button>
               </div>
             </CardContent>
@@ -240,8 +251,8 @@ function AccountSettingsHubPage() {
           {/* 2 — Notifications */}
           <Card id="notifications">
             <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Manage how you receive notifications</CardDescription>
+              <CardTitle>{t('accountSettings.notifications')}</CardTitle>
+              <CardDescription>{t('accountSettings.notificationsSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {NOTIFICATION_ROWS.map(({ id, label, description, icon: Icon }) => (
@@ -264,12 +275,12 @@ function AccountSettingsHubPage() {
           {/* 3 — Connected Accounts */}
           <Card id="connected-accounts">
             <CardHeader>
-              <CardTitle>Connected Accounts</CardTitle>
-              <CardDescription>Link your OAuth providers for easy sign-in</CardDescription>
+              <CardTitle>{t('accountSettings.connectedAccounts')}</CardTitle>
+              <CardDescription>{t('accountSettings.connectedAccountsSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Available
+                {t('accountSettings.available')}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {OAUTH_PROVIDERS.map(({ id, label, className }) => (
@@ -277,7 +288,7 @@ function AccountSettingsHubPage() {
                     key={id}
                     className={cn('h-12 justify-between border-2 opacity-60', className)}
                     disabled
-                    title="Coming soon"
+                    title={t('accountSettings.comingSoon')}
                   >
                     <span className="font-medium">{label}</span>
                     <Plus className="size-4" />
@@ -290,8 +301,8 @@ function AccountSettingsHubPage() {
           {/* 4 — Two-Factor Authentication */}
           <Card id="two-factor-auth">
             <CardHeader>
-              <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>Add an extra layer of security to your account</CardDescription>
+              <CardTitle>{t('accountSettings.twoFactor')}</CardTitle>
+              <CardDescription>{t('accountSettings.twoFactorSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {TWO_FA_METHODS.map(({ id, label, description, icon: Icon }) => (
@@ -305,8 +316,8 @@ function AccountSettingsHubPage() {
                       <p className="text-sm text-muted-foreground">{description}</p>
                     </div>
                   </div>
-                  <Button size="sm" disabled title="Coming soon">
-                    Enable
+                  <Button size="sm" disabled title={t('accountSettings.comingSoon')}>
+                    {t('accountSettings.enable')}
                   </Button>
                 </div>
               ))}
@@ -316,16 +327,16 @@ function AccountSettingsHubPage() {
           {/* 5 — Login Management */}
           <Card id="login-management">
             <CardHeader>
-              <CardTitle>Login Management</CardTitle>
-              <CardDescription>Manage your active sessions</CardDescription>
+              <CardTitle>{t('accountSettings.loginManagement')}</CardTitle>
+              <CardDescription>{t('accountSettings.loginManagementSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Signing out of all devices will end all active sessions except your current one.
+                {t('accountSettings.logoutAllHint')}
               </p>
-              <Button variant="destructive" disabled title="Coming soon" className="gap-2">
+              <Button variant="destructive" disabled title={t('accountSettings.comingSoon')} className="gap-2">
                 <LogOut className="size-4" />
-                Log Out All Devices
+                {t('accountSettings.logoutAll')}
               </Button>
             </CardContent>
           </Card>
@@ -333,8 +344,8 @@ function AccountSettingsHubPage() {
           {/* 6 — User Profiles */}
           <Card id="user-profiles">
             <CardHeader>
-              <CardTitle>User Profiles</CardTitle>
-              <CardDescription>Manage your service profiles for posting</CardDescription>
+              <CardTitle>{t('accountSettings.userProfiles')}</CardTitle>
+              <CardDescription>{t('accountSettings.userProfilesSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-4 py-3">
@@ -343,17 +354,16 @@ function AccountSettingsHubPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {user?.profiles.length ?? 0} Active{' '}
-                    {(user?.profiles.length ?? 0) === 1 ? 'Profile' : 'Profiles'}
+                    {t('accountSettings.activeProfiles', { count: user?.profiles.length ?? 0 })}
                   </p>
-                  <p className="text-xs text-muted-foreground">Profiles for posting services</p>
+                  <p className="text-xs text-muted-foreground">{t('accountSettings.profilesDesc')}</p>
                 </div>
               </div>
               <Link
                 to="/account-settings/profiles"
                 className={buttonVariants({ variant: 'outline', className: 'w-full' })}
               >
-                Manage Profiles
+                {t('accountSettings.manageProfiles')}
               </Link>
             </CardContent>
           </Card>

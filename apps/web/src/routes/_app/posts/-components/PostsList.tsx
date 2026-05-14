@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PostCard } from '#/components/PostCard'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -32,6 +33,7 @@ export function PostsList({
   region?: string
   city?: string
 }) {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
   const { activeProfile } = useActiveProfile()
@@ -80,8 +82,8 @@ export function PostsList({
     <main className="mx-auto max-w-7xl px-4 py-6">
       <p className="mb-4 text-muted-foreground">
         {favouritesOnly
-          ? `${totalItems} favourite${totalItems !== 1 ? 's' : ''}`
-          : `${totalItems} service${totalItems !== 1 ? 's' : ''} available`}
+          ? t('posts.totalFavourites', { count: totalItems })
+          : t('posts.totalServices', { count: totalItems })}
       </p>
 
       {data.items.length === 0 ? (
@@ -90,14 +92,14 @@ export function PostsList({
             <>
               <Heart className="mx-auto size-12 text-muted-foreground/50" />
               <p className="mt-4 text-muted-foreground">
-                No favourites found matching your criteria.
+                {t('posts.noFavourites')}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Browse posts and click the heart icon to add them to your favourites.
+                {t('posts.noFavouritesHint')}
               </p>
             </>
           ) : (
-            <p className="text-muted-foreground">No services found matching your criteria.</p>
+            <p className="text-muted-foreground">{t('posts.noServices')}</p>
           )}
         </div>
       ) : (

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions } from '#/lib/queries/users'
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/_app/account-settings/profiles/create')({
 })
 
 function CreateProfilePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([])
@@ -68,10 +70,7 @@ function CreateProfilePage() {
       for (const { preview } of pendingFilesRef.current) URL.revokeObjectURL(preview)
       setPendingFiles([])
       if (failedCount > 0) {
-        setUploadWarning(
-          `Profile created! However, ${failedCount} image${failedCount > 1 ? 's' : ''} failed to upload. ` +
-            `Images are optional — you can add them later by editing the profile.`,
-        )
+        setUploadWarning(t('profiles.imageWarningMessage', { count: failedCount }))
       } else {
         navigate({ to: '/account-settings/profiles' })
       }
@@ -98,14 +97,14 @@ function CreateProfilePage() {
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="rounded-lg border bg-muted p-4 text-sm">
-              <p className="font-medium">Profile created with a warning</p>
+              <p className="font-medium">{t('profiles.imageWarning')}</p>
               <p className="mt-1 text-muted-foreground">{uploadWarning}</p>
             </div>
             <Link
               to="/account-settings/profiles"
               className={buttonVariants({ variant: 'default' })}
             >
-              Go to Manage Profiles
+              {t('profiles.goToManage')}
             </Link>
           </CardContent>
         </Card>
@@ -118,15 +117,15 @@ function CreateProfilePage() {
       <BackButton onClick={() => navigate({ to: '/account-settings/profiles' })} />
 
       <div className="mb-6">
-        <h2 className="mb-2">Add Profile</h2>
-        <p className="text-muted-foreground">Create a new profile on your account</p>
+        <h2 className="mb-2">{t('profiles.createTitle')}</h2>
+        <p className="text-muted-foreground">{t('profiles.createSubtitle')}</p>
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Contact and personal information</CardDescription>
+            <CardTitle>{t('profiles.basicInfo')}</CardTitle>
+            <CardDescription>{t('profiles.contactInfo')}</CardDescription>
           </CardHeader>
           <CardContent>
             <ProfileFields control={form.control} />
@@ -135,8 +134,8 @@ function CreateProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Images</CardTitle>
-            <CardDescription>Add photos to your profile</CardDescription>
+            <CardTitle>{t('profiles.images')}</CardTitle>
+            <CardDescription>{t('profiles.imagesAddDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <ImagePickerGrid
@@ -156,11 +155,11 @@ function CreateProfilePage() {
             variant="outline"
             onClick={() => navigate({ to: '/account-settings/profiles' })}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Create Profile
+            {mutation.isPending ? t('profiles.creating') : t('profiles.createProfile')}
           </Button>
         </div>
       </form>

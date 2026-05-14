@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '#/components/ui/badge'
 import { cn } from '#/lib/utils'
 import { formatRelativeTime } from '../-utils'
@@ -6,6 +7,7 @@ import { ProfileAvatar } from '#/components/ProfileAvatar'
 import type { Thread } from '../-queries/threads'
 
 export function ThreadItem({ thread, isActive }: { thread: Thread; isActive?: boolean }) {
+  const { t } = useTranslation()
   return (
     <Link
       to="/messages/$threadId"
@@ -44,22 +46,22 @@ export function ThreadItem({ thread, isActive }: { thread: Thread; isActive?: bo
               variant="outline"
               className="h-4 shrink-0 border-muted-foreground/40 px-1 text-[10px] text-muted-foreground"
             >
-              Your post
+              {t('messages.yourPost')}
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-2">
           {thread.postDeleted ? (
             <Badge variant="outline" className="h-4 px-1 text-[10px] text-muted-foreground">
-              Post deleted
+              {t('messages.postDeleted')}
             </Badge>
           ) : thread.lastMessage ? (
             <p className="truncate text-xs text-muted-foreground">
-              {thread.lastMessage.sentByMe ? 'You: ' : ''}
+              {thread.lastMessage.sentByMe ? t('messages.you') : ''}
               {thread.lastMessage.content}
             </p>
           ) : (
-            <p className="text-xs italic text-muted-foreground">No messages yet</p>
+            <p className="text-xs italic text-muted-foreground">{t('messages.noMessagesThread')}</p>
           )}
           {thread.unreadCount > 0 && (
             <span className="ml-auto inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">

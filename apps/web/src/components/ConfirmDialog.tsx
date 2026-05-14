@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import {
   AlertDialog,
@@ -36,6 +37,7 @@ export function ConfirmDialog({
   onConfirm: (reason?: string) => void | Promise<void>
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [internalPending, setInternalPending] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +50,7 @@ export function ConfirmDialog({
     try {
       await onConfirm(reasonLabel ? reason || undefined : undefined)
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError(t('errors.generic'))
     } finally {
       setInternalPending(false)
       setReason('')
@@ -76,7 +78,7 @@ export function ConfirmDialog({
             <Label htmlFor="confirm-reason">{reasonLabel}</Label>
             <Textarea
               id="confirm-reason"
-              placeholder="Describe the reason..."
+              placeholder={t('common.reasonPlaceholder')}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
@@ -85,7 +87,7 @@ export function ConfirmDialog({
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={isLoading || (reasonRequired && !reason.trim())}
             className={
