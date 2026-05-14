@@ -537,6 +537,8 @@
     "exit": "Exit Impersonation"
   },
   "pagination": {
+    "previous": "Previous",
+    "next": "Next",
     "morePages": "More pages",
     "page": "Page {{number}}"
   },

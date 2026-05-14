@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '#/lib/utils'
 import {
   Pagination,
@@ -38,6 +39,7 @@ export function PaginationBar({
   onPageChange: (page: number) => void
   className?: string
 }) {
+  const { t } = useTranslation()
   return (
     <Pagination className={cn('justify-center', className)}>
       <PaginationContent>
@@ -47,13 +49,14 @@ export function PaginationBar({
             aria-disabled={page <= 1}
             className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
             role="link"
+            text={t('pagination.previous')}
           />
         </PaginationItem>
 
         {buildPageNumbers(page, totalPages).map((item, i) =>
           item === 'ellipsis' ? (
             <PaginationItem key={`ellipsis-${i}`}>
-              <span aria-label="More pages">
+              <span aria-label={t('pagination.morePages')}>
                 <PaginationEllipsis />
               </span>
             </PaginationItem>
@@ -63,7 +66,7 @@ export function PaginationBar({
                 isActive={item === page}
                 onClick={() => onPageChange(item)}
                 className="cursor-pointer"
-                aria-label={`Page ${item}`}
+                aria-label={t('pagination.page', { number: item })}
                 role="button"
               >
                 {item}
@@ -78,6 +81,7 @@ export function PaginationBar({
             aria-disabled={page >= totalPages}
             className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
             role="link"
+            text={t('pagination.next')}
           />
         </PaginationItem>
       </PaginationContent>

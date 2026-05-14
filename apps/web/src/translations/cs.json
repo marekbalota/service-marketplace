@@ -537,6 +537,8 @@
     "exit": "Ukončit zosobnění"
   },
   "pagination": {
+    "previous": "Předchozí",
+    "next": "Další",
     "morePages": "Více stránek",
     "page": "Stránka {{number}}"
   },

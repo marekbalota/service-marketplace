@@ -537,6 +537,8 @@
     "exit": "Ukončiť zosobnenie"
   },
   "pagination": {
+    "previous": "Predchádzajúca",
+    "next": "Nasledujúca",
     "morePages": "Viac stránok",
     "page": "Stránka {{number}}"
   },
