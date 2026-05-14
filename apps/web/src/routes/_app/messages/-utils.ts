@@ -1,6 +1,6 @@
-type TranslateFn = (key: string, opts?: Record<string, unknown>) => string
+import type { TFunction } from 'i18next'
 
-export function formatRelativeTime(date: Date | string, t: TranslateFn): string {
+export function formatRelativeTime(date: Date | string, t: TFunction): string {
   const d = typeof date === 'string' ? new Date(date) : date
   const seconds = Math.floor((Date.now() - d.getTime()) / 1000)
   if (seconds < 60) return t('messages.justNow')

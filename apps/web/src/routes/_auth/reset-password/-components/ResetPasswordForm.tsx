@@ -49,7 +49,7 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
       token: token!,
     })
     if (error) {
-      form.setError('root', { message: error.message ?? 'An unexpected error occurred' })
+      form.setError('root', { message: error.message ?? t('error.unexpected') })
       return
     }
     setSucceeded(true)

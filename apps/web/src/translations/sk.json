@@ -565,8 +565,8 @@
     "tryAgain": "Skúsiť znova"
   },
   "imagePicker": {
-    "rejected_one": "{{count}} súbor bol odmietnutý — iba obrázky sú povolené.",
-    "rejected_other": "{{count}} súborov bolo odmietnutých — iba obrázky sú povolené."
+    "rejected_one": "1 súbor sa nepodarilo načítať a bol preskočený. Uistite sa, že ide o platný obrázok JPEG, PNG, GIF alebo WebP.",
+    "rejected_other": "{{count}} súborov sa nepodarilo načítať a boli preskočené. Uistite sa, že ide o platné obrázky JPEG, PNG, GIF alebo WebP."
   },
   "validation": {
     "required": "Toto pole je povinné",
@@ -578,6 +578,7 @@
     "selectOption": "Vyberte platnú možnosť",
     "passwordsMismatch": "Heslá sa nezhodujú",
     "expiryRequired": "Dátum vypršania je povinný",
-    "expiryFuture": "Dátum vypršania musí byť v budúcnosti"
+    "expiryFuture": "Dátum vypršania musí byť v budúcnosti",
+    "invalid": "Neplatná hodnota"
   }
 }

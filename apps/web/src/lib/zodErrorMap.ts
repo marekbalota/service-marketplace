@@ -33,7 +33,12 @@ export function zodErrorMap(issue: $ZodRawIssue): { message: string } | null {
       if (issue.format === 'email') return { message: i18next.t('validation.email') }
       if (issue.format === 'uuid') return { message: i18next.t('validation.selectOption') }
       break
+
+    case 'invalid_value':
+      // Enum values — user selected something not in the allowed set
+      return { message: i18next.t('validation.selectOption') }
   }
 
-  return null
+  // Catch-all: prevents any English leaking through for unhandled codes
+  return { message: i18next.t('validation.invalid') }
 }

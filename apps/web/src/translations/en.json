@@ -578,6 +578,7 @@
     "selectOption": "Please select a valid option",
     "passwordsMismatch": "Passwords do not match",
     "expiryRequired": "Expiry date is required",
-    "expiryFuture": "Expiry date must be in the future"
+    "expiryFuture": "Expiry date must be in the future",
+    "invalid": "Invalid value"
   }
 }

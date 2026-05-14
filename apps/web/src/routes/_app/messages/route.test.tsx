@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { formatRelativeTime } from './-utils'
+import type { TFunction } from 'i18next'
 
-const t = (key: string, opts?: Record<string, unknown>) => {
+const t = ((key: string, opts?: Record<string, unknown>) => {
   if (key === 'messages.justNow') return 'just now'
   if (key === 'messages.minutesAgo') return `${opts?.count}m ago`
   if (key === 'messages.hoursAgo') return `${opts?.count}h ago`
   if (key === 'messages.daysAgo') return `${opts?.count}d ago`
   return key
-}
+}) as unknown as TFunction
 
 describe('formatRelativeTime', () => {
   it('returns "just now" for times within the last minute', () => {
@@ -33,5 +34,20 @@ describe('formatRelativeTime', () => {
   it('accepts an ISO string as well as a Date', () => {
     const iso = new Date(Date.now() - 10 * 60 * 1000).toISOString()
     expect(formatRelativeTime(iso, t)).toBe('10m ago')
+  })
+
+  it('passes count=1 for exactly 1 minute ago', () => {
+    const oneMinAgo = new Date(Date.now() - 60 * 1000)
+    expect(formatRelativeTime(oneMinAgo, t)).toBe('1m ago')
+  })
+
+  it('passes count=1 for exactly 1 hour ago', () => {
+    const oneHourAgo = new Date(Date.now() - 3600 * 1000)
+    expect(formatRelativeTime(oneHourAgo, t)).toBe('1h ago')
+  })
+
+  it('passes count=1 for exactly 1 day ago', () => {
+    const oneDayAgo = new Date(Date.now() - 86400 * 1000)
+    expect(formatRelativeTime(oneDayAgo, t)).toBe('1d ago')
   })
 })

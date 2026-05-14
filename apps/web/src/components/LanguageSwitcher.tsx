@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Select,
@@ -9,15 +9,14 @@ import {
 
 type Language = 'en' | 'sk' | 'cs'
 
+function getInitialLang(): Language {
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('language') : null
+  return stored === 'sk' || stored === 'cs' ? stored : 'en'
+}
+
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
-  const [lang, setLang] = useState<Language>('en')
-
-  useLayoutEffect(() => {
-    const stored = localStorage.getItem('language')
-    const initial: Language = stored === 'sk' || stored === 'cs' ? stored : 'en'
-    setLang(initial)
-  }, [])
+  const [lang, setLang] = useState<Language>(getInitialLang)
 
   return (
     <Select

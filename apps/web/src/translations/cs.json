@@ -565,8 +565,8 @@
     "tryAgain": "Zkusit znovu"
   },
   "imagePicker": {
-    "rejected_one": "{{count}} soubor byl odmítnut — povoleny jsou pouze obrázky.",
-    "rejected_other": "{{count}} souborů bylo odmítnuto — povoleny jsou pouze obrázky."
+    "rejected_one": "1 soubor se nepodařilo přečíst a byl přeskočen. Ujistěte se, že jde o platný obrázek JPEG, PNG, GIF nebo WebP.",
+    "rejected_other": "{{count}} souborů se nepodařilo přečíst a byly přeskočeny. Ujistěte se, že jde o platné obrázky JPEG, PNG, GIF nebo WebP."
   },
   "validation": {
     "required": "Toto pole je povinné",
@@ -578,6 +578,7 @@
     "selectOption": "Vyberte platnou možnost",
     "passwordsMismatch": "Hesla se neshodují",
     "expiryRequired": "Datum vypršení je povinné",
-    "expiryFuture": "Datum vypršení musí být v budoucnosti"
+    "expiryFuture": "Datum vypršení musí být v budoucnosti",
+    "invalid": "Neplatná hodnota"
   }
 }
