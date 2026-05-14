@@ -11,7 +11,9 @@
     "view": "Zobraziť",
     "create": "Vytvoriť",
     "search": "Hľadať…",
-    "reasonPlaceholder": "Opíšte dôvod…"
+    "reasonPlaceholder": "Opíšte dôvod…",
+    "selectAll": "Vybrať všetko",
+    "clearSelection": "Zrušiť výber"
   },
   "nav": {
     "login": "Prihlásiť sa",
@@ -147,7 +149,9 @@
       "clear": "Vymazať lokalitu",
       "country": "Krajina",
       "region": "Kraj",
-      "city": "Mesto"
+      "city": "Mesto",
+      "searchPlaceholder": "Hľadať {{location}}…",
+      "noLocations": "Žiadne lokality sa nenašli."
     },
     "rateType": {
       "hourly": "Hodinová",
@@ -210,7 +214,12 @@
     "searchCategories": "Hľadať kategórie…",
     "postingAs": "Zverejňujem ako",
     "submit": "Vytvoriť inzerát",
-    "submitting": "Vytváranie…"
+    "submitting": "Vytváranie…",
+    "locationOptional": "Poloha (voliteľná)",
+    "enterNewLocation": "Zadať novú polohu",
+    "usePreviousLocation": "Použiť predchádzajúcu polohu",
+    "selectPreviousLocation": "Vybrať z predchádzajúcich polôh",
+    "noPreviousLocations": "Žiadne predchádzajúce polohy. Kliknite na 'Zadať novú polohu' pre pridanie."
   },
   "editPost": {
     "title": "Upraviť inzerát",
@@ -255,7 +264,11 @@
     "viewPost": "Zobraziť inzerát",
     "sendFailed": "Odoslanie zlyhalo. Skúste to znova.",
     "writePlaceholder": "Napíšte správu…",
-    "send": "Odoslať správu"
+    "send": "Odoslať správu",
+    "justNow": "práve teraz",
+    "minutesAgo": "pred {{count}} min",
+    "hoursAgo": "pred {{count}} hod",
+    "daysAgo": "pred {{count}} d"
   },
   "pricing": {
     "label": "Cena (nepovinná)",
@@ -544,5 +557,15 @@
   },
   "footer": {
     "copyright": "© {{year}} Service Marketplace. Všetky práva vyhradené."
+  },
+  "error": {
+    "label": "Chyba",
+    "somethingWentWrong": "Niečo sa pokazilo",
+    "unexpected": "Vyskytla sa neočakávaná chyba. Skúste to znova.",
+    "tryAgain": "Skúsiť znova"
+  },
+  "imagePicker": {
+    "rejected_one": "{{count}} súbor bol odmietnutý — iba obrázky sú povolené.",
+    "rejected_other": "{{count}} súborov bolo odmietnutých — iba obrázky sú povolené."
   }
 }

@@ -11,7 +11,9 @@
     "view": "View",
     "create": "Create",
     "search": "Search…",
-    "reasonPlaceholder": "Describe the reason…"
+    "reasonPlaceholder": "Describe the reason…",
+    "selectAll": "Select all",
+    "clearSelection": "Clear selection"
   },
   "nav": {
     "login": "Log in",
@@ -147,7 +149,9 @@
       "clear": "Clear location",
       "country": "Country",
       "region": "Region",
-      "city": "City"
+      "city": "City",
+      "searchPlaceholder": "Search {{location}}…",
+      "noLocations": "No locations found."
     },
     "rateType": {
       "hourly": "Hourly",
@@ -210,7 +214,12 @@
     "searchCategories": "Search categories…",
     "postingAs": "Posting as",
     "submit": "Create Posting",
-    "submitting": "Creating…"
+    "submitting": "Creating…",
+    "locationOptional": "Location (Optional)",
+    "enterNewLocation": "Enter New Location",
+    "usePreviousLocation": "Use Previous Location",
+    "selectPreviousLocation": "Select from your previous locations",
+    "noPreviousLocations": "No previous locations. Click 'Enter New Location' to add one."
   },
   "editPost": {
     "title": "Edit Posting",
@@ -255,7 +264,11 @@
     "viewPost": "View post",
     "sendFailed": "Failed to send. Please try again.",
     "writePlaceholder": "Write a message…",
-    "send": "Send message"
+    "send": "Send message",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
   },
   "pricing": {
     "label": "Pricing (Optional)",
@@ -544,5 +557,15 @@
   },
   "footer": {
     "copyright": "© {{year}} Service Marketplace. All rights reserved."
+  },
+  "error": {
+    "label": "Error",
+    "somethingWentWrong": "Something went wrong",
+    "unexpected": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try again"
+  },
+  "imagePicker": {
+    "rejected_one": "1 file could not be read and was skipped. Make sure it is a valid JPEG, PNG, GIF, or WebP image.",
+    "rejected_other": "{{count}} files could not be read and were skipped. Make sure they are valid JPEG, PNG, GIF, or WebP images."
   }
 }

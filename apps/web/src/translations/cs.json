@@ -11,7 +11,9 @@
     "view": "Zobrazit",
     "create": "Vytvořit",
     "search": "Hledat…",
-    "reasonPlaceholder": "Popište důvod…"
+    "reasonPlaceholder": "Popište důvod…",
+    "selectAll": "Vybrat vše",
+    "clearSelection": "Zrušit výběr"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -147,7 +149,9 @@
       "clear": "Vymazat lokalitu",
       "country": "Země",
       "region": "Kraj",
-      "city": "Město"
+      "city": "Město",
+      "searchPlaceholder": "Hledat {{location}}…",
+      "noLocations": "Žádné lokality nebyly nalezeny."
     },
     "rateType": {
       "hourly": "Hodinová",
@@ -210,7 +214,12 @@
     "searchCategories": "Hledat kategorie…",
     "postingAs": "Zveřejňuji jako",
     "submit": "Vytvořit inzerát",
-    "submitting": "Vytváření…"
+    "submitting": "Vytváření…",
+    "locationOptional": "Poloha (volitelná)",
+    "enterNewLocation": "Zadat novou polohu",
+    "usePreviousLocation": "Použít předchozí polohu",
+    "selectPreviousLocation": "Vybrat z předchozích poloh",
+    "noPreviousLocations": "Žádné předchozí polohy. Klikněte na 'Zadat novou polohu' pro přidání."
   },
   "editPost": {
     "title": "Upravit inzerát",
@@ -255,7 +264,11 @@
     "viewPost": "Zobrazit inzerát",
     "sendFailed": "Odeslání se nezdařilo. Zkuste to znovu.",
     "writePlaceholder": "Napište zprávu…",
-    "send": "Odeslat zprávu"
+    "send": "Odeslat zprávu",
+    "justNow": "právě teď",
+    "minutesAgo": "před {{count}} min",
+    "hoursAgo": "před {{count}} hod",
+    "daysAgo": "před {{count}} d"
   },
   "pricing": {
     "label": "Cena (nepovinná)",
@@ -544,5 +557,15 @@
   },
   "footer": {
     "copyright": "© {{year}} Service Marketplace. Všechna práva vyhrazena."
+  },
+  "error": {
+    "label": "Chyba",
+    "somethingWentWrong": "Něco se pokazilo",
+    "unexpected": "Nastala neočekávaná chyba. Zkuste to znovu.",
+    "tryAgain": "Zkusit znovu"
+  },
+  "imagePicker": {
+    "rejected_one": "{{count}} soubor byl odmítnut — povoleny jsou pouze obrázky.",
+    "rejected_other": "{{count}} souborů bylo odmítnuto — povoleny jsou pouze obrázky."
   }
 }
