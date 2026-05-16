@@ -340,6 +340,7 @@ test.describe('Admin', () => {
     ).trim()
     const userCard = page
       .getByRole('heading', { level: 3, name: firstUserName, exact: true })
+      .first()
       .locator('../../..')
 
     await userCard.getByRole('button', { name: /^ban$/i }).click()
