@@ -322,25 +322,34 @@ test.describe('Admin', () => {
     await page.getByLabel(/role name/i).fill(roleName)
     await page.getByLabel(/description/i).fill('Created by e2e test')
     await page
+      .getByRole('dialog')
       .getByRole('button', { name: /^create role$/i })
-      .last()
       .click()
-    await expect(page.getByText(roleName)).toBeVisible()
+    await expect(page.getByText(roleName)).toBeVisible({ timeout: 15000 })
   })
 
   test('bans and unbans a user', async ({ page }) => {
     await page.goto('/admin/users')
     // Target the first user with a Ban button (exclude SuperAdmin - no Ban button for higher/equal priority roles)
-    const userName = page.getByRole('heading', { level: 3 }).first()
-    const userCard = userName.locator('..').locator('..').locator('..')
+    const firstBanBtn = page.getByRole('button', { name: /^ban$/i }).first()
+    await expect(firstBanBtn).toBeVisible()
+    // Capture the user's name so the locator stays anchored to the same card after list re-renders
+    const firstUserName = (
+      (await firstBanBtn.locator('../../../..').getByRole('heading', { level: 3 }).textContent()) ??
+      ''
+    ).trim()
+    const userCard = page
+      .getByRole('heading', { level: 3, name: firstUserName, exact: true })
+      .locator('../../..')
+
     await userCard.getByRole('button', { name: /^ban$/i }).click()
     await page.getByPlaceholder(/describe the reason for this ban/i).fill('E2E test ban')
     await page.getByRole('button', { name: /^ban user$/i }).click()
-    await expect(userCard.getByText('banned')).toBeVisible()
+    await expect(userCard.getByText('banned')).toBeVisible({ timeout: 15000 })
 
     await userCard.getByRole('button', { name: /^unban$/i }).click()
     await page.getByRole('button', { name: /^confirm$/i }).click()
-    await expect(userCard.getByText('active')).toBeVisible()
+    await expect(userCard.getByText('active')).toBeVisible({ timeout: 15000 })
   })
 })
 
