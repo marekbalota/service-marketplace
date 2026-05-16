@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from '@tanstack/react-router'
-import { Turnstile } from '@marsidev/react-turnstile'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
 import { env } from '#/env'
@@ -23,7 +23,8 @@ type RegisterValues = z.infer<typeof registerSchema>
 export function RegisterForm() {
   const navigate = useNavigate()
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [challengeVisible, setChallengeVisible] = useState(false)
+  const [captchaVisible, setCaptchaVisible] = useState(false)
+  const turnstileRef = useRef<TurnstileInstance | null>(null)
   const theme = useAppTheme()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -43,11 +44,15 @@ export function RegisterForm() {
       const body = parseAuthErrorBody(error)
       if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
         setCaptchaToken(null)
+        setCaptchaVisible(true)
+        turnstileRef.current?.reset()
         form.setError('root', { message: (body.message as string) ?? error.message })
         return
       }
     }
     setCaptchaToken(null)
+    setCaptchaVisible(true)
+    turnstileRef.current?.reset()
     form.setError('root', { message: error.message })
   }
 
@@ -109,17 +114,18 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
-      <div className={challengeVisible ? undefined : '!hidden'}>
+      <FieldError errors={[form.formState.errors.root]} />
+      <div className={captchaVisible ? undefined : '!hidden'}>
         <Turnstile
+          ref={turnstileRef}
           siteKey={env.turnstileSiteKey}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
           onError={() => setCaptchaToken(null)}
-          onBeforeInteractive={() => setChallengeVisible(true)}
+          onBeforeInteractive={() => setCaptchaVisible(true)}
           options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
         />
       </div>
-      <FieldError errors={[form.formState.errors.root]} />
       <Button
         type="submit"
         className="w-full"
