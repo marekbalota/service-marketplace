@@ -57,9 +57,7 @@ describe('ChangeEmailDialog', () => {
     await user.click(screen.getByRole('button', { name: /^change email$/i }))
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
-      expect(toast.success).toHaveBeenCalledWith(
-        expect.stringContaining('confirmation link'),
-      )
+      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('confirmation link'))
     })
   })
 

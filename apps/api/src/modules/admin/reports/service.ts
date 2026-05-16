@@ -1,5 +1,13 @@
 import { db } from '../../../db'
-import { reports, reportCategories, posts, messages, reviews, users, userProfiles } from '../../../db/schema'
+import {
+  reports,
+  reportCategories,
+  posts,
+  messages,
+  reviews,
+  users,
+  userProfiles,
+} from '../../../db/schema'
 import { eq, and, isNull, count, desc } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
@@ -180,10 +188,7 @@ export abstract class AdminReportsService {
 
     if (!existing) throw new NotFoundError(ErrorMessages.reportNotFound)
 
-    await db
-      .update(reports)
-      .set({ status: 'RESOLVED' })
-      .where(eq(reports.reportId, reportId))
+    await db.update(reports).set({ status: 'RESOLVED' }).where(eq(reports.reportId, reportId))
   }
 
   static async getMessageContext(reportId: string) {
@@ -242,9 +247,6 @@ export abstract class AdminReportsService {
 
     if (!existing) throw new NotFoundError(ErrorMessages.reportNotFound)
 
-    await db
-      .update(reports)
-      .set({ status: 'DISMISSED' })
-      .where(eq(reports.reportId, reportId))
+    await db.update(reports).set({ status: 'DISMISSED' }).where(eq(reports.reportId, reportId))
   }
 }

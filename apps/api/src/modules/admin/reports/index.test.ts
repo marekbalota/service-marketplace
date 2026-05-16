@@ -75,10 +75,12 @@ beforeAll(async () => {
   const categoryId = categories![0]!.categoryId
 
   // Bob reports alice's post
-  const { data: report } = await client.posts({ id: testPostId }).reports.post(
-    { categoryId, description: 'Test report for integration tests' },
-    { headers: { Cookie: bobCookie } },
-  )
+  const { data: report } = await client
+    .posts({ id: testPostId })
+    .reports.post(
+      { categoryId, description: 'Test report for integration tests' },
+      { headers: { Cookie: bobCookie } },
+    )
   testReportId = (report as { reportId: string }).reportId
 })
 
@@ -209,10 +211,12 @@ describe('PATCH /admin/reports/:id/dismiss', () => {
     })
     const categoryId = categories![0]!.categoryId
 
-    const { data: report2 } = await client.posts({ id: post2Id }).reports.post(
-      { categoryId, description: 'To be dismissed' },
-      { headers: { Cookie: bobCookie } },
-    )
+    const { data: report2 } = await client
+      .posts({ id: post2Id })
+      .reports.post(
+        { categoryId, description: 'To be dismissed' },
+        { headers: { Cookie: bobCookie } },
+      )
     dismissTargetId = (report2 as { reportId: string }).reportId
   })
 

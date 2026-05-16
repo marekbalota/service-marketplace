@@ -44,7 +44,9 @@ export function ChangeEmailDialog({
     const { error } = await authClient.changeEmail({ newEmail })
     if (error) {
       const body = parseAuthErrorBody(error)
-      form.setError('root', { message: (body?.message as string) ?? error.message ?? 'An unexpected error occurred' })
+      form.setError('root', {
+        message: (body?.message as string) ?? error.message ?? 'An unexpected error occurred',
+      })
       return
     }
     handleOpenChange(false)
