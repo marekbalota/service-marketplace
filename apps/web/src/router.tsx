@@ -1,5 +1,6 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
+import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental'
 import { toast } from 'sonner'
 import { ErrorCodes } from '@marketplace/shared'
 import { ApiError } from '#/lib/api-error'
@@ -43,6 +44,11 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60, // 1 minute — cached results served instantly within this window
     },
   },
+})
+
+broadcastQueryClient({
+  queryClient,
+  broadcastChannel: 'marketplace-query-sync',
 })
 
 export function getRouter() {
