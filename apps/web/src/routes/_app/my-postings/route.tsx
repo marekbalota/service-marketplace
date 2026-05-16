@@ -27,7 +27,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_app/my-postings')({
   validateSearch: searchSchema,
   beforeLoad: ({ context: { user }, location }) => {
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href }, replace: true })
   },
   component: MyPostingsPage,
 })

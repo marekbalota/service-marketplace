@@ -136,15 +136,20 @@ export function ReportCard({ report }: { report: ReportItem }) {
               />
             </>
           ) : (
-            <Button variant="outline" size="sm" className="gap-2 shrink-0" asChild>
-              <a
-                href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <ExternalLink className="size-4" />
-                View
-              </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 shrink-0"
+              render={
+                <a
+                  href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
+            >
+              <ExternalLink className="size-4" />
+              View
             </Button>
           )}
         </div>

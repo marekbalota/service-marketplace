@@ -17,6 +17,7 @@ import { Route as AuthResetPasswordRouteRouteImport } from './routes/_auth/reset
 import { Route as AuthRegisterRouteRouteImport } from './routes/_auth/register/route'
 import { Route as AuthLoginRouteRouteImport } from './routes/_auth/login/route'
 import { Route as AuthForgotPasswordRouteRouteImport } from './routes/_auth/forgot-password/route'
+import { Route as AuthChangeEmailPendingRouteRouteImport } from './routes/_auth/change-email-pending/route'
 import { Route as AuthBannedRouteRouteImport } from './routes/_auth/banned/route'
 import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
 import { Route as AppMessagesRouteRouteImport } from './routes/_app/messages/route'
@@ -82,6 +83,12 @@ const AuthForgotPasswordRouteRoute = AuthForgotPasswordRouteRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthChangeEmailPendingRouteRoute =
+  AuthChangeEmailPendingRouteRouteImport.update({
+    id: '/change-email-pending',
+    path: '/change-email-pending',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthBannedRouteRoute = AuthBannedRouteRouteImport.update({
   id: '/banned',
   path: '/banned',
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AppMessagesRouteRouteWithChildren
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/banned': typeof AuthBannedRouteRoute
+  '/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
   '/forgot-password': typeof AuthForgotPasswordRouteRoute
   '/login': typeof AuthLoginRouteRoute
   '/register': typeof AuthRegisterRouteRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/create-post': typeof AppCreatePostRouteRoute
   '/my-postings': typeof AppMyPostingsRouteRoute
   '/banned': typeof AuthBannedRouteRoute
+  '/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
   '/forgot-password': typeof AuthForgotPasswordRouteRoute
   '/login': typeof AuthLoginRouteRoute
   '/register': typeof AuthRegisterRouteRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_app/messages': typeof AppMessagesRouteRouteWithChildren
   '/_app/my-postings': typeof AppMyPostingsRouteRoute
   '/_auth/banned': typeof AuthBannedRouteRoute
+  '/_auth/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRouteRoute
   '/_auth/login': typeof AuthLoginRouteRoute
   '/_auth/register': typeof AuthRegisterRouteRoute
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/my-postings'
     | '/banned'
+    | '/change-email-pending'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/create-post'
     | '/my-postings'
     | '/banned'
+    | '/change-email-pending'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -394,6 +406,7 @@ export interface FileRouteTypes {
     | '/_app/messages'
     | '/_app/my-postings'
     | '/_auth/banned'
+    | '/_auth/change-email-pending'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
@@ -483,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/change-email-pending': {
+      id: '/_auth/change-email-pending'
+      path: '/change-email-pending'
+      fullPath: '/change-email-pending'
+      preLoaderRoute: typeof AuthChangeEmailPendingRouteRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/banned': {
@@ -798,6 +818,7 @@ const AuthVerifyEmailRouteRouteWithChildren =
 
 interface AuthRouteRouteChildren {
   AuthBannedRouteRoute: typeof AuthBannedRouteRoute
+  AuthChangeEmailPendingRouteRoute: typeof AuthChangeEmailPendingRouteRoute
   AuthForgotPasswordRouteRoute: typeof AuthForgotPasswordRouteRoute
   AuthLoginRouteRoute: typeof AuthLoginRouteRoute
   AuthRegisterRouteRoute: typeof AuthRegisterRouteRoute
@@ -807,6 +828,7 @@ interface AuthRouteRouteChildren {
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthBannedRouteRoute: AuthBannedRouteRoute,
+  AuthChangeEmailPendingRouteRoute: AuthChangeEmailPendingRouteRoute,
   AuthForgotPasswordRouteRoute: AuthForgotPasswordRouteRoute,
   AuthLoginRouteRoute: AuthLoginRouteRoute,
   AuthRegisterRouteRoute: AuthRegisterRouteRoute,

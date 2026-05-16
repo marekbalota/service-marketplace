@@ -16,6 +16,7 @@ import {
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
 import { Switch } from '#/components/ui/switch'
@@ -205,15 +206,24 @@ function AccountSettingsHubPage() {
                     <p className="text-sm text-muted-foreground">{user?.email ?? '—'}</p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title="Coming soon"
-                  onClick={() => setShowChangeEmail(true)}
-                >
-                  Change Email
-                </Button>
+                {!user || !!user.impersonatedBy ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span tabIndex={0} className="inline-flex">
+                          <Button variant="outline" size="sm" disabled>
+                            Change
+                          </Button>
+                        </span>
+                      }
+                    />
+                    <TooltipContent>Not available during impersonation</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowChangeEmail(true)}>
+                    Change
+                  </Button>
+                )}
               </div>
               <Separator />
               <div className="flex items-center justify-between gap-4">
@@ -224,15 +234,24 @@ function AccountSettingsHubPage() {
                     <p className="text-sm text-muted-foreground">••••••••</p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title="Coming soon"
-                  onClick={() => setShowChangePassword(true)}
-                >
-                  Change Password
-                </Button>
+                {!user || !!user.impersonatedBy ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span tabIndex={0} className="inline-flex">
+                          <Button variant="outline" size="sm" disabled>
+                            Change
+                          </Button>
+                        </span>
+                      }
+                    />
+                    <TooltipContent>Not available during impersonation</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)}>
+                    Change
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -1,11 +1,12 @@
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
-import { Turnstile } from '@marsidev/react-turnstile'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
+import { ErrorCodes } from '@marketplace/shared'
 import { handleBanError } from '#/lib/ban-handler'
 import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
@@ -30,7 +31,8 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const navigate = useNavigate()
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [challengeVisible, setChallengeVisible] = useState(false)
+  const [captchaVisible, setCaptchaVisible] = useState(false)
+  const turnstileRef = useRef<TurnstileInstance | null>(null)
   const theme = useAppTheme()
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -79,8 +81,10 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     if (error.status === 429) return
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
-      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+      if (body?.code === ErrorCodes.CaptchaVerificationFailed) {
         setCaptchaToken(null)
+        setCaptchaVisible(true)
+        turnstileRef.current?.reset()
         form.setError('root', { message: (body.message as string) ?? error.message })
         return
       }
@@ -88,6 +92,8 @@ export function LoginForm({ redirect }: { redirect?: string }) {
       return
     }
     setCaptchaToken(null)
+    setCaptchaVisible(true)
+    turnstileRef.current?.reset()
     form.setError('root', { message: error.message })
   }
 
@@ -160,17 +166,18 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           Forgot your password?
         </Link>
       </div>
-      <div className={challengeVisible ? undefined : '!hidden'}>
+      <FieldError errors={[form.formState.errors.root]} />
+      <div className={captchaVisible ? undefined : '!hidden'}>
         <Turnstile
+          ref={turnstileRef}
           siteKey={env.turnstileSiteKey}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
           onError={() => setCaptchaToken(null)}
-          onBeforeInteractive={() => setChallengeVisible(true)}
+          onBeforeInteractive={() => setCaptchaVisible(true)}
           options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
         />
       </div>
-      <FieldError errors={[form.formState.errors.root]} />
       <Button
         type="submit"
         className="w-full"

@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { ErrorCodes } from '@marketplace/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { createAuthMiddleware, APIError } from 'better-auth/api'
+import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/api'
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
@@ -13,6 +13,8 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendExistingAccountSignUpEmail,
+  sendChangeEmailConfirmationEmail,
+  sendNewEmailVerificationEmail,
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
@@ -50,6 +52,17 @@ export const auth = betterAuth({
     },
   }),
   user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+        const confirmUrl = new URL(url)
+        confirmUrl.searchParams.set(
+          'callbackURL',
+          `${env.frontendUrl}/change-email-pending?email=${encodeURIComponent(newEmail)}`,
+        )
+        void sendChangeEmailConfirmationEmail({ email: user.email, url: confirmUrl.toString() })
+      },
+    },
     additionalFields: {
       roleId: { type: 'string', input: false },
       isBanned: { type: 'boolean', input: false },
@@ -90,7 +103,13 @@ export const auth = betterAuth({
       if (env.nodeEnv === 'test') {
         verificationTokenStore.set(user.email, token)
       }
-      void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      const storedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) })
+      const isEmailChange = storedUser?.email !== user.email
+      if (isEmailChange) {
+        void sendNewEmailVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      } else {
+        void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      }
     },
   },
   secondaryStorage: {
@@ -167,15 +186,15 @@ export const auth = betterAuth({
         const token = ctx.headers?.get('x-captcha-response')
         if (!token) {
           return new APIError('BAD_REQUEST', {
-            message: 'Captcha response is required',
-            code: 'MISSING_CAPTCHA_RESPONSE',
+            message: AuthErrorMessages.missingCaptchaResponse,
+            code: ErrorCodes.MissingCaptchaResponse,
           })
         }
         const valid = await verifyCaptchaToken(token)
         if (!valid) {
           return new APIError('FORBIDDEN', {
-            message: 'Captcha verification failed',
-            code: 'CAPTCHA_VERIFICATION_FAILED',
+            message: AuthErrorMessages.captchaVerificationFailed,
+            code: ErrorCodes.CaptchaVerificationFailed,
           })
         }
       }
@@ -190,13 +209,24 @@ export const auth = betterAuth({
           if (banStatus) {
             await AuthService.clearUserSessions(user.id)
 
-            throw new APIError('FORBIDDEN', {
+            return new APIError('FORBIDDEN', {
               code: ErrorCodes.Banned,
               message: AuthErrorMessages.banned,
               reason: banStatus.reason,
               expiresAt: banStatus.expiresAt,
             })
           }
+        }
+      }
+
+      // Block changeEmail and changePassword during impersonation
+      if (['/change-email', '/change-password'].includes(ctx.path)) {
+        const session = await getSessionFromCtx(ctx)
+        if (session?.session.impersonatedBy) {
+          return new APIError('FORBIDDEN', {
+            code: ErrorCodes.ImpersonationReadOnly,
+            message: AuthErrorMessages.impersonationReadOnly,
+          })
         }
       }
     }),

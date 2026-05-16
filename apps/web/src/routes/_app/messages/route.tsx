@@ -121,7 +121,7 @@ function MessagesLayout() {
 
 export const Route = createFileRoute('/_app/messages')({
   beforeLoad: ({ context: { user }, location }) => {
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href }, replace: true })
   },
   component: MessagesLayout,
 })

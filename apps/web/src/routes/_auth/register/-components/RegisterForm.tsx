@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from '@tanstack/react-router'
-import { Turnstile } from '@marsidev/react-turnstile'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
+import { ErrorCodes } from '@marketplace/shared'
 import { env } from '#/env'
 import { useAppTheme } from '#/lib/theme'
 import { Button } from '#/components/ui/button'
@@ -23,7 +24,8 @@ type RegisterValues = z.infer<typeof registerSchema>
 export function RegisterForm() {
   const navigate = useNavigate()
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [challengeVisible, setChallengeVisible] = useState(false)
+  const [captchaVisible, setCaptchaVisible] = useState(false)
+  const turnstileRef = useRef<TurnstileInstance | null>(null)
   const theme = useAppTheme()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -41,18 +43,27 @@ export function RegisterForm() {
     }
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
-      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+      if (body?.code === ErrorCodes.CaptchaVerificationFailed) {
         setCaptchaToken(null)
+        setCaptchaVisible(true)
+        turnstileRef.current?.reset()
         form.setError('root', { message: (body.message as string) ?? error.message })
         return
       }
     }
     setCaptchaToken(null)
+    setCaptchaVisible(true)
+    turnstileRef.current?.reset()
     form.setError('root', { message: error.message })
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        void form.handleSubmit(onSubmit)(e)
+      }}
+      className="space-y-6"
+    >
       <FieldGroup>
         <Controller
           name="name"
@@ -109,17 +120,18 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
-      <div className={challengeVisible ? undefined : '!hidden'}>
+      <FieldError errors={[form.formState.errors.root]} />
+      <div className={captchaVisible ? undefined : '!hidden'}>
         <Turnstile
+          ref={turnstileRef}
           siteKey={env.turnstileSiteKey}
           onSuccess={setCaptchaToken}
           onExpire={() => setCaptchaToken(null)}
           onError={() => setCaptchaToken(null)}
-          onBeforeInteractive={() => setChallengeVisible(true)}
+          onBeforeInteractive={() => setCaptchaVisible(true)}
           options={{ retry: 'auto', refreshExpired: 'auto', theme, size: 'flexible' }}
         />
       </div>
-      <FieldError errors={[form.formState.errors.root]} />
       <Button
         type="submit"
         className="w-full"

@@ -43,7 +43,7 @@ type FormValues = z.infer<typeof schema>
 
 export const Route = createFileRoute('/_app/create-post')({
   beforeLoad: ({ context: { user }, location }) => {
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href }, replace: true })
     const canCreatePosts = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsCreate])
     if (!canCreatePosts) throw redirect({ to: '/' })
   },
