@@ -57,7 +57,12 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        void form.handleSubmit(onSubmit)(e)
+      }}
+      className="space-y-6"
+    >
       <FieldGroup>
         <Controller
           name="name"

@@ -141,16 +141,12 @@ describe('SendMessageSection', () => {
   it('does not enable the thread query when user is not authenticated', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as any)
     await renderSection()
-    expect(vi.mocked(useQuery)).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: false }),
-    )
+    expect(vi.mocked(useQuery)).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
   })
 
   it('enables the thread query when user is authenticated', async () => {
     vi.mocked(useCurrentUser).mockReturnValue({ data: { id: 'user-1' } } as any)
     await renderSection()
-    expect(vi.mocked(useQuery)).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: true }),
-    )
+    expect(vi.mocked(useQuery)).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }))
   })
 })

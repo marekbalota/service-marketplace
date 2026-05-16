@@ -93,7 +93,12 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
         <CardDescription>Enter your email to receive a reset link</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(onSubmit)(e)
+          }}
+          className="space-y-6"
+        >
           <Controller
             name="email"
             control={form.control}
