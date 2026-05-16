@@ -1086,7 +1086,8 @@ async function seed() {
       {
         senderId: elenaProfile.userProfileId,
         threadId: t4!.threadId,
-        content: "I'd appreciate you not sending messages like this. Please keep communication respectful.",
+        content:
+          "I'd appreciate you not sending messages like this. Please keep communication respectful.",
       },
     ])
     .returning()
