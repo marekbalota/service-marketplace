@@ -86,5 +86,4 @@ describe('handleBanError', () => {
     expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/banned' })
     expect(localStorage.getItem('activeProfileId')).toBeNull()
   })
-
 })
