@@ -22,8 +22,7 @@ export const queryClient = new QueryClient({
         redirecting401 = true
         queryClient.clear()
         if (routerRef) {
-          void routerRef.invalidate()
-          void routerRef.navigate({ to: '/login' }).then(() => {
+          void routerRef.navigate({ to: '/login', replace: true }).then(() => {
             redirecting401 = false
           })
         } else {
