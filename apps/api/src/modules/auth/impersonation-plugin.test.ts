@@ -263,3 +263,67 @@ describe('POST /api/auth/admin/stop-impersonating', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('Impersonation gate: changeEmail and changePassword are blocked while impersonating', () => {
+  let impersonationCookies: string
+
+  beforeAll(async () => {
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: 'admin@example.com', password: 'admin123' },
+      asResponse: true,
+    })
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers)
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    })
+    impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
+  })
+
+  it('returns 403 for changeEmail during impersonation', async () => {
+    const res = await auth.api.changeEmail({
+      body: { newEmail: 'gate-test@example.com', callbackURL: 'http://localhost:3000' },
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    })
+    expect(res.status).toBe(403)
+    const body = (await res.json()) as { message: string }
+    expect(body.message).toBe('Cannot make changes during impersonation')
+  })
+
+  it('returns 403 for changePassword during impersonation', async () => {
+    const res = await auth.api.changePassword({
+      body: {
+        currentPassword: 'password123',
+        newPassword: 'newpassword456',
+        revokeOtherSessions: true,
+      },
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    })
+    expect(res.status).toBe(403)
+    const body = (await res.json()) as { message: string }
+    expect(body.message).toBe('Cannot make changes during impersonation')
+  })
+
+  it('does not block changeEmail for a normal (non-impersonated) session', async () => {
+    // Sign in as alice directly (no impersonation)
+    const aliceSignIn = await auth.api.signInEmail({
+      body: { email: 'alice@example.com', password: 'password123' },
+      asResponse: true,
+    })
+    const aliceCookie = setCookiesToRequestCookie(aliceSignIn.headers)
+
+    const res = await auth.api.changeEmail({
+      body: { newEmail: 'gate-control@example.com', callbackURL: 'http://localhost:3000' },
+      headers: new Headers({ Cookie: aliceCookie }),
+      asResponse: true,
+    })
+    // Gate should not fire — the gate only blocks impersonated sessions.
+    // BetterAuth may return various non-403 codes (200, 400, etc.) depending on
+    // email verification state, but it must NOT return 403.
+    expect(res.status).not.toBe(403)
+  })
+})

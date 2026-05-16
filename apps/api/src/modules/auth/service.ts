@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { ErrorCodes } from '@marketplace/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { createAuthMiddleware, APIError } from 'better-auth/api'
+import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/api'
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
@@ -13,6 +13,8 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendExistingAccountSignUpEmail,
+  sendChangeEmailConfirmationEmail,
+  sendNewEmailVerificationEmail,
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
@@ -50,6 +52,17 @@ export const auth = betterAuth({
     },
   }),
   user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+        const confirmUrl = new URL(url)
+        confirmUrl.searchParams.set(
+          'callbackURL',
+          `${env.frontendUrl}/change-email-pending?email=${encodeURIComponent(newEmail)}`,
+        )
+        void sendChangeEmailConfirmationEmail({ email: user.email, url: confirmUrl.toString() })
+      },
+    },
     additionalFields: {
       roleId: { type: 'string', input: false },
       isBanned: { type: 'boolean', input: false },
@@ -90,7 +103,13 @@ export const auth = betterAuth({
       if (env.nodeEnv === 'test') {
         verificationTokenStore.set(user.email, token)
       }
-      void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      const storedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) })
+      const isEmailChange = storedUser?.email !== user.email
+      if (isEmailChange) {
+        void sendNewEmailVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      } else {
+        void sendVerificationEmail({ email: user.email, url: verifyUrl.toString() })
+      }
     },
   },
   secondaryStorage: {
@@ -197,6 +216,17 @@ export const auth = betterAuth({
               expiresAt: banStatus.expiresAt,
             })
           }
+        }
+      }
+
+      // Block changeEmail and changePassword during impersonation
+      if (['/change-email', '/change-password'].includes(ctx.path)) {
+        const session = await getSessionFromCtx(ctx)
+        if (session?.session.impersonatedBy) {
+          return new APIError('FORBIDDEN', {
+            code: ErrorCodes.ImpersonationReadOnly,
+            message: AuthErrorMessages.impersonationReadOnly,
+          })
         }
       }
     }),

@@ -12,6 +12,10 @@
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  scroll-padding-top: 5rem;
+}
+
 :root {
   --lagoon: #4fb8b2;
   --lagoon-deep: #328f97;

@@ -18,3 +18,17 @@ export async function sendExistingAccountSignUpEmail(params: {
     `[email-existing-signup] ${params.email} → login:${params.loginUrl} reset:${params.resetUrl}`,
   )
 }
+
+export async function sendChangeEmailConfirmationEmail(params: {
+  email: string
+  url: string
+}): Promise<void> {
+  console.log(`[email-change-confirm] ${params.email} → ${params.url}`)
+}
+
+export async function sendNewEmailVerificationEmail(params: {
+  email: string
+  url: string
+}): Promise<void> {
+  console.log(`[email-change-verify-new] ${params.email} → ${params.url}`)
+}
