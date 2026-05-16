@@ -1,13 +1,18 @@
 export function parseAuthErrorBody(error: unknown): Record<string, unknown> | null {
   if (typeof error !== 'object' || error === null) return null
   const err = error as { body?: unknown; message?: unknown }
+  // Legacy / mock format: body nested under .body
   if (typeof err.body === 'object' && err.body !== null) return err.body as Record<string, unknown>
-  if (typeof err.message !== 'string') return null
-  try {
-    return JSON.parse(err.message)
-  } catch {
-    return null
+  // @better-fetch spreads the parsed JSON body directly onto the error object,
+  // so the error object itself is the body.
+  if (typeof err.message === 'string') {
+    try {
+      return JSON.parse(err.message)
+    } catch {
+      // fall through
+    }
   }
+  return err as Record<string, unknown>
 }
 
 export function parseAuthErrorCode(error: unknown): string | undefined {

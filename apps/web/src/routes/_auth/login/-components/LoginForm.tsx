@@ -6,6 +6,7 @@ import { useNavigate, Link } from '@tanstack/react-router'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
+import { ErrorCodes } from '@marketplace/shared'
 import { handleBanError } from '#/lib/ban-handler'
 import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
@@ -80,7 +81,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     if (error.status === 429) return
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
-      if (body?.code === 'CAPTCHA_VERIFICATION_FAILED') {
+      if (body?.code === ErrorCodes.CaptchaVerificationFailed) {
         setCaptchaToken(null)
         setCaptchaVisible(true)
         turnstileRef.current?.reset()

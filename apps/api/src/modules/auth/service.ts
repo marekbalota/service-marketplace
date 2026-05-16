@@ -186,15 +186,15 @@ export const auth = betterAuth({
         const token = ctx.headers?.get('x-captcha-response')
         if (!token) {
           return new APIError('BAD_REQUEST', {
-            message: 'Captcha response is required',
-            code: 'MISSING_CAPTCHA_RESPONSE',
+            message: AuthErrorMessages.missingCaptchaResponse,
+            code: ErrorCodes.MissingCaptchaResponse,
           })
         }
         const valid = await verifyCaptchaToken(token)
         if (!valid) {
           return new APIError('FORBIDDEN', {
-            message: 'Captcha verification failed',
-            code: 'CAPTCHA_VERIFICATION_FAILED',
+            message: AuthErrorMessages.captchaVerificationFailed,
+            code: ErrorCodes.CaptchaVerificationFailed,
           })
         }
       }
@@ -209,7 +209,7 @@ export const auth = betterAuth({
           if (banStatus) {
             await AuthService.clearUserSessions(user.id)
 
-            throw new APIError('FORBIDDEN', {
+            return new APIError('FORBIDDEN', {
               code: ErrorCodes.Banned,
               message: AuthErrorMessages.banned,
               reason: banStatus.reason,
