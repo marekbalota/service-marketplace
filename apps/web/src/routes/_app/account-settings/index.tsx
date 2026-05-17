@@ -3,15 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import {
   User,
   Bell,
-  Key,
   Shield,
   LogOut,
   Users,
   Mail,
   Lock,
-  Smartphone,
-  MessageSquare,
-  Plus,
 } from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -23,6 +19,7 @@ import { Switch } from '#/components/ui/switch'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ChangeEmailDialog } from './-components/ChangeEmailDialog'
 import { ChangePasswordDialog } from './-components/ChangePasswordDialog'
+import { TwoFactorSection } from './-components/TwoFactorSection'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
@@ -34,7 +31,6 @@ export const Route = createFileRoute('/_app/account-settings/')({
 const SECTIONS = [
   { id: 'account-information', label: 'Account Information', icon: User },
   { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'connected-accounts', label: 'Connected Accounts', icon: Key },
   { id: 'two-factor-auth', label: 'Two-Factor Authentication', icon: Shield },
   { id: 'login-management', label: 'Login Management', icon: LogOut },
   { id: 'user-profiles', label: 'User Profiles', icon: Users },
@@ -63,40 +59,6 @@ const NOTIFICATION_ROWS = [
   },
 ] as const
 
-const OAUTH_PROVIDERS = [
-  {
-    id: 'google',
-    label: 'Google',
-    className: 'bg-white text-gray-900 border-gray-300 hover:bg-white',
-  },
-  {
-    id: 'facebook',
-    label: 'Facebook',
-    className: 'bg-blue-600 text-white border-blue-600 hover:bg-blue-600',
-  },
-  {
-    id: 'github',
-    label: 'GitHub',
-    className: 'bg-gray-900 text-white border-gray-900 hover:bg-gray-900',
-  },
-  {
-    id: 'microsoft',
-    label: 'Microsoft',
-    className: 'bg-blue-500 text-white border-blue-500 hover:bg-blue-500',
-  },
-  { id: 'apple', label: 'Apple', className: 'bg-black text-white border-black hover:bg-black' },
-] as const
-
-const TWO_FA_METHODS = [
-  { id: 'email', label: 'Email', description: 'Receive a code via email', icon: Mail },
-  {
-    id: 'authenticator',
-    label: 'Authenticator App',
-    description: 'Use an app like Google Authenticator or Authy',
-    icon: Smartphone,
-  },
-  { id: 'sms', label: 'SMS', description: 'Receive a code via text message', icon: MessageSquare },
-] as const
 
 function AccountSettingsHubSkeleton() {
   return (
@@ -280,59 +242,10 @@ function AccountSettingsHubPage() {
             </CardContent>
           </Card>
 
-          {/* 3 — Connected Accounts */}
-          <Card id="connected-accounts">
-            <CardHeader>
-              <CardTitle>Connected Accounts</CardTitle>
-              <CardDescription>Link your OAuth providers for easy sign-in</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Available
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {OAUTH_PROVIDERS.map(({ id, label, className }) => (
-                  <Button
-                    key={id}
-                    className={cn('h-12 justify-between border-2 opacity-60', className)}
-                    disabled
-                    title="Coming soon"
-                  >
-                    <span className="font-medium">{label}</span>
-                    <Plus className="size-4" />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* 3 — Two-Factor Authentication */}
+          <TwoFactorSection />
 
-          {/* 4 — Two-Factor Authentication */}
-          <Card id="two-factor-auth">
-            <CardHeader>
-              <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>Add an extra layer of security to your account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {TWO_FA_METHODS.map(({ id, label, description, icon: Icon }) => (
-                <div key={id} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <Icon className="size-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-sm text-muted-foreground">{description}</p>
-                    </div>
-                  </div>
-                  <Button size="sm" disabled title="Coming soon">
-                    Enable
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* 5 — Login Management */}
+          {/* 4 — Login Management */}
           <Card id="login-management">
             <CardHeader>
               <CardTitle>Login Management</CardTitle>
@@ -349,7 +262,7 @@ function AccountSettingsHubPage() {
             </CardContent>
           </Card>
 
-          {/* 6 — User Profiles */}
+          {/* 5 — User Profiles */}
           <Card id="user-profiles">
             <CardHeader>
               <CardTitle>User Profiles</CardTitle>
