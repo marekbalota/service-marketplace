@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
 import { authClient } from '#/auth'
@@ -34,38 +35,38 @@ export function EnableTotpDialog({
   const [totpURI, setTotpURI] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[]>([])
   const [otpCode, setOtpCode] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [savedCodes, setSavedCodes] = useState(false)
   const [showManualKey, setShowManualKey] = useState(false)
 
+  const enable = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await authClient.twoFactor.enable({ password })
+      if (error) throw new Error(error.message ?? 'An error occurred')
+      return data
+    },
+    onSuccess: (data) => {
+      setTotpURI(data?.totpURI ?? '')
+      setBackupCodes(data?.backupCodes ?? [])
+      setStep(2)
+    },
+  })
+
+  const verify = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.verifyTotp({ code: otpCode })
+      if (error) throw new Error(error.message ?? 'Invalid code')
+    },
+    onSuccess: () => setStep(4),
+  })
+
   function reset() {
     setStep(1); setPassword(''); setTotpURI(''); setBackupCodes([])
-    setOtpCode(''); setError(null); setLoading(false)
-    setSavedCodes(false); setShowManualKey(false)
+    setOtpCode(''); setSavedCodes(false); setShowManualKey(false)
+    enable.reset(); verify.reset()
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) reset()
     onOpenChange(next)
-  }
-
-  async function handleStep1() {
-    setError(null); setLoading(true)
-    const { data, error } = await authClient.twoFactor.enable({ password })
-    setLoading(false)
-    if (error) { setError(error.message ?? 'An error occurred'); return }
-    setTotpURI(data?.totpURI ?? '')
-    setBackupCodes(data?.backupCodes ?? [])
-    setStep(2)
-  }
-
-  async function handleStep3() {
-    setError(null); setLoading(true)
-    const { error } = await authClient.twoFactor.verifyTotp({ code: otpCode })
-    setLoading(false)
-    if (error) { setError(error.message ?? 'Invalid code'); return }
-    setStep(4)
   }
 
   async function handleDone() {
@@ -82,11 +83,12 @@ export function EnableTotpDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && details.reason === 'outside-press') return
+        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
         handleOpenChange(nextOpen)
       }}
+      onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
     >
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[520px]" showCloseButton={step !== 4}>
         <div className="flex justify-center gap-1.5 pt-1">
           {([1, 2, 3, 4] as Step[]).map((s) => (
             <div
@@ -112,15 +114,15 @@ export function EnableTotpDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) handleStep1() }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !enable.isPending) enable.mutate() }}
                 autoComplete="current-password"
               />
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {enable.error && <p className="text-sm text-destructive">{enable.error.message}</p>}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={handleStep1} disabled={!password || loading}>
-                {loading ? 'Verifying…' : 'Continue'}
+              <Button onClick={() => enable.mutate()} disabled={!password || enable.isPending}>
+                {enable.isPending ? 'Verifying…' : 'Continue'}
               </Button>
             </DialogFooter>
           </>
@@ -138,13 +140,9 @@ export function EnableTotpDialog({
                   <QRCodeSVG value={totpURI} size={192} />
                 </div>
               )}
-              <button
-                type="button"
-                className="text-sm text-muted-foreground underline underline-offset-2"
-                onClick={() => setShowManualKey((v) => !v)}
-              >
+              <Button variant="link" className="h-auto p-0 text-muted-foreground" onClick={() => setShowManualKey((v) => !v)}>
                 {showManualKey ? 'Hide manual key' : "Can't scan? Enter key manually"}
-              </button>
+              </Button>
               {showManualKey && (
                 <div className="rounded-md bg-muted px-4 py-3 font-mono text-sm break-all text-center">
                   {manualKey}
@@ -152,7 +150,7 @@ export function EnableTotpDialog({
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
               <Button onClick={() => setStep(3)}>Next</Button>
             </DialogFooter>
           </>
@@ -170,7 +168,7 @@ export function EnableTotpDialog({
                 value={otpCode}
                 onChange={setOtpCode}
                 containerClassName="gap-2"
-                onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !loading) handleStep3() }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !verify.isPending) verify.mutate() }}
               >
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <InputOTPGroup key={i}>
@@ -178,20 +176,12 @@ export function EnableTotpDialog({
                   </InputOTPGroup>
                 ))}
               </InputOTP>
-              <input
-                aria-hidden
-                tabIndex={-1}
-                className="sr-only"
-                placeholder="000000"
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
-              />
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {verify.error && <p className="text-sm text-destructive">{verify.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-              <Button onClick={handleStep3} disabled={otpCode.length !== 6 || loading}>
-                {loading ? 'Verifying…' : 'Verify'}
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => verify.mutate()} disabled={otpCode.length !== 6 || verify.isPending}>
+                {verify.isPending ? 'Verifying…' : 'Verify'}
               </Button>
             </DialogFooter>
           </>
@@ -209,8 +199,8 @@ export function EnableTotpDialog({
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
-                <Checkbox id="totp-saved-codes" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
-                <Label htmlFor="totp-saved-codes">I have saved these codes</Label>
+                <Checkbox id="totp-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
+                <Label htmlFor="totp-saved-codes" className="cursor-pointer">I have saved these codes</Label>
               </div>
             </div>
             <DialogFooter>

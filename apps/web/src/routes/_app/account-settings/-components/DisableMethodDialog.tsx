@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
@@ -25,33 +26,28 @@ export function DisableMethodDialog({
   isOnlyMethod: boolean
 }) {
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  function reset() {
-    setPassword(''); setError(null); setLoading(false)
-  }
+  const disable = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.disable({ password })
+      if (error) throw new Error(error.message ?? 'Wrong password')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
+      toast.success('Two-factor authentication disabled')
+      handleOpenChange(false)
+    },
+  })
 
   function handleOpenChange(next: boolean) {
-    if (!next) reset()
+    if (!next) { setPassword(''); disable.reset() }
     onOpenChange(next)
-  }
-
-  async function handleDisable() {
-    setError(null); setLoading(true)
-    const { error } = await authClient.twoFactor.disable({ password })
-    setLoading(false)
-    if (error) { setError(error.message ?? 'Wrong password'); return }
-    await queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-    toast.success('Two-factor authentication disabled')
-    handleOpenChange(false)
   }
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && details.reason === 'outside-press') return
         handleOpenChange(nextOpen)
       }}
     >
@@ -76,16 +72,16 @@ export function DisableMethodDialog({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) handleDisable() }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && password && !disable.isPending) disable.mutate() }}
               autoComplete="current-password"
             />
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {disable.error && <p className="text-sm text-destructive">{disable.error.message}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-          <Button variant="destructive" onClick={handleDisable} disabled={!password || loading}>
-            {loading ? 'Disabling…' : 'Disable'}
+          <Button variant="destructive" onClick={() => disable.mutate()} disabled={!password || disable.isPending}>
+            {disable.isPending ? 'Disabling…' : 'Disable'}
           </Button>
         </DialogFooter>
       </DialogContent>

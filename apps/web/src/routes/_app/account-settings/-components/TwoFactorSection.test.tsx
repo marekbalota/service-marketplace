@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 
-const mockUseQuery = vi.hoisted(() => vi.fn())
-vi.mock('@tanstack/react-query', () => ({ useQuery: mockUseQuery }))
+const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+vi.mock('@tanstack/react-query', () => ({ useSuspenseQuery: mockUseSuspenseQuery }))
 vi.mock('#/lib/queries/two-factor', () => ({
   twoFactorStatusQueryOptions: { queryKey: ['two-factor', 'status'] },
 }))
@@ -22,16 +22,9 @@ vi.mock('./DisableMethodDialog', () => ({
 import { TwoFactorSection } from './TwoFactorSection'
 
 describe('TwoFactorSection', () => {
-  it('shows loading skeleton when data is loading', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true })
-    render(<TwoFactorSection />)
-    expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
-  })
-
   it('shows both methods in Available group when 2FA is disabled', () => {
-    mockUseQuery.mockReturnValue({
+    mockUseSuspenseQuery.mockReturnValue({
       data: { twoFactorEnabled: false, totpEnabled: false },
-      isLoading: false,
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/available/i)).toBeInTheDocument()
@@ -42,9 +35,8 @@ describe('TwoFactorSection', () => {
   })
 
   it('shows Email in Enabled group and Backup Codes when email-only 2FA is on', () => {
-    mockUseQuery.mockReturnValue({
+    mockUseSuspenseQuery.mockReturnValue({
       data: { twoFactorEnabled: true, totpEnabled: false },
-      isLoading: false,
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/enabled/i)).toBeInTheDocument()
@@ -54,9 +46,8 @@ describe('TwoFactorSection', () => {
   })
 
   it('shows both methods in Enabled group and no Available group when both are on', () => {
-    mockUseQuery.mockReturnValue({
+    mockUseSuspenseQuery.mockReturnValue({
       data: { twoFactorEnabled: true, totpEnabled: true },
-      isLoading: false,
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/enabled/i)).toBeInTheDocument()

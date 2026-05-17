@@ -1,23 +1,22 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { saveAs } from 'file-saver'
 import { Button } from '#/components/ui/button'
 
 export function BackupCodesDisplay({ codes }: { codes: string[] }) {
   const [copied, setCopied] = useState(false)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current) }, [])
 
   function handleCopyAll() {
     void navigator.clipboard.writeText(codes.join('\n'))
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (copyTimer.current) clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setCopied(false), 2000)
   }
 
   function handleDownload() {
-    const blob = new Blob([codes.join('\n')], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'backup-codes.txt'
-    a.click()
-    URL.revokeObjectURL(url)
+    saveAs(new Blob([codes.join('\n')], { type: 'text/plain' }), 'backup-codes.txt')
   }
 
   return (
@@ -32,7 +31,7 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
           {copied ? 'Copied!' : 'Copy All'}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={handleDownload} className="flex-1">
-          Download .txt
+          Download as .txt
         </Button>
       </div>
     </div>

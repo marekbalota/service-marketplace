@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Mail, Smartphone, Shield } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
-import { Skeleton } from '#/components/ui/skeleton'
 import { Separator } from '#/components/ui/separator'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { EnableTotpDialog } from './EnableTotpDialog'
@@ -26,23 +25,10 @@ function isEnabled(methodId: MethodId, data: { twoFactorEnabled: boolean; totpEn
 }
 
 export function TwoFactorSection() {
-  const { data, isLoading } = useQuery(twoFactorStatusQueryOptions)
+  const { data } = useSuspenseQuery(twoFactorStatusQueryOptions)
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null)
 
-  if (isLoading || !data) {
-    return (
-      <Card id="two-factor-auth">
-        <CardHeader>
-          <CardTitle>Two-Factor Authentication</CardTitle>
-          <CardDescription>Add an extra layer of security to your account</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-14 w-full" data-testid="skeleton" />
-          <Skeleton className="h-14 w-full" data-testid="skeleton" />
-        </CardContent>
-      </Card>
-    )
-  }
+  if (!data) return null
 
   const enabledMethods = METHODS.filter((m) => isEnabled(m.id, data))
   const availableMethods = METHODS.filter((m) => !isEnabled(m.id, data))
@@ -82,6 +68,20 @@ export function TwoFactorSection() {
                     </Button>
                   </div>
                 ))}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Shield className="size-5 text-emerald-700 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Backup Codes</p>
+                      <p className="text-sm text-muted-foreground">Emergency access codes</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
+                    Regenerate
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -112,26 +112,6 @@ export function TwoFactorSection() {
                 ))}
               </div>
             </div>
-          )}
-
-          {hasAny && (
-            <>
-              <Separator />
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <Shield className="size-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Backup Codes</p>
-                    <p className="text-sm text-muted-foreground">Emergency access codes</p>
-                  </div>
-                </div>
-                <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                  Regenerate
-                </Button>
-              </div>
-            </>
           )}
         </CardContent>
       </Card>

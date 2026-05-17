@@ -10,6 +10,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
@@ -23,7 +24,10 @@ import { TwoFactorSection } from './-components/TwoFactorSection'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
-  loader: ({ context: { queryClient } }) => queryClient.ensureQueryData(currentUserQueryOptions),
+  loader: ({ context: { queryClient } }) => Promise.all([
+    queryClient.ensureQueryData(currentUserQueryOptions),
+    queryClient.ensureQueryData(twoFactorStatusQueryOptions),
+  ]),
   pendingComponent: AccountSettingsHubSkeleton,
   component: AccountSettingsHubPage,
 })
@@ -63,26 +67,123 @@ const NOTIFICATION_ROWS = [
 function AccountSettingsHubSkeleton() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
-      <Skeleton className="mb-8 h-8 w-48" />
+      <div className="mb-8">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="mt-1 h-4 w-72" />
+      </div>
       <div className="flex gap-8">
-        <div className="hidden lg:block w-56 shrink-0 space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full" />
-          ))}
+        <div className="hidden lg:block w-56 shrink-0">
+          <div className="sticky top-24 flex flex-col gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
         </div>
-        <div className="flex-1 space-y-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-4 w-64" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex-1 space-y-8 min-w-0">
+          {/* Account Information */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-44" />
+              <Skeleton className="h-4 w-52" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-5 shrink-0" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+                <Skeleton className="h-9 w-20 shrink-0" />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-5 shrink-0" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-9 w-20 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-4 w-60" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-5 shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-4 w-64" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-10 rounded-full shrink-0" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Two-Factor Authentication */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-52" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-10 rounded-full shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-56" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-9 w-20 shrink-0" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Login Management */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-9 w-44" />
+            </CardContent>
+          </Card>
+
+          {/* User Profiles */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-4 w-56" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-4 py-3">
+                <Skeleton className="size-10 rounded-full shrink-0" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-full" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>

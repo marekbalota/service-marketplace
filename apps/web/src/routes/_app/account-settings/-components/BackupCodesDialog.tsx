@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { authClient } from '#/auth'
 import { cn } from '#/lib/utils'
 import { Button } from '#/components/ui/button'
+import { Checkbox } from '#/components/ui/checkbox'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import {
@@ -26,36 +28,38 @@ export function BackupCodesDialog({
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
   const [codes, setCodes] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [savedCodes, setSavedCodes] = useState(false)
+
+  const regenerate = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await authClient.twoFactor.generateBackupCodes({ password })
+      if (error) throw new Error(error.message ?? 'Failed to generate backup codes')
+      return data?.backupCodes ?? []
+    },
+    onSuccess: (backupCodes) => {
+      setCodes(backupCodes)
+      setStep(3)
+    },
+  })
 
   function reset() {
-    setStep(1); setPassword(''); setCodes([]); setError(null); setLoading(false)
+    setStep(1); setPassword(''); setCodes([]); setSavedCodes(false); regenerate.reset()
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) reset()
     onOpenChange(next)
-  }
-
-  async function handleRegenerate() {
-    setError(null); setLoading(true)
-    const { data, error } = await authClient.twoFactor.generateBackupCodes({ password })
-    setLoading(false)
-    if (error) { setError(error.message ?? 'Wrong password'); return }
-    setCodes(data?.backupCodes ?? [])
-    setStep(3)
   }
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && details.reason === 'outside-press') return
+        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
         handleOpenChange(nextOpen)
       }}
+      onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
     >
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[520px]" showCloseButton={step !== 3}>
         <div className="flex justify-center gap-1.5 pt-1">
           {([1, 2, 3] as Step[]).map((s) => (
             <div
@@ -72,31 +76,6 @@ export function BackupCodesDialog({
           <>
             <DialogHeader>
               <DialogTitle>Regenerate Backup Codes</DialogTitle>
-              <DialogDescription>Enter your password to continue.</DialogDescription>
-            </DialogHeader>
-            <div className="py-4 space-y-3">
-              <Label htmlFor="backup-password">Password</Label>
-              <Input
-                id="backup-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) setStep(2) }}
-                autoComplete="current-password"
-              />
-              {error && <p className="text-sm text-destructive">{error}</p>}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => setStep(2)} disabled={!password}>Continue</Button>
-            </DialogFooter>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Regenerate Backup Codes</DialogTitle>
               <DialogDescription>This will invalidate all your existing backup codes.</DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -105,9 +84,34 @@ export function BackupCodesDialog({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button variant="destructive" onClick={handleRegenerate} disabled={loading}>
-                {loading ? 'Generating…' : 'Regenerate Codes'}
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => setStep(2)}>Continue</Button>
+            </DialogFooter>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Confirm with Password</DialogTitle>
+              <DialogDescription>Enter your password to confirm.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-3">
+              <Label htmlFor="backup-password">Password</Label>
+              <Input
+                id="backup-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !regenerate.isPending) regenerate.mutate() }}
+                autoComplete="current-password"
+              />
+              {regenerate.error && <p className="text-sm text-destructive">{regenerate.error.message}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { regenerate.reset(); setStep(1) }}>Back</Button>
+              <Button variant="destructive" onClick={() => regenerate.mutate()} disabled={!password || regenerate.isPending}>
+                {regenerate.isPending ? 'Generating…' : 'Regenerate Codes'}
               </Button>
             </DialogFooter>
           </>
@@ -119,11 +123,15 @@ export function BackupCodesDialog({
               <DialogTitle>New Backup Codes</DialogTitle>
               <DialogDescription>Save these somewhere safe. Each code can only be used once.</DialogDescription>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-4 space-y-4">
               <BackupCodesDisplay codes={codes} />
+              <div className="flex items-center gap-2">
+                <Checkbox id="backup-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
+                <Label htmlFor="backup-saved-codes" className="cursor-pointer">I have saved these codes</Label>
+              </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)}>Done</Button>
+              <Button onClick={() => handleOpenChange(false)} disabled={!savedCodes}>Done</Button>
             </DialogFooter>
           </>
         )}
