@@ -1,5 +1,5 @@
 {
-  "id": "4693701e-27f9-49ad-8917-1108da37084f",
+  "id": "e9d3ddb7-171c-4db9-9c36-958c788f0db6",
   "prevId": "c69e927d-aa99-45c7-8880-0d39b5f4242f",
   "version": "7",
   "dialect": "postgresql",
@@ -739,6 +739,79 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.profile_locations": {
+      "name": "profile_locations",
+      "schema": "",
+      "columns": {
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profile_locations_user_profile_id_user_profiles_user_profile_id_fk": {
+          "name": "profile_locations_user_profile_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "profile_locations",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_profile_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "profile_locations_location_id_locations_location_id_fk": {
+          "name": "profile_locations_location_id_locations_location_id_fk",
+          "tableFrom": "profile_locations",
+          "tableTo": "locations",
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "location_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "profile_locations_user_profile_id_location_id_pk": {
+          "name": "profile_locations_user_profile_id_location_id_pk",
+          "columns": [
+            "user_profile_id",
+            "location_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.report_categories": {
       "name": "report_categories",
       "schema": "",
@@ -938,6 +1011,71 @@
           "value": "(\"reports\".\"post_id\" IS NOT NULL)::int + (\"reports\".\"message_id\" IS NOT NULL)::int + (\"reports\".\"review_id\" IS NOT NULL)::int = 1"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.review_images": {
+      "name": "review_images",
+      "schema": "",
+      "columns": {
+        "review_image_id": {
+          "name": "review_image_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "review_id": {
+          "name": "review_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "review_images_review_id_reviews_review_id_fk": {
+          "name": "review_images_review_id_reviews_review_id_fk",
+          "tableFrom": "review_images",
+          "tableTo": "reviews",
+          "columnsFrom": [
+            "review_id"
+          ],
+          "columnsTo": [
+            "review_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.reviews": {

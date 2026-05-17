@@ -1,1 +1,0 @@
-ALTER TABLE "profile_locations" ADD COLUMN "deleted_at" timestamp;

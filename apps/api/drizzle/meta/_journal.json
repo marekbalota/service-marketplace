@@ -96,57 +96,22 @@
     {
       "idx": 13,
       "version": "7",
-      "when": 1777046400000,
-      "tag": "0013_enable_unaccent",
+      "when": 1779023159035,
+      "tag": "0013_parallel_puppet_master",
       "breakpoints": true
     },
     {
       "idx": 14,
       "version": "7",
-      "when": 1777807675075,
-      "tag": "0014_amused_maelstrom",
+      "when": 1779023201335,
+      "tag": "0014_wonderful_lester",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
-      "when": 1777876507730,
-      "tag": "0015_lively_professor_monster",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "7",
-      "when": 1777998791576,
-      "tag": "0016_soft_delete_profile_locations",
-      "breakpoints": true
-    },
-    {
-      "idx": 17,
-      "version": "7",
-      "when": 1777813593994,
-      "tag": "0017_watery_roland_deschain",
-      "breakpoints": true
-    },
-    {
-      "idx": 18,
-      "version": "7",
-      "when": 1778085191576,
-      "tag": "0018_add_report_status",
-      "breakpoints": true
-    },
-    {
-      "idx": 19,
-      "version": "7",
-      "when": 1778085291576,
-      "tag": "0019_reports_message_fk_set_null",
-      "breakpoints": true
-    },
-    {
-      "idx": 20,
-      "version": "7",
-      "when": 1778085391576,
-      "tag": "0020_report_status_uppercase",
+      "when": 1779023449516,
+      "tag": "0015_nosy_purple_man",
       "breakpoints": true
     }
   ]
