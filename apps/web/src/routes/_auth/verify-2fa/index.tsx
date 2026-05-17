@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Smartphone, Mail, Shield, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
+import { buttonVariants } from '#/components/ui/button'
 
 export const Route = createFileRoute('/_auth/verify-2fa/')({
   validateSearch: z.object({
@@ -65,13 +66,13 @@ function VerifyTwoFaSelectionPage() {
           </div>
         ))}
         <Separator />
-        <div className="px-6 py-4 text-center">
+        <div className="px-6 py-4 flex justify-center">
           <Link
             to="/login"
             search={redirect ? { redirect } : {}}
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="font-medium hover:text-foreground text-muted-foreground"
           >
-            ← Back to login
+            Back to login
           </Link>
         </div>
       </CardContent>

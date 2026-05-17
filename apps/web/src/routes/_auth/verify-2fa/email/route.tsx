@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
 import { formatCountdown } from '#/lib/format'
@@ -23,11 +24,42 @@ function EmailChallengePage() {
   const navigate = useNavigate()
   const { redirect, email } = Route.useSearch()
   const [code, setCode] = useState('')
-  const [codeSent, setCodeSent] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
   const [rememberDevice, setRememberDevice] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const id = setInterval(() => {
+      setResendCooldown((s) => {
+        if (s <= 1) { clearInterval(id); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [resendCooldown])
+
+  const sendCode = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.sendOtp()
+      if (error) throw new Error(error.message ?? 'Failed to send code')
+    },
+    onSuccess: () => {
+      sessionStorage.setItem(SENT_AT_KEY, Date.now().toString())
+      setResendCooldown(COOLDOWN_SECONDS)
+    },
+  })
+
+  const verify = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.verifyOtp({ code, trustDevice: rememberDevice })
+      if (error) throw new Error(error.message ?? 'Invalid code')
+    },
+    onSuccess: async () => {
+      sessionStorage.removeItem(SENT_AT_KEY)
+      await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+    },
+  })
 
   useEffect(() => {
     const sentAt = sessionStorage.getItem(SENT_AT_KEY)
@@ -35,56 +67,12 @@ function EmailChallengePage() {
       const elapsed = Math.floor((Date.now() - parseInt(sentAt)) / 1000)
       const remaining = COOLDOWN_SECONDS - elapsed
       if (remaining > 0) {
-        setCodeSent(true)
         setResendCooldown(remaining)
-        setLoading(false)
         return
       }
     }
-    void handleSend()
+    sendCode.mutate()
   }, [])
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return
-    const id = setInterval(() => {
-      setResendCooldown((s) => {
-        if (s <= 1) {
-          clearInterval(id)
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => clearInterval(id)
-  }, [resendCooldown])
-
-  async function handleSend() {
-    setError(null)
-    setLoading(true)
-    const { error } = await authClient.twoFactor.sendOtp()
-    setLoading(false)
-    if (error) {
-      setError(error.message ?? 'Failed to send code')
-      return
-    }
-    sessionStorage.setItem(SENT_AT_KEY, Date.now().toString())
-    setCodeSent(true)
-    setResendCooldown(COOLDOWN_SECONDS)
-  }
-
-  async function handleVerify() {
-    setError(null)
-    setLoading(true)
-    const { error } = await authClient.twoFactor.verifyOtp({ code, trustDevice: rememberDevice })
-    setLoading(false)
-    if (error) {
-      setError(error.message ?? 'Invalid code')
-      return
-    }
-    sessionStorage.removeItem(SENT_AT_KEY)
-    await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-    void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
-  }
 
   return (
     <Card className="w-full max-w-md">
@@ -99,8 +87,7 @@ function EmailChallengePage() {
             value={code}
             onChange={setCode}
             containerClassName="gap-2"
-            disabled={!codeSent}
-            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !loading) handleVerify() }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate() }}
           >
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <InputOTPGroup key={i}>
@@ -110,33 +97,23 @@ function EmailChallengePage() {
           </InputOTP>
         </div>
         <div className="text-center text-sm text-muted-foreground">
-          {loading && !codeSent ? (
-            'Sending code…'
-          ) : !codeSent ? (
-            <button
-              type="button"
-              className="underline underline-offset-2"
-              onClick={handleSend}
-              disabled={loading}
-            >
-              Send code
-            </button>
-          ) : resendCooldown > 0 ? (
-            `Resend in ${formatCountdown(resendCooldown)}`
-          ) : (
-            <button
-              type="button"
-              className="underline underline-offset-2"
-              onClick={handleSend}
-              disabled={loading}
-            >
-              Resend code
-            </button>
-          )}
+          <Button
+            variant="link"
+            className="h-auto p-0"
+            onClick={() => sendCode.mutate()}
+            disabled={sendCode.isPending || resendCooldown > 0}
+          >
+            {sendCode.isPending
+              ? 'Sending…'
+              : resendCooldown > 0
+              ? `Resend in ${formatCountdown(resendCooldown)}`
+              : 'Resend code'}
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox
             id="email-remember"
+            className="cursor-pointer"
             checked={rememberDevice}
             onCheckedChange={(c) => setRememberDevice(c === true)}
           />
@@ -144,15 +121,17 @@ function EmailChallengePage() {
             Remember this browser for 30 days
           </Label>
         </div>
-        {error && <p className="text-sm text-destructive text-center">{error}</p>}
-        <Button className="w-full" onClick={handleVerify} disabled={!codeSent || code.length !== 6 || loading}>
-          {loading && codeSent ? 'Verifying…' : 'Verify'}
+        {(sendCode.error || verify.error) && (
+          <p className="text-sm text-destructive text-center">{(sendCode.error ?? verify.error)?.message}</p>
+        )}
+        <Button className="w-full" onClick={() => verify.mutate()} disabled={code.length !== 6 || verify.isPending}>
+          {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">
           <Link
             to="/verify-2fa"
             search={{ redirect, email }}
-            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way
           </Link>

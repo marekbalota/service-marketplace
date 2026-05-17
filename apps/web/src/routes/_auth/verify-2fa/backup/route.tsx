@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
@@ -18,21 +19,17 @@ function BackupChallengePage() {
   const navigate = useNavigate()
   const { redirect, email } = Route.useSearch()
   const [code, setCode] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit() {
-    setError(null)
-    setLoading(true)
-    const { error } = await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
-    setLoading(false)
-    if (error) {
-      setError(error.message ?? 'Invalid backup code')
-      return
-    }
-    await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-    void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
-  }
+  const verify = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
+      if (error) throw new Error(error.message ?? 'Invalid backup code')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+    },
+  })
 
   return (
     <Card className="w-full max-w-md">
@@ -47,20 +44,21 @@ function BackupChallengePage() {
             id="backup-code-input"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && code && !verify.isPending) verify.mutate() }}
             className="font-mono"
             placeholder="xxxxxxxx"
             autoComplete="off"
           />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button className="w-full" onClick={handleSubmit} disabled={!code || loading}>
-          {loading ? 'Verifying…' : 'Verify'}
+        {verify.error && <p className="text-sm text-destructive">{verify.error.message}</p>}
+        <Button className="w-full" onClick={() => verify.mutate()} disabled={!code || verify.isPending}>
+          {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">
           <Link
             to="/verify-2fa"
             search={{ redirect, email }}
-            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way
           </Link>

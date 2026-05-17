@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
@@ -20,21 +21,17 @@ function TotpChallengePage() {
   const { redirect, email } = Route.useSearch()
   const [code, setCode] = useState('')
   const [rememberDevice, setRememberDevice] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit() {
-    setError(null)
-    setLoading(true)
-    const { error } = await authClient.twoFactor.verifyTotp({ code, trustDevice: rememberDevice })
-    setLoading(false)
-    if (error) {
-      setError(error.message ?? 'Invalid code')
-      return
-    }
-    await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-    void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
-  }
+  const verify = useMutation({
+    mutationFn: async () => {
+      const { error } = await authClient.twoFactor.verifyTotp({ code, trustDevice: rememberDevice })
+      if (error) throw new Error(error.message ?? 'Invalid code')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+    },
+  })
 
   return (
     <Card className="w-full max-w-md">
@@ -49,7 +46,7 @@ function TotpChallengePage() {
             value={code}
             onChange={setCode}
             containerClassName="gap-2"
-            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !loading) handleSubmit() }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate() }}
           >
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <InputOTPGroup key={i}>
@@ -61,6 +58,7 @@ function TotpChallengePage() {
         <div className="flex items-center gap-2">
           <Checkbox
             id="totp-remember"
+            className="cursor-pointer"
             checked={rememberDevice}
             onCheckedChange={(c) => setRememberDevice(c === true)}
           />
@@ -68,15 +66,15 @@ function TotpChallengePage() {
             Remember this browser for 30 days
           </Label>
         </div>
-        {error && <p className="text-sm text-destructive text-center">{error}</p>}
-        <Button className="w-full" onClick={handleSubmit} disabled={code.length !== 6 || loading}>
-          {loading ? 'Verifying…' : 'Verify'}
+        {verify.error && <p className="text-sm text-destructive text-center">{verify.error.message}</p>}
+        <Button className="w-full" onClick={() => verify.mutate()} disabled={code.length !== 6 || verify.isPending}>
+          {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">
           <Link
             to="/verify-2fa"
             search={{ redirect, email }}
-            className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way
           </Link>
