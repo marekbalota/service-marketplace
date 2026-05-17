@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { z } from 'zod'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
 import { currentUserQueryOptions } from '#/lib/queries/users'
@@ -9,12 +10,13 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 
 export const Route = createFileRoute('/_auth/verify-2fa/backup')({
+  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
   component: BackupChallengePage,
 })
 
 function BackupChallengePage() {
   const navigate = useNavigate()
-  const { redirect } = Route.useSearch()
+  const { redirect, email } = Route.useSearch()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -22,7 +24,7 @@ function BackupChallengePage() {
   async function handleSubmit() {
     setError(null)
     setLoading(true)
-    const { error } = await (authClient.twoFactor as any).verifyBackupCode({ code })
+    const { error } = await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
     setLoading(false)
     if (error) {
       setError(error.message ?? 'Invalid backup code')
@@ -57,7 +59,7 @@ function BackupChallengePage() {
         <div className="text-center">
           <Link
             to="/verify-2fa"
-            search={redirect ? { redirect } : {}}
+            search={{ redirect, email }}
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
           >
             Try another way

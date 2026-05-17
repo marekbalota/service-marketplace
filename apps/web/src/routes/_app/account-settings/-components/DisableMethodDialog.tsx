@@ -76,6 +76,7 @@ export function DisableMethodDialog({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) handleDisable() }}
               autoComplete="current-password"
             />
           </div>

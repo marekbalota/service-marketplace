@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { z } from 'zod'
 import { Smartphone, Mail, Shield, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
 
 export const Route = createFileRoute('/_auth/verify-2fa/')({
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+    email: z.string().optional(),
+  }),
   component: VerifyTwoFaSelectionPage,
 })
 
@@ -32,12 +37,13 @@ const CHALLENGE_METHODS = [
 ] as const
 
 function VerifyTwoFaSelectionPage() {
-  const { redirect } = Route.useSearch()
+  const { redirect, email } = Route.useSearch()
 
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">2-Step Verification</CardTitle>
+        {email && <p className="text-sm font-medium">{email}</p>}
         <CardDescription>Choose how you want to verify your identity.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -46,7 +52,7 @@ function VerifyTwoFaSelectionPage() {
             {i > 0 && <Separator />}
             <Link
               to={method.to}
-              search={redirect ? { redirect } : {}}
+              search={{ redirect, email }}
               className="flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors"
             >
               <method.icon className="size-5 text-muted-foreground shrink-0" />
@@ -58,6 +64,16 @@ function VerifyTwoFaSelectionPage() {
             </Link>
           </div>
         ))}
+        <Separator />
+        <div className="px-6 py-4 text-center">
+          <Link
+            to="/login"
+            search={redirect ? { redirect } : {}}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← Back to login
+          </Link>
+        </div>
       </CardContent>
     </Card>
   )

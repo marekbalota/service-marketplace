@@ -4,7 +4,7 @@ import { queryClient } from '#/router'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 
 export const Route = createFileRoute('/_auth/verify-2fa')({
-  validateSearch: z.object({ redirect: z.string().optional() }),
+  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
   beforeLoad: async () => {
     const user = await queryClient.fetchQuery(currentUserQueryOptions)
     if (user) {

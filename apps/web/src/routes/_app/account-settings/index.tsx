@@ -173,7 +173,7 @@ function AccountSettingsHubPage() {
                     <TooltipTrigger
                       render={
                         <span tabIndex={0} className="inline-flex">
-                          <Button variant="outline" size="sm" disabled>
+                          <Button variant="outline" disabled>
                             Change
                           </Button>
                         </span>
@@ -182,7 +182,7 @@ function AccountSettingsHubPage() {
                     <TooltipContent>Not available during impersonation</TooltipContent>
                   </Tooltip>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={() => setShowChangeEmail(true)}>
+                  <Button variant="outline" onClick={() => setShowChangeEmail(true)}>
                     Change
                   </Button>
                 )}
@@ -201,7 +201,7 @@ function AccountSettingsHubPage() {
                     <TooltipTrigger
                       render={
                         <span tabIndex={0} className="inline-flex">
-                          <Button variant="outline" size="sm" disabled>
+                          <Button variant="outline" disabled>
                             Change
                           </Button>
                         </span>
@@ -210,7 +210,7 @@ function AccountSettingsHubPage() {
                     <TooltipContent>Not available during impersonation</TooltipContent>
                   </Tooltip>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)}>
+                  <Button variant="outline" onClick={() => setShowChangePassword(true)}>
                     Change
                   </Button>
                 )}

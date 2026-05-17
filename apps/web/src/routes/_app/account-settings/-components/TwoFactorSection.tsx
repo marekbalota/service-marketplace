@@ -75,7 +75,6 @@ export function TwoFactorSection() {
                       </div>
                     </div>
                     <Button
-                      size="sm"
                       variant="destructive"
                       onClick={() => setOpenDialog(`disable-${id}`)}
                     >
@@ -106,7 +105,7 @@ export function TwoFactorSection() {
                         <p className="text-sm text-muted-foreground">{description}</p>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => setOpenDialog(`enable-${id}`)}>
+                    <Button onClick={() => setOpenDialog(`enable-${id}`)}>
                       Enable
                     </Button>
                   </div>
@@ -128,8 +127,8 @@ export function TwoFactorSection() {
                     <p className="text-sm text-muted-foreground">Emergency access codes</p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                  View / Regenerate
+                <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
+                  Regenerate
                 </Button>
               </div>
             </>

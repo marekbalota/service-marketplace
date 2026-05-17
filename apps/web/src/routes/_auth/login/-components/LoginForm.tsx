@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
-import { authClient } from '#/auth'
+import { authClient, setPendingTwoFactorContext } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
 import { ErrorCodes } from '@marketplace/shared'
 import { handleBanError } from '#/lib/ban-handler'
@@ -58,6 +58,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const isValidEmail = z.email().safeParse(watchedEmail).success
 
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
+    setPendingTwoFactorContext(values.email, redirect)
     const result = await authClient.signIn.email({
       email: values.email,
       password: values.password,
@@ -75,13 +76,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     const { error } = result
     if (!error) {
       const data = result.data as { twoFactorRedirect?: boolean } | undefined
-      if (data?.twoFactorRedirect) {
-        void navigate({
-          to: '/verify-2fa',
-          search: redirect ? { redirect } : {},
-        })
-        return
-      }
+      if (data?.twoFactorRedirect) return  // navigation already handled by onTwoFactorRedirect in auth.ts
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
       return

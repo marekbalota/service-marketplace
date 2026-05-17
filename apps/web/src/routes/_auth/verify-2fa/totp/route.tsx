@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { z } from 'zod'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
 import { currentUserQueryOptions } from '#/lib/queries/users'
@@ -10,12 +11,13 @@ import { Label } from '#/components/ui/label'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp'
 
 export const Route = createFileRoute('/_auth/verify-2fa/totp')({
+  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
   component: TotpChallengePage,
 })
 
 function TotpChallengePage() {
   const navigate = useNavigate()
-  const { redirect } = Route.useSearch()
+  const { redirect, email } = Route.useSearch()
   const [code, setCode] = useState('')
   const [rememberDevice, setRememberDevice] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,15 +44,18 @@ function TotpChallengePage() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-center">
-          <InputOTP maxLength={6} value={code} onChange={setCode}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
+          <InputOTP
+            maxLength={6}
+            value={code}
+            onChange={setCode}
+            containerClassName="gap-2"
+            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !loading) handleSubmit() }}
+          >
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <InputOTPGroup key={i}>
+                <InputOTPSlot index={i} className="size-12 text-base" />
+              </InputOTPGroup>
+            ))}
           </InputOTP>
         </div>
         <div className="flex items-center gap-2">
@@ -70,7 +75,7 @@ function TotpChallengePage() {
         <div className="text-center">
           <Link
             to="/verify-2fa"
-            search={redirect ? { redirect } : {}}
+            search={{ redirect, email }}
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
           >
             Try another way

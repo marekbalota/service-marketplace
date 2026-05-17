@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
+import { cn } from '#/lib/utils'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Checkbox } from '#/components/ui/checkbox'
@@ -99,6 +100,18 @@ export function EnableEmailDialog({
       }}
     >
       <DialogContent className="sm:max-w-[520px]">
+        <div className="flex justify-center gap-1.5 pt-1">
+          {([1, 2, 3] as Step[]).map((s) => (
+            <div
+              key={s}
+              className={cn(
+                'rounded-full transition-all',
+                s === step ? 'size-2 bg-foreground' : 'size-1.5 bg-muted-foreground/30',
+              )}
+            />
+          ))}
+        </div>
+
         {step === 1 && (
           <>
             <DialogHeader>
@@ -112,6 +125,7 @@ export function EnableEmailDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) handleStep1() }}
                 autoComplete="current-password"
               />
               {error && <p className="text-sm text-destructive">{error}</p>}
@@ -139,15 +153,18 @@ export function EnableEmailDialog({
               ) : (
                 <>
                   <div className="flex flex-col items-center gap-4">
-                    <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
+                    <InputOTP
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={setOtpCode}
+                      containerClassName="gap-2"
+                      onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !loading) handleVerify() }}
+                    >
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <InputOTPGroup key={i}>
+                          <InputOTPSlot index={i} className="size-12 text-base" />
+                        </InputOTPGroup>
+                      ))}
                     </InputOTP>
                     <input
                       aria-hidden

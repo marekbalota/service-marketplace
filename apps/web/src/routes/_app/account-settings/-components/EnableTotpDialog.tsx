@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
+import { cn } from '#/lib/utils'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Checkbox } from '#/components/ui/checkbox'
@@ -86,6 +87,18 @@ export function EnableTotpDialog({
       }}
     >
       <DialogContent className="sm:max-w-[520px]">
+        <div className="flex justify-center gap-1.5 pt-1">
+          {([1, 2, 3, 4] as Step[]).map((s) => (
+            <div
+              key={s}
+              className={cn(
+                'rounded-full transition-all',
+                s === step ? 'size-2 bg-foreground' : 'size-1.5 bg-muted-foreground/30',
+              )}
+            />
+          ))}
+        </div>
+
         {step === 1 && (
           <>
             <DialogHeader>
@@ -99,6 +112,7 @@ export function EnableTotpDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !loading) handleStep1() }}
                 autoComplete="current-password"
               />
               {error && <p className="text-sm text-destructive">{error}</p>}
@@ -119,7 +133,11 @@ export function EnableTotpDialog({
               <DialogDescription>Open your authenticator app and scan the code below.</DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
-              {totpURI && <QRCodeSVG value={totpURI} size={192} />}
+              {totpURI && (
+                <div className="rounded-lg bg-white p-3">
+                  <QRCodeSVG value={totpURI} size={192} />
+                </div>
+              )}
               <button
                 type="button"
                 className="text-sm text-muted-foreground underline underline-offset-2"
@@ -128,7 +146,7 @@ export function EnableTotpDialog({
                 {showManualKey ? 'Hide manual key' : "Can't scan? Enter key manually"}
               </button>
               {showManualKey && (
-                <div className="w-full rounded-md bg-muted px-4 py-3 font-mono text-sm break-all">
+                <div className="rounded-md bg-muted px-4 py-3 font-mono text-sm break-all text-center">
                   {manualKey}
                 </div>
               )}
@@ -147,15 +165,18 @@ export function EnableTotpDialog({
               <DialogDescription>Enter the 6-digit code from your authenticator app.</DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
-              <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
+              <InputOTP
+                maxLength={6}
+                value={otpCode}
+                onChange={setOtpCode}
+                containerClassName="gap-2"
+                onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !loading) handleStep3() }}
+              >
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <InputOTPGroup key={i}>
+                    <InputOTPSlot index={i} className="size-12 text-base" />
+                  </InputOTPGroup>
+                ))}
               </InputOTP>
               <input
                 aria-hidden
