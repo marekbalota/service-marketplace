@@ -536,3 +536,36 @@ test.describe('User Impersonation', () => {
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
 })
+
+test.describe('2FA challenge routes', () => {
+  test('verify-2fa selection page renders when navigated to directly', async ({ page }) => {
+    // Navigate directly to the challenge page (without a pending 2FA session)
+    // The page renders — no redirect happens because there's no fully-authenticated user
+    await page.goto('/verify-2fa')
+    await expect(page.getByText('2-Step Verification')).toBeVisible()
+    await expect(page.getByText('Authenticator App')).toBeVisible()
+    await expect(page.getByText('Email')).toBeVisible()
+    await expect(page.getByText(/backup code/i)).toBeVisible()
+  })
+
+  test('verify-2fa/totp renders TOTP challenge', async ({ page }) => {
+    await page.goto('/verify-2fa/totp')
+    await expect(page.getByText('Check your authentication app')).toBeVisible()
+    await expect(page.getByRole('button', { name: /verify/i })).toBeVisible()
+    await expect(page.getByText(/try another way/i)).toBeVisible()
+  })
+
+  test('verify-2fa/email renders email OTP challenge', async ({ page }) => {
+    await page.goto('/verify-2fa/email')
+    await expect(page.getByText('Check your email')).toBeVisible()
+    await expect(page.getByRole('button', { name: /send code/i })).toBeVisible()
+    await expect(page.getByText(/try another way/i)).toBeVisible()
+  })
+
+  test('verify-2fa/backup renders backup code challenge', async ({ page }) => {
+    await page.goto('/verify-2fa/backup')
+    await expect(page.getByText('Use a backup code')).toBeVisible()
+    await expect(page.getByRole('button', { name: /verify/i })).toBeVisible()
+    await expect(page.getByText(/try another way/i)).toBeVisible()
+  })
+})

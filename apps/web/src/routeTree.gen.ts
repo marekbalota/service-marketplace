@@ -13,6 +13,7 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AuthVerifyEmailRouteRouteImport } from './routes/_auth/verify-email/route'
+import { Route as AuthVerify2faRouteRouteImport } from './routes/_auth/verify-2fa/route'
 import { Route as AuthResetPasswordRouteRouteImport } from './routes/_auth/reset-password/route'
 import { Route as AuthRegisterRouteRouteImport } from './routes/_auth/register/route'
 import { Route as AuthLoginRouteRouteImport } from './routes/_auth/login/route'
@@ -25,11 +26,15 @@ import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-pos
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppAccountSettingsRouteRouteImport } from './routes/_app/account-settings/route'
 import { Route as AuthVerifyEmailIndexRouteImport } from './routes/_auth/verify-email/index'
+import { Route as AuthVerify2faIndexRouteImport } from './routes/_auth/verify-2fa/index'
 import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
 import { Route as AppMessagesIndexRouteImport } from './routes/_app/messages/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAccountSettingsIndexRouteImport } from './routes/_app/account-settings/index'
 import { Route as AuthVerifyEmailCallbackRouteRouteImport } from './routes/_auth/verify-email/callback/route'
+import { Route as AuthVerify2faTotpRouteRouteImport } from './routes/_auth/verify-2fa/totp/route'
+import { Route as AuthVerify2faEmailRouteRouteImport } from './routes/_auth/verify-2fa/email/route'
+import { Route as AuthVerify2faBackupRouteRouteImport } from './routes/_auth/verify-2fa/backup/route'
 import { Route as AppProfilesProfileIdRouteRouteImport } from './routes/_app/profiles/$profileId/route'
 import { Route as AppPostsPostIdRouteRouteImport } from './routes/_app/posts/$postId/route'
 import { Route as AppMessagesThreadIdRouteRouteImport } from './routes/_app/messages/$threadId/route'
@@ -61,6 +66,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AuthVerifyEmailRouteRoute = AuthVerifyEmailRouteRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthVerify2faRouteRoute = AuthVerify2faRouteRouteImport.update({
+  id: '/verify-2fa',
+  path: '/verify-2fa',
   getParentRoute: () => AuthRouteRoute,
 } as any)
 const AuthResetPasswordRouteRoute = AuthResetPasswordRouteRouteImport.update({
@@ -124,6 +134,11 @@ const AuthVerifyEmailIndexRoute = AuthVerifyEmailIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthVerifyEmailRouteRoute,
 } as any)
+const AuthVerify2faIndexRoute = AuthVerify2faIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthVerify2faRouteRoute,
+} as any)
 const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
@@ -149,6 +164,22 @@ const AuthVerifyEmailCallbackRouteRoute =
     id: '/callback',
     path: '/callback',
     getParentRoute: () => AuthVerifyEmailRouteRoute,
+  } as any)
+const AuthVerify2faTotpRouteRoute = AuthVerify2faTotpRouteRouteImport.update({
+  id: '/totp',
+  path: '/totp',
+  getParentRoute: () => AuthVerify2faRouteRoute,
+} as any)
+const AuthVerify2faEmailRouteRoute = AuthVerify2faEmailRouteRouteImport.update({
+  id: '/email',
+  path: '/email',
+  getParentRoute: () => AuthVerify2faRouteRoute,
+} as any)
+const AuthVerify2faBackupRouteRoute =
+  AuthVerify2faBackupRouteRouteImport.update({
+    id: '/backup',
+    path: '/backup',
+    getParentRoute: () => AuthVerify2faRouteRoute,
   } as any)
 const AppProfilesProfileIdRouteRoute =
   AppProfilesProfileIdRouteRouteImport.update({
@@ -242,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRouteRoute
   '/register': typeof AuthRegisterRouteRoute
   '/reset-password': typeof AuthResetPasswordRouteRoute
+  '/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
   '/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
   '/admin/reports': typeof AppAdminReportsRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
@@ -250,11 +282,15 @@ export interface FileRoutesByFullPath {
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
+  '/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
+  '/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
   '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/account-settings/': typeof AppAccountSettingsIndexRoute
   '/admin/': typeof AppAdminIndexRoute
   '/messages/': typeof AppMessagesIndexRoute
   '/posts/': typeof AppPostsIndexRoute
+  '/verify-2fa/': typeof AuthVerify2faIndexRoute
   '/verify-email/': typeof AuthVerifyEmailIndexRoute
   '/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
@@ -280,11 +316,15 @@ export interface FileRoutesByTo {
   '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
+  '/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
+  '/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
   '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/account-settings': typeof AppAccountSettingsIndexRoute
   '/admin': typeof AppAdminIndexRoute
   '/messages': typeof AppMessagesIndexRoute
   '/posts': typeof AppPostsIndexRoute
+  '/verify-2fa': typeof AuthVerify2faIndexRoute
   '/verify-email': typeof AuthVerifyEmailIndexRoute
   '/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
   '/account-settings/profiles': typeof AppAccountSettingsProfilesIndexRoute
@@ -308,6 +348,7 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRouteRoute
   '/_auth/register': typeof AuthRegisterRouteRoute
   '/_auth/reset-password': typeof AuthResetPasswordRouteRoute
+  '/_auth/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
   '/_auth/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
   '/_app/': typeof AppIndexRoute
   '/_app/admin/reports': typeof AppAdminReportsRouteRoute
@@ -317,11 +358,15 @@ export interface FileRoutesById {
   '/_app/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRouteRoute
   '/_app/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
+  '/_auth/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
+  '/_auth/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
+  '/_auth/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
   '/_auth/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
   '/_app/account-settings/': typeof AppAccountSettingsIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/messages/': typeof AppMessagesIndexRoute
   '/_app/posts/': typeof AppPostsIndexRoute
+  '/_auth/verify-2fa/': typeof AuthVerify2faIndexRoute
   '/_auth/verify-email/': typeof AuthVerifyEmailIndexRoute
   '/_app/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
   '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
@@ -346,6 +391,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/verify-2fa'
     | '/verify-email'
     | '/admin/reports'
     | '/admin/roles'
@@ -354,11 +400,15 @@ export interface FileRouteTypes {
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
+    | '/verify-2fa/backup'
+    | '/verify-2fa/email'
+    | '/verify-2fa/totp'
     | '/verify-email/callback'
     | '/account-settings/'
     | '/admin/'
     | '/messages/'
     | '/posts/'
+    | '/verify-2fa/'
     | '/verify-email/'
     | '/account-settings/profiles/create'
     | '/admin/users/$userId'
@@ -384,11 +434,15 @@ export interface FileRouteTypes {
     | '/messages/$threadId'
     | '/posts/$postId'
     | '/profiles/$profileId'
+    | '/verify-2fa/backup'
+    | '/verify-2fa/email'
+    | '/verify-2fa/totp'
     | '/verify-email/callback'
     | '/account-settings'
     | '/admin'
     | '/messages'
     | '/posts'
+    | '/verify-2fa'
     | '/verify-email'
     | '/account-settings/profiles/create'
     | '/account-settings/profiles'
@@ -411,6 +465,7 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/reset-password'
+    | '/_auth/verify-2fa'
     | '/_auth/verify-email'
     | '/_app/'
     | '/_app/admin/reports'
@@ -420,11 +475,15 @@ export interface FileRouteTypes {
     | '/_app/messages/$threadId'
     | '/_app/posts/$postId'
     | '/_app/profiles/$profileId'
+    | '/_auth/verify-2fa/backup'
+    | '/_auth/verify-2fa/email'
+    | '/_auth/verify-2fa/totp'
     | '/_auth/verify-email/callback'
     | '/_app/account-settings/'
     | '/_app/admin/'
     | '/_app/messages/'
     | '/_app/posts/'
+    | '/_auth/verify-2fa/'
     | '/_auth/verify-email/'
     | '/_app/account-settings/profiles/create'
     | '/_app/admin/users/$userId'
@@ -468,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof AuthVerifyEmailRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/verify-2fa': {
+      id: '/_auth/verify-2fa'
+      path: '/verify-2fa'
+      fullPath: '/verify-2fa'
+      preLoaderRoute: typeof AuthVerify2faRouteRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/reset-password': {
@@ -554,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyEmailIndexRouteImport
       parentRoute: typeof AuthVerifyEmailRouteRoute
     }
+    '/_auth/verify-2fa/': {
+      id: '/_auth/verify-2fa/'
+      path: '/'
+      fullPath: '/verify-2fa/'
+      preLoaderRoute: typeof AuthVerify2faIndexRouteImport
+      parentRoute: typeof AuthVerify2faRouteRoute
+    }
     '/_app/posts/': {
       id: '/_app/posts/'
       path: '/posts'
@@ -588,6 +661,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/verify-email/callback'
       preLoaderRoute: typeof AuthVerifyEmailCallbackRouteRouteImport
       parentRoute: typeof AuthVerifyEmailRouteRoute
+    }
+    '/_auth/verify-2fa/totp': {
+      id: '/_auth/verify-2fa/totp'
+      path: '/totp'
+      fullPath: '/verify-2fa/totp'
+      preLoaderRoute: typeof AuthVerify2faTotpRouteRouteImport
+      parentRoute: typeof AuthVerify2faRouteRoute
+    }
+    '/_auth/verify-2fa/email': {
+      id: '/_auth/verify-2fa/email'
+      path: '/email'
+      fullPath: '/verify-2fa/email'
+      preLoaderRoute: typeof AuthVerify2faEmailRouteRouteImport
+      parentRoute: typeof AuthVerify2faRouteRoute
+    }
+    '/_auth/verify-2fa/backup': {
+      id: '/_auth/verify-2fa/backup'
+      path: '/backup'
+      fullPath: '/verify-2fa/backup'
+      preLoaderRoute: typeof AuthVerify2faBackupRouteRouteImport
+      parentRoute: typeof AuthVerify2faRouteRoute
     }
     '/_app/profiles/$profileId': {
       id: '/_app/profiles/$profileId'
@@ -803,6 +897,23 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
   AppRouteRouteChildren,
 )
 
+interface AuthVerify2faRouteRouteChildren {
+  AuthVerify2faBackupRouteRoute: typeof AuthVerify2faBackupRouteRoute
+  AuthVerify2faEmailRouteRoute: typeof AuthVerify2faEmailRouteRoute
+  AuthVerify2faTotpRouteRoute: typeof AuthVerify2faTotpRouteRoute
+  AuthVerify2faIndexRoute: typeof AuthVerify2faIndexRoute
+}
+
+const AuthVerify2faRouteRouteChildren: AuthVerify2faRouteRouteChildren = {
+  AuthVerify2faBackupRouteRoute: AuthVerify2faBackupRouteRoute,
+  AuthVerify2faEmailRouteRoute: AuthVerify2faEmailRouteRoute,
+  AuthVerify2faTotpRouteRoute: AuthVerify2faTotpRouteRoute,
+  AuthVerify2faIndexRoute: AuthVerify2faIndexRoute,
+}
+
+const AuthVerify2faRouteRouteWithChildren =
+  AuthVerify2faRouteRoute._addFileChildren(AuthVerify2faRouteRouteChildren)
+
 interface AuthVerifyEmailRouteRouteChildren {
   AuthVerifyEmailCallbackRouteRoute: typeof AuthVerifyEmailCallbackRouteRoute
   AuthVerifyEmailIndexRoute: typeof AuthVerifyEmailIndexRoute
@@ -823,6 +934,7 @@ interface AuthRouteRouteChildren {
   AuthLoginRouteRoute: typeof AuthLoginRouteRoute
   AuthRegisterRouteRoute: typeof AuthRegisterRouteRoute
   AuthResetPasswordRouteRoute: typeof AuthResetPasswordRouteRoute
+  AuthVerify2faRouteRoute: typeof AuthVerify2faRouteRouteWithChildren
   AuthVerifyEmailRouteRoute: typeof AuthVerifyEmailRouteRouteWithChildren
 }
 
@@ -833,6 +945,7 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthLoginRouteRoute: AuthLoginRouteRoute,
   AuthRegisterRouteRoute: AuthRegisterRouteRoute,
   AuthResetPasswordRouteRoute: AuthResetPasswordRouteRoute,
+  AuthVerify2faRouteRoute: AuthVerify2faRouteRouteWithChildren,
   AuthVerifyEmailRouteRoute: AuthVerifyEmailRouteRouteWithChildren,
 }
 

@@ -58,7 +58,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const isValidEmail = z.email().safeParse(watchedEmail).success
 
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
-    const { error } = await authClient.signIn.email({
+    const result = await authClient.signIn.email({
       email: values.email,
       password: values.password,
       rememberMe: values.rememberMe,
@@ -72,7 +72,16 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         },
       },
     })
+    const { error } = result
     if (!error) {
+      const data = result.data as { twoFactorRedirect?: boolean } | undefined
+      if (data?.twoFactorRedirect) {
+        void navigate({
+          to: '/verify-2fa',
+          search: redirect ? { redirect } : {},
+        })
+        return
+      }
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
       return
