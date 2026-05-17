@@ -26,6 +26,7 @@ import { reviewImagesRoutes } from './modules/review-images'
 import { reportCategoriesRoutes } from './modules/reports'
 import { initBucket } from './lib/storage'
 import { locationsRoutes } from './modules/locations'
+import { twoFactorRoutes } from './modules/two-factor'
 
 export const app = new Elysia()
   .use(errorsPlugin)
@@ -65,6 +66,7 @@ export const app = new Elysia()
   .use(logger)
   .get('/', () => 'Marketplace API')
   .use(authRoutes)
+  .use(twoFactorRoutes)
   .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)

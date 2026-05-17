@@ -9,12 +9,14 @@ import { users, roles, userProfiles, sessions } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
 import { impersonationPlugin } from './impersonation-plugin'
+import { twoFactor } from 'better-auth/plugins'
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendExistingAccountSignUpEmail,
   sendChangeEmailConfirmationEmail,
   sendNewEmailVerificationEmail,
+  sendTwoFactorOtpEmail,
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
@@ -40,7 +42,17 @@ export const existingSignupNotifiedEmails = new Set<string>()
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   trustedOrigins: [env.frontendUrl],
-  plugins: [impersonationPlugin()],
+  plugins: [
+    impersonationPlugin(),
+    twoFactor({
+      issuer: 'Marketplace',
+      otpOptions: {
+        async sendOTP({ user, otp }: { user: { email: string }; otp: string }) {
+          void sendTwoFactorOtpEmail({ email: user.email, otp })
+        },
+      },
+    }),
+  ],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -49,6 +61,7 @@ export const auth = betterAuth({
       session: schema.sessions,
       account: schema.oauthAccounts,
       verification: schema.verifications,
+      twoFactor: schema.twoFactors,
     },
   }),
   user: {
@@ -221,6 +234,16 @@ export const auth = betterAuth({
 
       // Block changeEmail and changePassword during impersonation
       if (['/change-email', '/change-password'].includes(ctx.path)) {
+        const session = await getSessionFromCtx(ctx)
+        if (session?.session.impersonatedBy) {
+          return new APIError('FORBIDDEN', {
+            code: ErrorCodes.ImpersonationReadOnly,
+            message: AuthErrorMessages.impersonationReadOnly,
+          })
+        }
+      }
+
+      if (ctx.path.startsWith('/two-factor/')) {
         const session = await getSessionFromCtx(ctx)
         if (session?.session.impersonatedBy) {
           return new APIError('FORBIDDEN', {
