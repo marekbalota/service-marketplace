@@ -19,9 +19,9 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp'
-import { BackupCodesDisplay } from './BackupCodesDisplay'
+import { BackupCodesDisplay, type BackupCodeEntry } from './BackupCodesDisplay'
 
-type Step = 1 | 2 | 3 | 4
+type Step = 1 | 2 | 3
 
 export function EnableTotpDialog({
   open,
@@ -33,46 +33,46 @@ export function EnableTotpDialog({
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
   const [totpURI, setTotpURI] = useState('')
-  const [backupCodes, setBackupCodes] = useState<string[]>([])
   const [otpCode, setOtpCode] = useState('')
+  const [backupCodes, setBackupCodes] = useState<BackupCodeEntry[]>([])
   const [savedCodes, setSavedCodes] = useState(false)
   const [showManualKey, setShowManualKey] = useState(false)
 
-  const enable = useMutation({
+  const setup = useMutation({
     mutationFn: async () => {
-      const { data, error } = await authClient.twoFactor.enable({ password })
+      const { data, error } = await authClient.twoFactor.setupTotp({ password })
       if (error) throw new Error(error.message ?? 'An error occurred')
       return data
     },
     onSuccess: (data) => {
-      setTotpURI(data?.totpURI ?? '')
-      setBackupCodes(data?.backupCodes ?? [])
+      setTotpURI(data?.uri ?? '')
       setStep(2)
     },
   })
 
   const verify = useMutation({
     mutationFn: async () => {
-      const { error } = await authClient.twoFactor.verifyTotp({ code: otpCode })
+      const { data, error } = await authClient.twoFactor.enableTotp({ code: otpCode })
       if (error) throw new Error(error.message ?? 'Invalid code')
+      return data
     },
-    onSuccess: () => setStep(4),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
+      toast.success('Authenticator app enabled')
+
+      const codes = (data?.backupCodes ?? []).map((code) => ({ code, usedAt: null }))
+      if (codes.length > 0) {
+        setBackupCodes(codes)
+      } else {
+        onOpenChange(false)
+      }
+    },
   })
 
   function reset() {
-    setStep(1); setPassword(''); setTotpURI(''); setBackupCodes([])
-    setOtpCode(''); setSavedCodes(false); setShowManualKey(false)
-    enable.reset(); verify.reset()
-  }
-
-  function handleOpenChange(next: boolean) {
-    onOpenChange(next)
-  }
-
-  async function handleDone() {
-    await queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-    toast.success('Authenticator app enabled')
-    handleOpenChange(false)
+    setStep(1); setPassword(''); setTotpURI(''); setOtpCode('')
+    setBackupCodes([]); setSavedCodes(false); setShowManualKey(false)
+    setup.reset(); verify.reset()
   }
 
   const manualKey = totpURI
@@ -84,13 +84,13 @@ export function EnableTotpDialog({
       open={open}
       onOpenChange={(nextOpen, details) => {
         if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
-        handleOpenChange(nextOpen)
+        onOpenChange(nextOpen)
       }}
       onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
     >
-      <DialogContent className="sm:max-w-[520px]" showCloseButton={step !== 4}>
+      <DialogContent className="sm:max-w-[520px]" showCloseButton={!verify.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
-          {([1, 2, 3, 4] as Step[]).map((s) => (
+          {([1, 2, 3] as Step[]).map((s) => (
             <div
               key={s}
               className={cn(
@@ -114,15 +114,15 @@ export function EnableTotpDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !enable.isPending) enable.mutate() }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !setup.isPending) setup.mutate() }}
                 autoComplete="current-password"
               />
-              {enable.error && <p className="text-sm text-destructive">{enable.error.message}</p>}
+              {setup.error && <p className="text-sm text-destructive">{setup.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => enable.mutate()} disabled={!password || enable.isPending}>
-                {enable.isPending ? 'Verifying…' : 'Continue'}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => setup.mutate()} disabled={!password || setup.isPending}>
+                {setup.isPending ? 'Verifying…' : 'Continue'}
               </Button>
             </DialogFooter>
           </>
@@ -150,13 +150,13 @@ export function EnableTotpDialog({
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={() => setStep(3)}>Next</Button>
             </DialogFooter>
           </>
         )}
 
-        {step === 3 && (
+        {step === 3 && !verify.isSuccess && (
           <>
             <DialogHeader>
               <DialogTitle>Verify Code</DialogTitle>
@@ -179,7 +179,7 @@ export function EnableTotpDialog({
               {verify.error && <p className="text-sm text-destructive">{verify.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={() => verify.mutate()} disabled={otpCode.length !== 6 || verify.isPending}>
                 {verify.isPending ? 'Verifying…' : 'Verify'}
               </Button>
@@ -187,7 +187,7 @@ export function EnableTotpDialog({
           </>
         )}
 
-        {step === 4 && (
+        {step === 3 && verify.isSuccess && (
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>
@@ -204,7 +204,7 @@ export function EnableTotpDialog({
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDone} disabled={!savedCodes}>Done</Button>
+              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>Done</Button>
             </DialogFooter>
           </>
         )}

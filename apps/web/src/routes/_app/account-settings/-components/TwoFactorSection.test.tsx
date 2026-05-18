@@ -24,7 +24,7 @@ import { TwoFactorSection } from './TwoFactorSection'
 describe('TwoFactorSection', () => {
   it('shows both methods in Available group when 2FA is disabled', () => {
     mockUseSuspenseQuery.mockReturnValue({
-      data: { twoFactorEnabled: false, totpEnabled: false },
+      data: { twoFactorEnabled: false, enabledMethods: [] },
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/available/i)).toBeInTheDocument()
@@ -36,7 +36,7 @@ describe('TwoFactorSection', () => {
 
   it('shows Email in Enabled group and Backup Codes when email-only 2FA is on', () => {
     mockUseSuspenseQuery.mockReturnValue({
-      data: { twoFactorEnabled: true, totpEnabled: false },
+      data: { twoFactorEnabled: true, enabledMethods: ['email'] },
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/enabled/i)).toBeInTheDocument()
@@ -47,7 +47,7 @@ describe('TwoFactorSection', () => {
 
   it('shows both methods in Enabled group and no Available group when both are on', () => {
     mockUseSuspenseQuery.mockReturnValue({
-      data: { twoFactorEnabled: true, totpEnabled: true },
+      data: { twoFactorEnabled: true, enabledMethods: ['email', 'totp'] },
     })
     render(<TwoFactorSection />)
     expect(screen.getByText(/enabled/i)).toBeInTheDocument()

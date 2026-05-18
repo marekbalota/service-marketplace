@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react'
-import { twoFactorClient } from 'better-auth/client/plugins'
 import { impersonationClient } from './impersonation-client'
+import { customTwoFactorClient } from './lib/two-factor-client'
 import { routerRef } from './router'
 import { env } from './env'
 
@@ -17,9 +17,9 @@ export const authClient = createAuthClient({
   },
   plugins: [
     impersonationClient(),
-    twoFactorClient({
-      onTwoFactorRedirect() {
-        const search = pendingTwoFactorSearch
+    customTwoFactorClient({
+      onTwoFactorRedirect({ twoFactorMethods }) {
+        const search = { ...pendingTwoFactorSearch, twoFactorMethods }
         pendingTwoFactorSearch = {}
         void routerRef?.navigate({ to: '/verify-2fa', search })
       },

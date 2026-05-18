@@ -19,9 +19,9 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp'
-import { BackupCodesDisplay } from './BackupCodesDisplay'
+import { BackupCodesDisplay, type BackupCodeEntry } from './BackupCodesDisplay'
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2
 
 export function EnableEmailDialog({
   open,
@@ -32,8 +32,8 @@ export function EnableEmailDialog({
 }) {
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
-  const [backupCodes, setBackupCodes] = useState<string[]>([])
   const [otpCode, setOtpCode] = useState('')
+  const [backupCodes, setBackupCodes] = useState<BackupCodeEntry[]>([])
   const [resendCooldown, setResendCooldown] = useState(0)
   const [savedCodes, setSavedCodes] = useState(false)
 
@@ -50,47 +50,35 @@ export function EnableEmailDialog({
 
   const sendCode = useMutation({
     mutationFn: async () => {
-      const { error } = await authClient.twoFactor.sendOtp()
+      const { error } = await authClient.twoFactor.setupEmail({ password })
       if (error) throw new Error(error.message ?? 'Failed to send code')
     },
     onSuccess: () => setResendCooldown(60),
   })
 
-  const enable = useMutation({
+  const enableEmail = useMutation({
     mutationFn: async () => {
-      const { data, error } = await authClient.twoFactor.enable({ password })
-      if (error) throw new Error(error.message ?? 'An error occurred')
+      const { data, error } = await authClient.twoFactor.enableEmail({ code: otpCode })
+      if (error) throw new Error(error.message ?? 'Invalid code')
       return data
     },
     onSuccess: (data) => {
-      setBackupCodes(data?.backupCodes ?? [])
-      setStep(2)
-      sendCode.mutate()
-    },
-  })
+      void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
+      toast.success('Email 2FA enabled')
 
-  const verify = useMutation({
-    mutationFn: async () => {
-      const { error } = await authClient.twoFactor.verifyOtp({ code: otpCode })
-      if (error) throw new Error(error.message ?? 'Invalid code')
+      const codes = data?.backupCodes ?? []
+      if (codes.length > 0) {
+        setBackupCodes(codes.map((code) => ({ code, usedAt: null })))
+      } else {
+        onOpenChange(false)
+      }
     },
-    onSuccess: () => setStep(3),
   })
 
   function reset() {
-    setStep(1); setPassword(''); setBackupCodes([]); setOtpCode('')
-    setSavedCodes(false)
-    enable.reset(); sendCode.reset(); verify.reset()
-  }
-
-  function handleOpenChange(next: boolean) {
-    onOpenChange(next)
-  }
-
-  async function handleDone() {
-    await queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-    toast.success('Email 2FA enabled')
-    handleOpenChange(false)
+    setStep(1); setPassword(''); setOtpCode(''); setBackupCodes([])
+    setResendCooldown(0); setSavedCodes(false)
+    sendCode.reset(); enableEmail.reset()
   }
 
   return (
@@ -98,13 +86,13 @@ export function EnableEmailDialog({
       open={open}
       onOpenChange={(nextOpen, details) => {
         if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
-        handleOpenChange(nextOpen)
+        onOpenChange(nextOpen)
       }}
       onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
     >
-      <DialogContent className="sm:max-w-[520px]" showCloseButton={step !== 3}>
+      <DialogContent className="sm:max-w-[520px]" showCloseButton={!enableEmail.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
-          {([1, 2, 3] as Step[]).map((s) => (
+          {([1, 2] as Step[]).map((s) => (
             <div
               key={s}
               className={cn(
@@ -128,21 +116,21 @@ export function EnableEmailDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !enable.isPending) enable.mutate() }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !sendCode.isPending) sendCode.mutate(undefined, { onSuccess: () => setStep(2) }) }}
                 autoComplete="current-password"
               />
-              {enable.error && <p className="text-sm text-destructive">{enable.error.message}</p>}
+              {sendCode.error && <p className="text-sm text-destructive">{sendCode.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => enable.mutate()} disabled={!password || enable.isPending}>
-                {enable.isPending ? 'Verifying…' : 'Continue'}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => sendCode.mutate(undefined, { onSuccess: () => setStep(2) })} disabled={!password || sendCode.isPending}>
+                {sendCode.isPending ? 'Sending…' : 'Continue'}
               </Button>
             </DialogFooter>
           </>
         )}
 
-        {step === 2 && (
+        {step === 2 && !enableEmail.isSuccess && (
           <>
             <DialogHeader>
               <DialogTitle>Verify Your Email</DialogTitle>
@@ -155,7 +143,7 @@ export function EnableEmailDialog({
                   value={otpCode}
                   onChange={setOtpCode}
                   containerClassName="gap-2"
-                  onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !verify.isPending) verify.mutate() }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !enableEmail.isPending) enableEmail.mutate() }}
                 >
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <InputOTPGroup key={i}>
@@ -163,49 +151,49 @@ export function EnableEmailDialog({
                     </InputOTPGroup>
                   ))}
                 </InputOTP>
-              </div>
-              <div className="text-center text-sm text-muted-foreground">
-                {sendCode.isPending && 'Sending code…'}
-                {!sendCode.isPending && resendCooldown > 0 && (
-                  `Resend in ${formatCountdown(resendCooldown)}`
+                <div className="text-center text-sm text-muted-foreground">
+                  {sendCode.isPending && 'Sending code…'}
+                  {!sendCode.isPending && resendCooldown > 0 && (
+                    `Resend in ${formatCountdown(resendCooldown)}`
+                  )}
+                  {!sendCode.isPending && resendCooldown === 0 && (
+                    <Button variant="link" className="h-auto p-0" onClick={() => sendCode.mutate()}>
+                      Resend code
+                    </Button>
+                  )}
+                </div>
+                {(sendCode.error || enableEmail.error) && (
+                  <p className="text-sm text-destructive">{(sendCode.error ?? enableEmail.error)?.message}</p>
                 )}
-                {!sendCode.isPending && resendCooldown === 0 && (
-                  <Button variant="link" className="h-auto p-0" onClick={() => sendCode.mutate()}>
-                    Resend code
-                  </Button>
-                )}
               </div>
-              {(sendCode.error || verify.error) && (
-                <p className="text-sm text-destructive">{(sendCode.error ?? verify.error)?.message}</p>
-              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => verify.mutate()} disabled={otpCode.length !== 6 || verify.isPending}>
-                {verify.isPending ? 'Verifying…' : 'Verify'}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => enableEmail.mutate()} disabled={otpCode.length !== 6 || enableEmail.isPending}>
+                {enableEmail.isPending ? 'Verifying…' : 'Verify'}
               </Button>
             </DialogFooter>
           </>
         )}
 
-        {step === 3 && (
+        {step === 2 && enableEmail.isSuccess && (
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>
-              <DialogDescription>Store these codes somewhere safe. Each can only be used once.</DialogDescription>
+              <DialogDescription>Save these somewhere safe. Each code can only be used once.</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                Keep these codes secure. You'll need them if you can't access your email.
+                If you lose access to your email, these codes are your only way in.
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
                 <Checkbox id="email-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
-                <Label htmlFor="email-saved-codes" className="cursor-pointer">I have saved my backup codes</Label>
+                <Label htmlFor="email-saved-codes" className="cursor-pointer">I have saved these codes</Label>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleDone} disabled={!savedCodes}>Done</Button>
+              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>Done</Button>
             </DialogFooter>
           </>
         )}

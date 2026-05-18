@@ -1,15 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const mockEnable = vi.hoisted(() => vi.fn())
-const mockVerifyTotp = vi.hoisted(() => vi.fn())
+function wrapRender(ui: React.ReactElement) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+}
+
+const mockSetupTotp = vi.hoisted(() => vi.fn())
+const mockEnableTotp = vi.hoisted(() => vi.fn())
 const mockInvalidate = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 
 vi.mock('#/auth', () => ({
   authClient: {
     twoFactor: {
-      enable: mockEnable,
-      verifyTotp: mockVerifyTotp,
+      setupTotp: mockSetupTotp,
+      enableTotp: mockEnableTotp,
     },
   },
 }))
@@ -18,14 +24,14 @@ vi.mock('#/router', () => ({ queryClient: { invalidateQueries: mockInvalidate } 
 import { EnableTotpDialog } from './EnableTotpDialog'
 
 function renderDialog(open = true) {
-  return render(<EnableTotpDialog open={open} onOpenChange={vi.fn()} />)
+  return wrapRender(<EnableTotpDialog open={open} onOpenChange={vi.fn()} />)
 }
 
 describe('EnableTotpDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockEnable.mockResolvedValue({ data: { totpURI: 'otpauth://test', backupCodes: ['aaa', 'bbb'] }, error: null })
-    mockVerifyTotp.mockResolvedValue({ data: {}, error: null })
+    mockSetupTotp.mockResolvedValue({ data: { uri: 'otpauth://test' }, error: null })
+    mockEnableTotp.mockResolvedValue({ data: { backupCodes: ['aaa', 'bbb'] }, error: null })
   })
 
   it('renders password input on step 1', () => {
@@ -43,13 +49,13 @@ describe('EnableTotpDialog', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'secret123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
     await waitFor(() => {
-      expect(mockEnable).toHaveBeenCalledWith({ password: 'secret123' })
+      expect(mockSetupTotp).toHaveBeenCalledWith({ password: 'secret123' })
       expect(screen.getByText(/scan the qr code/i)).toBeInTheDocument()
     })
   })
 
-  it('shows error on step 1 when enable fails', async () => {
-    mockEnable.mockResolvedValueOnce({ data: null, error: { message: 'Wrong password' } })
+  it('shows error on step 1 when setupTotp fails', async () => {
+    mockSetupTotp.mockResolvedValueOnce({ data: null, error: { message: 'Wrong password' } })
     renderDialog()
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
@@ -64,10 +70,12 @@ describe('EnableTotpDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
     await waitFor(() => screen.getByText(/scan the qr code/i))
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
-    await waitFor(() => screen.getByPlaceholderText('000000'))
-    fireEvent.change(screen.getByPlaceholderText('000000'), { target: { value: '123456' } })
+    await waitFor(() => document.querySelector('[data-input-otp]'))
+    const otpInput = document.querySelector('[data-input-otp]') as HTMLInputElement
+    fireEvent.change(otpInput, { target: { value: '123456' } })
     fireEvent.click(screen.getByRole('button', { name: /verify/i }))
     await waitFor(() => {
+      expect(mockEnableTotp).toHaveBeenCalledWith({ code: '123456' })
       expect(screen.getByText(/backup codes/i)).toBeInTheDocument()
       expect(screen.getByText('aaa')).toBeInTheDocument()
     })

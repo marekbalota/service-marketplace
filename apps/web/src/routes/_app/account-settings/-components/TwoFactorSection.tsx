@@ -1,39 +1,63 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Mail, Smartphone, Shield } from 'lucide-react'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQuery, useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { TwoFactorMethod } from '@marketplace/shared'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { Separator } from '#/components/ui/separator'
+import { authClient } from '#/auth'
+import { queryClient } from '#/router'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { EnableTotpDialog } from './EnableTotpDialog'
 import { EnableEmailDialog } from './EnableEmailDialog'
 import { BackupCodesDialog } from './BackupCodesDialog'
 import { DisableMethodDialog } from './DisableMethodDialog'
 
-type DialogId = 'enable-totp' | 'enable-email' | 'backup-codes' | 'disable-totp' | 'disable-email'
+type DialogId = 'enable-totp' | 'enable-email' | 'backup-codes' | `disable-${TwoFactorMethod}`
 
 const METHODS = [
   { id: 'totp' as const, label: 'Authenticator App', description: 'Use an app like Google Authenticator or Authy', icon: Smartphone },
   { id: 'email' as const, label: 'Email', description: 'Receive a verification code via email', icon: Mail },
 ] as const
 
-type MethodId = (typeof METHODS)[number]['id']
-
-function isEnabled(methodId: MethodId, data: { twoFactorEnabled: boolean; totpEnabled: boolean }) {
-  if (methodId === 'totp') return data.totpEnabled
-  return data.twoFactorEnabled
+function buildDisableWarning(method: TwoFactorMethod, isLastMethod: boolean): string {
+  const base = method === 'email'
+    ? 'This will disable email verification for your account.'
+    : 'This will disable your authenticator app for your account.'
+  return isLastMethod ? `${base} This will turn off two-factor authentication for your account entirely.` : base
 }
 
 export function TwoFactorSection() {
   const { data } = useSuspenseQuery(twoFactorStatusQueryOptions)
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null)
+  const disableMethodRef = useRef<TwoFactorMethod>('email')
+
+  const disableMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const method = disableMethodRef.current
+      const fn = method === 'email' ? authClient.twoFactor.disableEmail : authClient.twoFactor.disableTotp
+      const { error } = await fn({ password })
+      if (error) throw new Error(error.message ?? 'An error occurred')
+    },
+    onSuccess: () => {
+      const method = disableMethodRef.current
+      void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
+      toast.success(method === 'email' ? 'Email 2FA disabled' : 'Authenticator app disabled')
+      setOpenDialog(null)
+    },
+  })
+
+  function openDisableDialog(method: TwoFactorMethod) {
+    disableMethodRef.current = method
+    setOpenDialog(`disable-${method}`)
+  }
 
   if (!data) return null
 
-  const enabledMethods = METHODS.filter((m) => isEnabled(m.id, data))
-  const availableMethods = METHODS.filter((m) => !isEnabled(m.id, data))
-  const hasAny = data.twoFactorEnabled
-  const enabledCount = enabledMethods.length
+  const enabledMethodSet = new Set(data.enabledMethods ?? [])
+  const enabledMethods = METHODS.filter((m) => enabledMethodSet.has(m.id))
+  const availableMethods = METHODS.filter((m) => !enabledMethodSet.has(m.id))
 
   return (
     <>
@@ -62,7 +86,7 @@ export function TwoFactorSection() {
                     </div>
                     <Button
                       variant="destructive"
-                      onClick={() => setOpenDialog(`disable-${id}`)}
+                      onClick={() => openDisableDialog(id)}
                     >
                       Disable
                     </Button>
@@ -79,7 +103,7 @@ export function TwoFactorSection() {
                     </div>
                   </div>
                   <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                    Regenerate
+                    View Codes
                   </Button>
                 </div>
               </div>
@@ -130,8 +154,11 @@ export function TwoFactorSection() {
       />
       <DisableMethodDialog
         open={openDialog === 'disable-totp' || openDialog === 'disable-email'}
-        onOpenChange={(o) => !o && setOpenDialog(null)}
-        isOnlyMethod={enabledCount === 1}
+        onOpenChange={(o) => { if (!o) { setOpenDialog(null); disableMutation.reset() } }}
+        warning={buildDisableWarning(disableMethodRef.current, enabledMethods.length === 1)}
+        isPending={disableMutation.isPending}
+        error={disableMutation.error as Error | null}
+        onSubmit={disableMutation.mutate}
       />
     </>
   )

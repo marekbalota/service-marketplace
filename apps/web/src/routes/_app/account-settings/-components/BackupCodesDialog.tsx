@@ -14,9 +14,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from '#/components/ui/dialog'
-import { BackupCodesDisplay } from './BackupCodesDisplay'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
+import { BackupCodesDisplay, type BackupCodeEntry } from './BackupCodesDisplay'
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2
 
 export function BackupCodesDialog({
   open,
@@ -27,23 +28,39 @@ export function BackupCodesDialog({
 }) {
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
-  const [codes, setCodes] = useState<string[]>([])
+  const [codes, setCodes] = useState<BackupCodeEntry[]>([])
   const [savedCodes, setSavedCodes] = useState(false)
+
+  const viewCodes = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await authClient.twoFactor.getBackupCodes({ password })
+      if (error) throw new Error(error.message ?? 'Failed to retrieve backup codes')
+      return data?.codes ?? []
+    },
+    onSuccess: (fetchedCodes) => {
+      setCodes(fetchedCodes)
+      setStep(2)
+    },
+  })
 
   const regenerate = useMutation({
     mutationFn: async () => {
-      const { data, error } = await authClient.twoFactor.generateBackupCodes({ password })
-      if (error) throw new Error(error.message ?? 'Failed to generate backup codes')
-      return data?.backupCodes ?? []
+      const { data, error } = await authClient.twoFactor.regenerateBackupCodes({ password })
+      if (error) throw new Error(error.message ?? 'Failed to regenerate backup codes')
+      return data?.codes ?? []
     },
-    onSuccess: (backupCodes) => {
-      setCodes(backupCodes)
-      setStep(3)
+    onSuccess: (newCodes) => {
+      setCodes(newCodes.map((c) => ({ code: c, usedAt: null })))
     },
   })
 
   function reset() {
-    setStep(1); setPassword(''); setCodes([]); setSavedCodes(false); regenerate.reset()
+    setStep(1)
+    setPassword('')
+    setCodes([])
+    setSavedCodes(false)
+    viewCodes.reset()
+    regenerate.reset()
   }
 
   function handleOpenChange(next: boolean) {
@@ -59,9 +76,9 @@ export function BackupCodesDialog({
       }}
       onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
     >
-      <DialogContent className="sm:max-w-[520px]" showCloseButton={step !== 3}>
+      <DialogContent className="sm:max-w-[520px]" showCloseButton={!regenerate.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
-          {([1, 2, 3] as Step[]).map((s) => (
+          {([1, 2] as Step[]).map((s) => (
             <div
               key={s}
               className={cn(
@@ -71,21 +88,29 @@ export function BackupCodesDialog({
             />
           ))}
         </div>
-
         {step === 1 && (
           <>
             <DialogHeader>
-              <DialogTitle>Regenerate Backup Codes</DialogTitle>
-              <DialogDescription>This will invalidate all your existing backup codes.</DialogDescription>
+              <DialogTitle>Backup Codes</DialogTitle>
+              <DialogDescription>Enter your password to view your backup codes.</DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                Are you sure you want to regenerate your backup codes? All existing codes will be permanently invalidated.
-              </div>
+            <div className="py-4 space-y-3">
+              <Label htmlFor="backup-view-password">Password</Label>
+              <Input
+                id="backup-view-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && password && !viewCodes.isPending) viewCodes.mutate() }}
+                autoComplete="current-password"
+              />
+              {viewCodes.error && <p className="text-sm text-destructive">{viewCodes.error.message}</p>}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => setStep(2)}>Continue</Button>
+              <Button onClick={() => viewCodes.mutate()} disabled={!password || viewCodes.isPending}>
+                {viewCodes.isPending ? 'Loading…' : 'View Codes'}
+              </Button>
             </DialogFooter>
           </>
         )}
@@ -93,45 +118,50 @@ export function BackupCodesDialog({
         {step === 2 && (
           <>
             <DialogHeader>
-              <DialogTitle>Confirm with Password</DialogTitle>
-              <DialogDescription>Enter your password to confirm.</DialogDescription>
+              <DialogTitle>Backup Codes</DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-3">
-              <Label htmlFor="backup-password">Password</Label>
-              <Input
-                id="backup-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !regenerate.isPending) regenerate.mutate() }}
-                autoComplete="current-password"
-              />
-              {regenerate.error && <p className="text-sm text-destructive">{regenerate.error.message}</p>}
+            <div className="py-2">
+              <Tabs defaultValue="current">
+                <TabsList className="w-full">
+                  <TabsTrigger value="current" className="flex-1">Current Codes</TabsTrigger>
+                  <TabsTrigger value="regenerate" className="flex-1">Regenerate</TabsTrigger>
+                </TabsList>
+                <TabsContent value="current" className="pt-4">
+                  <BackupCodesDisplay codes={codes} />
+                </TabsContent>
+                <TabsContent value="regenerate" className="pt-4 space-y-4">
+                  {!regenerate.isSuccess && (
+                    <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
+                      This will permanently invalidate all existing backup codes and generate new ones.
+                    </div>
+                  )}
+                  {regenerate.isSuccess && (
+                    <BackupCodesDisplay codes={codes} />
+                  )}
+                  {regenerate.error && (
+                    <p className="text-sm text-destructive">{regenerate.error.message}</p>
+                  )}
+                  {!regenerate.isSuccess && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => regenerate.mutate()}
+                      disabled={regenerate.isPending}
+                      className="w-full"
+                    >
+                      {regenerate.isPending ? 'Generating…' : 'Regenerate Codes'}
+                    </Button>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { regenerate.reset(); setStep(1) }}>Back</Button>
-              <Button variant="destructive" onClick={() => regenerate.mutate()} disabled={!password || regenerate.isPending}>
-                {regenerate.isPending ? 'Generating…' : 'Regenerate Codes'}
-              </Button>
-            </DialogFooter>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <DialogHeader>
-              <DialogTitle>New Backup Codes</DialogTitle>
-              <DialogDescription>Save these somewhere safe. Each code can only be used once.</DialogDescription>
-            </DialogHeader>
-            <div className="py-4 space-y-4">
-              <BackupCodesDisplay codes={codes} />
-              <div className="flex items-center gap-2">
+            {regenerate.isSuccess && (
+              <div className="flex items-center gap-2 px-1">
                 <Checkbox id="backup-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
                 <Label htmlFor="backup-saved-codes" className="cursor-pointer">I have saved these codes</Label>
               </div>
-            </div>
+            )}
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)} disabled={!savedCodes}>Done</Button>
+              <Button onClick={() => handleOpenChange(false)} disabled={regenerate.isSuccess && !savedCodes}>Done</Button>
             </DialogFooter>
           </>
         )}

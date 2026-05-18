@@ -1,9 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const mockGenerateBackupCodes = vi.hoisted(() => vi.fn())
+function wrap(ui: React.ReactElement) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+}
+
+const mockGetBackupCodes = vi.hoisted(() => vi.fn())
+const mockRegenerateBackupCodes = vi.hoisted(() => vi.fn())
 vi.mock('#/auth', () => ({
-  authClient: { twoFactor: { generateBackupCodes: mockGenerateBackupCodes } },
+  authClient: {
+    twoFactor: {
+      getBackupCodes: mockGetBackupCodes,
+      regenerateBackupCodes: mockRegenerateBackupCodes,
+    },
+  },
 }))
 vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
 
@@ -12,22 +24,28 @@ import { BackupCodesDialog } from './BackupCodesDialog'
 describe('BackupCodesDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGenerateBackupCodes.mockResolvedValue({ data: { backupCodes: ['new1', 'new2'] }, error: null })
+    mockGetBackupCodes.mockResolvedValue({
+      data: { codes: [{ code: 'old1', usedAt: null }] },
+      error: null,
+    })
+    mockRegenerateBackupCodes.mockResolvedValue({
+      data: { codes: ['new1', 'new2'] },
+      error: null,
+    })
   })
 
   it('renders password field on step 1', () => {
-    render(<BackupCodesDialog open onOpenChange={vi.fn()} />)
+    wrap(<BackupCodesDialog open onOpenChange={vi.fn()} />)
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
   })
 
   it('View Codes button disabled when password empty', () => {
-    render(<BackupCodesDialog open onOpenChange={vi.fn()} />)
+    wrap(<BackupCodesDialog open onOpenChange={vi.fn()} />)
     expect(screen.getByRole('button', { name: /view codes/i })).toBeDisabled()
   })
 
   it('shows Current Codes tab after password confirm', async () => {
-    mockGenerateBackupCodes.mockResolvedValueOnce({ data: { backupCodes: ['old1'] }, error: null })
-    render(<BackupCodesDialog open onOpenChange={vi.fn()} />)
+    wrap(<BackupCodesDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass' } })
     fireEvent.click(screen.getByRole('button', { name: /view codes/i }))
     await waitFor(() => {
@@ -35,15 +53,15 @@ describe('BackupCodesDialog', () => {
     })
   })
 
-  it('switches to Regenerate tab and calls generateBackupCodes on confirm', async () => {
-    render(<BackupCodesDialog open onOpenChange={vi.fn()} />)
+  it('switches to Regenerate tab and calls regenerateBackupCodes on confirm, shows new codes', async () => {
+    wrap(<BackupCodesDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass' } })
     fireEvent.click(screen.getByRole('button', { name: /view codes/i }))
     await waitFor(() => screen.getByRole('tab', { name: /regenerate/i }))
     fireEvent.click(screen.getByRole('tab', { name: /regenerate/i }))
     fireEvent.click(screen.getByRole('button', { name: /regenerate codes/i }))
     await waitFor(() => {
-      expect(mockGenerateBackupCodes).toHaveBeenCalled()
+      expect(mockRegenerateBackupCodes).toHaveBeenCalled()
       expect(screen.getByText('new1')).toBeInTheDocument()
     })
   })
