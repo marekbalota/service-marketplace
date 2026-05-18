@@ -34,7 +34,7 @@ export function DisableMethodDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange} onOpenChangeComplete={(isOpen) => { if (!isOpen) setPassword('') }}>
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle>Disable Two-Factor Authentication</DialogTitle>

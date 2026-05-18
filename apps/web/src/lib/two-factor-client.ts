@@ -51,7 +51,7 @@ export function customTwoFactorClient(options: CustomTwoFactorOptions) {
         regenerateBackupCodes: (data: { password: string }) =>
           $fetch<{ codes: string[] }>('/two-factor/regenerate-backup-codes', { method: 'POST', body: data }),
         status: () =>
-          $fetch<{ twoFactorEnabled: boolean; enabledMethods: TwoFactorMethod[] }>('/two-factor/status', { method: 'GET' }),
+          $fetch<{ twoFactorEnabled: boolean; enabledMethods: TwoFactorMethod[] }>('/two-factor/status', { method: 'GET', cache: 'no-store' }),
       },
     }),
   } satisfies BetterAuthClientPlugin

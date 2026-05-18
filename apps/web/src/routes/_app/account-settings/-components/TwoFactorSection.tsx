@@ -103,7 +103,7 @@ export function TwoFactorSection() {
                     </div>
                   </div>
                   <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                    View Codes
+                    Manage
                   </Button>
                 </div>
               </div>
