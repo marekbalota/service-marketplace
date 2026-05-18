@@ -13,7 +13,12 @@
     "search": "Search…",
     "reasonPlaceholder": "Describe the reason…",
     "selectAll": "Select all",
-    "clearSelection": "Clear selection"
+    "clearSelection": "Clear selection",
+    "dismiss": "Dismiss",
+    "preview": "Preview",
+    "image": "Image",
+    "previousImage": "Previous image",
+    "nextImage": "Next image"
   },
   "nav": {
     "login": "Log in",
@@ -207,7 +212,8 @@
     "badge": {
       "offer": "Offering",
       "request": "Requesting"
-    }
+    },
+    "deletePost": "Delete post"
   },
   "createPost": {
     "title": "Create New Posting",

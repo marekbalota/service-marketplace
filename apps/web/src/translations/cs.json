@@ -13,7 +13,12 @@
     "search": "Hledat…",
     "reasonPlaceholder": "Popište důvod…",
     "selectAll": "Vybrat vše",
-    "clearSelection": "Zrušit výběr"
+    "clearSelection": "Zrušit výběr",
+    "dismiss": "Zavřít",
+    "preview": "Náhled",
+    "image": "Obrázek",
+    "previousImage": "Předchozí obrázek",
+    "nextImage": "Následující obrázek"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -207,7 +212,8 @@
     "badge": {
       "offer": "Nabídka",
       "request": "Poptávka"
-    }
+    },
+    "deletePost": "Smazat příspěvek"
   },
   "createPost": {
     "title": "Vytvořit nový inzerát",

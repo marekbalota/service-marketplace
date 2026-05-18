@@ -60,7 +60,7 @@ export function ImagePickerGrid({
           <div key={`${preview}-${i}`} className="group relative">
             <img
               src={preview}
-              alt="Preview"
+              alt={t('common.preview')}
               className="h-32 w-full cursor-pointer rounded-lg border object-cover"
               onClick={() => setLightboxIndex(i)}
             />
@@ -105,7 +105,7 @@ export function ImagePickerGrid({
             size="icon"
             onClick={() => setRejectedCount(0)}
             className="ml-auto size-6 shrink-0 text-destructive/60 hover:text-destructive"
-            aria-label="Dismiss"
+            aria-label={t('common.dismiss')}
           >
             <X className="size-3.5" />
           </Button>
@@ -113,7 +113,7 @@ export function ImagePickerGrid({
       )}
 
       <ImageLightbox
-        images={previews.map((src) => ({ src, alt: 'Preview' }))}
+        images={previews.map((src) => ({ src, alt: t('common.preview') }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}
