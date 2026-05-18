@@ -2,6 +2,8 @@ import { Loader2 } from 'lucide-react'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
+import i18n from '#/lib/i18n'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -23,30 +25,25 @@ import {
 
 const banFormSchema = z
   .object({
-    reason: z.string().min(1, 'Reason is required'),
+    reason: z.string().min(1),
     durationType: z.enum(['permanent', 'until-date']),
     expiresAt: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.durationType === 'until-date') {
       if (!data.expiresAt) {
-        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'Expiry date is required' })
+        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: i18n.t('validation.expiryRequired') })
       } else if (new Date(data.expiresAt) <= new Date()) {
         ctx.addIssue({
           code: 'custom',
           path: ['expiresAt'],
-          message: 'Expiry date must be in the future',
+          message: i18n.t('validation.expiryFuture'),
         })
       }
     }
   })
 
 type BanFormValues = z.infer<typeof banFormSchema>
-
-const durationLabels: Record<string, string> = {
-  permanent: 'Permanent',
-  'until-date': 'Until date',
-}
 
 export function BanDialog({
   open,
@@ -59,6 +56,7 @@ export function BanDialog({
   onSubmit: (reason: string, expiresAt?: Date) => Promise<void>
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const { control, handleSubmit, watch, reset, setError, formState } = useForm<BanFormValues>({
     resolver: zodResolver(banFormSchema),
     mode: 'onTouched',
@@ -66,6 +64,11 @@ export function BanDialog({
   })
 
   const durationType = watch('durationType')
+
+  const durationLabels: Record<string, string> = {
+    permanent: t('admin.ban.permanent'),
+    'until-date': t('admin.ban.untilDate'),
+  }
 
   const submit: SubmitHandler<BanFormValues> = async (values) => {
     const expiresAt =
@@ -76,7 +79,7 @@ export function BanDialog({
       await onSubmit(values.reason, expiresAt)
       reset()
     } catch {
-      setError('root', { message: 'Failed to ban user. Please try again.' })
+      setError('root', { message: t('admin.ban.failed') })
     }
   }
 
@@ -92,7 +95,7 @@ export function BanDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ban {userName}</DialogTitle>
+          <DialogTitle>{t('admin.ban.title', { userName })}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(submit)} className="space-y-4">
@@ -101,11 +104,11 @@ export function BanDialog({
             name="reason"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <label className="text-sm font-medium">Reason *</label>
+                <label className="text-sm font-medium">{t('admin.ban.reason')}</label>
                 <Textarea
                   {...field}
                   aria-invalid={fieldState.invalid}
-                  placeholder="Describe the reason for this ban..."
+                  placeholder={t('admin.ban.reasonPlaceholder')}
                   rows={3}
                 />
                 <FieldError errors={[fieldState.error]} />
@@ -118,7 +121,7 @@ export function BanDialog({
             name="durationType"
             render={({ field }) => (
               <Field>
-                <label className="text-sm font-medium">Duration</label>
+                <label className="text-sm font-medium">{t('admin.ban.duration')}</label>
                 <Select
                   value={field.value}
                   onValueChange={(v) => {
@@ -147,7 +150,7 @@ export function BanDialog({
               name="expiresAt"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <label className="text-sm font-medium">Expiry date</label>
+                  <label className="text-sm font-medium">{t('admin.ban.expiryDate')}</label>
                   <Input
                     {...field}
                     type="date"
@@ -170,7 +173,7 @@ export function BanDialog({
                 onClose()
               }}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -178,7 +181,7 @@ export function BanDialog({
               disabled={formState.isSubmitting || !formState.isValid}
             >
               {formState.isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-              Ban User
+              {t('admin.ban.submit')}
             </Button>
           </DialogFooter>
         </form>

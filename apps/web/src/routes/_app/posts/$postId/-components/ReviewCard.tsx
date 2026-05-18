@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Star, Trash2, Flag } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { cn } from '#/lib/utils'
@@ -37,6 +38,7 @@ export function ReviewCard({
   onReport: (id: string) => void
   isAuthenticated: boolean
 }) {
+  const { t } = useTranslation()
   const { activeProfile } = useActiveProfile()
   const profileId = activeProfile?.userProfileId
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -80,7 +82,7 @@ export function ReviewCard({
                   'opacity-0 group-hover:opacity-100',
                 )}
                 onClick={() => onReport(review.reviewId)}
-                aria-label="Report review"
+                aria-label={t('posts.detail.reportReview')}
                 tabIndex={-1}
               >
                 <Flag className="size-3.5" />

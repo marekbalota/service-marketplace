@@ -1,5 +1,6 @@
 import { MapPin, User, DollarSign, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '#/components/ui/badge'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
@@ -37,6 +38,7 @@ export function PostCard({
   favouriteDisabled,
   showFavouriteButton = true,
 }: PostCardProps) {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
   const price = post.price ? parseFloat(post.price) : null
@@ -53,7 +55,7 @@ export function PostCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Delete post"
+                  aria-label={t('posts.deletePost')}
                   className="text-muted-foreground hover:text-destructive"
                   disabled={deleteDisabled}
                   onClick={(e) => {

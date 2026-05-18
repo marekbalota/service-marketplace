@@ -3,6 +3,7 @@ import { wrapEdenError } from '#/lib/api-error'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -31,6 +32,7 @@ export const Route = createFileRoute('/_app/admin/roles')({
 })
 
 function ManageRoles() {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
   const userPriority = user?.role?.priority ?? 0
@@ -38,11 +40,11 @@ function ManageRoles() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/admin' })} label="Back to Admin" />
+      <BackButton onClick={() => navigate({ to: '/admin' })} label={t('admin.backToAdmin')} />
 
       <PageHeader
-        title="Manage Roles"
-        description="Configure user roles and permissions for the platform"
+        title={t('admin.roles.title')}
+        description={t('admin.roles.subtitle')}
         action={
           <Suspense fallback={<Skeleton className="h-9 w-32" />}>
             <CreateRoleAction userPermissionNames={userPermissionNames} />
@@ -58,6 +60,7 @@ function ManageRoles() {
 }
 
 function CreateRoleAction({ userPermissionNames }: { userPermissionNames: string[] }) {
+  const { t } = useTranslation()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const { data: permissions } = useSuspenseQuery(permissionsQueryOptions)
   const queryClient = useQueryClient()
@@ -82,14 +85,14 @@ function CreateRoleAction({ userPermissionNames }: { userPermissionNames: string
     <>
       <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
         <Plus className="size-4" />
-        Create Role
+        {t('admin.roles.createRole')}
       </Button>
       <RoleDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        title="Create New Role"
-        description="Define a new role with specific permissions"
-        submitLabel="Create Role"
+        title={t('admin.roles.createTitle')}
+        description={t('admin.roles.createDesc')}
+        submitLabel={t('admin.roles.createRole')}
         permissions={permissions}
         grantablePermissionIds={grantablePermissionIds}
         onSubmit={(values) => createMutation.mutateAsync(values)}

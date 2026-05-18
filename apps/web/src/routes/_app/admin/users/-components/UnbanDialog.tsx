@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 
 export function UnbanDialog({
@@ -11,11 +12,12 @@ export function UnbanDialog({
   onConfirm: () => Promise<void>
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <ConfirmDialog
       open={open}
-      title={`Unban ${userName}?`}
-      description="This will restore full access for this user."
+      title={t('admin.unban.title', { userName })}
+      description={t('admin.unban.description')}
       onConfirm={onConfirm}
       onClose={onClose}
     />

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { createFileRoute, redirect, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
@@ -20,6 +21,7 @@ export const Route = createFileRoute('/_auth/verify-email/')({
 })
 
 function VerifyEmailPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { email } = Route.useSearch()
   const [cooldown, setCooldown] = useState(0)
@@ -72,17 +74,16 @@ function VerifyEmailPage() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <Mail className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl">Check your email</CardTitle>
+        <CardTitle className="text-2xl">{t('auth.verifyEmail.title')}</CardTitle>
         <CardDescription>
           {email
-            ? `We sent a verification link to ${email}`
-            : 'We sent a verification link to your email address'}
+            ? t('auth.verifyEmail.sentTo', { email })
+            : t('auth.verifyEmail.sentGeneric')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-center text-sm text-muted-foreground">
-          Click the link in the email to verify your account. This page will sign you in
-          automatically once verified.
+          {t('auth.verifyEmail.instruction')}
         </p>
         {email && (
           <Button
@@ -91,13 +92,13 @@ function VerifyEmailPage() {
             variant="outline"
             className="w-full"
           >
-            {cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend verification email'}
+            {cooldown > 0 ? t('auth.verifyEmail.resendCooldown', { cooldown }) : t('auth.verifyEmail.resend')}
           </Button>
         )}
         {resendError && <p className="text-center text-sm text-destructive">{resendError}</p>}
         <div className="text-center">
           <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
-            Already have an account? Sign in
+            {t('auth.verifyEmail.hasAccount')}
           </Link>
         </div>
       </CardContent>

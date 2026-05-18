@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,7 +18,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field
 import { parseAuthErrorBody } from '#/lib/api-error'
 
 const schema = z.object({
-  newEmail: z.email('Please enter a valid email'),
+  newEmail: z.email(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -29,6 +30,7 @@ export function ChangeEmailDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { newEmail: '' },
@@ -45,20 +47,20 @@ export function ChangeEmailDialog({
     if (error) {
       const body = parseAuthErrorBody(error)
       form.setError('root', {
-        message: (body?.message as string) ?? error.message ?? 'An unexpected error occurred',
+        message: (body?.message as string) ?? error.message ?? t('error.unexpected'),
       })
       return
     }
     handleOpenChange(false)
-    toast.success("Check your inbox — we've sent a confirmation link to your current email.")
+    toast.success(t('accountSettings.changeEmailDialog.successMessage'))
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Change Email</DialogTitle>
-          <DialogDescription>Update your account email address.</DialogDescription>
+          <DialogTitle>{t('accountSettings.changeEmailDialog.title')}</DialogTitle>
+          <DialogDescription>{t('accountSettings.changeEmailDialog.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -67,12 +69,12 @@ export function ChangeEmailDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-email">New Email</FieldLabel>
+                  <FieldLabel htmlFor="new-email">{t('accountSettings.changeEmailDialog.newEmail')}</FieldLabel>
                   <Input
                     {...field}
                     id="new-email"
                     type="email"
-                    placeholder="new@example.com"
+                    placeholder={t('accountSettings.changeEmailDialog.newEmailPlaceholder')}
                     autoComplete="email"
                     aria-invalid={fieldState.invalid}
                     disabled={form.formState.isSubmitting}
@@ -85,10 +87,12 @@ export function ChangeEmailDialog({
           <FieldError errors={[form.formState.errors.root]} />
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isValid}>
-              {form.formState.isSubmitting ? 'Sending…' : 'Change Email'}
+              {form.formState.isSubmitting
+                ? t('accountSettings.changeEmailDialog.submitting')
+                : t('accountSettings.changeEmail')}
             </Button>
           </DialogFooter>
         </form>

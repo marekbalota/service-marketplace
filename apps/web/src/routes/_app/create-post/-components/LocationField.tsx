@@ -1,6 +1,7 @@
 import { Controller, type Control, type FieldValues } from 'react-hook-form'
 import { MapPin } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { formatLocation } from '#/lib/format'
 import { profileLocationsQueryOptions } from '#/lib/queries/profiles'
 import { Button } from '#/components/ui/button'
@@ -29,6 +30,7 @@ export function LocationField<T extends FieldValues>({
   onToggle,
 }: LocationFieldProps<T>) {
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
+  const { t } = useTranslation()
   const control = controlProp as Control<FieldValues, any>
   const { data: previousLocations = [] } = useQuery(profileLocationsQueryOptions(profileId))
 
@@ -39,11 +41,11 @@ export function LocationField<T extends FieldValues>({
           <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20">
             <MapPin className="size-5 text-orange-600 dark:text-orange-300" />
           </div>
-          <span className="text-base font-semibold">Location (Optional)</span>
+          <span className="text-base font-semibold">{t('createPost.locationOptional')}</span>
         </div>
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2" onClick={onToggle}>
           <MapPin className="size-4" />
-          {isManualLocation ? 'Use Previous Location' : 'Enter New Location'}
+          {isManualLocation ? t('createPost.usePreviousLocation') : t('createPost.enterNewLocation')}
         </Button>
       </div>
 
@@ -62,7 +64,7 @@ export function LocationField<T extends FieldValues>({
                 disabled={previousLocations.length === 0}
               >
                 <SelectTrigger className="!h-11 w-full">
-                  <SelectValue placeholder="Select from your previous locations">
+                  <SelectValue placeholder={t('createPost.selectPreviousLocation')}>
                     {field.value
                       ? formatLocation(
                           previousLocations.find((l) => l.locationId === field.value) ?? {},
@@ -80,7 +82,7 @@ export function LocationField<T extends FieldValues>({
               </Select>
               {previousLocations.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No previous locations. Click 'Enter New Location' to add one.
+                  {t('createPost.noPreviousLocations')}
                 </p>
               )}
             </div>
@@ -95,11 +97,11 @@ export function LocationField<T extends FieldValues>({
                 name="country"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="country">Country</FieldLabel>
+                    <FieldLabel htmlFor="country">{t('profiles.location.country')}</FieldLabel>
                     <Input
                       {...field}
                       id="country"
-                      placeholder="e.g., Czech Republic"
+                      placeholder={t('profiles.location.countryPlaceholder')}
                       aria-invalid={fieldState.invalid}
                     />
                     <FieldError errors={[fieldState.error]} />
@@ -111,11 +113,11 @@ export function LocationField<T extends FieldValues>({
                 name="region"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="region">Region/State</FieldLabel>
+                    <FieldLabel htmlFor="region">{t('profiles.location.region')}</FieldLabel>
                     <Input
                       {...field}
                       id="region"
-                      placeholder="e.g., South Moravian Region"
+                      placeholder={t('profiles.location.regionPlaceholder')}
                       aria-invalid={fieldState.invalid}
                     />
                     <FieldError errors={[fieldState.error]} />
@@ -128,11 +130,11 @@ export function LocationField<T extends FieldValues>({
               name="city"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="city">City</FieldLabel>
+                  <FieldLabel htmlFor="city">{t('profiles.location.city')}</FieldLabel>
                   <Input
                     {...field}
                     id="city"
-                    placeholder="e.g., Brno"
+                    placeholder={t('profiles.location.cityPlaceholder')}
                     aria-invalid={fieldState.invalid}
                   />
                   <FieldError errors={[fieldState.error]} />
@@ -145,8 +147,8 @@ export function LocationField<T extends FieldValues>({
                 name="street"
                 render={({ field }) => (
                   <Field className="md:col-span-2">
-                    <FieldLabel htmlFor="street">Street</FieldLabel>
-                    <Input {...field} id="street" placeholder="e.g., Botanická" />
+                    <FieldLabel htmlFor="street">{t('profiles.location.street')}</FieldLabel>
+                    <Input {...field} id="street" placeholder={t('profiles.location.streetPlaceholder')} />
                   </Field>
                 )}
               />
@@ -155,8 +157,8 @@ export function LocationField<T extends FieldValues>({
                 name="houseNumber"
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel htmlFor="houseNumber">House No.</FieldLabel>
-                    <Input {...field} id="houseNumber" placeholder="e.g., 68a" />
+                    <FieldLabel htmlFor="houseNumber">{t('profiles.location.houseNumber')}</FieldLabel>
+                    <Input {...field} id="houseNumber" placeholder={t('profiles.location.houseNumberPlaceholder')} />
                   </Field>
                 )}
               />

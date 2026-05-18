@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { User, ChevronDown } from 'lucide-react'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '#/components/ui/sheet'
 import { ThemeToggle } from './ThemeToggle'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { UserProfilePanel } from './UserProfilePanel'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 
 export function Header() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
@@ -26,14 +29,15 @@ export function Header() {
             </h1>
           </Link>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
             {user === null && (
               <>
                 <Link to="/login" className={cn(buttonVariants({ variant: 'outline' }))}>
-                  Log in
+                  {t('nav.login')}
                 </Link>
                 <Link to="/register" className={cn(buttonVariants())}>
-                  Register
+                  {t('nav.register')}
                 </Link>
               </>
             )}

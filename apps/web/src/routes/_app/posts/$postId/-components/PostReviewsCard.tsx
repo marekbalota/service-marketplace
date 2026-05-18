@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -17,6 +18,7 @@ import { ReviewCard } from './ReviewCard'
 import { ReviewForm } from './ReviewForm'
 
 export function PostReviewsCard({ postId }: { postId: string }) {
+  const { t } = useTranslation()
   const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
@@ -48,7 +50,7 @@ export function PostReviewsCard({ postId }: { postId: string }) {
       <Card className="lg:col-span-2 lg:row-start-2">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Reviews ({post.reviewCount})</h2>
+            <h2 className="text-lg font-medium">{t('posts.detail.reviews', { count: post.reviewCount })}</h2>
             {showReviewButton && (
               <Button
                 variant="outline"
@@ -57,19 +59,19 @@ export function PostReviewsCard({ postId }: { postId: string }) {
                 onClick={() => setShowReviewForm(true)}
               >
                 <Star className="size-4" />
-                Leave a Review
+                {t('posts.detail.leaveReview')}
               </Button>
             )}
             {hasReviewed && (
               <p className="text-center text-sm text-muted-foreground">
-                You have already reviewed this post
+                {t('posts.detail.alreadyReviewed')}
               </p>
             )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {post.reviews.length === 0 ? (
-            <EmptyState message="No reviews yet." />
+            <EmptyState message={t('posts.detail.noReviews')} />
           ) : (
             <div className="space-y-4">
               {post.reviews.map(
@@ -104,7 +106,7 @@ export function PostReviewsCard({ postId }: { postId: string }) {
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Leave a Review</DialogTitle>
+            <DialogTitle>{t('posts.detail.leaveReview')}</DialogTitle>
           </DialogHeader>
           {activeProfile && (
             <ReviewForm
@@ -124,7 +126,7 @@ export function PostReviewsCard({ postId }: { postId: string }) {
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Report Review</DialogTitle>
+            <DialogTitle>{t('posts.detail.reportReview')}</DialogTitle>
           </DialogHeader>
           {reportingReviewId && (
             <ReportForm
@@ -151,9 +153,9 @@ export function PostReviewsCard({ postId }: { postId: string }) {
 
       <ConfirmDialog
         open={deletingReviewId !== null}
-        title="Delete review?"
-        description="This will permanently remove your review. This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('posts.detail.deleteReviewTitle')}
+        description={t('posts.detail.deleteReviewMessage')}
+        confirmLabel={t('common.delete')}
         destructive
         isPending={deleteMutation.isPending}
         onConfirm={() => {

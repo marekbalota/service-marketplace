@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { EmptyState } from '#/components/EmptyState'
 import { PaginationBar } from '#/components/PaginationBar'
 import { StatCard } from '../../-components/StatCard'
@@ -14,6 +15,7 @@ type Props = {
 }
 
 export function ReportsContent({ targetType, categoryId, status, page }: Props) {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { data } = useSuspenseQuery(
     adminReportsQueryOptions({ targetType, categoryId, status, page }),
@@ -25,17 +27,17 @@ export function ReportsContent({ targetType, categoryId, status, page }: Props) 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard value={data.total} label="Total Reports" />
-        <StatCard value={data.totalPending} label="Pending" />
-        <StatCard value={data.totalResolved} label="Resolved" />
-        <StatCard value={data.totalDismissed} label="Dismissed" />
+        <StatCard value={data.total} label={t('admin.reports.totalReports')} />
+        <StatCard value={data.totalPending} label={t('admin.reports.pending')} />
+        <StatCard value={data.totalResolved} label={t('admin.reports.resolved')} />
+        <StatCard value={data.totalDismissed} label={t('admin.reports.dismissed')} />
       </div>
 
       <div className="space-y-4">
         {data.items.map((report) => (
           <ReportCard key={report.reportId} report={report} />
         ))}
-        {data.items.length === 0 && <EmptyState message="No reports found." />}
+        {data.items.length === 0 && <EmptyState message={t('admin.reports.noReports')} />}
       </div>
 
       {data.totalPages > 1 && (

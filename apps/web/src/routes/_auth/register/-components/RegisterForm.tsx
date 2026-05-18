@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,14 +15,15 @@ import { Input } from '#/components/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 
 const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.email('Please enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(1),
+  email: z.email(),
+  password: z.string().min(8),
 })
 
 type RegisterValues = z.infer<typeof registerSchema>
 
 export function RegisterForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [captchaVisible, setCaptchaVisible] = useState(false)
@@ -70,12 +72,12 @@ export function RegisterForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="register-name">Full Name</FieldLabel>
+              <FieldLabel htmlFor="register-name">{t('auth.register.fullName')}</FieldLabel>
               <Input
                 {...field}
                 id="register-name"
                 type="text"
-                placeholder="John Doe"
+                placeholder={t('auth.register.fullNamePlaceholder')}
                 autoComplete="name"
                 aria-invalid={fieldState.invalid}
               />
@@ -88,12 +90,12 @@ export function RegisterForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="register-email">Email</FieldLabel>
+              <FieldLabel htmlFor="register-email">{t('auth.register.email')}</FieldLabel>
               <Input
                 {...field}
                 id="register-email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.register.emailPlaceholder')}
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
               />
@@ -106,7 +108,7 @@ export function RegisterForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="register-password">Password</FieldLabel>
+              <FieldLabel htmlFor="register-password">{t('auth.register.password')}</FieldLabel>
               <Input
                 {...field}
                 id="register-password"
@@ -137,7 +139,7 @@ export function RegisterForm() {
         className="w-full"
         disabled={!captchaToken || form.formState.isSubmitting}
       >
-        {form.formState.isSubmitting ? 'Registering…' : 'Register'}
+        {form.formState.isSubmitting ? t('auth.register.submitting') : t('auth.register.submit')}
       </Button>
     </form>
   )

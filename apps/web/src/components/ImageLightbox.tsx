@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent } from '#/components/ui/dialog'
 import { Button } from '#/components/ui/button'
 
@@ -16,6 +17,7 @@ interface ImageLightboxProps {
 }
 
 export function ImageLightbox({ images, initialIndex = 0, open, onClose }: ImageLightboxProps) {
+  const { t } = useTranslation()
   const [index, setIndex] = React.useState(initialIndex)
 
   // Sync index when the lightbox opens with a new initialIndex
@@ -66,7 +68,7 @@ export function ImageLightbox({ images, initialIndex = 0, open, onClose }: Image
               size="icon"
               onClick={prev}
               className="absolute left-0 z-10"
-              aria-label="Previous image"
+              aria-label={t('common.previousImage')}
             >
               <ChevronLeft className="size-6" />
             </Button>
@@ -75,7 +77,7 @@ export function ImageLightbox({ images, initialIndex = 0, open, onClose }: Image
           <img
             key={current.src}
             src={current.src}
-            alt={current.alt ?? 'Image'}
+            alt={current.alt ?? t('common.image')}
             className="max-h-[80vh] max-w-full rounded object-contain"
           />
 
@@ -85,7 +87,7 @@ export function ImageLightbox({ images, initialIndex = 0, open, onClose }: Image
               size="icon"
               onClick={next}
               className="absolute right-0 z-10"
-              aria-label="Next image"
+              aria-label={t('common.nextImage')}
             >
               <ChevronRight className="size-6" />
             </Button>

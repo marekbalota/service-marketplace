@@ -1,51 +1,22 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { PageHeader } from '#/components/PageHeader'
 import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared'
 import { useCurrentUser } from '#/lib/queries/users'
-
-const adminOptions = [
-  {
-    id: 'users',
-    title: 'Manage Accounts',
-    description: 'View and manage user accounts, permissions, and profiles',
-    icon: Users,
-    path: '/admin/users',
-  },
-  {
-    id: 'roles',
-    title: 'Manage Roles',
-    description: 'Configure user roles and permissions for the platform',
-    icon: Shield,
-    path: '/admin/roles',
-  },
-  {
-    id: 'reports',
-    title: 'Manage Reports',
-    description: 'Review user reports, moderate content, and manage bans',
-    icon: Flag,
-    path: '/admin/reports',
-  },
-  {
-    id: 'categories',
-    title: 'Manage Categories',
-    description: 'Create, edit, and organize service categories',
-    icon: FolderTree,
-    path: '/admin/categories',
-  },
-]
 
 export const Route = createFileRoute('/_app/admin/')({
   component: AdminDashboard,
 })
 
 function AdminDashboard() {
+  const { t } = useTranslation()
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
       <PageHeader
-        title="Admin Dashboard"
-        description="Manage platform settings, users, and content moderation"
+        title={t('admin.title')}
+        description={t('admin.subtitle')}
       />
 
       <AdminOptions />
@@ -53,35 +24,35 @@ function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
         <Card>
           <CardHeader>
-            <CardTitle>Platform Overview</CardTitle>
-            <CardDescription>Key metrics at a glance</CardDescription>
+            <CardTitle>{t('admin.overview.title')}</CardTitle>
+            <CardDescription>{t('admin.overview.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-blue-100 dark:bg-blue-500/20 rounded-lg border border-blue-200 dark:border-blue-400/30 hover:bg-blue-200 dark:hover:bg-blue-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-300">1,247</p>
-                <p className="text-sm text-muted-foreground mt-1">Total Users</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.totalUsers')}</p>
                 <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 font-medium">
-                  View Analytics →
+                  {t('admin.overview.viewAnalytics')}
                 </p>
               </div>
               <div className="p-4 bg-green-100 dark:bg-green-500/20 rounded-lg border border-green-200 dark:border-green-400/30 hover:bg-green-200 dark:hover:bg-green-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-green-600 dark:text-green-300">342</p>
-                <p className="text-sm text-muted-foreground mt-1">Active Posts</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.activePosts')}</p>
                 <p className="text-xs text-green-600 dark:text-green-300 mt-2 font-medium">
-                  View Analytics →
+                  {t('admin.overview.viewAnalytics')}
                 </p>
               </div>
               <div className="p-4 bg-orange-100 dark:bg-orange-500/20 rounded-lg border border-orange-200 dark:border-orange-400/30 hover:bg-orange-200 dark:hover:bg-orange-500/25 transition-colors cursor-pointer">
                 <p className="text-3xl font-bold text-orange-600 dark:text-orange-300">1,856</p>
-                <p className="text-sm text-muted-foreground mt-1">Total Messages</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.totalMessages')}</p>
                 <p className="text-xs text-orange-600 dark:text-orange-300 mt-2 font-medium">
-                  View Analytics →
+                  {t('admin.overview.viewAnalytics')}
                 </p>
               </div>
               <div className="p-4 bg-red-100 dark:bg-red-500/20 rounded-lg border border-red-200 dark:border-red-400/30">
                 <p className="text-3xl font-bold text-red-600 dark:text-red-300">12</p>
-                <p className="text-sm text-muted-foreground mt-1">Active Bans</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.activeBans')}</p>
               </div>
             </div>
           </CardContent>
@@ -89,8 +60,8 @@ function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest platform events</CardDescription>
+            <CardTitle>{t('admin.recentActivity.title')}</CardTitle>
+            <CardDescription>{t('admin.recentActivity.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -131,8 +102,40 @@ function AdminDashboard() {
 }
 
 function AdminOptions() {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const permissions = user?.role?.permissions ?? []
+
+  const adminOptions = [
+    {
+      id: 'users',
+      title: t('admin.manageAccounts'),
+      description: t('admin.manageAccountsDesc'),
+      icon: Users,
+      path: '/admin/users',
+    },
+    {
+      id: 'roles',
+      title: t('admin.manageRoles'),
+      description: t('admin.manageRolesDesc'),
+      icon: Shield,
+      path: '/admin/roles',
+    },
+    {
+      id: 'reports',
+      title: t('admin.manageReports'),
+      description: t('admin.manageReportsDesc'),
+      icon: Flag,
+      path: '/admin/reports',
+    },
+    {
+      id: 'categories',
+      title: t('admin.manageCategories'),
+      description: t('admin.manageCategoriesDesc'),
+      icon: FolderTree,
+      path: '/admin/categories',
+    },
+  ]
 
   const canManageUsers = hasAnyPermission(permissions, [
     Permissions.AdminUsersView,

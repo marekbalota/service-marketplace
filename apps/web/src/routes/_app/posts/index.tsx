@@ -3,6 +3,7 @@ import { Suspense, useState, useEffect } from 'react'
 import { useDebouncer } from '@tanstack/react-pacer'
 import { z } from 'zod'
 import { Plus, Heart } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -109,6 +110,7 @@ function PageSkeleton() {
 }
 
 function HomePage() {
+  const { t } = useTranslation()
   const {
     q = '',
     type = 'all',
@@ -152,7 +154,7 @@ function HomePage() {
     ...(isAuthenticated
       ? [
           {
-            label: 'Favourites',
+            label: t('posts.favourites'),
             control: (
               <Button
                 variant={favourites ? 'default' : 'outline'}
@@ -160,17 +162,17 @@ function HomePage() {
                 onClick={toggleFavourites}
               >
                 <Heart className={cn('size-4', favourites && 'fill-red-500')} />
-                {favourites ? 'Favourites' : 'Show Favourites'}
+                {favourites ? t('posts.favourites') : t('posts.showFavourites')}
               </Button>
             ),
           },
         ]
       : []),
-    { label: 'Post Type', control: <PostTypeSelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Category', control: <CategorySelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Rating', control: <RatingSelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Sort By', control: <SortSelect />, desktopWidth: 'w-[200px]' },
-    { label: 'Locations', control: <LocationSelect />, desktopWidth: 'w-[240px]' },
+    { label: t('posts.postType'), control: <PostTypeSelect />, desktopWidth: 'w-[200px]' },
+    { label: t('posts.category'), control: <CategorySelect />, desktopWidth: 'w-[200px]' },
+    { label: t('posts.ratingLabel'), control: <RatingSelect />, desktopWidth: 'w-[200px]' },
+    { label: t('posts.sortBy'), control: <SortSelect />, desktopWidth: 'w-[200px]' },
+    { label: t('posts.locations'), control: <LocationSelect />, desktopWidth: 'w-[240px]' },
   ]
 
   return (
@@ -178,15 +180,15 @@ function HomePage() {
       <div className="border-b bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <SearchFilterBar
-            searchPlaceholder="Search services, providers, or keywords..."
+            searchPlaceholder={t('posts.searchPlaceholder')}
             searchValue={inputValue}
             onSearchChange={(value) => {
               setInputValue(value)
               searchDebouncer.maybeExecute(value)
             }}
             filters={filters}
-            sheetTitle="Filters & Sort"
-            sheetDescription="Refine your search results"
+            sheetTitle={t('posts.filters')}
+            sheetDescription={t('posts.filtersSubtitle')}
             action={
               isAuthenticated ? (
                 <Link
@@ -194,7 +196,7 @@ function HomePage() {
                   className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}
                 >
                   <Plus className="size-4" />
-                  <span className="hidden sm:inline">New Post</span>
+                  <span className="hidden sm:inline">{t('posts.newPost')}</span>
                 </Link>
               ) : undefined
             }

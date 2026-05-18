@@ -1,10 +1,12 @@
 import { Controller, type Control } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { Field, FieldGroup, FieldLabel, FieldError } from '#/components/ui/field'
 import { type ProfileFormValues } from './profileSchema'
 
 export function ProfileFields({ control }: { control: Control<ProfileFormValues> }) {
+  const { t } = useTranslation()
   return (
     <FieldGroup>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -13,8 +15,8 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           name="name"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Name *</FieldLabel>
-              <Input placeholder="e.g., John Smith" aria-invalid={fieldState.invalid} {...field} />
+              <FieldLabel>{t('profiles.name')} *</FieldLabel>
+              <Input placeholder={t('profiles.namePlaceholder')} aria-invalid={fieldState.invalid} {...field} />
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}
@@ -24,10 +26,10 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Email *</FieldLabel>
+              <FieldLabel>{t('profiles.emailLabel')} *</FieldLabel>
               <Input
                 type="email"
-                placeholder="email@example.com"
+                placeholder={t('profiles.emailPlaceholder')}
                 aria-invalid={fieldState.invalid}
                 {...field}
               />
@@ -42,10 +44,10 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           name="phoneNumber"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Phone Number</FieldLabel>
+              <FieldLabel>{t('profiles.phoneNumber')}</FieldLabel>
               <Input
                 type="tel"
-                placeholder="+1 (555) 123-4567"
+                placeholder={t('profiles.phoneNumberPlaceholder')}
                 aria-invalid={fieldState.invalid}
                 {...field}
               />
@@ -58,10 +60,10 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           name="fax"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Fax</FieldLabel>
+              <FieldLabel>{t('profiles.fax')}</FieldLabel>
               <Input
                 type="tel"
-                placeholder="+1 (555) 123-4568"
+                placeholder={t('profiles.faxPlaceholder')}
                 aria-invalid={fieldState.invalid}
                 {...field}
               />
@@ -75,9 +77,9 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
         name="bio"
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>Bio</FieldLabel>
+            <FieldLabel>{t('profiles.bio')}</FieldLabel>
             <Textarea
-              placeholder="Tell others about yourself or your business..."
+              placeholder={t('profiles.bioPlaceholder')}
               rows={3}
               className="resize-none"
               aria-invalid={fieldState.invalid}

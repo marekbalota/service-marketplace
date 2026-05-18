@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Select,
   SelectContent,
@@ -9,15 +10,17 @@ import { Route } from '../index'
 
 type PostTypeFilter = 'all' | 'offer' | 'request'
 
-const POST_TYPE_LABELS: Record<PostTypeFilter, string> = {
-  all: 'All Types',
-  offer: 'Offers Only',
-  request: 'Requests Only',
-}
-
 export function PostTypeSelect() {
+  const { t } = useTranslation()
   const { type = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const POST_TYPE_LABELS: Record<PostTypeFilter, string> = {
+    all: t('posts.allTypes'),
+    offer: t('posts.offersOnly'),
+    request: t('posts.requestsOnly'),
+  }
+
   return (
     <Select
       value={type}

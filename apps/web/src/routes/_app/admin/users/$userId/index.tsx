@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Mail, Calendar, LogIn, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { BackButton } from '#/components/BackButton'
 import { PageHeader } from '#/components/PageHeader'
@@ -55,6 +56,7 @@ function UserDetailSkeleton() {
 }
 
 function UserDetailContent({ userId }: { userId: string }) {
+  const { t } = useTranslation()
   const { data: user } = useSuspenseQuery(userDetailQueryOptions(userId))
   const { data: profiles = [] } = useSuspenseQuery(userProfilesQueryOptions(userId))
   const { data: currentUser } = useCurrentUser()
@@ -102,7 +104,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                       user.isBanned ? 'bg-banned-bg text-banned-fg' : 'bg-active-bg text-active-fg'
                     }
                   >
-                    {user.isBanned ? 'banned' : 'active'}
+                    {user.isBanned ? t('admin.users.banned') : t('admin.users.active')}
                   </Badge>
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
@@ -112,7 +114,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4" />
-                    <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                    <span>{t('admin.users.joined', { date: new Date(user.createdAt).toLocaleDateString() })}</span>
                   </div>
                 </div>
               </div>
@@ -126,7 +128,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                   onClick={() => impersonateMutation.mutate()}
                 >
                   <LogIn className="size-4" />
-                  Impersonate User
+                  {t('admin.users.detail.impersonate')}
                 </Button>
               ) : (
                 <Tooltip>
@@ -135,15 +137,15 @@ function UserDetailContent({ userId }: { userId: string }) {
                       <span tabIndex={0} className="inline-flex">
                         <Button variant="outline" className="gap-2" disabled>
                           <LogIn className="size-4" />
-                          Impersonate User
+                          {t('admin.users.detail.impersonate')}
                         </Button>
                       </span>
                     }
                   />
                   <TooltipContent>
                     {isImpersonating
-                      ? 'Cannot start a new impersonation session while already impersonating'
-                      : 'Cannot impersonate users with equal or higher role priority'}
+                      ? t('admin.users.detail.impersonateAlreadyActive')
+                      : t('admin.users.detail.impersonateHigherRole')}
                   </TooltipContent>
                 </Tooltip>
               ))}
@@ -153,11 +155,11 @@ function UserDetailContent({ userId }: { userId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>User Profiles ({profiles.length})</CardTitle>
+          <CardTitle>{t('admin.users.detail.userProfiles', { count: profiles.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {profiles.length === 0 ? (
-            <EmptyState message="No profiles found for this user." />
+            <EmptyState message={t('admin.users.detail.noProfiles')} />
           ) : (
             <div className="space-y-4">
               {profiles.map((profile) => (
@@ -183,7 +185,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                             {profile.fax && <span>📠 {profile.fax}</span>}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Created {new Date(profile.createdAt).toLocaleDateString()}
+                            {t('admin.users.detail.created', { date: new Date(profile.createdAt).toLocaleDateString() })}
                           </p>
                         </div>
                       </div>
@@ -195,7 +197,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                         }
                       >
                         <Eye className="size-4" />
-                        View Posts
+                        {t('admin.users.detail.viewPosts')}
                       </Link>
                     </div>
                   </CardContent>
@@ -210,15 +212,16 @@ function UserDetailContent({ userId }: { userId: string }) {
 }
 
 function UserDetailPage() {
+  const { t } = useTranslation()
   const { userId } = Route.useParams()
   const navigate = Route.useNavigate()
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/admin/users' })} label="Back to Users" />
+      <BackButton onClick={() => navigate({ to: '/admin/users' })} label={t('admin.backToUsers')} />
       <PageHeader
-        title="User Details"
-        description="View and manage user information, profiles, and activity"
+        title={t('admin.users.detail.title')}
+        description={t('admin.users.detail.subtitle')}
       />
       <Suspense fallback={<UserDetailSkeleton />}>
         <UserDetailContent userId={userId} />

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { Suspense, useState } from 'react'
 import { useSuspenseQuery, useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { z } from 'zod'
 import { api } from '#/api'
@@ -120,8 +121,10 @@ function ProfilePostsList({
     },
   })
 
+  const { t } = useTranslation()
+
   if (posts.length === 0) {
-    return <EmptyState message={`No ${archived ? 'archived' : 'active'} posts.`} />
+    return <EmptyState message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')} />
   }
 
   return (
@@ -148,11 +151,11 @@ function ProfilePostsList({
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete post?"
-        description={`This will permanently remove "${deleteTarget?.postTitle ?? ''}". This action cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('myPostings.deleteTitle')}
+        description={t('myPostings.deleteMessage', { title: deleteTarget?.postTitle ?? '' })}
+        confirmLabel={t('myPostings.delete')}
         destructive
-        reasonLabel="Reason"
+        reasonLabel={t('admin.reports.reason')}
         reasonRequired
         onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId)}
         onClose={() => setDeleteTarget(null)}
@@ -162,6 +165,7 @@ function ProfilePostsList({
 }
 
 function ProfileDetailPage() {
+  const { t } = useTranslation()
   const { userId, profileId } = Route.useParams()
   const navigate = Route.useNavigate()
   const { tab, page = 1 } = Route.useSearch()
@@ -187,7 +191,7 @@ function ProfileDetailPage() {
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton
         onClick={() => navigate({ to: '/admin/users/$userId', params: { userId } })}
-        label="Back to User"
+        label={t('admin.backToUser')}
       />
 
       <Suspense fallback={<ProfileInfoSkeleton />}>
@@ -197,10 +201,10 @@ function ProfileDetailPage() {
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList variant="line" className="gap-6 mb-4">
           <TabsTrigger value="active">
-            Active{postCounts ? ` (${postCounts.active})` : ''}
+            {t('profiles.activeTab')}{postCounts ? ` (${postCounts.active})` : ''}
           </TabsTrigger>
           <TabsTrigger value="archived">
-            Archived{postCounts ? ` (${postCounts.archived})` : ''}
+            {t('profiles.archivedTab')}{postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="active">

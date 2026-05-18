@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import i18next from 'i18next'
 import { authClient } from '#/auth'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -18,13 +20,18 @@ import { parseAuthErrorBody } from '#/lib/api-error'
 
 const schema = z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8),
     confirmPassword: z.string(),
   })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+  .superRefine((d, ctx) => {
+    if (d.newPassword !== d.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: i18next.t('validation.passwordsMismatch'),
+        path: ['confirmPassword'],
+      })
+    }
   })
 
 type FormValues = z.infer<typeof schema>
@@ -36,6 +43,7 @@ export function ChangePasswordDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
@@ -56,20 +64,20 @@ export function ChangePasswordDialog({
     if (error) {
       const body = parseAuthErrorBody(error)
       form.setError('root', {
-        message: (body?.message as string) ?? error.message ?? 'An unexpected error occurred',
+        message: (body?.message as string) ?? error.message ?? t('error.unexpected'),
       })
       return
     }
     handleOpenChange(false)
-    toast.success("Password changed. You've been signed out of other devices.")
+    toast.success(t('accountSettings.changePasswordDialog.successMessage'))
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Change Password</DialogTitle>
-          <DialogDescription>Update your account password.</DialogDescription>
+          <DialogTitle>{t('accountSettings.changePasswordDialog.title')}</DialogTitle>
+          <DialogDescription>{t('accountSettings.changePasswordDialog.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -78,7 +86,7 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="current-password">Current Password</FieldLabel>
+                  <FieldLabel htmlFor="current-password">{t('accountSettings.changePasswordDialog.currentPassword')}</FieldLabel>
                   <Input
                     {...field}
                     id="current-password"
@@ -96,7 +104,7 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-password">New Password</FieldLabel>
+                  <FieldLabel htmlFor="new-password">{t('accountSettings.changePasswordDialog.newPassword')}</FieldLabel>
                   <Input
                     {...field}
                     id="new-password"
@@ -114,7 +122,7 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="confirm-password">Confirm New Password</FieldLabel>
+                  <FieldLabel htmlFor="confirm-password">{t('accountSettings.changePasswordDialog.confirmPassword')}</FieldLabel>
                   <Input
                     {...field}
                     id="confirm-password"
@@ -131,10 +139,12 @@ export function ChangePasswordDialog({
           <FieldError errors={[form.formState.errors.root]} />
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isValid}>
-              {form.formState.isSubmitting ? 'Saving…' : 'Change Password'}
+              {form.formState.isSubmitting
+                ? t('accountSettings.changePasswordDialog.submitting')
+                : t('accountSettings.changePassword')}
             </Button>
           </DialogFooter>
         </form>

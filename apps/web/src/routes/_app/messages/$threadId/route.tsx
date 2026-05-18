@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Skeleton } from '#/components/ui/skeleton'
 import { EmptyState } from '#/components/EmptyState'
 import { cn } from '#/lib/utils'
@@ -31,16 +32,17 @@ function ThreadPageSkeleton() {
 }
 
 function ThreadPage() {
+  const { t } = useTranslation()
   const { threadId } = Route.useParams()
   const { data: currentUser } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
 
   if (currentUser?.impersonatedBy) {
-    return <EmptyState message="Messages are not accessible during impersonation." />
+    return <EmptyState message={t('messages.impersonationBlocked')} />
   }
 
   if (!activeProfile) {
-    return <EmptyState message="No active profile. Set up a profile to use messages." />
+    return <EmptyState message={t('errors.noProfile')} />
   }
 
   return (

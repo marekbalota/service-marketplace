@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { createFileRoute, useNavigate, redirect, useRouter } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -26,8 +27,8 @@ import { PricingField } from '#/components/PricingField'
 
 const schema = z.object({
   postType: z.enum(['OFFER', 'REQUEST']),
-  postTitle: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  postTitle: z.string().min(3),
+  description: z.string().min(10),
   categoryIds: z.array(z.string()),
   price: z.string().optional(),
   rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
@@ -137,6 +138,7 @@ function CreatePostSkeleton() {
 }
 
 function CreatePostPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -240,7 +242,7 @@ function CreatePostPage() {
           <div className="flex items-center gap-3">
             <ProfileAvatar name={activeProfile.name} className="size-10 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Posting as</p>
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">{t('createPost.postingAs')}</p>
               <p className="font-semibold text-foreground">{activeProfile.name}</p>
             </div>
           </div>
@@ -249,9 +251,9 @@ function CreatePostPage() {
 
       <Card className="border-0 shadow-lg">
         <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl">Create New Posting</CardTitle>
+          <CardTitle className="text-2xl">{t('createPost.title')}</CardTitle>
           <CardDescription className="text-base">
-            Post a service you're offering or a service you're looking for
+            {t('createPost.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -267,13 +269,13 @@ function CreatePostPage() {
                     icon={FileText}
                     iconBgClassName="bg-blue-100 dark:bg-blue-500/20"
                     iconClassName="text-blue-600 dark:text-blue-300"
-                    label="Title *"
+                    label={t('createPost.titleLabel')}
                     htmlFor="postTitle"
                   />
                   <Input
                     {...field}
                     id="postTitle"
-                    placeholder="e.g., Professional Lawn Care Service"
+                    placeholder={t('createPost.titlePlaceholder')}
                     className="h-11"
                     aria-invalid={fieldState.invalid}
                   />
@@ -291,13 +293,13 @@ function CreatePostPage() {
                     icon={AlignLeft}
                     iconBgClassName="bg-muted"
                     iconClassName="text-muted-foreground"
-                    label="Description *"
+                    label={t('createPost.descriptionLabel')}
                     htmlFor="description"
                   />
                   <Textarea
                     {...field}
                     id="description"
-                    placeholder="Describe your service offering or request in detail..."
+                    placeholder={t('createPost.descriptionPlaceholder')}
                     rows={5}
                     className="resize-none"
                     aria-invalid={fieldState.invalid}
@@ -316,7 +318,7 @@ function CreatePostPage() {
                     icon={Tag}
                     iconBgClassName="bg-green-100 dark:bg-green-500/20"
                     iconClassName="text-green-600 dark:text-green-300"
-                    label="Categories (Optional)"
+                    label={t('createPost.categories')}
                   />
                   <MultiSelect
                     options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
@@ -325,8 +327,8 @@ function CreatePostPage() {
                       field.onChange(v)
                       field.onBlur()
                     }}
-                    placeholder="Select categories"
-                    searchPlaceholder="Search categories..."
+                    placeholder={t('createPost.categories')}
+                    searchPlaceholder={t('createPost.searchCategories')}
                     searchable
                     displayMode="tags"
                     aria-invalid={fieldState.invalid}
@@ -354,14 +356,14 @@ function CreatePostPage() {
                 onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending || !isValid}
                 className="h-11 flex-1"
               >
-                {mutation.isPending ? 'Creating…' : 'Create Posting'}
+                {mutation.isPending ? t('createPost.submitting') : t('createPost.submit')}
               </Button>
             </div>
           </form>

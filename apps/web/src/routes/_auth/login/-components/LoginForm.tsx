@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,14 +21,15 @@ import { Label } from '#/components/ui/label'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 
 const loginSchema = z.object({
-  email: z.email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email(),
+  password: z.string().min(1),
   rememberMe: z.boolean(),
 })
 
 type LoginValues = z.infer<typeof loginSchema>
 
 export function LoginForm({ redirect }: { redirect?: string }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -105,12 +107,12 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-email">Email</FieldLabel>
+              <FieldLabel htmlFor="login-email">{t('auth.login.email')}</FieldLabel>
               <Input
                 {...field}
                 id="login-email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.login.emailPlaceholder')}
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
               />
@@ -123,7 +125,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-password">Password</FieldLabel>
+              <FieldLabel htmlFor="login-password">{t('auth.login.password')}</FieldLabel>
               <Input
                 {...field}
                 id="login-password"
@@ -153,7 +155,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
                 }}
               />
               <Label htmlFor="login-remember-me" className="cursor-pointer">
-                Remember me
+                {t('auth.login.rememberMe')}
               </Label>
             </div>
           )}
@@ -163,7 +165,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
           search={isValidEmail ? { email: watchedEmail } : {}}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          Forgot your password?
+          {t('auth.login.forgotPassword')}
         </Link>
       </div>
       <FieldError errors={[form.formState.errors.root]} />
@@ -184,10 +186,10 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         disabled={!captchaToken || form.formState.isSubmitting || rateLimitSeconds > 0}
       >
         {rateLimitSeconds > 0
-          ? `Try again in ${formatCountdown(rateLimitSeconds)}`
+          ? t('auth.login.tryAgain', { time: formatCountdown(rateLimitSeconds) })
           : form.formState.isSubmitting
-            ? 'Signing in…'
-            : 'Log in'}
+            ? t('auth.login.submitting')
+            : t('auth.login.submit')}
       </Button>
     </form>
   )

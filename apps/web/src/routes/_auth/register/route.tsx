@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { RegisterForm } from './-components/RegisterForm'
@@ -14,19 +15,20 @@ export const Route = createFileRoute('/_auth/register')({
 })
 
 function RegisterPage() {
+  const { t } = useTranslation()
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Create Account</CardTitle>
-        <CardDescription>Get started with Service Marketplace</CardDescription>
+        <CardTitle className="text-2xl">{t('auth.register.title')}</CardTitle>
+        <CardDescription>{t('auth.register.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <RegisterForm />
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Already have an account?{' '}
+            {t('auth.register.hasAccount')}{' '}
             <Link to="/login" className="font-medium hover:text-foreground">
-              Sign in
+              {t('auth.register.signIn')}
             </Link>
           </p>
         </div>
