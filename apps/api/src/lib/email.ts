@@ -39,3 +39,11 @@ export async function sendTwoFactorOtpEmail(params: {
 }): Promise<void> {
   console.log(`[email-2fa-otp] ${params.email} → ${params.otp}`)
 }
+
+export async function sendSecurityAlertEmail(params: {
+  email: string
+  subject: string
+  message: string
+}): Promise<void> {
+  console.log(`[email-security-alert] ${params.email} — ${params.subject}: ${params.message}`)
+}

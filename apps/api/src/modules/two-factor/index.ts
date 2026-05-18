@@ -9,10 +9,10 @@ export const twoFactorRoutes = new Elysia({ prefix: '/two-factor' })
   .get(
     '/status',
     async ({ user }) => {
-      const totpEnabled = await TwoFactorService.isTotpEnabled(user.id)
+      const enabledMethods = await TwoFactorService.getEnabledMethods(user.id)
       return {
         twoFactorEnabled: user.twoFactorEnabled ?? false,
-        totpEnabled,
+        enabledMethods,
       }
     },
     {

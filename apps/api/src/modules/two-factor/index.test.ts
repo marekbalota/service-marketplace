@@ -37,7 +37,7 @@ describe('GET /two-factor/status — unauthenticated', () => {
 describe('GET /two-factor/status — authenticated, 2FA disabled', () => {
   const email = `tf-no2fa-${Date.now()}@example.com`
 
-  it('returns twoFactorEnabled=false, totpEnabled=false', async () => {
+  it('returns twoFactorEnabled=false, enabledMethods=[]', async () => {
     await setupVerifiedUser(email)
     const cookie = await getSessionCookie(email)
     const { data, status } = await client['two-factor'].status.get({
@@ -45,6 +45,6 @@ describe('GET /two-factor/status — authenticated, 2FA disabled', () => {
     })
     expect(status).toBe(200)
     expect(data?.twoFactorEnabled).toBe(false)
-    expect(data?.totpEnabled).toBe(false)
+    expect(data?.enabledMethods).toEqual([])
   })
 })

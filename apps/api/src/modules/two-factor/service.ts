@@ -1,12 +1,14 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
-import { twoFactors } from '../../db/schema'
+import { userTwoFactorMethods } from '../../db/schema'
+import type { TwoFactorMethod } from '@marketplace/shared'
 
 export abstract class TwoFactorService {
-  static async isTotpEnabled(userId: string): Promise<boolean> {
-    const tf = await db.query.twoFactors.findFirst({
-      where: eq(twoFactors.userId, userId),
-    })
-    return tf?.verified === true
+  static async getEnabledMethods(userId: string): Promise<TwoFactorMethod[]> {
+    const rows = await db
+      .select({ method: userTwoFactorMethods.method })
+      .from(userTwoFactorMethods)
+      .where(eq(userTwoFactorMethods.userId, userId))
+    return rows.map((r) => r.method)
   }
 }

@@ -9,14 +9,13 @@ import { users, roles, userProfiles, sessions } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
 import { impersonationPlugin } from './impersonation-plugin'
-import { twoFactor } from 'better-auth/plugins'
+import { twoFactorPlugin } from './two-factor-plugin'
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendExistingAccountSignUpEmail,
   sendChangeEmailConfirmationEmail,
   sendNewEmailVerificationEmail,
-  sendTwoFactorOtpEmail,
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
@@ -44,14 +43,7 @@ export const auth = betterAuth({
   trustedOrigins: [env.frontendUrl],
   plugins: [
     impersonationPlugin(),
-    twoFactor({
-      issuer: 'Marketplace',
-      otpOptions: {
-        async sendOTP({ user, otp }: { user: { email: string }; otp: string }) {
-          void sendTwoFactorOtpEmail({ email: user.email, otp })
-        },
-      },
-    }),
+    twoFactorPlugin({ issuer: 'Marketplace' }),
   ],
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -61,7 +53,6 @@ export const auth = betterAuth({
       session: schema.sessions,
       account: schema.oauthAccounts,
       verification: schema.verifications,
-      twoFactor: schema.twoFactors,
     },
   }),
   user: {
@@ -81,6 +72,7 @@ export const auth = betterAuth({
       isBanned: { type: 'boolean', input: false },
       banReason: { type: 'string', input: false },
       banExpiration: { type: 'date', input: false },
+      twoFactorEnabled: { type: 'boolean', input: false, defaultValue: false },
     },
   },
   emailAndPassword: {
