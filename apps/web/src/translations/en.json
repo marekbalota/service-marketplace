@@ -98,6 +98,13 @@
       "resendCooldown": "Resend ({{cooldown}}s)",
       "hasAccount": "Already have an account? Sign in"
     },
+    "changeEmailPending": {
+      "title": "Check your new inbox",
+      "sentTo": "We sent a verification link to {{email}}",
+      "sentGeneric": "We sent a verification link to your new email address",
+      "instruction": "Click the link in that email to verify your new address. Until then your current email remains active.",
+      "backButton": "Back to account settings"
+    },
     "banned": {
       "title": "Account Suspended",
       "message": "Your account has been suspended from the platform.",

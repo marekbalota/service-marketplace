@@ -98,6 +98,13 @@
       "resendCooldown": "Znova odoslať ({{cooldown}}s)",
       "hasAccount": "Máte už účet? Prihlásiť sa"
     },
+    "changeEmailPending": {
+      "title": "Skontrolujte novú schránku",
+      "sentTo": "Poslali sme odkaz na overenie na {{email}}",
+      "sentGeneric": "Poslali sme odkaz na overenie na vašu novú e-mailovú adresu",
+      "instruction": "Kliknite na odkaz v tomto e-maile na overenie novej adresy. Dovtedy zostáva aktívny váš súčasný e-mail.",
+      "backButton": "Späť na nastavenia účtu"
+    },
     "banned": {
       "title": "Účet pozastavený",
       "message": "Váš účet bol pozastavený.",
