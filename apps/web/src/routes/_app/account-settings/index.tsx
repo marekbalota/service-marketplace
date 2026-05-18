@@ -1,14 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import {
-  User,
-  Bell,
-  Shield,
-  LogOut,
-  Users,
-  Mail,
-  Lock,
-} from 'lucide-react'
+import { User, Bell, Shield, LogOut, Users, Mail, Lock } from 'lucide-react'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -24,10 +16,11 @@ import { TwoFactorSection } from './-components/TwoFactorSection'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
-  loader: ({ context: { queryClient } }) => Promise.all([
-    queryClient.ensureQueryData(currentUserQueryOptions),
-    queryClient.ensureQueryData(twoFactorStatusQueryOptions),
-  ]),
+  loader: ({ context: { queryClient } }) =>
+    Promise.all([
+      queryClient.ensureQueryData(currentUserQueryOptions),
+      queryClient.ensureQueryData(twoFactorStatusQueryOptions),
+    ]),
   pendingComponent: AccountSettingsHubSkeleton,
   component: AccountSettingsHubPage,
 })
@@ -62,7 +55,6 @@ const NOTIFICATION_ROWS = [
     icon: Bell,
   },
 ] as const
-
 
 function AccountSettingsHubSkeleton() {
   return (

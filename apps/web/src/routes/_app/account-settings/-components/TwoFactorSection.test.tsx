@@ -7,16 +7,17 @@ vi.mock('#/lib/queries/two-factor', () => ({
   twoFactorStatusQueryOptions: { queryKey: ['two-factor', 'status'] },
 }))
 vi.mock('./EnableTotpDialog', () => ({
-  EnableTotpDialog: ({ open }: { open: boolean }) => open ? <div>EnableTotpDialog</div> : null,
+  EnableTotpDialog: ({ open }: { open: boolean }) => (open ? <div>EnableTotpDialog</div> : null),
 }))
 vi.mock('./EnableEmailDialog', () => ({
-  EnableEmailDialog: ({ open }: { open: boolean }) => open ? <div>EnableEmailDialog</div> : null,
+  EnableEmailDialog: ({ open }: { open: boolean }) => (open ? <div>EnableEmailDialog</div> : null),
 }))
 vi.mock('./BackupCodesDialog', () => ({
-  BackupCodesDialog: ({ open }: { open: boolean }) => open ? <div>BackupCodesDialog</div> : null,
+  BackupCodesDialog: ({ open }: { open: boolean }) => (open ? <div>BackupCodesDialog</div> : null),
 }))
 vi.mock('./DisableMethodDialog', () => ({
-  DisableMethodDialog: ({ open }: { open: boolean }) => open ? <div>DisableMethodDialog</div> : null,
+  DisableMethodDialog: ({ open }: { open: boolean }) =>
+    open ? <div>DisableMethodDialog</div> : null,
 }))
 
 import { TwoFactorSection } from './TwoFactorSection'

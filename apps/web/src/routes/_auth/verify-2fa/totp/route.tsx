@@ -46,7 +46,9 @@ function TotpChallengePage() {
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Check your authentication app</CardTitle>
-        <CardDescription>Enter the six-digit code from your authenticator app below.</CardDescription>
+        <CardDescription>
+          Enter the six-digit code from your authenticator app below.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-center">
@@ -55,7 +57,9 @@ function TotpChallengePage() {
             value={code}
             onChange={setCode}
             containerClassName="gap-2"
-            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate()
+            }}
           >
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <InputOTPGroup key={i}>
@@ -75,8 +79,14 @@ function TotpChallengePage() {
             Remember this browser for 30 days
           </Label>
         </div>
-        {verify.error && <p className="text-sm text-destructive text-center">{verify.error.message}</p>}
-        <Button className="w-full" onClick={() => verify.mutate()} disabled={code.length !== 6 || verify.isPending}>
+        {verify.error && (
+          <p className="text-sm text-destructive text-center">{verify.error.message}</p>
+        )}
+        <Button
+          className="w-full"
+          onClick={() => verify.mutate()}
+          disabled={code.length !== 6 || verify.isPending}
+        >
           {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">

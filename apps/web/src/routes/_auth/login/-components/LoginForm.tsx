@@ -76,7 +76,7 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     const { error } = result
     if (!error) {
       const data = result.data as { twoFactorRedirect?: boolean } | undefined
-      if (data?.twoFactorRedirect) return  // navigation already handled by onTwoFactorRedirect in auth.ts
+      if (data?.twoFactorRedirect) return // navigation already handled by onTwoFactorRedirect in auth.ts
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
       return

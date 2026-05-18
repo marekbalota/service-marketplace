@@ -10,7 +10,9 @@ function wrap(ui: React.ReactElement) {
 const mockDisableEmail = vi.hoisted(() => vi.fn())
 const mockDisableTotp = vi.hoisted(() => vi.fn())
 const mockInvalidate = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
-vi.mock('#/auth', () => ({ authClient: { twoFactor: { disableEmail: mockDisableEmail, disableTotp: mockDisableTotp } } }))
+vi.mock('#/auth', () => ({
+  authClient: { twoFactor: { disableEmail: mockDisableEmail, disableTotp: mockDisableTotp } },
+}))
 vi.mock('#/router', () => ({ queryClient: { invalidateQueries: mockInvalidate } }))
 
 import { DisableMethodDialog } from './DisableMethodDialog'
@@ -34,12 +36,16 @@ describe('DisableMethodDialog', () => {
 
   it('shows "turn off 2FA entirely" warning when isLastMethod', () => {
     wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod />)
-    expect(screen.getByText(/turn off two-factor authentication for your account entirely/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/turn off two-factor authentication for your account entirely/i),
+    ).toBeInTheDocument()
   })
 
   it('does not show "turn off 2FA entirely" when not isLastMethod', () => {
     wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod={false} />)
-    expect(screen.queryByText(/turn off two-factor authentication for your account entirely/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/turn off two-factor authentication for your account entirely/i),
+    ).not.toBeInTheDocument()
   })
 
   it('shows email-specific warning for email method', () => {

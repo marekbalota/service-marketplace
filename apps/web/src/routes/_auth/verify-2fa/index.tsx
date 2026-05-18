@@ -42,7 +42,8 @@ function VerifyTwoFaSelectionPage() {
   const { redirect, email, twoFactorMethods } = Route.useSearch()
 
   const visibleMethods = CHALLENGE_METHODS.filter(
-    (m) => m.id === 'backup' || !twoFactorMethods || twoFactorMethods.includes(m.id as TwoFactorMethod),
+    (m) =>
+      m.id === 'backup' || !twoFactorMethods || twoFactorMethods.includes(m.id as TwoFactorMethod),
   )
 
   return (

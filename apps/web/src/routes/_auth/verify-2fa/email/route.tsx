@@ -40,7 +40,10 @@ function EmailChallengePage() {
     if (resendCooldown <= 0) return
     const id = setInterval(() => {
       setResendCooldown((s) => {
-        if (s <= 1) { clearInterval(id); return 0 }
+        if (s <= 1) {
+          clearInterval(id)
+          return 0
+        }
         return s - 1
       })
     }, 1000)
@@ -60,7 +63,10 @@ function EmailChallengePage() {
 
   const verify = useMutation({
     mutationFn: async () => {
-      const { error } = await authClient.twoFactor.verifyEmailOtp({ code, trustDevice: rememberDevice })
+      const { error } = await authClient.twoFactor.verifyEmailOtp({
+        code,
+        trustDevice: rememberDevice,
+      })
       if (error) throw new Error(error.message ?? 'Invalid code')
     },
     onSuccess: async () => {
@@ -82,8 +88,8 @@ function EmailChallengePage() {
       }
     }
     sendCodeMutate()
-  // sendCodeMutate is a stable reference from useMutation — run once on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // sendCodeMutate is a stable reference from useMutation — run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -99,7 +105,9 @@ function EmailChallengePage() {
             value={code}
             onChange={setCode}
             containerClassName="gap-2"
-            onKeyDown={(e) => { if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && code.length === 6 && !verify.isPending) verify.mutate()
+            }}
           >
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <InputOTPGroup key={i}>
@@ -118,8 +126,8 @@ function EmailChallengePage() {
             {sendCode.isPending
               ? 'Sending…'
               : resendCooldown > 0
-              ? `Resend in ${formatCountdown(resendCooldown)}`
-              : 'Resend code'}
+                ? `Resend in ${formatCountdown(resendCooldown)}`
+                : 'Resend code'}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -134,9 +142,15 @@ function EmailChallengePage() {
           </Label>
         </div>
         {(sendCode.error || verify.error) && (
-          <p className="text-sm text-destructive text-center">{(sendCode.error ?? verify.error)?.message}</p>
+          <p className="text-sm text-destructive text-center">
+            {(sendCode.error ?? verify.error)?.message}
+          </p>
         )}
-        <Button className="w-full" onClick={() => verify.mutate()} disabled={code.length !== 6 || verify.isPending}>
+        <Button
+          className="w-full"
+          onClick={() => verify.mutate()}
+          disabled={code.length !== 6 || verify.isPending}
+        >
           {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">

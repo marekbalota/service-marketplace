@@ -118,28 +118,42 @@ export const verifications = pgTable('verification', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
 
-export const userTwoFactorMethods = pgTable('user_two_factor_method', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  method: twoFactorMethodEnum('method').notNull(),
-  enabledAt: timestamp('enabled_at', { withTimezone: true }).notNull(),
-}, (t) => [unique().on(t.userId, t.method)])
+export const userTwoFactorMethods = pgTable(
+  'user_two_factor_method',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    method: twoFactorMethodEnum('method').notNull(),
+    enabledAt: timestamp('enabled_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [unique().on(t.userId, t.method)],
+)
 
 export const userTotpCredentials = pgTable('user_totp_credential', {
   id: uuid('id').primaryKey().defaultRandom(),
-  methodId: uuid('method_id').notNull().unique()
+  methodId: uuid('method_id')
+    .notNull()
+    .unique()
     .references(() => userTwoFactorMethods.id, { onDelete: 'cascade' }),
   secret: text('secret').notNull(),
 })
 
-export const userBackupCodes = pgTable('user_backup_code', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  codeIndex: integer('code_index').notNull(),
-  codeEncrypted: text('code_encrypted').notNull(),
-  usedAt: timestamp('used_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [unique().on(t.userId, t.codeIndex)])
+export const userBackupCodes = pgTable(
+  'user_backup_code',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeIndex: integer('code_index').notNull(),
+    codeEncrypted: text('code_encrypted').notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.codeIndex)],
+)
 
 export const userProfiles = pgTable('user_profiles', {
   userProfileId: uuid('user_profile_id').primaryKey().defaultRandom(),

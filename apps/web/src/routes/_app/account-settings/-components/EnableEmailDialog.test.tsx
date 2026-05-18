@@ -57,7 +57,9 @@ describe('EnableEmailDialog', () => {
     await waitFor(() => screen.getByRole('button', { name: /send code/i }))
     expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /send code/i }))
-    await waitFor(() => { expect(mockSetupEmail).toHaveBeenCalled() })
+    await waitFor(() => {
+      expect(mockSetupEmail).toHaveBeenCalled()
+    })
     expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
   })
 

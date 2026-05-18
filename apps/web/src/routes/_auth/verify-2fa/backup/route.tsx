@@ -48,14 +48,20 @@ function BackupChallengePage() {
             id="backup-code-input"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && code && !verify.isPending) verify.mutate() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && code && !verify.isPending) verify.mutate()
+            }}
             className="font-mono"
             placeholder="xxxxxxxx"
             autoComplete="off"
           />
         </div>
         {verify.error && <p className="text-sm text-destructive">{verify.error.message}</p>}
-        <Button className="w-full" onClick={() => verify.mutate()} disabled={!code || verify.isPending}>
+        <Button
+          className="w-full"
+          onClick={() => verify.mutate()}
+          disabled={!code || verify.isPending}
+        >
           {verify.isPending ? 'Verifying…' : 'Verify'}
         </Button>
         <div className="text-center">

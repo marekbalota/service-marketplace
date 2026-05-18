@@ -34,7 +34,13 @@ export function DisableMethodDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange} onOpenChangeComplete={(isOpen) => { if (!isOpen) setPassword('') }}>
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) setPassword('')
+      }}
+    >
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
@@ -51,15 +57,23 @@ export function DisableMethodDialog({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && password && !isPending) onSubmit(password) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && password && !isPending) onSubmit(password)
+              }}
               autoComplete="current-password"
             />
           </div>
           {error && <p className="text-sm text-destructive">{error.message}</p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => onSubmit(password)} disabled={!password || isPending}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => onSubmit(password)}
+            disabled={!password || isPending}
+          >
             {isPending ? 'Disabling…' : 'Disable'}
           </Button>
         </DialogFooter>

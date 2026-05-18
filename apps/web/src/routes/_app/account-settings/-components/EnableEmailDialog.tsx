@@ -41,7 +41,10 @@ export function EnableEmailDialog({
     if (resendCooldown <= 0) return
     const id = setInterval(() => {
       setResendCooldown((s) => {
-        if (s <= 1) { clearInterval(id); return 0 }
+        if (s <= 1) {
+          clearInterval(id)
+          return 0
+        }
         return s - 1
       })
     }, 1000)
@@ -76,19 +79,27 @@ export function EnableEmailDialog({
   })
 
   function reset() {
-    setStep(1); setPassword(''); setOtpCode(''); setBackupCodes([])
-    setResendCooldown(0); setSavedCodes(false)
-    sendCode.reset(); enableEmail.reset()
+    setStep(1)
+    setPassword('')
+    setOtpCode('')
+    setBackupCodes([])
+    setResendCooldown(0)
+    setSavedCodes(false)
+    sendCode.reset()
+    enableEmail.reset()
   }
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
+        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key'))
+          return
         onOpenChange(nextOpen)
       }}
-      onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) reset()
+      }}
     >
       <DialogContent className="sm:max-w-[520px]" showCloseButton={!enableEmail.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
@@ -116,14 +127,24 @@ export function EnableEmailDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !sendCode.isPending) sendCode.mutate(undefined, { onSuccess: () => setStep(2) }) }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && password && !sendCode.isPending)
+                    sendCode.mutate(undefined, { onSuccess: () => setStep(2) })
+                }}
                 autoComplete="current-password"
               />
-              {sendCode.error && <p className="text-sm text-destructive">{sendCode.error.message}</p>}
+              {sendCode.error && (
+                <p className="text-sm text-destructive">{sendCode.error.message}</p>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => sendCode.mutate(undefined, { onSuccess: () => setStep(2) })} disabled={!password || sendCode.isPending}>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => sendCode.mutate(undefined, { onSuccess: () => setStep(2) })}
+                disabled={!password || sendCode.isPending}
+              >
                 {sendCode.isPending ? 'Sending…' : 'Continue'}
               </Button>
             </DialogFooter>
@@ -143,7 +164,10 @@ export function EnableEmailDialog({
                   value={otpCode}
                   onChange={setOtpCode}
                   containerClassName="gap-2"
-                  onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !enableEmail.isPending) enableEmail.mutate() }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && otpCode.length === 6 && !enableEmail.isPending)
+                      enableEmail.mutate()
+                  }}
                 >
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <InputOTPGroup key={i}>
@@ -153,9 +177,9 @@ export function EnableEmailDialog({
                 </InputOTP>
                 <div className="text-center text-sm text-muted-foreground">
                   {sendCode.isPending && 'Sending code…'}
-                  {!sendCode.isPending && resendCooldown > 0 && (
-                    `Resend in ${formatCountdown(resendCooldown)}`
-                  )}
+                  {!sendCode.isPending &&
+                    resendCooldown > 0 &&
+                    `Resend in ${formatCountdown(resendCooldown)}`}
                   {!sendCode.isPending && resendCooldown === 0 && (
                     <Button variant="link" className="h-auto p-0" onClick={() => sendCode.mutate()}>
                       Resend code
@@ -163,13 +187,20 @@ export function EnableEmailDialog({
                   )}
                 </div>
                 {(sendCode.error || enableEmail.error) && (
-                  <p className="text-sm text-destructive">{(sendCode.error ?? enableEmail.error)?.message}</p>
+                  <p className="text-sm text-destructive">
+                    {(sendCode.error ?? enableEmail.error)?.message}
+                  </p>
                 )}
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => enableEmail.mutate()} disabled={otpCode.length !== 6 || enableEmail.isPending}>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => enableEmail.mutate()}
+                disabled={otpCode.length !== 6 || enableEmail.isPending}
+              >
                 {enableEmail.isPending ? 'Verifying…' : 'Verify'}
               </Button>
             </DialogFooter>
@@ -180,7 +211,9 @@ export function EnableEmailDialog({
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>
-              <DialogDescription>Save these somewhere safe. Each code can only be used once.</DialogDescription>
+              <DialogDescription>
+                Save these somewhere safe. Each code can only be used once.
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
@@ -188,12 +221,21 @@ export function EnableEmailDialog({
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
-                <Checkbox id="email-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
-                <Label htmlFor="email-saved-codes" className="cursor-pointer">I have saved these codes</Label>
+                <Checkbox
+                  id="email-saved-codes"
+                  className="cursor-pointer"
+                  checked={savedCodes}
+                  onCheckedChange={(c) => setSavedCodes(c === true)}
+                />
+                <Label htmlFor="email-saved-codes" className="cursor-pointer">
+                  I have saved these codes
+                </Label>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>Done</Button>
+              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>
+                Done
+              </Button>
             </DialogFooter>
           </>
         )}

@@ -41,10 +41,7 @@ export const existingSignupNotifiedEmails = new Set<string>()
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   trustedOrigins: [env.frontendUrl],
-  plugins: [
-    impersonationPlugin(),
-    twoFactorPlugin({ issuer: 'Marketplace' }),
-  ],
+  plugins: [impersonationPlugin(), twoFactorPlugin({ issuer: 'Marketplace' })],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {

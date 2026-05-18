@@ -33,10 +33,7 @@ export async function sendNewEmailVerificationEmail(params: {
   console.log(`[email-change-verify-new] ${params.email} → ${params.url}`)
 }
 
-export async function sendTwoFactorOtpEmail(params: {
-  email: string
-  otp: string
-}): Promise<void> {
+export async function sendTwoFactorOtpEmail(params: { email: string; otp: string }): Promise<void> {
   console.log(`[email-2fa-otp] ${params.email} → ${params.otp}`)
 }
 

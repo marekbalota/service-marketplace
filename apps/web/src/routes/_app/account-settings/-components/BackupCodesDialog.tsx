@@ -71,10 +71,13 @@ export function BackupCodesDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
+        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key'))
+          return
         handleOpenChange(nextOpen)
       }}
-      onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) reset()
+      }}
     >
       <DialogContent className="sm:max-w-[520px]" showCloseButton={!regenerate.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
@@ -101,14 +104,23 @@ export function BackupCodesDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !viewCodes.isPending) viewCodes.mutate() }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && password && !viewCodes.isPending) viewCodes.mutate()
+                }}
                 autoComplete="current-password"
               />
-              {viewCodes.error && <p className="text-sm text-destructive">{viewCodes.error.message}</p>}
+              {viewCodes.error && (
+                <p className="text-sm text-destructive">{viewCodes.error.message}</p>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => viewCodes.mutate()} disabled={!password || viewCodes.isPending}>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => viewCodes.mutate()}
+                disabled={!password || viewCodes.isPending}
+              >
                 {viewCodes.isPending ? 'Loading…' : 'View Codes'}
               </Button>
             </DialogFooter>
@@ -123,8 +135,12 @@ export function BackupCodesDialog({
             <div className="py-2">
               <Tabs defaultValue="current">
                 <TabsList className="w-full">
-                  <TabsTrigger value="current" className="flex-1">Current Codes</TabsTrigger>
-                  <TabsTrigger value="regenerate" className="flex-1">Regenerate</TabsTrigger>
+                  <TabsTrigger value="current" className="flex-1">
+                    Current Codes
+                  </TabsTrigger>
+                  <TabsTrigger value="regenerate" className="flex-1">
+                    Regenerate
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="current" className="pt-4">
                   <BackupCodesDisplay codes={codes} />
@@ -132,12 +148,11 @@ export function BackupCodesDialog({
                 <TabsContent value="regenerate" className="pt-4 space-y-4">
                   {!regenerate.isSuccess && (
                     <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                      This will permanently invalidate all existing backup codes and generate new ones.
+                      This will permanently invalidate all existing backup codes and generate new
+                      ones.
                     </div>
                   )}
-                  {regenerate.isSuccess && (
-                    <BackupCodesDisplay codes={codes} />
-                  )}
+                  {regenerate.isSuccess && <BackupCodesDisplay codes={codes} />}
                   {regenerate.error && (
                     <p className="text-sm text-destructive">{regenerate.error.message}</p>
                   )}
@@ -156,12 +171,24 @@ export function BackupCodesDialog({
             </div>
             {regenerate.isSuccess && (
               <div className="flex items-center gap-2 px-1">
-                <Checkbox id="backup-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
-                <Label htmlFor="backup-saved-codes" className="cursor-pointer">I have saved these codes</Label>
+                <Checkbox
+                  id="backup-saved-codes"
+                  className="cursor-pointer"
+                  checked={savedCodes}
+                  onCheckedChange={(c) => setSavedCodes(c === true)}
+                />
+                <Label htmlFor="backup-saved-codes" className="cursor-pointer">
+                  I have saved these codes
+                </Label>
               </div>
             )}
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)} disabled={regenerate.isSuccess && !savedCodes}>Done</Button>
+              <Button
+                onClick={() => handleOpenChange(false)}
+                disabled={regenerate.isSuccess && !savedCodes}
+              >
+                Done
+              </Button>
             </DialogFooter>
           </>
         )}

@@ -70,23 +70,30 @@ export function EnableTotpDialog({
   })
 
   function reset() {
-    setStep(1); setPassword(''); setTotpURI(''); setOtpCode('')
-    setBackupCodes([]); setSavedCodes(false); setShowManualKey(false)
-    setup.reset(); verify.reset()
+    setStep(1)
+    setPassword('')
+    setTotpURI('')
+    setOtpCode('')
+    setBackupCodes([])
+    setSavedCodes(false)
+    setShowManualKey(false)
+    setup.reset()
+    verify.reset()
   }
 
-  const manualKey = totpURI
-    ? new URL(totpURI).searchParams.get('secret') ?? ''
-    : ''
+  const manualKey = totpURI ? (new URL(totpURI).searchParams.get('secret') ?? '') : ''
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key')) return
+        if (!nextOpen && (details.reason === 'outside-press' || details.reason === 'escape-key'))
+          return
         onOpenChange(nextOpen)
       }}
-      onOpenChangeComplete={(isOpen) => { if (!isOpen) reset() }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) reset()
+      }}
     >
       <DialogContent className="sm:max-w-[520px]" showCloseButton={!verify.isSuccess}>
         <div className="flex justify-center gap-1.5 pt-1">
@@ -114,13 +121,17 @@ export function EnableTotpDialog({
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && password && !setup.isPending) setup.mutate() }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && password && !setup.isPending) setup.mutate()
+                }}
                 autoComplete="current-password"
               />
               {setup.error && <p className="text-sm text-destructive">{setup.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
               <Button onClick={() => setup.mutate()} disabled={!password || setup.isPending}>
                 {setup.isPending ? 'Verifying…' : 'Continue'}
               </Button>
@@ -132,7 +143,9 @@ export function EnableTotpDialog({
           <>
             <DialogHeader>
               <DialogTitle>Scan the QR Code</DialogTitle>
-              <DialogDescription>Open your authenticator app and scan the code below.</DialogDescription>
+              <DialogDescription>
+                Open your authenticator app and scan the code below.
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
               {totpURI && (
@@ -140,7 +153,11 @@ export function EnableTotpDialog({
                   <QRCodeSVG value={totpURI} size={192} />
                 </div>
               )}
-              <Button variant="link" className="h-auto p-0 text-muted-foreground" onClick={() => setShowManualKey((v) => !v)}>
+              <Button
+                variant="link"
+                className="h-auto p-0 text-muted-foreground"
+                onClick={() => setShowManualKey((v) => !v)}
+              >
                 {showManualKey ? 'Hide manual key' : "Can't scan? Enter key manually"}
               </Button>
               {showManualKey && (
@@ -150,7 +167,9 @@ export function EnableTotpDialog({
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
               <Button onClick={() => setStep(3)}>Next</Button>
             </DialogFooter>
           </>
@@ -160,7 +179,9 @@ export function EnableTotpDialog({
           <>
             <DialogHeader>
               <DialogTitle>Verify Code</DialogTitle>
-              <DialogDescription>Enter the 6-digit code from your authenticator app.</DialogDescription>
+              <DialogDescription>
+                Enter the 6-digit code from your authenticator app.
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
               <InputOTP
@@ -168,7 +189,10 @@ export function EnableTotpDialog({
                 value={otpCode}
                 onChange={setOtpCode}
                 containerClassName="gap-2"
-                onKeyDown={(e) => { if (e.key === 'Enter' && otpCode.length === 6 && !verify.isPending) verify.mutate() }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && otpCode.length === 6 && !verify.isPending)
+                    verify.mutate()
+                }}
               >
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <InputOTPGroup key={i}>
@@ -179,8 +203,13 @@ export function EnableTotpDialog({
               {verify.error && <p className="text-sm text-destructive">{verify.error.message}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => verify.mutate()} disabled={otpCode.length !== 6 || verify.isPending}>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => verify.mutate()}
+                disabled={otpCode.length !== 6 || verify.isPending}
+              >
                 {verify.isPending ? 'Verifying…' : 'Verify'}
               </Button>
             </DialogFooter>
@@ -191,7 +220,9 @@ export function EnableTotpDialog({
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>
-              <DialogDescription>Store these codes somewhere safe. Each code can only be used once.</DialogDescription>
+              <DialogDescription>
+                Store these codes somewhere safe. Each code can only be used once.
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
@@ -199,12 +230,21 @@ export function EnableTotpDialog({
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
-                <Checkbox id="totp-saved-codes" className="cursor-pointer" checked={savedCodes} onCheckedChange={(c) => setSavedCodes(c === true)} />
-                <Label htmlFor="totp-saved-codes" className="cursor-pointer">I have saved these codes</Label>
+                <Checkbox
+                  id="totp-saved-codes"
+                  className="cursor-pointer"
+                  checked={savedCodes}
+                  onCheckedChange={(c) => setSavedCodes(c === true)}
+                />
+                <Label htmlFor="totp-saved-codes" className="cursor-pointer">
+                  I have saved these codes
+                </Label>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>Done</Button>
+              <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>
+                Done
+              </Button>
             </DialogFooter>
           </>
         )}

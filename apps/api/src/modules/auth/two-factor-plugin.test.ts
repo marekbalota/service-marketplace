@@ -10,9 +10,18 @@ type AnyFn = (...args: any[]) => any
 // Under moduleResolution:bundler, better-auth plugin endpoints are not reflected in the
 // inferred auth.api type — they exist at runtime but TypeScript can't see them.
 type PluginEndpoints = {
-  sendEmailOtp: AnyFn; verifyEmailOtp: AnyFn; setupEmail: AnyFn; enableEmail: AnyFn
-  disableEmail: AnyFn; setupTotp: AnyFn; enableTotp: AnyFn; verifyTotp: AnyFn
-  disableTotp: AnyFn; verifyBackupCode: AnyFn; getBackupCodes: AnyFn; regenerateBackupCodes: AnyFn
+  sendEmailOtp: AnyFn
+  verifyEmailOtp: AnyFn
+  setupEmail: AnyFn
+  enableEmail: AnyFn
+  disableEmail: AnyFn
+  setupTotp: AnyFn
+  enableTotp: AnyFn
+  verifyTotp: AnyFn
+  disableTotp: AnyFn
+  verifyBackupCode: AnyFn
+  getBackupCodes: AnyFn
+  regenerateBackupCodes: AnyFn
 }
 const api = auth.api as typeof auth.api & PluginEndpoints
 
@@ -82,7 +91,7 @@ describe('sign-in hook — user without 2FA', () => {
       headers: CAPTCHA,
       asResponse: true,
     })
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(res.status).toBe(200)
     expect(body.twoFactorRedirect).toBeUndefined()
     expect(res.headers.get('set-cookie')).toContain('better-auth.session_token')
@@ -102,14 +111,16 @@ describe('sign-in hook — user with 2FA enabled', () => {
       headers: CAPTCHA,
       asResponse: true,
     })
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(res.status).toBe(200)
     expect(body.twoFactorRedirect).toBe(true)
     expect(body.twoFactorMethods).toContain('email')
     const setCookieHeader = res.headers.get('set-cookie') ?? ''
     expect(setCookieHeader).toContain('better-auth.two_factor')
     // The session token must be deleted (Max-Age=0) as the final Set-Cookie for that name
-    const sessionTokenCookies = setCookieHeader.split(', ').filter(c => c.startsWith('better-auth.session_token='))
+    const sessionTokenCookies = setCookieHeader
+      .split(', ')
+      .filter((c) => c.startsWith('better-auth.session_token='))
     const lastSessionCookie = sessionTokenCookies.at(-1) ?? ''
     expect(lastSessionCookie).toContain('Max-Age=0')
   })
@@ -120,7 +131,7 @@ describe('sign-in hook — user with 2FA enabled', () => {
       headers: CAPTCHA,
       asResponse: true,
     })
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(body.token).toBeUndefined()
     expect(body.user).toBeUndefined()
     expect(body.twoFactorRedirect).toBe(true)
@@ -207,7 +218,10 @@ describe('email OTP management (setup / enable / disable)', () => {
     const user = await db.query.users.findFirst({ where: eq(users.email, email) })
     expect(user?.twoFactorEnabled).toBe(true)
     const method = await db.query.userTwoFactorMethods.findFirst({
-      where: and(eq(userTwoFactorMethods.userId, user!.id), eq(userTwoFactorMethods.method, 'email')),
+      where: and(
+        eq(userTwoFactorMethods.userId, user!.id),
+        eq(userTwoFactorMethods.method, 'email'),
+      ),
     })
     expect(method).toBeTruthy()
   })
@@ -263,7 +277,7 @@ describe('TOTP management (setup / enable / disable)', () => {
       asResponse: true,
     })
     expect(res.status).toBe(200)
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(body.uri).toMatch(/^otpauth:\/\/totp\//)
     totpSecret = new URL(body.uri).searchParams.get('secret') ?? ''
     expect(totpSecret.length).toBeGreaterThan(0)
@@ -277,7 +291,7 @@ describe('TOTP management (setup / enable / disable)', () => {
       asResponse: true,
     })
     expect(res.status).toBe(200)
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(body.backupCodes).toHaveLength(10)
   })
 
@@ -364,9 +378,17 @@ describe('backup code management', () => {
     })
     sessionCookies = setCookiesToRequestCookie(verRes.headers)
     // Generate backup codes via enable-email flow
-    await api.setupEmail({ body: { password: PASSWORD }, headers: { cookie: sessionCookies }, asResponse: true })
+    await api.setupEmail({
+      body: { password: PASSWORD },
+      headers: { cookie: sessionCookies },
+      asResponse: true,
+    })
     const otp2 = twoFactorOtpStore.get(email)!
-    await api.enableEmail({ body: { code: otp2 }, headers: { cookie: sessionCookies }, asResponse: true })
+    await api.enableEmail({
+      body: { code: otp2 },
+      headers: { cookie: sessionCookies },
+      asResponse: true,
+    })
     // After enableEmail, session is refreshed. Re-authenticate.
     const reLoginRes = await api.signInEmail({
       body: { email, password: PASSWORD },
@@ -391,7 +413,7 @@ describe('backup code management', () => {
       asResponse: true,
     })
     expect(res.status).toBe(200)
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(body.codes).toHaveLength(10)
     expect(body.codes[0].usedAt).toBeNull()
   })
@@ -403,7 +425,7 @@ describe('backup code management', () => {
       asResponse: true,
     })
     expect(res.status).toBe(200)
-    const body = await res.json() as any
+    const body = (await res.json()) as any
     expect(body.codes).toHaveLength(10)
   })
 })
