@@ -26,7 +26,9 @@ vi.mock('#/api', () => ({
       reports: vi.fn(() => ({
         resolve: { patch: vi.fn().mockResolvedValue({ error: null }) },
         dismiss: { patch: vi.fn().mockResolvedValue({ error: null }) },
-        'message-context': { get: vi.fn().mockResolvedValue({ data: { messages: [] }, error: null }) },
+        'message-context': {
+          get: vi.fn().mockResolvedValue({ data: { messages: [] }, error: null }),
+        },
       })),
     },
   },
@@ -91,7 +93,11 @@ describe('ReportCard', () => {
   })
 
   it('view link points to the review post for REVIEW reports', () => {
-    render(<ReportCard report={{ ...baseReport, targetType: 'REVIEW', postId: null, reviewPostId: 'post-xyz' }} />)
+    render(
+      <ReportCard
+        report={{ ...baseReport, targetType: 'REVIEW', postId: null, reviewPostId: 'post-xyz' }}
+      />,
+    )
     expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute('href', '/posts/post-xyz')
   })
 
@@ -122,7 +128,16 @@ describe('ReportCard', () => {
   })
 
   it('does not show Ban/Unban when reportedUserId is null', () => {
-    render(<ReportCard report={{ ...baseReport, reportedUserId: null, reportedUserName: null, reportedUserIsBanned: null }} />)
+    render(
+      <ReportCard
+        report={{
+          ...baseReport,
+          reportedUserId: null,
+          reportedUserName: null,
+          reportedUserIsBanned: null,
+        }}
+      />,
+    )
     expect(screen.queryByRole('button', { name: /ban user/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /unban user/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /dismiss/i })).toBeInTheDocument()

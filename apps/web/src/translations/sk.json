@@ -328,19 +328,24 @@
       "loginManagement": "Správa prihlásení",
       "userProfiles": "Používateľské profily"
     },
+    "impersonationRestricted": "Nedostupné počas zosobnenia",
     "changeEmailDialog": {
       "title": "Zmeniť e-mail",
       "description": "Aktualizujte e-mailovú adresu účtu.",
       "newEmail": "Nový e-mail",
       "newEmailPlaceholder": "novy@email.com",
-      "currentPassword": "Aktuálne heslo"
+      "currentPassword": "Aktuálne heslo",
+      "submitting": "Odosielam…",
+      "successMessage": "Skontrolujte schránku — zaslali sme potvrdzovací odkaz na vašu aktuálnu e-mailovú adresu."
     },
     "changePasswordDialog": {
       "title": "Zmeniť heslo",
       "description": "Aktualizujte heslo k účtu.",
       "currentPassword": "Aktuálne heslo",
       "newPassword": "Nové heslo",
-      "confirmPassword": "Potvrdiť nové heslo"
+      "confirmPassword": "Potvrdiť nové heslo",
+      "submitting": "Ukladám…",
+      "successMessage": "Heslo bolo zmenené. Boli ste odhlásení z ostatných zariadení."
     }
   },
   "profiles": {

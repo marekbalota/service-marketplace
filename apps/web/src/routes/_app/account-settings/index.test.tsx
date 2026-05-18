@@ -90,9 +90,20 @@ describe('AccountSettingsHubPage', () => {
     expect(screen.getByText(/0 Active Profiles/i)).toBeInTheDocument()
   })
 
-  it('renders Change Email and Change Password buttons as disabled', async () => {
+  it('renders Change buttons as enabled', async () => {
     await renderPage()
-    expect(screen.getByRole('button', { name: /change email/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /change password/i })).toBeDisabled()
+    const changeButtons = screen.getAllByRole('button', { name: /^change$/i })
+    expect(changeButtons).toHaveLength(2)
+    changeButtons.forEach((btn) => expect(btn).not.toBeDisabled())
+  })
+
+  it('disables Change buttons during impersonation', async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { email: 'alice@example.com', profiles: [], impersonatedBy: 'admin-uuid' },
+    } as unknown as ReturnType<typeof useCurrentUser>)
+    await renderPage()
+    const changeButtons = screen.getAllByRole('button', { name: /^change$/i })
+    expect(changeButtons).toHaveLength(2)
+    changeButtons.forEach((btn) => expect(btn).toBeDisabled())
   })
 })

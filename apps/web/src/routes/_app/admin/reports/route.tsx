@@ -43,7 +43,9 @@ export const Route = createFileRoute('/_app/admin/reports')({
     }
   },
   loader: ({ context: { queryClient } }) => {
-    void queryClient.prefetchQuery(adminReportsQueryOptions({ targetType: 'all', categoryId: 'all', status: 'all', page: 1 }))
+    void queryClient.prefetchQuery(
+      adminReportsQueryOptions({ targetType: 'all', categoryId: 'all', status: 'all', page: 1 }),
+    )
   },
   component: ManageReports,
 })
@@ -240,12 +242,7 @@ function ManageReports() {
       </Card>
 
       <Suspense fallback={<ReportsSkeleton />}>
-        <ReportsContent
-          targetType={type}
-          categoryId={category}
-          status={status}
-          page={page}
-        />
+        <ReportsContent targetType={type} categoryId={category} status={status} page={page} />
       </Suspense>
     </main>
   )

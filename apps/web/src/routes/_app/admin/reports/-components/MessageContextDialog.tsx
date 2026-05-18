@@ -16,9 +16,7 @@ export function MessageContextDialog({ reportId, open, onClose }: Props) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'reports', reportId, 'message-context'],
     queryFn: async () => {
-      const { data, error } = await api.admin
-        .reports({ id: reportId })
-        ['message-context'].get()
+      const { data, error } = await api.admin.reports({ id: reportId })['message-context'].get()
       if (error) throw error
       return data
     },

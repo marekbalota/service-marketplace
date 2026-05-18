@@ -54,7 +54,7 @@ function ThreadPage() {
 
 export const Route = createFileRoute('/_app/messages/$threadId')({
   beforeLoad: ({ context: { user }, location }) => {
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href }, replace: true })
   },
   component: ThreadPage,
 })

@@ -63,9 +63,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
   const unbanMutation = useMutation({
     mutationFn: async () => {
       if (!report.reportedUserId) return
-      const { error } = await api.admin
-        .users({ id: report.reportedUserId })
-        .unban.patch()
+      const { error } = await api.admin.users({ id: report.reportedUserId }).unban.patch()
       if (error) throw wrapEdenError(error, 'Failed to unban user.')
     },
     onSuccess: () => {
@@ -97,7 +95,9 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Badge variant="outline" className="capitalize">
                 {TYPE_LABELS[report.targetType] ?? report.targetType}
               </Badge>
-              <Badge className={STATUS_CLASSES[report.status]}>{STATUS_DISPLAY[report.status] ?? report.status}</Badge>
+              <Badge className={STATUS_CLASSES[report.status]}>
+                {STATUS_DISPLAY[report.status] ?? report.status}
+              </Badge>
             </div>
             <div className="space-y-1 text-sm text-muted-foreground">
               {report.reportedUserName && (
@@ -138,15 +138,20 @@ export function ReportCard({ report }: { report: ReportItem }) {
               />
             </>
           ) : (
-            <Button variant="outline" size="sm" className="gap-2 shrink-0" asChild>
-              <a
-                href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <ExternalLink className="size-4" />
-                {t('common.view')}
-              </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 shrink-0"
+              render={
+                <a
+                  href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
+            >
+              <ExternalLink className="size-4" />
+              {t('common.view')}
             </Button>
           )}
         </div>

@@ -36,7 +36,7 @@ type FormValues = z.infer<typeof schema>
 
 export const Route = createFileRoute('/_app/edit-post/$postId')({
   beforeLoad: async ({ context: { user, queryClient }, params: { postId }, location }) => {
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) throw redirect({ to: '/login', search: { redirect: location.href }, replace: true })
     if (!hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn]))
       throw redirect({ to: '/' })
     const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId))

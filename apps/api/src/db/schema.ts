@@ -69,6 +69,7 @@ export const users = pgTable('user', {
   isBanned: boolean('is_banned').notNull().default(false),
   banReason: text('ban_reason'),
   banExpiration: timestamp('ban_expiration'),
+  twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
 })
 
 export const sessions = pgTable('session', {
@@ -115,6 +116,20 @@ export const verifications = pgTable('verification', {
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
+
+export const twoFactors = pgTable(
+  'two_factor',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    verified: boolean('verified'),
+  },
+  (table) => [unique('two_factor_user_id_unique').on(table.userId)],
+)
 
 export const userProfiles = pgTable('user_profiles', {
   userProfileId: uuid('user_profile_id').primaryKey().defaultRandom(),
@@ -293,7 +308,7 @@ export const reports = pgTable(
       .notNull()
       .references(() => reportCategories.categoryId),
     description: text('description'),
-    status: reportStatusEnum('status').notNull().default('pending'),
+    status: reportStatusEnum('status').notNull().default('PENDING'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),
   },
@@ -330,6 +345,17 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   userProfiles: many(userProfiles),
   sessions: many(sessions),
+  twoFactor: one(twoFactors, {
+    fields: [users.id],
+    references: [twoFactors.userId],
+  }),
+}))
+
+export const twoFactorsRelations = relations(twoFactors, ({ one }) => ({
+  user: one(users, {
+    fields: [twoFactors.userId],
+    references: [users.id],
+  }),
 }))
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({

@@ -31,7 +31,7 @@ export function SendMessageSection({ postId, profileId }: { postId: string; prof
 
   const { data: threads, isLoading } = useQuery({
     ...existingThreadQueryOptions(postId, profileId),
-    enabled: !isImpersonating,
+    enabled: !!currentUser && !isImpersonating,
   })
   const existingThread = threads?.[0] ?? null
 

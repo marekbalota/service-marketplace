@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
 import { Switch } from '#/components/ui/switch'
@@ -216,15 +217,24 @@ function AccountSettingsHubPage() {
                     <p className="text-sm text-muted-foreground">{user?.email ?? '—'}</p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title={t('accountSettings.comingSoon')}
-                  onClick={() => setShowChangeEmail(true)}
-                >
-                  {t('accountSettings.changeEmail')}
-                </Button>
+                {!user || !!user.impersonatedBy ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span tabIndex={0} className="inline-flex">
+                          <Button variant="outline" size="sm" disabled>
+                            {t('accountSettings.changeEmail')}
+                          </Button>
+                        </span>
+                      }
+                    />
+                    <TooltipContent>{t('accountSettings.impersonationRestricted')}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowChangeEmail(true)}>
+                    {t('accountSettings.changeEmail')}
+                  </Button>
+                )}
               </div>
               <Separator />
               <div className="flex items-center justify-between gap-4">
@@ -235,15 +245,24 @@ function AccountSettingsHubPage() {
                     <p className="text-sm text-muted-foreground">••••••••</p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title={t('accountSettings.comingSoon')}
-                  onClick={() => setShowChangePassword(true)}
-                >
-                  {t('accountSettings.changePassword')}
-                </Button>
+                {!user || !!user.impersonatedBy ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span tabIndex={0} className="inline-flex">
+                          <Button variant="outline" size="sm" disabled>
+                            {t('accountSettings.changePassword')}
+                          </Button>
+                        </span>
+                      }
+                    />
+                    <TooltipContent>{t('accountSettings.impersonationRestricted')}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)}>
+                    {t('accountSettings.changePassword')}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

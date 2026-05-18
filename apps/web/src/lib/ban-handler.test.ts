@@ -68,4 +68,22 @@ describe('handleBanError', () => {
     expect(stored.reason).toBe('TOS violation')
     expect(stored.expiresAt).toBeNull()
   })
+
+  it('detects ban from flat @better-fetch error (code at top level)', () => {
+    const error = {
+      code: 'BANNED',
+      message: 'Account banned',
+      reason: 'Spam',
+      expiresAt: '2026-12-01T00:00:00Z',
+      status: 403,
+      statusText: 'Forbidden',
+    }
+    localStorage.setItem('activeProfileId', 'p1')
+
+    const result = handleBanError(error)
+
+    expect(result).toBe(true)
+    expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/banned' })
+    expect(localStorage.getItem('activeProfileId')).toBeNull()
+  })
 })

@@ -328,19 +328,24 @@
       "loginManagement": "Login Management",
       "userProfiles": "User Profiles"
     },
+    "impersonationRestricted": "Not available during impersonation",
     "changeEmailDialog": {
       "title": "Change Email",
       "description": "Update your account email address.",
       "newEmail": "New Email",
       "newEmailPlaceholder": "new@example.com",
-      "currentPassword": "Current Password"
+      "currentPassword": "Current Password",
+      "submitting": "Sending…",
+      "successMessage": "Check your inbox — we've sent a confirmation link to your current email."
     },
     "changePasswordDialog": {
       "title": "Change Password",
       "description": "Update your account password.",
       "currentPassword": "Current Password",
       "newPassword": "New Password",
-      "confirmPassword": "Confirm New Password"
+      "confirmPassword": "Confirm New Password",
+      "submitting": "Saving…",
+      "successMessage": "Password changed. You've been signed out of other devices."
     }
   },
   "profiles": {
