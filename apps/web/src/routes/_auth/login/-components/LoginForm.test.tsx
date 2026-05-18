@@ -8,6 +8,7 @@ vi.mock('#/auth', () => ({
       email: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
   },
+  setPendingTwoFactorContext: vi.fn(),
 }))
 
 const mockNavigate = vi.hoisted(() => vi.fn())

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -12,13 +12,22 @@ import { Label } from '#/components/ui/label'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp'
 
 export const Route = createFileRoute('/_auth/verify-2fa/totp')({
-  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+    email: z.string().optional(),
+    twoFactorMethods: z.array(z.enum(['email', 'totp'])).optional(),
+  }),
+  beforeLoad: ({ search }) => {
+    if (search.twoFactorMethods && !search.twoFactorMethods.includes('totp')) {
+      throw redirect({ to: '/verify-2fa', search })
+    }
+  },
   component: TotpChallengePage,
 })
 
 function TotpChallengePage() {
   const navigate = useNavigate()
-  const { redirect, email } = Route.useSearch()
+  const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
   const [rememberDevice, setRememberDevice] = useState(false)
 
@@ -29,7 +38,7 @@ function TotpChallengePage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/', replace: true })
     },
   })
 
@@ -73,7 +82,8 @@ function TotpChallengePage() {
         <div className="text-center">
           <Link
             to="/verify-2fa"
-            search={{ redirect, email }}
+            search={{ redirect, email, twoFactorMethods }}
+            replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way

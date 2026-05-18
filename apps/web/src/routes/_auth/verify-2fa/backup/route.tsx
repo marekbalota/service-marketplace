@@ -11,13 +11,17 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 
 export const Route = createFileRoute('/_auth/verify-2fa/backup')({
-  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+    email: z.string().optional(),
+    twoFactorMethods: z.array(z.enum(['email', 'totp'])).optional(),
+  }),
   component: BackupChallengePage,
 })
 
 function BackupChallengePage() {
   const navigate = useNavigate()
-  const { redirect, email } = Route.useSearch()
+  const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
 
   const verify = useMutation({
@@ -27,7 +31,7 @@ function BackupChallengePage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/', replace: true })
     },
   })
 
@@ -57,7 +61,8 @@ function BackupChallengePage() {
         <div className="text-center">
           <Link
             to="/verify-2fa"
-            search={{ redirect, email }}
+            search={{ redirect, email, twoFactorMethods }}
+            replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way

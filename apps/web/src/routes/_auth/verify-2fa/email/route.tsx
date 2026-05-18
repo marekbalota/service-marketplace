@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -16,13 +16,22 @@ const SENT_AT_KEY = 'verify-2fa-email-sent-at'
 const COOLDOWN_SECONDS = 60
 
 export const Route = createFileRoute('/_auth/verify-2fa/email')({
-  validateSearch: z.object({ redirect: z.string().optional(), email: z.string().optional() }),
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+    email: z.string().optional(),
+    twoFactorMethods: z.array(z.enum(['email', 'totp'])).optional(),
+  }),
+  beforeLoad: ({ search }) => {
+    if (search.twoFactorMethods && !search.twoFactorMethods.includes('email')) {
+      throw redirect({ to: '/verify-2fa', search })
+    }
+  },
   component: EmailChallengePage,
 })
 
 function EmailChallengePage() {
   const navigate = useNavigate()
-  const { redirect, email } = Route.useSearch()
+  const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
   const [rememberDevice, setRememberDevice] = useState(false)
@@ -40,7 +49,7 @@ function EmailChallengePage() {
 
   const sendCode = useMutation({
     mutationFn: async () => {
-      const { error } = await authClient.twoFactor.sendOtp()
+      const { error } = await authClient.twoFactor.sendEmailOtp()
       if (error) throw new Error(error.message ?? 'Failed to send code')
     },
     onSuccess: () => {
@@ -51,16 +60,17 @@ function EmailChallengePage() {
 
   const verify = useMutation({
     mutationFn: async () => {
-      const { error } = await authClient.twoFactor.verifyOtp({ code, trustDevice: rememberDevice })
+      const { error } = await authClient.twoFactor.verifyEmailOtp({ code, trustDevice: rememberDevice })
       if (error) throw new Error(error.message ?? 'Invalid code')
     },
     onSuccess: async () => {
       sessionStorage.removeItem(SENT_AT_KEY)
       await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
-      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
+      void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/', replace: true })
     },
   })
 
+  const sendCodeMutate = sendCode.mutate
   useEffect(() => {
     const sentAt = sessionStorage.getItem(SENT_AT_KEY)
     if (sentAt) {
@@ -71,7 +81,9 @@ function EmailChallengePage() {
         return
       }
     }
-    sendCode.mutate()
+    sendCodeMutate()
+  // sendCodeMutate is a stable reference from useMutation — run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -130,7 +142,8 @@ function EmailChallengePage() {
         <div className="text-center">
           <Link
             to="/verify-2fa"
-            search={{ redirect, email }}
+            search={{ redirect, email, twoFactorMethods }}
+            replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
             Try another way

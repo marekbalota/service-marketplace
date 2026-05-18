@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
+import type { TwoFactorMethod } from '@marketplace/shared'
 import { Smartphone, Mail, Shield, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Separator } from '#/components/ui/separator'
-import { buttonVariants } from '#/components/ui/button'
 
 export const Route = createFileRoute('/_auth/verify-2fa/')({
   validateSearch: z.object({
     redirect: z.string().optional(),
     email: z.string().optional(),
+    twoFactorMethods: z.array(z.enum(['email', 'totp'] as const)).optional(),
   }),
   component: VerifyTwoFaSelectionPage,
 })
@@ -38,7 +39,11 @@ const CHALLENGE_METHODS = [
 ] as const
 
 function VerifyTwoFaSelectionPage() {
-  const { redirect, email } = Route.useSearch()
+  const { redirect, email, twoFactorMethods } = Route.useSearch()
+
+  const visibleMethods = CHALLENGE_METHODS.filter(
+    (m) => m.id === 'backup' || !twoFactorMethods || twoFactorMethods.includes(m.id as TwoFactorMethod),
+  )
 
   return (
     <Card className="w-full max-w-md">
@@ -48,12 +53,13 @@ function VerifyTwoFaSelectionPage() {
         <CardDescription>Choose how you want to verify your identity.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        {CHALLENGE_METHODS.map((method, i) => (
+        {visibleMethods.map((method, i) => (
           <div key={method.id}>
             {i > 0 && <Separator />}
             <Link
               to={method.to}
-              search={{ redirect, email }}
+              search={{ redirect, email, twoFactorMethods }}
+              replace
               className="flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors"
             >
               <method.icon className="size-5 text-muted-foreground shrink-0" />
@@ -70,6 +76,7 @@ function VerifyTwoFaSelectionPage() {
           <Link
             to="/login"
             search={redirect ? { redirect } : {}}
+            replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
             Back to login
