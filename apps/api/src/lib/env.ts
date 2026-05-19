@@ -27,4 +27,11 @@ export const env = {
     secretKey: required('TURNSTILE_SECRET_KEY'),
   },
   betterAuthSecret: required('BETTER_AUTH_SECRET'),
+  smtp: {
+    host: process.env.SMTP_HOST ?? 'localhost',
+    port: parseInt(process.env.SMTP_PORT ?? '1025', 10),
+    user: process.env.SMTP_USER ?? '',
+    pass: process.env.SMTP_PASS ?? '',
+    from: process.env.EMAIL_FROM ?? 'noreply@marketplace.local',
+  },
 }
