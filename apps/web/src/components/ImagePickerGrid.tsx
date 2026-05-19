@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Plus, X, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { ImageLightbox } from '#/components/ImageLightbox'
 
@@ -28,6 +29,7 @@ export function ImagePickerGrid({
   onFilePicked: (file: File) => void
   onRemove: (index: number) => void
 }) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [rejectedCount, setRejectedCount] = useState(0)
@@ -58,7 +60,7 @@ export function ImagePickerGrid({
           <div key={`${preview}-${i}`} className="group relative">
             <img
               src={preview}
-              alt="Preview"
+              alt={t('common.preview')}
               className="h-32 w-full cursor-pointer rounded-lg border object-cover"
               onClick={() => setLightboxIndex(i)}
             />
@@ -95,9 +97,7 @@ export function ImagePickerGrid({
         <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           <span>
-            {rejectedCount === 1
-              ? '1 file could not be read and was skipped. Make sure it is a valid JPEG, PNG, GIF, or WebP image.'
-              : `${rejectedCount} files could not be read and were skipped. Make sure they are valid JPEG, PNG, GIF, or WebP images.`}
+            {t('imagePicker.rejected', { count: rejectedCount })}
           </span>
           <Button
             type="button"
@@ -105,7 +105,7 @@ export function ImagePickerGrid({
             size="icon"
             onClick={() => setRejectedCount(0)}
             className="ml-auto size-6 shrink-0 text-destructive/60 hover:text-destructive"
-            aria-label="Dismiss"
+            aria-label={t('common.dismiss')}
           >
             <X className="size-3.5" />
           </Button>
@@ -113,7 +113,7 @@ export function ImagePickerGrid({
       )}
 
       <ImageLightbox
-        images={previews.map((src) => ({ src, alt: 'Preview' }))}
+        images={previews.map((src) => ({ src, alt: t('common.preview') }))}
         initialIndex={lightboxIndex ?? 0}
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}

@@ -1,5 +1,6 @@
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { Link, useRouter } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
@@ -20,6 +21,7 @@ export function ThreadHeader({
   postDeleted,
   myRole,
 }: ThreadHeaderProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const isPostOwner = myRole === 'post_owner'
 
@@ -30,7 +32,7 @@ export function ThreadHeader({
         size="icon"
         className="shrink-0 md:hidden"
         onClick={() => router.navigate({ to: '/messages' })}
-        aria-label="Back to messages"
+        aria-label={t('messages.backToMessages')}
       >
         <ArrowLeft className="size-4" />
       </Button>
@@ -50,12 +52,12 @@ export function ThreadHeader({
               variant="outline"
               className="h-4 shrink-0 border-muted-foreground/40 px-1 text-[10px] text-muted-foreground"
             >
-              Your post
+              {t('messages.yourPost')}
             </Badge>
           )}
           {postDeleted && (
             <Badge variant="outline" className="mt-0.5 text-xs text-muted-foreground">
-              Post deleted
+              {t('messages.postDeleted')}
             </Badge>
           )}
         </div>
@@ -68,7 +70,7 @@ export function ThreadHeader({
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5 no-underline')}
         >
           <ExternalLink className="size-3.5" />
-          View post
+          {t('messages.viewPost')}
         </Link>
       )}
     </div>

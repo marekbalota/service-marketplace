@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash2, Plus, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
@@ -53,6 +54,7 @@ function EditSkeleton() {
 }
 
 function EditProfilePage() {
+  const { t } = useTranslation()
   const { profileId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -190,22 +192,22 @@ function EditProfilePage() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton
-        label="Back to Profiles"
+        label={t('profiles.backToProfiles')}
         onClick={() => navigate({ to: '/account-settings/profiles' })}
       />
 
       <div className="mb-6">
-        <h2 className="mb-2">Edit Profile</h2>
+        <h2 className="mb-2">{t('profiles.editTitle')}</h2>
         <p className="text-muted-foreground">
-          Update your profile information and manage your saved locations
+          {t('profiles.editSubtitle')}
         </p>
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Your profile details visible to others</CardDescription>
+            <CardTitle>{t('profiles.basicInfo')}</CardTitle>
+            <CardDescription>{t('profiles.basicInfoSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ProfileFields control={form.control} />
@@ -214,8 +216,8 @@ function EditProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Images</CardTitle>
-            <CardDescription>Photos of your work, profile pictures, etc.</CardDescription>
+            <CardTitle>{t('profiles.images')}</CardTitle>
+            <CardDescription>{t('profiles.imagesSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ImagePickerGrid previews={previews} onFilePicked={addFile} onRemove={removeImage} />
@@ -226,8 +228,8 @@ function EditProfilePage() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle>Saved Locations</CardTitle>
-                <CardDescription>Manage locations you frequently use for posts</CardDescription>
+                <CardTitle>{t('profiles.savedLocations')}</CardTitle>
+                <CardDescription>{t('profiles.savedLocationsSubtitle')}</CardDescription>
               </div>
               <Button
                 type="button"
@@ -237,7 +239,7 @@ function EditProfilePage() {
                 onClick={() => setShowAddLocation((v) => !v)}
               >
                 <Plus className="size-4" />
-                Add Location
+                {t('profiles.addLocation')}
               </Button>
             </div>
           </CardHeader>
@@ -262,7 +264,7 @@ function EditProfilePage() {
 
             {locations.length === 0 ? (
               <p className="text-center py-8 text-sm text-muted-foreground">
-                No saved locations yet. Add one to quickly select it when creating posts.
+                {t('profiles.noLocations')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -302,20 +304,20 @@ function EditProfilePage() {
             variant="outline"
             onClick={() => navigate({ to: '/account-settings/profiles' })}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={saveMutation.isPending}>
             {saveMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Save Changes
+            {t('common.save')}
           </Button>
         </div>
       </form>
 
       <ConfirmDialog
         open={deleteLocationId !== null}
-        title="Remove Location"
-        description="Are you sure you want to remove this location from your profile?"
-        confirmLabel="Remove"
+        title={t('profiles.removeLocation')}
+        description={t('profiles.removeLocationConfirm')}
+        confirmLabel={t('common.remove')}
         destructive
         isPending={deleteLocationMutation.isPending}
         onConfirm={() => {

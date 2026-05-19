@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { BackButton } from '#/components/BackButton'
 import { PageHeader } from '#/components/PageHeader'
 import { Card, CardContent } from '#/components/ui/card'
@@ -49,23 +50,17 @@ export const Route = createFileRoute('/_app/admin/reports')({
   component: ManageReports,
 })
 
-const TYPE_LABELS: Record<string, string> = {
-  all: 'All Types',
-  POST: 'Posts',
-  MESSAGE: 'Messages',
-  REVIEW: 'Reviews',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  all: 'All Statuses',
-  PENDING: 'Pending',
-  RESOLVED: 'Resolved',
-  DISMISSED: 'Dismissed',
-}
-
 function TypeSelect() {
+  const { t } = useTranslation()
   const { type = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const TYPE_LABELS: Record<string, string> = {
+    all: t('admin.reports.allTypes'),
+    POST: t('admin.reports.posts'),
+    MESSAGE: t('admin.reports.messages'),
+    REVIEW: t('admin.reports.reviews'),
+  }
 
   return (
     <Select
@@ -102,6 +97,7 @@ function CategorySelect() {
 }
 
 function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) {
+  const { t } = useTranslation()
   const { category = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: categories = [] } = useQuery(reportCategoriesQueryOptions(type))
@@ -122,12 +118,12 @@ function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) 
       <SelectTrigger className="w-full">
         <SelectValue>
           {category === 'all'
-            ? 'All Reasons'
-            : (categories.find((c) => c.categoryId === category)?.label ?? 'All Reasons')}
+            ? t('admin.reports.allReasons')
+            : (categories.find((c) => c.categoryId === category)?.label ?? t('admin.reports.allReasons'))}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
-        <SelectItem value="all">All Reasons</SelectItem>
+        <SelectItem value="all">{t('admin.reports.allReasons')}</SelectItem>
         {categories.map((cat) => (
           <SelectItem key={cat.categoryId} value={cat.categoryId}>
             {cat.label}
@@ -139,8 +135,16 @@ function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) 
 }
 
 function StatusSelect() {
+  const { t } = useTranslation()
   const { status = 'all' } = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const STATUS_LABELS: Record<string, string> = {
+    all: t('admin.reports.allStatuses'),
+    PENDING: t('admin.reports.pending'),
+    RESOLVED: t('admin.reports.resolved'),
+    DISMISSED: t('admin.reports.dismissed'),
+  }
 
   return (
     <Select
@@ -214,16 +218,17 @@ function ReportsSkeleton() {
 }
 
 function ManageReports() {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { type = 'all', category = 'all', status = 'all', page = 1 } = Route.useSearch()
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/admin' })} label="Back to Admin" />
+      <BackButton onClick={() => navigate({ to: '/admin' })} label={t('admin.backToAdmin')} />
 
       <PageHeader
-        title="Manage Reports"
-        description="Review and moderate user-reported posts, messages, and reviews"
+        title={t('admin.reports.title')}
+        description={t('admin.reports.subtitle')}
       />
 
       <Card className="mb-6">

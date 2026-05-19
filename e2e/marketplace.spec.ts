@@ -372,6 +372,63 @@ test.describe('Banned page', () => {
   })
 })
 
+test.describe('Language switching', () => {
+  test.beforeEach(async ({ page }) => {
+    // Start from a clean language state so other tests are not affected
+    await page.goto('/posts')
+    await page.evaluate(() => localStorage.removeItem('language'))
+    await page.reload()
+    await expect(page.getByRole('banner')).toBeVisible()
+  })
+
+  test.afterEach(async ({ page }) => {
+    // Reset to English so other tests see the default language
+    await page.evaluate(() => localStorage.removeItem('language'))
+  })
+
+  test('switches UI to Slovak and persists across reload', async ({ page }) => {
+    // Switch to SK via the language switcher in the header
+    await page.getByRole('banner').getByRole('combobox').click()
+    await page.getByRole('option', { name: 'SK' }).click()
+
+    // Search placeholder should now be in Slovak
+    await expect(
+      page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
+    ).toBeVisible()
+
+    // Reload — language should be read from localStorage and stay in Slovak
+    await page.reload()
+    await expect(
+      page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
+    ).toBeVisible()
+  })
+
+  test('switches UI to Czech', async ({ page }) => {
+    await page.getByRole('banner').getByRole('combobox').click()
+    await page.getByRole('option', { name: 'CS' }).click()
+
+    await expect(
+      page.getByPlaceholder('Hledejte služby, poskytovatele nebo klíčová slova…'),
+    ).toBeVisible()
+  })
+
+  test('switching back to English restores English UI', async ({ page }) => {
+    // First switch to SK
+    await page.getByRole('banner').getByRole('combobox').click()
+    await page.getByRole('option', { name: 'SK' }).click()
+    await expect(
+      page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
+    ).toBeVisible()
+
+    // Switch back to EN
+    await page.getByRole('banner').getByRole('combobox').click()
+    await page.getByRole('option', { name: 'EN' }).click()
+    await expect(
+      page.getByPlaceholder('Search services, providers, or keywords…'),
+    ).toBeVisible()
+  })
+})
+
 test.describe('Authentication', () => {
   const testEmail = `e2e-${Date.now()}@example.com`
   const testPassword = 'password123'

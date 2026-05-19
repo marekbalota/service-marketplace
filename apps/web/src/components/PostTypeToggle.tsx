@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, type Control, type FieldValues } from 'react-hook-form'
 import { Field, FieldLabel } from '#/components/ui/field'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
@@ -7,6 +8,7 @@ export function PostTypeToggle<T extends FieldValues>({
 }: {
   control: Control<T, any>
 }) {
+  const { t } = useTranslation()
   const control = controlProp as Control<FieldValues, any>
   return (
     <Controller
@@ -14,7 +16,7 @@ export function PostTypeToggle<T extends FieldValues>({
       name="postType"
       render={({ field }) => (
         <Field>
-          <FieldLabel className="text-base font-semibold">Type *</FieldLabel>
+          <FieldLabel className="text-base font-semibold">{t('createPost.typeLabel')}</FieldLabel>
           <ToggleGroup
             value={field.value ? [field.value] : []}
             onValueChange={(vals) => {
@@ -35,7 +37,7 @@ export function PostTypeToggle<T extends FieldValues>({
                   type === 'OFFER' ? 'border-r' : '',
                 ].join(' ')}
               >
-                {type === 'OFFER' ? 'Offering Service' : 'Requesting Service'}
+                {type === 'OFFER' ? t('posts.type.offer') : t('posts.type.request')}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>

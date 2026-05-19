@@ -1,31 +1,30 @@
 import { createFileRoute, useRouter, redirect, useBlocker } from '@tanstack/react-router'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { FileText, AlignLeft, Tag } from 'lucide-react'
-import { FieldIconHeader } from '#/components/FieldIconHeader'
-import { PostTypeToggle } from '#/components/PostTypeToggle'
+import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
 import { api } from '#/api'
 import { categoriesQueryOptions, postDetailQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { Textarea } from '#/components/ui/textarea'
-import { MultiSelect } from '#/components/ui/multi-select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
-import { Field, FieldError } from '#/components/ui/field'
-import { Permissions, hasPermissions } from '@marketplace/shared'
+import { FieldError } from '#/components/ui/field'
+import { PostTypeToggle } from '#/components/PostTypeToggle'
 import { PricingField } from '#/components/PricingField'
+import { PostTitleField } from '#/components/PostTitleField'
+import { PostCategoryField } from '#/components/PostCategoryField'
+import { PostDescriptionField } from '#/components/PostDescriptionField'
+import { Permissions, hasPermissions } from '@marketplace/shared'
 
 const schema = z.object({
   postType: z.enum(['OFFER', 'REQUEST']),
-  postTitle: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  postTitle: z.string().min(3),
+  description: z.string().min(10),
   categoryIds: z.array(z.string()),
   price: z.string().optional(),
   rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
@@ -54,57 +53,61 @@ export const Route = createFileRoute('/_app/edit-post/$postId')({
 
 function EditPostSkeleton() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
+    <main className="mx-auto max-w-7xl px-4 py-6">
       <Skeleton className="mb-4 h-9 w-20" />
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="space-y-1 pb-6">
-          <Skeleton className="h-8 w-36" />
-          <Skeleton className="h-5 w-64" />
+      <Card className="border-0 shadow-lg pt-0">
+        <CardHeader className="flex flex-col rounded-t-xl px-6 pt-4 pb-3">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-4 w-56" />
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+        <CardContent className="pt-2">
+          <div className="space-y-4">
+            {/* Row 1 skeleton: Post Type */}
             <div className="space-y-2">
-              <Skeleton className="h-5 w-12" />
-              <Skeleton className="h-11 w-full rounded-lg" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 shrink-0 rounded-lg" />
-                <Skeleton className="h-5 w-14" />
-              </div>
+              <Skeleton className="h-5 w-16" />
               <Skeleton className="h-11 w-full" />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 shrink-0 rounded-lg" />
-                <Skeleton className="h-5 w-28" />
+            {/* Row 2 skeleton: Title | Category */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-8 shrink-0 rounded-lg" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-11 w-full" />
               </div>
-              <Skeleton className="h-32 w-full" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 shrink-0 rounded-lg" />
-                <Skeleton className="h-5 w-36" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-8 shrink-0 rounded-lg" />
+                  <Skeleton className="h-5 w-28" />
+                </div>
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-11 w-full" />
               </div>
-              <Skeleton className="h-11 w-full" />
             </div>
+            {/* Row 3 skeleton: Pricing */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <Skeleton className="size-8 shrink-0 rounded-lg" />
                 <Skeleton className="h-5 w-32" />
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-11 w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-11 w-full" />
-                </div>
+                <Skeleton className="h-11 w-full" />
+                <Skeleton className="h-11 w-full" />
               </div>
             </div>
-            <div className="flex gap-3 pt-6">
+            {/* Row 4 skeleton: Description */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-8 shrink-0 rounded-lg" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-[220px] w-full" />
+            </div>
+            {/* Buttons skeleton */}
+            <div className="flex gap-3 pt-2">
               <Skeleton className="h-11 flex-1" />
               <Skeleton className="h-11 flex-1" />
             </div>
@@ -116,6 +119,7 @@ function EditPostSkeleton() {
 }
 
 function EditPostPage() {
+  const { t } = useTranslation()
   const { postId } = Route.useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -175,117 +179,49 @@ function EditPostPage() {
   const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
+    <main className="mx-auto max-w-7xl px-4 py-6">
       <BackButton onClick={() => router.history.back()} />
 
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl">Edit Posting</CardTitle>
-          <CardDescription className="text-base">
-            Update your service posting details
-          </CardDescription>
+      <Card className="border-0 shadow-lg pt-0">
+        <CardHeader className="flex flex-col rounded-t-xl px-6 pt-4 pb-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30">
+          <CardTitle className="text-lg">{t('editPost.title')}</CardTitle>
+          <CardDescription className="text-sm">{t('editPost.subtitle')}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="pt-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+
+            {/* Row 1: Post Type — full width */}
             <PostTypeToggle control={form.control} />
 
-            <Controller
-              control={form.control}
-              name="postTitle"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader
-                    icon={FileText}
-                    iconBgClassName="bg-blue-100 dark:bg-blue-500/20"
-                    iconClassName="text-blue-600 dark:text-blue-300"
-                    label="Title *"
-                    htmlFor="postTitle"
-                  />
-                  <Input
-                    {...field}
-                    id="postTitle"
-                    placeholder="e.g., Professional Lawn Care Service"
-                    className="h-11"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
+            {/* Row 2: Title | Category */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <PostTitleField control={form.control} />
+              <PostCategoryField control={form.control} categories={categories} />
+            </div>
 
-            <Controller
-              control={form.control}
-              name="description"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader
-                    icon={AlignLeft}
-                    iconBgClassName="bg-muted"
-                    iconClassName="text-muted-foreground"
-                    label="Description *"
-                    htmlFor="description"
-                  />
-                  <Textarea
-                    {...field}
-                    id="description"
-                    placeholder="Describe your service offering or request in detail..."
-                    rows={5}
-                    className="resize-none"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="categoryIds"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldIconHeader
-                    icon={Tag}
-                    iconBgClassName="bg-green-100 dark:bg-green-500/20"
-                    iconClassName="text-green-600 dark:text-green-300"
-                    label="Categories (Optional)"
-                  />
-                  <MultiSelect
-                    options={categories.map((c) => ({ value: c.categoryId, label: c.name }))}
-                    value={field.value}
-                    onValueChange={(v) => {
-                      field.onChange(v)
-                      field.onBlur()
-                    }}
-                    placeholder="Select categories"
-                    searchPlaceholder="Search categories..."
-                    searchable
-                    displayMode="tags"
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-
+            {/* Row 3: Pricing — full width (price | rate type side-by-side internally) */}
             <PricingField control={form.control} priceValue={priceValue} />
+
+            {/* Row 4: Description — full width, stretched */}
+            <PostDescriptionField control={form.control} />
 
             <FieldError errors={[form.formState.errors.root]} />
 
-            <div className="flex gap-3 pt-6">
+            <div className="flex gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.history.back()}
                 className="h-11 flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending || !isValid}
                 className="h-11 flex-1"
               >
-                {mutation.isPending ? 'Saving…' : 'Save Changes'}
+                {mutation.isPending ? t('editPost.submitting') : t('editPost.submit')}
               </Button>
             </div>
           </form>
@@ -294,9 +230,9 @@ function EditPostPage() {
 
       <ConfirmDialog
         open={status === 'blocked'}
-        title="Discard changes?"
-        description="You have unsaved changes. Are you sure you want to leave?"
-        confirmLabel="Discard"
+        title={t('editPost.discardTitle')}
+        description={t('editPost.discardMessage')}
+        confirmLabel={t('editPost.discard')}
         destructive
         onConfirm={() => proceed?.()}
         onClose={() => reset?.()}

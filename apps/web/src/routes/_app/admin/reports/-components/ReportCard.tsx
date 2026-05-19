@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Ban, Eye, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 import { Button } from '#/components/ui/button'
@@ -20,20 +21,21 @@ const STATUS_CLASSES: Record<string, string> = {
   DISMISSED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
 }
 
-const STATUS_DISPLAY: Record<string, string> = {
-  PENDING: 'Pending',
-  RESOLVED: 'Resolved',
-  DISMISSED: 'Dismissed',
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  POST: 'Post',
-  MESSAGE: 'Message',
-  REVIEW: 'Review',
-}
-
 export function ReportCard({ report }: { report: ReportItem }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
+
+  const STATUS_DISPLAY: Record<string, string> = {
+    PENDING: t('admin.reports.pending'),
+    RESOLVED: t('admin.reports.resolved'),
+    DISMISSED: t('admin.reports.dismissed'),
+  }
+
+  const TYPE_LABELS: Record<string, string> = {
+    POST: t('admin.reports.posts'),
+    MESSAGE: t('admin.reports.messages'),
+    REVIEW: t('admin.reports.reviews'),
+  }
   const [banDialogOpen, setBanDialogOpen] = useState(false)
   const [unbanDialogOpen, setUnbanDialogOpen] = useState(false)
   const [messageContextOpen, setMessageContextOpen] = useState(false)
@@ -100,19 +102,19 @@ export function ReportCard({ report }: { report: ReportItem }) {
             <div className="space-y-1 text-sm text-muted-foreground">
               {report.reportedUserName && (
                 <p>
-                  <span className="font-medium text-foreground">Reported User:</span>{' '}
+                  <span className="font-medium text-foreground">{t('admin.reports.reportedUser')}:</span>{' '}
                   {report.reportedUserName}
                 </p>
               )}
               <p>
-                <span className="font-medium text-foreground">Reported By:</span>{' '}
+                <span className="font-medium text-foreground">{t('admin.reports.reportedBy')}:</span>{' '}
                 {report.reporterName}
               </p>
               <p>
-                <span className="font-medium text-foreground">Reason:</span> {report.categoryLabel}
+                <span className="font-medium text-foreground">{t('admin.reports.reason')}:</span> {report.categoryLabel}
               </p>
               <p>
-                <span className="font-medium text-foreground">Date:</span>{' '}
+                <span className="font-medium text-foreground">{t('admin.reports.date')}:</span>{' '}
                 {new Date(report.createdAt).toLocaleDateString()}
               </p>
             </div>
@@ -127,7 +129,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 onClick={() => setMessageContextOpen(true)}
               >
                 <Eye className="size-4" />
-                View
+                {t('common.view')}
               </Button>
               <MessageContextDialog
                 reportId={report.reportId}
@@ -149,7 +151,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               }
             >
               <ExternalLink className="size-4" />
-              View
+              {t('common.view')}
             </Button>
           )}
         </div>
@@ -158,7 +160,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
       <CardContent className="pt-0">
         {report.description && (
           <div className="mb-4">
-            <p className="text-sm font-medium mb-1">Description</p>
+            <p className="text-sm font-medium mb-1">{t('admin.reports.description')}</p>
             <p className="text-sm text-muted-foreground">{report.description}</p>
           </div>
         )}
@@ -174,7 +176,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                     disabled={unbanMutation.isPending}
                     onClick={() => setUnbanDialogOpen(true)}
                   >
-                    Unban User
+                    {t('admin.reports.unbanUser')}
                   </Button>
                   <UnbanDialog
                     open={unbanDialogOpen}
@@ -193,7 +195,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                     onClick={() => setBanDialogOpen(true)}
                   >
                     <Ban className="size-4" />
-                    Ban User
+                    {t('admin.reports.banUser')}
                   </Button>
                   <BanDialog
                     open={banDialogOpen}
@@ -210,7 +212,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               disabled={dismissMutation.isPending}
               onClick={() => dismissMutation.mutate()}
             >
-              Dismiss
+              {t('admin.reports.dismiss')}
             </Button>
           </div>
         )}

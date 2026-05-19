@@ -1,15 +1,17 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useStopImpersonating } from '#/lib/queries/auth'
 
 export function ImpersonationBanner() {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const stopMutation = useStopImpersonating()
 
   return (
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-900/30 flex items-center justify-between">
       <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
-        Impersonating {user?.name}
+        {t('impersonation.banner', { name: user?.name })}
       </span>
       <Button
         variant="outline"
@@ -18,7 +20,7 @@ export function ImpersonationBanner() {
         disabled={stopMutation.isPending}
         onClick={() => stopMutation.mutate()}
       >
-        Exit Impersonation
+        {t('impersonation.exit')}
       </Button>
     </div>
   )

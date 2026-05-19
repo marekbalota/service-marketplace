@@ -4,6 +4,7 @@ import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 import { Suspense } from 'react'
 import { Star, Mail, Phone, Printer } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { PostCard } from '#/components/PostCard'
 import { EmptyState } from '#/components/EmptyState'
@@ -98,6 +99,7 @@ function ProfilePostsGrid({
   archived: boolean
   isOwner: boolean
 }) {
+  const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived, 6))
   const posts = data?.items ?? []
@@ -107,7 +109,7 @@ function ProfilePostsGrid({
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }), replace: true })
 
   if (posts.length === 0) {
-    return <EmptyState message={`No ${archived ? 'archived' : 'active'} posts.`} />
+    return <EmptyState message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')} />
   }
 
   return (
@@ -130,6 +132,7 @@ function ProfilePostsGrid({
 }
 
 function ProfileViewPage() {
+  const { t } = useTranslation()
   const { profileId } = Route.useParams()
   const router = useRouter()
   const { tab, page = 1 } = Route.useSearch()
@@ -172,7 +175,7 @@ function ProfileViewPage() {
               <div className="text-center">
                 <h1 className="text-xl font-semibold">{profile.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Member since {new Date(profile.createdAt).toLocaleDateString()}
+                  {t('profiles.memberSince', { date: new Date(profile.createdAt).toLocaleDateString() })}
                 </p>
               </div>
 
@@ -182,7 +185,7 @@ function ProfileViewPage() {
                 {profile.bio && (
                   <div className="space-y-1">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Bio
+                      {t('profiles.bio')}
                     </p>
                     <p className="whitespace-pre-wrap">{profile.bio}</p>
                   </div>
@@ -239,14 +242,14 @@ function ProfileViewPage() {
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-medium">Posts</h2>
+                <h2 className="text-xl font-medium">{t('profiles.postsTitle')}</h2>
                 {isAuthenticated && (
                   <TabsList>
                     <TabsTrigger value="active">
-                      Active{postCounts ? ` (${postCounts.active})` : ''}
+                      {t('profiles.activeTab')}{postCounts ? ` (${postCounts.active})` : ''}
                     </TabsTrigger>
                     <TabsTrigger value="archived">
-                      Archived{postCounts ? ` (${postCounts.archived})` : ''}
+                      {t('profiles.archivedTab')}{postCounts ? ` (${postCounts.archived})` : ''}
                     </TabsTrigger>
                   </TabsList>
                 )}
@@ -254,7 +257,7 @@ function ProfileViewPage() {
             </CardHeader>
             <CardContent>
               {!isAuthenticated ? (
-                <p className="text-muted-foreground">Sign in to view this user's posts.</p>
+                <p className="text-muted-foreground">{t('profiles.signInToView')}</p>
               ) : (
                 <>
                   <TabsContent value="active">

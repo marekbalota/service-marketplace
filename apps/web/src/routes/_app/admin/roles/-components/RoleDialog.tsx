@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,8 +19,8 @@ import { Field, FieldError } from '#/components/ui/field'
 import type { Permission } from './SortableRoleCard'
 
 const roleFormSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
+  name: z.string().min(1),
+  description: z.string().min(1),
   permissionIds: z.array(z.string()),
 })
 
@@ -48,6 +49,7 @@ export function RoleDialog({
   defaultValues,
   onSubmit,
 }: RoleDialogProps) {
+  const { t } = useTranslation()
   const { control, handleSubmit, watch, setValue, reset, setError, formState } =
     useForm<RoleValues>({
       resolver: zodResolver(roleFormSchema),
@@ -89,11 +91,11 @@ export function RoleDialog({
             name="name"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor="role-name">Role Name *</Label>
+                <Label htmlFor="role-name">{t('admin.roles.roleName')} *</Label>
                 <Input
                   {...field}
                   id="role-name"
-                  placeholder="e.g., Content Manager"
+                  placeholder={t('admin.roles.roleNamePlaceholder')}
                   aria-invalid={fieldState.invalid}
                 />
                 <FieldError errors={[fieldState.error]} />
@@ -105,11 +107,11 @@ export function RoleDialog({
             name="description"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor="role-description">Description *</Label>
+                <Label htmlFor="role-description">{t('admin.roles.descriptionLabel')} *</Label>
                 <Input
                   {...field}
                   id="role-description"
-                  placeholder="Brief description of this role"
+                  placeholder={t('admin.roles.descriptionPlaceholder')}
                   aria-invalid={fieldState.invalid}
                 />
                 <FieldError errors={[fieldState.error]} />
@@ -117,7 +119,7 @@ export function RoleDialog({
             )}
           />
           <div className="space-y-3">
-            <Label>Permissions</Label>
+            <Label>{t('admin.roles.permissionsSection')}</Label>
             <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-4">
               {permissions.map((permission) => {
                 const grantable = grantablePermissionIds.has(permission.permissionId)
@@ -157,7 +159,7 @@ export function RoleDialog({
               className="flex-1"
               disabled={formState.isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ImageLightbox } from '#/components/ImageLightbox'
 import { Plus, Edit, Trash2, CheckCircle2, Eye, Phone, Printer } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
@@ -53,6 +54,7 @@ function ManageProfilesSkeleton() {
 }
 
 function DeleteProfileButton({ profile }: { profile: UserProfile }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -83,7 +85,7 @@ function DeleteProfileButton({ profile }: { profile: UserProfile }) {
         }}
       >
         <Trash2 className="size-4" />
-        Delete
+        {t('common.delete')}
       </Button>
       {errorMsg && <p className="max-w-48 text-right text-xs text-destructive">{errorMsg}</p>}
     </div>
@@ -99,6 +101,7 @@ function ProfileCard({
   isActive: boolean
   isOnly: boolean
 }) {
+  const { t } = useTranslation()
   const { data: images = [] } = useQuery(imagesQueryOptions(profile.userProfileId))
   const visibleImages = images.slice(0, 3)
   const extraCount = images.length - visibleImages.length
@@ -121,7 +124,7 @@ function ProfileCard({
                     )}
                   >
                     <CheckCircle2 className="size-3" />
-                    Active
+                    {t('profiles.active')}
                   </span>
                 )}
               </div>
@@ -177,7 +180,7 @@ function ProfileCard({
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-24 gap-2')}
             >
               <Eye className="size-4" />
-              View
+              {t('common.view')}
             </Link>
             <Link
               to="/account-settings/profiles/$profileId/edit"
@@ -185,7 +188,7 @@ function ProfileCard({
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-24 gap-2')}
             >
               <Edit className="size-4" />
-              Edit
+              {t('common.edit')}
             </Link>
             {!isOnly && <DeleteProfileButton profile={profile} />}
           </div>
@@ -203,6 +206,7 @@ function ProfileCard({
 }
 
 function ManageProfilesPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
@@ -211,19 +215,19 @@ function ManageProfilesPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <BackButton
-        label="Back to Account Settings"
+        label={t('profiles.backToSettings')}
         onClick={() => navigate({ to: '/account-settings' })}
       />
       <PageHeader
-        title="Manage Profiles"
-        description="Create and manage your public profiles"
+        title={t('profiles.title')}
+        description={t('profiles.subtitle')}
         action={
           <Link
             to="/account-settings/profiles/create"
             className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
           >
             <Plus className="size-4" />
-            Add Profile
+            {t('profiles.addProfile')}
           </Link>
         }
       />

@@ -1,4 +1,5 @@
 import { Suspense, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { wrapEdenError } from '#/lib/api-error'
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
@@ -41,6 +42,7 @@ function PostsGrid({
   page: number
   archived: boolean
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived))
   const navigate = Route.useNavigate()
@@ -69,12 +71,12 @@ function PostsGrid({
 
   if (posts.length === 0 && page === 1) {
     return archived ? (
-      <EmptyState message="No archived postings." />
+      <EmptyState message={t('myPostings.noArchived')} />
     ) : (
-      <EmptyState message="You haven't created any postings yet.">
+      <EmptyState message={t('myPostings.noPostings')}>
         <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
           <Plus className="size-4" />
-          Create your first posting
+          {t('myPostings.createFirst')}
         </Link>
       </EmptyState>
     )
@@ -104,9 +106,9 @@ function PostsGrid({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title="Delete post?"
-        description={`This will permanently remove "${deleteTarget?.postTitle ?? ''}". This action cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('myPostings.deleteTitle')}
+        description={t('myPostings.deleteMessage', { title: deleteTarget?.postTitle ?? '' })}
+        confirmLabel={t('myPostings.delete')}
         destructive
         isPending={deleteMutation.isPending}
         onConfirm={async () => {
@@ -119,6 +121,7 @@ function PostsGrid({
 }
 
 function MyPostingsPage() {
+  const { t } = useTranslation()
   const { activeProfile } = useActiveProfile()
   const { page = 1, tab } = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -140,12 +143,12 @@ function MyPostingsPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <PageHeader
-        title="My Postings"
-        description="Manage your service offerings"
+        title={t('myPostings.title')}
+        description={t('myPostings.subtitle')}
         action={
           <Link to="/create-post" className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
             <Plus className="size-4" />
-            Create Posting
+            {t('myPostings.createPosting')}
           </Link>
         }
       />
@@ -153,10 +156,10 @@ function MyPostingsPage() {
       <Tabs value={tab ?? 'active'} onValueChange={handleTabChange}>
         <TabsList variant="line" className="gap-6 mb-6">
           <TabsTrigger value="active">
-            Active{postCounts ? ` (${postCounts.active})` : ''}
+            {t('myPostings.active')}{postCounts ? ` (${postCounts.active})` : ''}
           </TabsTrigger>
           <TabsTrigger value="archived">
-            Archived{postCounts ? ` (${postCounts.archived})` : ''}
+            {t('myPostings.archived')}{postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
         </TabsList>
 
@@ -166,7 +169,7 @@ function MyPostingsPage() {
               <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={false} />
             </Suspense>
           ) : (
-            <EmptyState message="No profile found." />
+            <EmptyState message={t('errors.noProfile')} />
           )}
         </TabsContent>
 
@@ -176,7 +179,7 @@ function MyPostingsPage() {
               <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={true} />
             </Suspense>
           ) : (
-            <EmptyState message="No profile found." />
+            <EmptyState message={t('errors.noProfile')} />
           )}
         </TabsContent>
       </Tabs>

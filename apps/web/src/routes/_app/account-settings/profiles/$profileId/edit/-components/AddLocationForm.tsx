@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
@@ -35,24 +36,25 @@ export function AddLocationForm({
   isPending: boolean
   error?: string
 }) {
+  const { t } = useTranslation()
   return (
     <Card className="border-2 border-primary/20 bg-muted/40">
       <CardContent className="pt-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="loc-country">Country *</Label>
+            <Label htmlFor="loc-country">{t('profiles.location.country')} *</Label>
             <Input
               id="loc-country"
-              placeholder="e.g., USA, Slovakia"
+              placeholder={t('profiles.location.countryPlaceholder')}
               value={value.country}
               onChange={(e) => onChange({ country: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="loc-region">Region</Label>
+            <Label htmlFor="loc-region">{t('profiles.location.region')}</Label>
             <Input
               id="loc-region"
-              placeholder="e.g., Texas, Bratislava Region"
+              placeholder={t('profiles.location.regionPlaceholder')}
               value={value.region}
               onChange={(e) => onChange({ region: e.target.value })}
             />
@@ -60,29 +62,29 @@ export function AddLocationForm({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="loc-city">City</Label>
+            <Label htmlFor="loc-city">{t('profiles.location.city')}</Label>
             <Input
               id="loc-city"
-              placeholder="e.g., Austin, Bratislava"
+              placeholder={t('profiles.location.cityPlaceholder')}
               value={value.city}
               onChange={(e) => onChange({ city: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="loc-street">Street</Label>
+            <Label htmlFor="loc-street">{t('profiles.location.street')}</Label>
             <Input
               id="loc-street"
-              placeholder="e.g., Main Street"
+              placeholder={t('profiles.location.streetPlaceholder')}
               value={value.street}
               onChange={(e) => onChange({ street: e.target.value })}
             />
           </div>
         </div>
         <div className="space-y-2 md:w-1/2">
-          <Label htmlFor="loc-house">House Number</Label>
+          <Label htmlFor="loc-house">{t('profiles.location.houseNumber')}</Label>
           <Input
             id="loc-house"
-            placeholder="e.g., 123"
+            placeholder={t('profiles.location.houseNumberPlaceholder')}
             value={value.houseNumber}
             onChange={(e) => onChange({ houseNumber: e.target.value })}
           />
@@ -90,11 +92,11 @@ export function AddLocationForm({
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="button" onClick={onSave} disabled={!value.country || isPending}>
             {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Add Location
+            {t('profiles.addLocation')}
           </Button>
         </div>
       </CardContent>

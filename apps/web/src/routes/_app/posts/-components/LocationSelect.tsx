@@ -1,5 +1,6 @@
 import { ChevronDown, MapPin } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { cn } from '#/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import { Button } from '#/components/ui/button'
@@ -8,11 +9,12 @@ import { locationsDistinctQueryOptions } from '../-queries/locations'
 import { LocationCombobox } from './LocationCombobox'
 
 export function LocationSelect() {
+  const { t } = useTranslation()
   const { country, region, city } = Route.useSearch()
   const navigate = Route.useNavigate()
 
   const hasFilter = !!(country || region || city)
-  const label = city ?? region ?? country ?? 'All Locations'
+  const label = city ?? region ?? country ?? t('posts.location.all')
 
   const { data: countries = [], isFetching: fetchingCountries } = useQuery(
     locationsDistinctQueryOptions({ field: 'country' }),
@@ -61,11 +63,11 @@ export function LocationSelect() {
       >
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Country</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('posts.location.country')}</p>
             <LocationCombobox
               value={country}
               options={countries}
-              placeholder="Any country"
+              placeholder={t('posts.location.anyCountry')}
               isFetching={fetchingCountries}
               onChange={(val) =>
                 navigate({
@@ -82,11 +84,11 @@ export function LocationSelect() {
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Region</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('posts.location.region')}</p>
             <LocationCombobox
               value={region}
               options={regions}
-              placeholder="Any region"
+              placeholder={t('posts.location.anyRegion')}
               disabled={!country}
               isFetching={fetchingRegions}
               onChange={(val) =>
@@ -103,11 +105,11 @@ export function LocationSelect() {
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">City</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('posts.location.city')}</p>
             <LocationCombobox
               value={city}
               options={cities}
-              placeholder="Any city"
+              placeholder={t('posts.location.anyCity')}
               disabled={!country || !region}
               isFetching={fetchingCities}
               onChange={(val) =>
@@ -130,7 +132,7 @@ export function LocationSelect() {
               onClick={clearAll}
               className="w-full text-xs text-muted-foreground"
             >
-              Clear location
+              {t('posts.location.clear')}
             </Button>
           )}
         </div>

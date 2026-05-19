@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronDown, Loader2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '#/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import { Button } from '#/components/ui/button'
@@ -38,6 +39,7 @@ export function LocationCombobox({
   disabled = false,
   isFetching = false,
 }: LocationComboboxProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
 
@@ -120,13 +122,13 @@ export function LocationCombobox({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={`Search ${placeholder.toLowerCase()}…`}
+            placeholder={t('posts.location.searchPlaceholder', { location: placeholder.toLowerCase() })}
             value={search}
             onValueChange={setSearch}
           />
           <div className="mt-1 h-px bg-border" />
           <CommandList className="![scrollbar-width:thin] [&::-webkit-scrollbar]:!block [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
-            <CommandEmpty>No locations found.</CommandEmpty>
+            <CommandEmpty>{t('posts.location.noLocations')}</CommandEmpty>
             <CommandGroup className="p-0">
               {displayed.map((opt) => (
                 <CommandItem

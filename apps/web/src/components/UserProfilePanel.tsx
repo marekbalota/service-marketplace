@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link, useRouter, useNavigate } from '@tanstack/react-router'
 import { Settings, FileText, MessageSquare, Shield, Search, LogOut } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
@@ -30,6 +31,7 @@ function ProfileOption({ name }: { name: string }) {
 }
 
 export function UserProfilePanel({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const { activeProfile, setActiveProfileId } = useActiveProfile()
   const router = useRouter()
@@ -45,7 +47,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
         {allProfiles.length > 0 && (
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Switch Profile
+              {t('nav.switchProfile')}
             </Label>
 
             <Select
@@ -77,7 +79,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
         {/* Navigation */}
         <div className="space-y-1">
           <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Navigation
+            {t('nav.navigation')}
           </p>
           <nav className="flex flex-col gap-0.5">
             <SheetClose
@@ -93,7 +95,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20">
                 <Search className="size-5 text-blue-600 dark:text-blue-300" />
               </div>
-              <span>Browse Postings</span>
+              <span>{t('nav.browsePostings')}</span>
             </SheetClose>
 
             <SheetClose
@@ -109,7 +111,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-500/20">
                 <FileText className="size-5 text-green-600 dark:text-green-300" />
               </div>
-              <span>My Postings</span>
+              <span>{t('nav.myPostings')}</span>
             </SheetClose>
 
             <SheetClose
@@ -125,7 +127,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-500/20">
                 <MessageSquare className="size-5 text-purple-600 dark:text-purple-300" />
               </div>
-              <span>Messages</span>
+              <span>{t('nav.messages')}</span>
             </SheetClose>
 
             {isAdmin && (
@@ -142,7 +144,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20">
                   <Shield className="size-5 text-orange-600 dark:text-orange-300" />
                 </div>
-                <span>Admin</span>
+                <span>{t('nav.admin')}</span>
               </SheetClose>
             )}
           </nav>
@@ -163,7 +165,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             }
           >
             <Settings className="size-5 text-muted-foreground" />
-            <span>Account Settings</span>
+            <span>{t('nav.accountSettings')}</span>
           </SheetClose>
           <Button
             variant="ghost"
@@ -182,7 +184,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             }}
           >
             <LogOut className="size-5" />
-            <span>Log out</span>
+            <span>{t('nav.logout')}</span>
           </Button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { useMatch } from '@tanstack/react-router'
 import { Suspense, useEffect, useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Skeleton } from '#/components/ui/skeleton'
 import { cn } from '#/lib/utils'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -35,15 +36,16 @@ function ThreadSidebar({
   profileId: string
   activeThreadId?: string
 }) {
+  const { t } = useTranslation()
   const { data: threads } = useSuspenseQuery(threadsQueryOptions(profileId))
 
   if (threads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <MessageSquare className="mb-4 size-10 text-muted-foreground/40" />
-        <p className="text-sm text-muted-foreground">No messages yet.</p>
+        <p className="text-sm text-muted-foreground">{t('messages.noMessages')}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Browse posts and send a message to get started.
+          {t('messages.noMessagesHint')}
         </p>
       </div>
     )
@@ -63,6 +65,7 @@ function ThreadSidebar({
 }
 
 function MessagesLayout() {
+  const { t } = useTranslation()
   const { data: currentUser } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const threadMatch = useMatch({ from: '/_app/messages/$threadId', shouldThrow: false })
@@ -82,7 +85,7 @@ function MessagesLayout() {
   if (currentUser?.impersonatedBy) {
     return (
       <div className="flex h-[calc(100svh-4rem)] items-center justify-center">
-        <EmptyState message="Messages are not accessible during impersonation." />
+        <EmptyState message={t('messages.impersonationBlocked')} />
       </div>
     )
   }
@@ -96,7 +99,7 @@ function MessagesLayout() {
         )}
       >
         <div className="border-b px-4 py-3">
-          <h1 className="text-lg font-semibold">Messages</h1>
+          <h1 className="text-lg font-semibold">{t('messages.title')}</h1>
         </div>
         <div className="flex-1 overflow-y-auto">
           {activeProfile ? (

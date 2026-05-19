@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import i18n from '#/lib/i18n'
 import { Flag } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Textarea } from '#/components/ui/textarea'
@@ -17,13 +19,13 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { reportCategoriesQueryOptions } from '#/lib/queries/reports'
 
 const baseSchema = z.object({
-  categoryId: z.uuid('Please select a category'),
+  categoryId: z.uuid(),
   description: z.string().max(1000).optional(),
 })
 
 const schemaWithRequiredDescription = baseSchema.superRefine((data, ctx) => {
   if (!data.description?.trim()) {
-    ctx.addIssue({ code: 'custom', message: 'Description is required', path: ['description'] })
+    ctx.addIssue({ code: 'custom', message: i18n.t('validation.required'), path: ['description'] })
   }
 })
 
@@ -46,6 +48,7 @@ export function ReportForm({
   onSuccess,
   onCancel,
 }: ReportFormProps) {
+  const { t } = useTranslation()
   const [serverError, setServerError] = useState<string | null>(null)
 
   const schema = descriptionRequired ? schemaWithRequiredDescription : baseSchema
@@ -86,7 +89,7 @@ export function ReportForm({
             const selectedLabel = categories.find((c) => c.categoryId === field.value)?.label
             return (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Report Category *</FieldLabel>
+                <FieldLabel>{t('report.category')}</FieldLabel>
                 <Select
                   value={field.value}
                   onValueChange={(v) => {
@@ -97,7 +100,7 @@ export function ReportForm({
                 >
                   <SelectTrigger aria-invalid={fieldState.invalid}>
                     <SelectValue
-                      placeholder={categoriesLoading ? 'Loading...' : 'Select a reason...'}
+                      placeholder={categoriesLoading ? t('common.loading') : t('report.selectReason')}
                     >
                       {selectedLabel}
                     </SelectValue>
@@ -121,9 +124,9 @@ export function ReportForm({
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>{descriptionRequired ? 'Description *' : 'Description'}</FieldLabel>
+              <FieldLabel>{descriptionRequired ? t('report.descriptionRequired') : t('report.description')}</FieldLabel>
               <Textarea
-                placeholder="Provide any additional details..."
+                placeholder={t('report.descriptionPlaceholder')}
                 maxLength={1000}
                 rows={3}
                 aria-invalid={fieldState.invalid}
@@ -146,10 +149,10 @@ export function ReportForm({
           className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Flag className="size-4" />
-          {mutation.isPending ? 'Submitting...' : 'Submit Report'}
+          {mutation.isPending ? t('common.submitting') : t('report.submit')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={mutation.isPending}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>

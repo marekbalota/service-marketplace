@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, type Control, type FieldValues } from 'react-hook-form'
 import { DollarSign } from 'lucide-react'
 import { Input } from '#/components/ui/input'
@@ -16,25 +17,27 @@ interface PricingFieldProps<T extends FieldValues> {
   priceValue: string | undefined
 }
 
-const RATE_TYPES = [
-  { value: 'HOURLY', label: 'Hourly Rate' },
-  { value: 'DAILY', label: 'Daily Rate' },
-  { value: 'FIXED', label: 'Fixed Price' },
-] as const
-
 export function PricingField<T extends FieldValues>({
   control: controlProp,
   priceValue,
 }: PricingFieldProps<T>) {
+  const { t } = useTranslation()
   // FieldValues (= Record<string,any>) has string-keyed index signature so any literal name is valid inside
   const control = controlProp as Control<FieldValues, any>
+
+  const rateTypes = [
+    { value: 'HOURLY', label: t('pricing.hourly') },
+    { value: 'DAILY', label: t('pricing.daily') },
+    { value: 'FIXED', label: t('pricing.fixed') },
+  ] as const
+
   return (
-    <Field className="space-y-4">
+    <Field>
       <FieldIconHeader
         icon={DollarSign}
         iconBgClassName="bg-emerald-100 dark:bg-emerald-500/20"
         iconClassName="text-emerald-600 dark:text-emerald-300"
-        label="Pricing (Optional)"
+        label={t('pricing.label')}
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Controller
@@ -42,7 +45,7 @@ export function PricingField<T extends FieldValues>({
           name="price"
           render={({ field }) => (
             <Field>
-              <FieldLabel htmlFor="price">Price ($)</FieldLabel>
+              <FieldLabel htmlFor="price">{t('pricing.price')}</FieldLabel>
               <Input
                 {...field}
                 id="price"
@@ -60,7 +63,7 @@ export function PricingField<T extends FieldValues>({
           name="rateType"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Rate Type</FieldLabel>
+              <FieldLabel>{t('pricing.rateType')}</FieldLabel>
               <Select
                 value={field.value ?? ''}
                 onValueChange={(v) => {
@@ -70,12 +73,12 @@ export function PricingField<T extends FieldValues>({
                 disabled={!priceValue}
               >
                 <SelectTrigger className="!h-11 w-full">
-                  <SelectValue placeholder="Select rate type">
-                    {RATE_TYPES.find((r) => r.value === field.value)?.label}
+                  <SelectValue placeholder={t('pricing.selectRateType')}>
+                    {rateTypes.find((r) => r.value === field.value)?.label}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {RATE_TYPES.map((r) => (
+                  {rateTypes.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}
                     </SelectItem>
@@ -87,7 +90,6 @@ export function PricingField<T extends FieldValues>({
           )}
         />
       </div>
-      <p className="text-sm text-muted-foreground">Leave price empty if negotiable</p>
     </Field>
   )
 }

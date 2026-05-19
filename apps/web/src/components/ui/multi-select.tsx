@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronDown, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '#/lib/utils'
 import { Badge } from '#/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
@@ -73,6 +74,7 @@ export function MultiSelect({
     onValueChange?.(value.slice(0, visibleCount))
   }
 
+  const { t } = useTranslation()
   const enabledOptions = options.filter((o) => !o.disabled)
   const selectAll = () => onValueChange?.(enabledOptions.map((o) => o.value))
   const clearAll = () => onValueChange?.([])
@@ -263,8 +265,8 @@ export function MultiSelect({
             <CommandEmpty>{emptyText}</CommandEmpty>
             {showControls && !search && (
               <CommandGroup className="p-0">
-                {value.length === 0 && <CommandItem onSelect={selectAll}>Select all</CommandItem>}
-                {value.length > 0 && <CommandItem onSelect={clearAll}>Clear selection</CommandItem>}
+                {value.length === 0 && <CommandItem onSelect={selectAll}>{t('common.selectAll')}</CommandItem>}
+                {value.length > 0 && <CommandItem onSelect={clearAll}>{t('common.clearSelection')}</CommandItem>}
               </CommandGroup>
             )}
             <CommandGroup className="p-0">
