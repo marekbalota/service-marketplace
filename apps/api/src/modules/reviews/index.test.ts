@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'bun:test'
+import { describe, it, expect, beforeAll, beforeEach } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { reviewsRoutes } from '.'
@@ -9,6 +9,7 @@ import { profilesRoutes } from '../profiles'
 import { usersRoutes } from '../users'
 import { categoriesRoutes } from '../categories'
 import { errorsPlugin } from '../../lib/errors'
+import { sentNotifications } from '../../lib/email'
 
 const app = new Elysia()
   .use(errorsPlugin)
@@ -53,6 +54,10 @@ beforeAll(async () => {
 })
 
 describe('POST /reviews', () => {
+  beforeEach(() => {
+    sentNotifications.length = 0
+  })
+
   it('returns 401 when not authenticated', async () => {
     const { error } = await client.reviews.post({
       rating: 5,
@@ -62,7 +67,7 @@ describe('POST /reviews', () => {
     expect(error?.status).toBe(401)
   })
 
-  it('creates a review with valid data (201)', async () => {
+  it('creates a review with valid data (201) and sends notification', async () => {
     const { data, error } = await client.reviews.post(
       { rating: 5, reviewDescription: 'Excellent service!', postId, profileId: authorId },
       { headers: { Cookie: sessionCookie } },
@@ -74,6 +79,12 @@ describe('POST /reviews', () => {
     expect((data as any)?.rating).toBe(5)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reviewId = (data as any)?.reviewId
+
+    // Notification should be sent to the post author
+    await new Promise((r) => setTimeout(r, 500))
+    expect(sentNotifications.length).toBe(1)
+    expect(sentNotifications[0]!.to).toBe('alice@example.com')
+    expect(sentNotifications[0]!.subject).toContain('review')
   })
 
   it('returns 409 for duplicate review', async () => {
