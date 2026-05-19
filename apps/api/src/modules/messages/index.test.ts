@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'bun:test'
+import { describe, it, expect, beforeAll, beforeEach } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
 import { messagesRoutes } from '.'
@@ -11,6 +11,7 @@ import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
 import { messageThreads, messages } from '../../db/schema'
 import { eq } from 'drizzle-orm'
+import { sentNotifications } from '../../lib/email'
 
 const app = new Elysia()
   .use(errorsPlugin)
@@ -68,6 +69,10 @@ beforeAll(async () => {
 })
 
 describe('POST /threads', () => {
+  beforeEach(() => {
+    sentNotifications.length = 0
+  })
+
   it('returns 401 without a session', async () => {
     const { error } = await client.threads.post({
       profileId: bobProfile,
@@ -109,6 +114,12 @@ describe('POST /threads', () => {
     expect(error).toBeNull()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (data as any)?.threadId).toBe('string')
+    // Notification should be queued to the post author (alice@example.com)
+    // Give the fire-and-forget a tick to complete
+    await new Promise((r) => setTimeout(r, 500))
+    expect(sentNotifications.length).toBe(1)
+    expect(sentNotifications[0]!.to).toBe('alice@example.com')
+    expect(sentNotifications[0]!.subject).toContain('message')
   })
 
   it('returns 409 when creating a duplicate thread for the same post', async () => {
@@ -258,6 +269,10 @@ describe('POST /threads/:threadId/messages', () => {
     threadId = data?.[0]?.threadId ?? ''
   })
 
+  beforeEach(() => {
+    sentNotifications.length = 0
+  })
+
   it('returns 401 without a session', async () => {
     const { error } = await client.threads({ threadId }).messages.post({
       profileId: aliceProfile,
@@ -284,7 +299,7 @@ describe('POST /threads/:threadId/messages', () => {
     expect(error?.status).toBe(403)
   })
 
-  it('allows Alice (post owner) to reply — returns 201', async () => {
+  it('allows Alice (post owner) to reply — returns 201 and notifies initiator', async () => {
     const { data, error } = await client
       .threads({ threadId })
       .messages.post(
@@ -296,6 +311,9 @@ describe('POST /threads/:threadId/messages', () => {
     expect(typeof (data as any)?.messageId).toBe('string')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((data as any)?.sentByMe).toBe(true)
+    await new Promise((r) => setTimeout(r, 500))
+    expect(sentNotifications.length).toBe(1)
+    expect(sentNotifications[0]!.to).toBe('bob@example.com')
   })
 
   it('allows Bob (initiator) to reply — returns 201', async () => {

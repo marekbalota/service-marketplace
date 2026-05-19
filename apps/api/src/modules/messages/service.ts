@@ -1,11 +1,13 @@
 import { db } from '../../db'
-import { messageThreads, messages, posts, userProfiles } from '../../db/schema'
+import { messageThreads, messages, posts, userProfiles, users } from '../../db/schema'
 import { eq, or, and, isNull, desc, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { MessagesModel } from './model'
 import { ForbiddenError, ConflictError, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 import { PostsService } from '../posts/service'
+import { sendMessageNotificationEmail } from '../../lib/email'
+import { env } from '../../lib/env'
 
 type Role = 'initiator' | 'post_owner'
 type Label = 'provider' | 'client'
@@ -242,8 +244,9 @@ export abstract class MessagesService {
       throw new ForbiddenError('Cannot start a thread on your own post')
     }
 
+    let result: { threadId: string }
     try {
-      return await db.transaction(async (tx) => {
+      result = await db.transaction(async (tx) => {
         const [thread] = await tx
           .insert(messageThreads)
           .values({ postId: body.postId, initiatorId: body.profileId })
@@ -274,6 +277,37 @@ export abstract class MessagesService {
       if (pgCode === '23505') throw new ConflictError('A thread for this post already exists')
       throw err
     }
+
+    // Fire-and-forget: notify post author about the new thread
+    void (async () => {
+      try {
+        const [authorEmailRow, initiatorRow] = await Promise.all([
+          db
+            .select({ email: users.email })
+            .from(userProfiles)
+            .innerJoin(users, eq(userProfiles.accountId, users.id))
+            .where(eq(userProfiles.userProfileId, post.authorId))
+            .limit(1),
+          db
+            .select({ name: userProfiles.name })
+            .from(userProfiles)
+            .where(eq(userProfiles.userProfileId, body.profileId))
+            .limit(1),
+        ])
+        if (authorEmailRow[0] && initiatorRow[0]) {
+          await sendMessageNotificationEmail({
+            recipientEmail: authorEmailRow[0].email,
+            senderName: initiatorRow[0].name,
+            postTitle: post.postTitle,
+            threadUrl: `${env.frontendUrl}/messages/${result.threadId}`,
+          })
+        }
+      } catch (notifyErr) {
+        console.error('[notification] createThread notification failed:', notifyErr)
+      }
+    })()
+
+    return result
   }
 
   /**
@@ -298,6 +332,53 @@ export abstract class MessagesService {
       .insert(messages)
       .values({ threadId, senderId: body.profileId, content: body.content })
       .returning()
+
+    // Fire-and-forget: notify the other participant
+    void (async () => {
+      try {
+      const initiatorAlias = alias(userProfiles, 'initiator_profile')
+      const authorAlias = alias(userProfiles, 'author_profile')
+      const [threadRow] = await db
+        .select({
+          initiatorId: messageThreads.initiatorId,
+          authorId: posts.authorId,
+          postTitle: posts.postTitle,
+          initiatorName: initiatorAlias.name,
+          authorName: authorAlias.name,
+        })
+        .from(messageThreads)
+        .innerJoin(posts, eq(messageThreads.postId, posts.postId))
+        .innerJoin(initiatorAlias, eq(messageThreads.initiatorId, initiatorAlias.userProfileId))
+        .innerJoin(authorAlias, eq(posts.authorId, authorAlias.userProfileId))
+        .where(eq(messageThreads.threadId, threadId))
+        .limit(1)
+
+      if (!threadRow) return
+
+      const recipientProfileId =
+        roleResult.role === 'initiator' ? threadRow.authorId : threadRow.initiatorId
+      const senderName =
+        roleResult.role === 'initiator' ? threadRow.initiatorName : threadRow.authorName
+
+      const [recipientEmailRow] = await db
+        .select({ email: users.email })
+        .from(userProfiles)
+        .innerJoin(users, eq(userProfiles.accountId, users.id))
+        .where(eq(userProfiles.userProfileId, recipientProfileId))
+        .limit(1)
+
+      if (recipientEmailRow) {
+        await sendMessageNotificationEmail({
+          recipientEmail: recipientEmailRow.email,
+          senderName,
+          postTitle: threadRow.postTitle,
+          threadUrl: `${env.frontendUrl}/messages/${threadId}`,
+        })
+      }
+      } catch (notifyErr) {
+        console.error('[notification] addMessage notification failed:', notifyErr)
+      }
+    })()
 
     return {
       messageId: inserted!.messageId,
