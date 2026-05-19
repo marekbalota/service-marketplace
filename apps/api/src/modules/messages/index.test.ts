@@ -10,7 +10,7 @@ import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
 import { messageThreads, messages } from '../../db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, isNull } from 'drizzle-orm'
 import { sentNotifications } from '../../lib/email'
 
 const app = new Elysia()
@@ -55,16 +55,22 @@ beforeAll(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   alicePostId = (alicePosts?.items?.[0] as any)?.postId ?? ''
 
-  // Clean up threads from previous test runs so the tests are idempotent
+  // Clean up threads from previous test runs so the tests are idempotent (soft-delete)
   if (bobProfile) {
     const existing = await db
       .select({ threadId: messageThreads.threadId })
       .from(messageThreads)
       .where(eq(messageThreads.initiatorId, bobProfile))
     for (const t of existing) {
-      await db.delete(messages).where(eq(messages.threadId, t.threadId))
+      await db
+        .update(messages)
+        .set({ deletedAt: new Date() })
+        .where(eq(messages.threadId, t.threadId))
     }
-    await db.delete(messageThreads).where(eq(messageThreads.initiatorId, bobProfile))
+    await db
+      .update(messageThreads)
+      .set({ deletedAt: new Date() })
+      .where(eq(messageThreads.initiatorId, bobProfile))
   }
 })
 

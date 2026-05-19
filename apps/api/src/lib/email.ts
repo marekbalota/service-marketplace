@@ -40,6 +40,10 @@ export const sentNotifications: SentNotification[] = []
 // Helpers
 // ---------------------------------------------------------------------------
 
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c]!)
+}
+
 function baseTemplate(title: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -137,7 +141,7 @@ export async function sendMessageNotificationEmail(params: {
 }): Promise<void> {
   const html = baseTemplate(
     'You have a new message',
-    `<p><strong>${params.senderName}</strong> sent you a message regarding your post <em>${params.postTitle}</em>.</p>
+    `<p><strong>${escapeHtml(params.senderName)}</strong> sent you a message regarding your post <em>${escapeHtml(params.postTitle)}</em>.</p>
      <a href="${params.threadUrl}" style="display:inline-block;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:6px;text-decoration:none;margin-top:16px;">View Message</a>`,
   )
   await sendEmail(params.recipientEmail, `New message: ${params.postTitle}`, html)
@@ -153,7 +157,7 @@ export async function sendReviewNotificationEmail(params: {
   const stars = '★'.repeat(params.rating) + '☆'.repeat(5 - params.rating)
   const html = baseTemplate(
     'New review on your post',
-    `<p><strong>${params.reviewerName}</strong> left a ${params.rating}-star review on your post <em>${params.postTitle}</em>.</p>
+    `<p><strong>${escapeHtml(params.reviewerName)}</strong> left a ${params.rating}-star review on your post <em>${escapeHtml(params.postTitle)}</em>.</p>
      <p style="font-size:24px;color:#f59e0b;">${stars}</p>
      <a href="${params.postUrl}" style="display:inline-block;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:6px;text-decoration:none;margin-top:16px;">View Post</a>`,
   )

@@ -336,45 +336,45 @@ export abstract class MessagesService {
     // Fire-and-forget: notify the other participant
     void (async () => {
       try {
-      const initiatorAlias = alias(userProfiles, 'initiator_profile')
-      const authorAlias = alias(userProfiles, 'author_profile')
-      const [threadRow] = await db
-        .select({
-          initiatorId: messageThreads.initiatorId,
-          authorId: posts.authorId,
-          postTitle: posts.postTitle,
-          initiatorName: initiatorAlias.name,
-          authorName: authorAlias.name,
-        })
-        .from(messageThreads)
-        .innerJoin(posts, eq(messageThreads.postId, posts.postId))
-        .innerJoin(initiatorAlias, eq(messageThreads.initiatorId, initiatorAlias.userProfileId))
-        .innerJoin(authorAlias, eq(posts.authorId, authorAlias.userProfileId))
-        .where(eq(messageThreads.threadId, threadId))
-        .limit(1)
+        const initiatorAlias = alias(userProfiles, 'initiator_profile')
+        const authorAlias = alias(userProfiles, 'author_profile')
+        const [threadRow] = await db
+          .select({
+            initiatorId: messageThreads.initiatorId,
+            authorId: posts.authorId,
+            postTitle: posts.postTitle,
+            initiatorName: initiatorAlias.name,
+            authorName: authorAlias.name,
+          })
+          .from(messageThreads)
+          .innerJoin(posts, eq(messageThreads.postId, posts.postId))
+          .innerJoin(initiatorAlias, eq(messageThreads.initiatorId, initiatorAlias.userProfileId))
+          .innerJoin(authorAlias, eq(posts.authorId, authorAlias.userProfileId))
+          .where(eq(messageThreads.threadId, threadId))
+          .limit(1)
 
-      if (!threadRow) return
+        if (!threadRow) return
 
-      const recipientProfileId =
-        roleResult.role === 'initiator' ? threadRow.authorId : threadRow.initiatorId
-      const senderName =
-        roleResult.role === 'initiator' ? threadRow.initiatorName : threadRow.authorName
+        const recipientProfileId =
+          roleResult.role === 'initiator' ? threadRow.authorId : threadRow.initiatorId
+        const senderName =
+          roleResult.role === 'initiator' ? threadRow.initiatorName : threadRow.authorName
 
-      const [recipientEmailRow] = await db
-        .select({ email: users.email })
-        .from(userProfiles)
-        .innerJoin(users, eq(userProfiles.accountId, users.id))
-        .where(eq(userProfiles.userProfileId, recipientProfileId))
-        .limit(1)
+        const [recipientEmailRow] = await db
+          .select({ email: users.email })
+          .from(userProfiles)
+          .innerJoin(users, eq(userProfiles.accountId, users.id))
+          .where(eq(userProfiles.userProfileId, recipientProfileId))
+          .limit(1)
 
-      if (recipientEmailRow) {
-        await sendMessageNotificationEmail({
-          recipientEmail: recipientEmailRow.email,
-          senderName,
-          postTitle: threadRow.postTitle,
-          threadUrl: `${env.frontendUrl}/messages/${threadId}`,
-        })
-      }
+        if (recipientEmailRow) {
+          await sendMessageNotificationEmail({
+            recipientEmail: recipientEmailRow.email,
+            senderName,
+            postTitle: threadRow.postTitle,
+            threadUrl: `${env.frontendUrl}/messages/${threadId}`,
+          })
+        }
       } catch (notifyErr) {
         console.error('[notification] addMessage notification failed:', notifyErr)
       }
