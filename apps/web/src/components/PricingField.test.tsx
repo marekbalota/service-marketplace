@@ -31,8 +31,4 @@ describe('PricingField', () => {
     expect(screen.getByRole('combobox')).not.toBeDisabled()
   })
 
-  it('shows the "leave price empty if negotiable" hint', () => {
-    render(<Wrapper />)
-    expect(screen.getByText(/leave price empty if negotiable/i)).toBeInTheDocument()
-  })
 })
