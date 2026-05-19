@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
@@ -35,6 +35,7 @@ function EmailChallengePage() {
   const [code, setCode] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
   const [rememberDevice, setRememberDevice] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     if (resendCooldown <= 0) return
@@ -58,7 +59,9 @@ function EmailChallengePage() {
     onSuccess: () => {
       sessionStorage.setItem(SENT_AT_KEY, Date.now().toString())
       setResendCooldown(COOLDOWN_SECONDS)
+      setIsSending(false)
     },
+    onError: () => setIsSending(false),
   })
 
   const verify = useMutation({
@@ -76,7 +79,7 @@ function EmailChallengePage() {
     },
   })
 
-  const sendCodeMutate = sendCode.mutate
+  const hasSentRef = useRef(false)
   useEffect(() => {
     const sentAt = sessionStorage.getItem(SENT_AT_KEY)
     if (sentAt) {
@@ -87,9 +90,9 @@ function EmailChallengePage() {
         return
       }
     }
-    sendCodeMutate()
-    // sendCodeMutate is a stable reference from useMutation — run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (hasSentRef.current) return
+    hasSentRef.current = true
+    sendCode.mutate()
   }, [])
 
   return (
@@ -120,10 +123,10 @@ function EmailChallengePage() {
           <Button
             variant="link"
             className="h-auto p-0"
-            onClick={() => sendCode.mutate()}
-            disabled={sendCode.isPending || resendCooldown > 0}
+            onClick={() => { setIsSending(true); sendCode.mutate() }}
+            disabled={isSending || resendCooldown > 0}
           >
-            {sendCode.isPending
+            {isSending
               ? 'Sending…'
               : resendCooldown > 0
                 ? `Resend in ${formatCountdown(resendCooldown)}`

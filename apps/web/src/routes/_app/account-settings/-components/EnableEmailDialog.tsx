@@ -207,7 +207,7 @@ export function EnableEmailDialog({
           </>
         )}
 
-        {step === 2 && enableEmail.isSuccess && (
+        {step === 2 && enableEmail.isSuccess && backupCodes.length > 0 && (
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>

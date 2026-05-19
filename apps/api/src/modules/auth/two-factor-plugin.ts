@@ -11,22 +11,36 @@ import {
   symmetricDecrypt,
   generateRandomString,
   constantTimeEqual,
+  type SecretConfig,
 } from 'better-auth/crypto'
 import { createHMAC } from '@better-auth/utils/hmac'
 import { createOTP } from '@better-auth/utils/otp'
 import * as z from 'zod'
 import { db } from '../../db'
-import { users, userTwoFactorMethods, userTotpCredentials, userBackupCodes } from '../../db/schema'
-import { eq, and, isNull } from 'drizzle-orm'
+import {
+  users,
+  userTwoFactorMethods,
+  userTotpCredentials,
+  userBackupCodes,
+  verifications,
+} from '../../db/schema'
+import { eq, and, isNull, like } from 'drizzle-orm'
 import { env } from '../../lib/env'
 import { sendTwoFactorOtpEmail, sendSecurityAlertEmail } from '../../lib/email'
 
 // ─── Test-mode stores ────────────────────────────────────────────────────────
 export const twoFactorOtpStore = new Map<string, string>() // email → plainOtp
 
+// ─── Shared types ─────────────────────────────────────────────────────────────
+
+type Ctx = Parameters<typeof setSessionCookie>[0]
+type TwoFactorCookie = Parameters<typeof expireCookie>[1]
+
+const TRUST_DEVICE_MAX_AGE_SECS = 30 * 24 * 60 * 60
+
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-async function resolvePendingCookie(ctx: any) {
+async function resolvePendingCookie(ctx: Ctx) {
   const twoFactorCookie = ctx.context.createAuthCookie('two_factor')
   const identifier = await ctx.getSignedCookie(twoFactorCookie.name, ctx.context.secret)
   if (!identifier) {
@@ -45,7 +59,7 @@ async function resolvePendingCookie(ctx: any) {
   return { identifier, userId: verification.value as string, twoFactorCookie }
 }
 
-async function completeSignIn(ctx: any, userId: string, identifier: string, twoFactorCookie: any) {
+async function completeSignIn(ctx: Ctx, userId: string, identifier: string, twoFactorCookie: TwoFactorCookie) {
   await ctx.context.internalAdapter.deleteVerificationByIdentifier(identifier)
   expireCookie(ctx, twoFactorCookie)
   const dontRememberMe = await ctx.getSignedCookie(
@@ -53,20 +67,17 @@ async function completeSignIn(ctx: any, userId: string, identifier: string, twoF
     ctx.context.secret,
   )
   const user = await ctx.context.internalAdapter.findUserById(userId)
-  const session = await ctx.context.internalAdapter.createSession(userId, !!dontRememberMe)
-  if (!session) {
-    throw new APIError('INTERNAL_SERVER_ERROR', {
-      message: 'Failed to create session',
-      code: 'FAILED_TO_CREATE_SESSION',
-    })
+  if (!user) {
+    throw new APIError('INTERNAL_SERVER_ERROR', { message: 'User not found' })
   }
+  const session = await ctx.context.internalAdapter.createSession(userId, !!dontRememberMe)
   await setSessionCookie(ctx, { session, user })
   expireCookie(ctx, ctx.context.authCookies.dontRememberToken)
   return { session, user }
 }
 
-async function setTrustDevice(ctx: any, userId: string) {
-  const maxAge = 30 * 24 * 60 * 60
+async function setTrustDevice(ctx: Ctx, userId: string) {
+  const maxAge = TRUST_DEVICE_MAX_AGE_SECS
   const trustIdentifier = `trust-device-${generateRandomString(32)}`
   const hmacToken = await createHMAC('SHA-256', 'base64urlnopad').sign(
     ctx.context.secret,
@@ -91,7 +102,7 @@ function generateBackupCode(): string {
   return `${part()}-${part()}`
 }
 
-async function insertFreshBackupCodes(userId: string, secretConfig: any) {
+async function insertFreshBackupCodes(userId: string, secretConfig: string | SecretConfig) {
   const plain = Array.from({ length: 10 }, generateBackupCode)
   const rows = await Promise.all(
     plain.map(async (code, i) => ({
@@ -108,11 +119,12 @@ async function insertFreshBackupCodes(userId: string, secretConfig: any) {
   return plain
 }
 
-async function refreshSession(ctx: any, userId: string, oldToken: string) {
+async function refreshSession(ctx: Ctx, userId: string, oldToken: string) {
   const session = await ctx.context.internalAdapter.createSession(userId, false)
-  if (!session)
-    throw new APIError('INTERNAL_SERVER_ERROR', { message: 'Failed to refresh session' })
   const user = await ctx.context.internalAdapter.findUserById(userId)
+  if (!user) {
+    throw new APIError('INTERNAL_SERVER_ERROR', { message: 'User not found' })
+  }
   await setSessionCookie(ctx, { session, user })
   await ctx.context.internalAdapter.deleteSession(oldToken)
   return { session, user }
@@ -171,7 +183,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
         if (
           entry &&
           entry.value === newSession.user.id &&
-          new Date(entry.expiresAt) > new Date() &&
+          entry.expiresAt.getTime() > Date.now() &&
           constantTimeEqual(hmacToken, expectedHmac)
         ) {
           await ctx.context.internalAdapter.deleteVerificationByIdentifier(trustIdentifier)
@@ -218,8 +230,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           matcher(context) {
             return (
               context.path === '/sign-in/email' ||
-              context.path === '/sign-in/username' ||
-              context.path === '/reset-password'
+              context.path === '/sign-in/username'
             )
           },
           handler: twoFactorAfterHook,
@@ -250,9 +261,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
               code: 'EMAIL_OTP_NOT_ENABLED',
             })
           }
-          const otp = String(
-            Math.floor(10 ** (otpDigits - 1) + Math.random() * (9 * 10 ** (otpDigits - 1))),
-          )
+          const otp = generateRandomString(otpDigits, '0-9')
           const encryptedOtp = await symmetricEncrypt({ key: ctx.context.secretConfig, data: otp })
           const otpKey = `2fa-otp-${identifier}`
           await ctx.context.internalAdapter.deleteVerificationByIdentifier(otpKey)
@@ -264,7 +273,9 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           if (env.nodeEnv === 'test') {
             twoFactorOtpStore.set(user.email, otp)
           }
-          void sendTwoFactorOtpEmail({ email: user.email, otp })
+          sendTwoFactorOtpEmail({ email: user.email, otp }).catch((err) =>
+            console.error('[2fa] Failed to send OTP email', err),
+          )
           return ctx.json({ status: true })
         },
       ),
@@ -273,7 +284,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
         '/two-factor/verify-email-otp',
         {
           method: 'POST',
-          body: z.object({ code: z.string(), trustDevice: z.boolean().optional() }),
+          body: z.object({ code: z.string().min(1).max(8), trustDevice: z.boolean().optional() }),
           requireHeaders: true,
         },
         async (ctx) => {
@@ -299,7 +310,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             })
           }
           const [encryptedOtp, counterStr] = otpVerification.value.split(':') as [string, string]
-          const counter = parseInt(counterStr, 10)
+          const counter = parseInt(counterStr ?? '0', 10)
           if (counter >= maxAttempts) {
             await ctx.context.internalAdapter.deleteVerificationByIdentifier(otpKey)
             throw new APIError('UNAUTHORIZED', {
@@ -312,9 +323,15 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             data: encryptedOtp,
           })
           if (!constantTimeEqual(plain, ctx.body.code)) {
-            await ctx.context.internalAdapter.updateVerificationByIdentifier(otpKey, {
-              value: `${encryptedOtp}:${counter + 1}`,
-            })
+            await db
+              .update(verifications)
+              .set({ value: `${encryptedOtp}:${counter + 1}` })
+              .where(
+                and(
+                  eq(verifications.identifier, otpKey),
+                  eq(verifications.value, `${encryptedOtp}:${counter}`),
+                ),
+              )
             throw new APIError('UNAUTHORIZED', { message: 'Invalid code', code: 'INVALID_CODE' })
           }
           await ctx.context.internalAdapter.deleteVerificationByIdentifier(otpKey)
@@ -339,9 +356,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           }
           const { user } = sessionData
           await ctx.context.password.checkPassword(user.id, ctx)
-          const otp = String(
-            Math.floor(10 ** (otpDigits - 1) + Math.random() * (9 * 10 ** (otpDigits - 1))),
-          )
+          const otp = generateRandomString(otpDigits, '0-9')
           const encryptedOtp = await symmetricEncrypt({ key: ctx.context.secretConfig, data: otp })
           const otpKey = `enable-email-${user.id}`
           await ctx.context.internalAdapter.deleteVerificationByIdentifier(otpKey)
@@ -353,14 +368,16 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           if (env.nodeEnv === 'test') {
             twoFactorOtpStore.set(user.email, otp)
           }
-          void sendTwoFactorOtpEmail({ email: user.email, otp })
+          sendTwoFactorOtpEmail({ email: user.email, otp }).catch((err) =>
+            console.error('[2fa] Failed to send setup OTP email', err),
+          )
           return ctx.json({ status: true })
         },
       ),
 
       enableEmail: createAuthEndpoint(
         '/two-factor/enable-email',
-        { method: 'POST', body: z.object({ code: z.string() }), requireHeaders: true },
+        { method: 'POST', body: z.object({ code: z.string().min(1).max(8) }), requireHeaders: true },
         async (ctx) => {
           const sessionData = await getSessionFromCtx(ctx)
           if (!sessionData) {
@@ -392,9 +409,15 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             data: encryptedOtp,
           })
           if (!constantTimeEqual(plain, ctx.body.code)) {
-            await ctx.context.internalAdapter.updateVerificationByIdentifier(otpKey, {
-              value: `${encryptedOtp}:${counter + 1}`,
-            })
+            await db
+              .update(verifications)
+              .set({ value: `${encryptedOtp}:${counter + 1}` })
+              .where(
+                and(
+                  eq(verifications.identifier, otpKey),
+                  eq(verifications.value, `${encryptedOtp}:${counter}`),
+                ),
+              )
             throw new APIError('UNAUTHORIZED', { message: 'Invalid code', code: 'INVALID_CODE' })
           }
           await ctx.context.internalAdapter.deleteVerificationByIdentifier(otpKey)
@@ -413,11 +436,11 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             backupCodes = await insertFreshBackupCodes(user.id, ctx.context.secretConfig)
           }
           await refreshSession(ctx, user.id, session.token)
-          void sendSecurityAlertEmail({
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Two-factor authentication enabled',
             message: 'Email OTP two-factor authentication has been enabled on your account.',
-          })
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ backupCodes })
         },
       ),
@@ -435,6 +458,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           }
           const { user, session } = sessionData
           await ctx.context.password.checkPassword(user.id, ctx)
+          let emailWasLastMethod = false
           await db.transaction(async (tx) => {
             await tx
               .delete(userTwoFactorMethods)
@@ -449,16 +473,32 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
               .from(userTwoFactorMethods)
               .where(eq(userTwoFactorMethods.userId, user.id))
             if (remainingMethods.length === 0) {
+              emailWasLastMethod = true
               await tx.update(users).set({ twoFactorEnabled: false }).where(eq(users.id, user.id))
               await tx.delete(userBackupCodes).where(eq(userBackupCodes.userId, user.id))
+              await tx
+                .delete(verifications)
+                .where(
+                  and(
+                    eq(verifications.value, user.id),
+                    like(verifications.identifier, 'trust-device-%'),
+                  ),
+                )
             }
           })
+          if (emailWasLastMethod) {
+            const trustCookie = ctx.context.createAuthCookie('trust_device', { maxAge: TRUST_DEVICE_MAX_AGE_SECS })
+            const trustValue = await ctx.getSignedCookie(trustCookie.name, ctx.context.secret)
+            if (trustValue) {
+              expireCookie(ctx, trustCookie)
+            }
+          }
           await refreshSession(ctx, user.id, session.token)
-          void sendSecurityAlertEmail({
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Two-factor authentication disabled',
             message: 'Email OTP two-factor authentication has been disabled on your account.',
-          })
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ status: true })
         },
       ),
@@ -498,7 +538,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
 
       enableTotp: createAuthEndpoint(
         '/two-factor/enable-totp',
-        { method: 'POST', body: z.object({ code: z.string() }), requireHeaders: true },
+        { method: 'POST', body: z.object({ code: z.string().min(1).max(8) }), requireHeaders: true },
         async (ctx) => {
           const sessionData = await getSessionFromCtx(ctx)
           if (!sessionData) {
@@ -554,11 +594,11 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             codes = await insertFreshBackupCodes(user.id, ctx.context.secretConfig)
           }
           await refreshSession(ctx, user.id, session.token)
-          void sendSecurityAlertEmail({
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Two-factor authentication enabled',
             message: 'TOTP two-factor authentication has been enabled on your account.',
-          })
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ backupCodes: codes })
         },
       ),
@@ -567,7 +607,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
         '/two-factor/verify-totp',
         {
           method: 'POST',
-          body: z.object({ code: z.string(), trustDevice: z.boolean().optional() }),
+          body: z.object({ code: z.string().min(1).max(8), trustDevice: z.boolean().optional() }),
           requireHeaders: true,
         },
         async (ctx) => {
@@ -637,6 +677,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           }
           const { user, session } = sessionData
           await ctx.context.password.checkPassword(user.id, ctx)
+          let totpWasLastMethod = false
           await db.transaction(async (tx) => {
             await tx
               .delete(userTwoFactorMethods)
@@ -651,23 +692,39 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
               .from(userTwoFactorMethods)
               .where(eq(userTwoFactorMethods.userId, user.id))
             if (remainingMethods.length === 0) {
+              totpWasLastMethod = true
               await tx.update(users).set({ twoFactorEnabled: false }).where(eq(users.id, user.id))
               await tx.delete(userBackupCodes).where(eq(userBackupCodes.userId, user.id))
+              await tx
+                .delete(verifications)
+                .where(
+                  and(
+                    eq(verifications.value, user.id),
+                    like(verifications.identifier, 'trust-device-%'),
+                  ),
+                )
             }
           })
+          if (totpWasLastMethod) {
+            const trustCookie = ctx.context.createAuthCookie('trust_device', { maxAge: TRUST_DEVICE_MAX_AGE_SECS })
+            const trustValue = await ctx.getSignedCookie(trustCookie.name, ctx.context.secret)
+            if (trustValue) {
+              expireCookie(ctx, trustCookie)
+            }
+          }
           await refreshSession(ctx, user.id, session.token)
-          void sendSecurityAlertEmail({
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Two-factor authentication disabled',
             message: 'TOTP two-factor authentication has been disabled on your account.',
-          })
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ status: true })
         },
       ),
 
       verifyBackupCode: createAuthEndpoint(
         '/two-factor/verify-backup-code',
-        { method: 'POST', body: z.object({ code: z.string() }), requireHeaders: true },
+        { method: 'POST', body: z.object({ code: z.string().min(11).max(11) }), requireHeaders: true },
         async (ctx) => {
           const { identifier, userId, twoFactorCookie } = await resolvePendingCookie(ctx)
           const unusedCodes = await db.query.userBackupCodes.findMany({
@@ -708,17 +765,13 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
               code: 'BACKUP_CODE_ALREADY_USED',
             })
           }
-          const user = await ctx.context.internalAdapter.findUserById(userId)
-          if (!user) {
-            throw new APIError('INTERNAL_SERVER_ERROR', { message: 'User not found' })
-          }
-          void sendSecurityAlertEmail({
+          const { session, user } = await completeSignIn(ctx, userId, identifier, twoFactorCookie)
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Backup code used',
             message:
               'A backup code was used to sign in to your account. If this was not you, please secure your account immediately.',
-          })
-          const { session } = await completeSignIn(ctx, userId, identifier, twoFactorCookie)
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ token: session.token, user })
         },
       ),
@@ -773,12 +826,12 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
           const { user } = sessionData
           await ctx.context.password.checkPassword(user.id, ctx)
           const plain = await insertFreshBackupCodes(user.id, ctx.context.secretConfig)
-          void sendSecurityAlertEmail({
+          sendSecurityAlertEmail({
             email: user.email,
             subject: 'Backup codes regenerated',
             message:
               'Your two-factor authentication backup codes have been regenerated. Your old codes are no longer valid.',
-          })
+          }).catch((err) => console.error('[2fa] Failed to send security alert email', err))
           return ctx.json({ codes: plain })
         },
       ),

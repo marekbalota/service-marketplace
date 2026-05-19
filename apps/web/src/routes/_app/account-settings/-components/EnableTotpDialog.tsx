@@ -216,7 +216,7 @@ export function EnableTotpDialog({
           </>
         )}
 
-        {step === 3 && verify.isSuccess && (
+        {step === 3 && verify.isSuccess && backupCodes.length > 0 && (
           <>
             <DialogHeader>
               <DialogTitle>Save Your Backup Codes</DialogTitle>
