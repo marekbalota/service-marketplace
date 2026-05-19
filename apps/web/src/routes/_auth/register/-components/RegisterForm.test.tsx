@@ -103,6 +103,34 @@ describe('RegisterForm', () => {
     })
   })
 
+  it('shows captcha error message and makes widget visible on 400 VERIFICATION_FAILED', async () => {
+    const { authClient } = await import('#/auth')
+    vi.mocked(authClient.signUp.email).mockResolvedValueOnce({
+      data: null,
+      error: {
+        status: 403,
+        message: 'Captcha verification failed',
+        body: { code: 'VERIFICATION_FAILED', message: 'Captcha verification failed' },
+      } as never,
+    })
+
+    render(<RegisterForm />)
+    act(() => {
+      fireTurnstileSuccess?.('test-token')
+    })
+    fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Alice' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'alice@example.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /register/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/captcha verification failed/i)).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /register/i })).toBeDisabled()
+    })
+  })
+
   it('shows a validation error when name is empty', async () => {
     render(<RegisterForm />)
     act(() => {

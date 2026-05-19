@@ -6,13 +6,11 @@ import {
   existingSignupNotifiedEmails,
 } from './service'
 import { db } from '../../db'
-import { env } from '../../lib/env'
 
 const TEST_EMAIL = `auth-test-${Date.now()}@example.com`
 const TEST_NAME = 'Auth Test User'
 const TEST_PASSWORD = 'password123'
 const CAPTCHA_HEADERS = new Headers({ 'x-captcha-response': 'test-token' })
-const HOST_HEADER = new Headers({ host: new URL(env.betterAuthUrl).host })
 
 function getLatestVerificationToken(email: string): string {
   const token = verificationTokenStore.get(email)
@@ -70,7 +68,7 @@ describe('POST /api/auth/sign-up/email', () => {
         name: TEST_NAME,
         password: TEST_PASSWORD,
       },
-      headers: HOST_HEADER,
+      headers: new Headers(),
       asResponse: true,
     })
     expect(res.status).toBe(400)
@@ -139,7 +137,7 @@ describe('POST /api/auth/sign-in/email', () => {
   it('returns 400 when x-captcha-response header is missing', async () => {
     const res = await auth.api.signInEmail({
       body: { email: TEST_EMAIL, password: TEST_PASSWORD },
-      headers: HOST_HEADER,
+      headers: new Headers(),
       asResponse: true,
     })
     expect(res.status).toBe(400)
@@ -208,7 +206,7 @@ describe('Password reset', () => {
   it('requestPasswordReset returns 400 when x-captcha-response header is missing', async () => {
     const res = await auth.api.requestPasswordReset({
       body: { email: RESET_EMAIL, redirectTo: 'http://localhost:3000/reset-password' },
-      headers: HOST_HEADER,
+      headers: new Headers(),
       asResponse: true,
     })
     expect(res.status).toBe(400)
