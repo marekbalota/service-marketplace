@@ -32,7 +32,7 @@ export function PricingField<T extends FieldValues>({
   ] as const
 
   return (
-    <Field className="space-y-4">
+    <Field>
       <FieldIconHeader
         icon={DollarSign}
         iconBgClassName="bg-emerald-100 dark:bg-emerald-500/20"
@@ -90,7 +90,6 @@ export function PricingField<T extends FieldValues>({
           )}
         />
       </div>
-      <p className="text-sm text-muted-foreground">{t('pricing.negotiable')}</p>
     </Field>
   )
 }

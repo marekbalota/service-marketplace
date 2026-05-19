@@ -232,7 +232,10 @@
     "enterNewLocation": "Zadat novou polohu",
     "usePreviousLocation": "Použít předchozí polohu",
     "selectPreviousLocation": "Vybrat z předchozích poloh",
-    "noPreviousLocations": "Žádné předchozí polohy. Klikněte na 'Zadat novou polohu' pro přidání."
+    "noPreviousLocations": "Žádné předchozí polohy. Klikněte na 'Zadat novou polohu' pro přidání.",
+    "titleHint": "Udělejte ho jasným a konkrétním",
+    "categoryHint": "Pomozte lidem najít váš příspěvek",
+    "descriptionHint": "Čím více podrobností, tím lépe"
   },
   "editPost": {
     "title": "Upravit inzerát",
@@ -290,8 +293,7 @@
     "selectRateType": "Vybrat typ sazby",
     "hourly": "Hodinová sazba",
     "daily": "Denní sazba",
-    "fixed": "Paušální cena",
-    "negotiable": "Nechte cenu prázdnou, pokud je dohodnutelná"
+    "fixed": "Paušální cena"
   },
   "accountSettings": {
     "title": "Nastavení účtu",

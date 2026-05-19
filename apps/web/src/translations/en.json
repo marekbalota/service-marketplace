@@ -232,7 +232,10 @@
     "enterNewLocation": "Enter New Location",
     "usePreviousLocation": "Use Previous Location",
     "selectPreviousLocation": "Select from your previous locations",
-    "noPreviousLocations": "No previous locations. Click 'Enter New Location' to add one."
+    "noPreviousLocations": "No previous locations. Click 'Enter New Location' to add one.",
+    "titleHint": "Make it clear and specific",
+    "categoryHint": "Help people find your post",
+    "descriptionHint": "The more details, the better"
   },
   "editPost": {
     "title": "Edit Posting",
@@ -290,8 +293,7 @@
     "selectRateType": "Select rate type",
     "hourly": "Hourly Rate",
     "daily": "Daily Rate",
-    "fixed": "Fixed Price",
-    "negotiable": "Leave price empty if negotiable"
+    "fixed": "Fixed Price"
   },
   "accountSettings": {
     "title": "Account Settings",

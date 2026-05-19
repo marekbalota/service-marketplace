@@ -17,9 +17,9 @@ export function FieldIconHeader({
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconBgClassName}`}
+        className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBgClassName}`}
       >
-        <Icon className={`size-5 ${iconClassName}`} />
+        <Icon className={`size-4 ${iconClassName}`} />
       </div>
       <FieldLabel htmlFor={htmlFor} className="text-base font-semibold">
         {label}
