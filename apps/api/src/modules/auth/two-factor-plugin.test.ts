@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'bun:test'
 import { auth, verificationTokenStore } from './service'
 import { twoFactorOtpStore } from './two-factor-plugin'
 import { createOTP } from '@better-auth/utils/otp'
+import { base32 } from '@better-auth/utils/base32'
 import { db } from '../../db'
 import { users, userTwoFactorMethods } from '../../db/schema'
 import { eq, and } from 'drizzle-orm'
@@ -279,7 +280,9 @@ describe('TOTP management (setup / enable / disable)', () => {
     expect(res.status).toBe(200)
     const body = (await res.json()) as any
     expect(body.uri).toMatch(/^otpauth:\/\/totp\//)
-    totpSecret = new URL(body.uri).searchParams.get('secret') ?? ''
+    // The URI encodes the secret as base32; decode it back to the raw key used server-side
+    const b32 = new URL(body.uri).searchParams.get('secret') ?? ''
+    totpSecret = new TextDecoder().decode(base32.decode(b32))
     expect(totpSecret.length).toBeGreaterThan(0)
   })
 
@@ -346,8 +349,9 @@ describe('backup code challenge', () => {
   })
 
   it('verify-backup-code with invalid code returns 401', async () => {
+    // Backup codes are 11 chars (XXXXX-XXXXX); use a valid-format but nonexistent code
     const res = await api.verifyBackupCode({
-      body: { code: 'INVALID-CODE' },
+      body: { code: 'AAAAA-AAAAA' },
       headers: { cookie: pendingCookies },
       asResponse: true,
     })

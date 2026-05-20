@@ -62,15 +62,18 @@ describe('POST /api/auth/sign-up/email', () => {
   })
 
   it('returns 400 when x-captcha-response header is missing', async () => {
-    const res = await auth.api.signUpEmail({
-      body: {
-        email: `no-captcha-${Date.now()}@example.com`,
-        name: TEST_NAME,
-        password: TEST_PASSWORD,
-      },
-      headers: new Headers(),
-      asResponse: true,
-    })
+    // auth.api.* bypasses onRequest hooks (captcha); use auth.handler to go through the full pipeline
+    const res = await auth.handler(
+      new Request('http://localhost:3001/api/auth/sign-up/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: `no-captcha-${Date.now()}@example.com`,
+          name: TEST_NAME,
+          password: TEST_PASSWORD,
+        }),
+      }),
+    )
     expect(res.status).toBe(400)
   })
 })
@@ -135,11 +138,14 @@ describe('POST /api/auth/sign-in/email', () => {
   })
 
   it('returns 400 when x-captcha-response header is missing', async () => {
-    const res = await auth.api.signInEmail({
-      body: { email: TEST_EMAIL, password: TEST_PASSWORD },
-      headers: new Headers(),
-      asResponse: true,
-    })
+    // auth.api.* bypasses onRequest hooks (captcha); use auth.handler to go through the full pipeline
+    const res = await auth.handler(
+      new Request('http://localhost:3001/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
+      }),
+    )
     expect(res.status).toBe(400)
   })
 })
@@ -204,11 +210,14 @@ describe('Password reset', () => {
   })
 
   it('requestPasswordReset returns 400 when x-captcha-response header is missing', async () => {
-    const res = await auth.api.requestPasswordReset({
-      body: { email: RESET_EMAIL, redirectTo: 'http://localhost:3000/reset-password' },
-      headers: new Headers(),
-      asResponse: true,
-    })
+    // auth.api.* bypasses onRequest hooks (captcha); use auth.handler to go through the full pipeline
+    const res = await auth.handler(
+      new Request('http://localhost:3001/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: RESET_EMAIL, redirectTo: 'http://localhost:3000/reset-password' }),
+      }),
+    )
     expect(res.status).toBe(400)
   })
 

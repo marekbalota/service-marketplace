@@ -9,8 +9,8 @@ import { authRoutes } from '../auth'
 import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
 import { db } from '../../db'
-import { messageThreads, messages } from '../../db/schema'
-import { eq } from 'drizzle-orm'
+import { messageThreads, messages, reports } from '../../db/schema'
+import { eq, inArray } from 'drizzle-orm'
 
 const app = new Elysia()
   .use(errorsPlugin)
@@ -53,18 +53,34 @@ beforeAll(async () => {
     .posts.get({ headers: { Cookie: aliceCookie } })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   alicePostId = (alicePosts?.items?.[0] as any)?.postId ?? ''
+})
 
-  // Clean up threads from previous test runs so the tests are idempotent
-  if (bobProfile) {
+describe('cleanup — removes Bob threads from previous runs', () => {
+  it('deletes stale reports and threads so tests are idempotent', async () => {
+    if (!bobProfile) return
     const existing = await db
       .select({ threadId: messageThreads.threadId })
       .from(messageThreads)
       .where(eq(messageThreads.initiatorId, bobProfile))
-    for (const t of existing) {
-      await db.delete(messages).where(eq(messages.threadId, t.threadId))
+    const threadIds = existing.map((t) => t.threadId)
+    if (threadIds.length > 0) {
+      // Delete reports that reference messages in these threads first — the
+      // reports_exactly_one_target check constraint prevents ON DELETE SET NULL
+      // from succeeding when a message is the sole report target.
+      const threadMessages = await db
+        .select({ messageId: messages.messageId })
+        .from(messages)
+        .where(inArray(messages.threadId, threadIds))
+      const msgIds = threadMessages.map((m) => m.messageId)
+      if (msgIds.length > 0) {
+        await db.delete(reports).where(inArray(reports.messageId, msgIds))
+      }
+      for (const t of existing) {
+        await db.delete(messages).where(eq(messages.threadId, t.threadId))
+      }
     }
     await db.delete(messageThreads).where(eq(messageThreads.initiatorId, bobProfile))
-  }
+  })
 })
 
 describe('POST /threads', () => {
