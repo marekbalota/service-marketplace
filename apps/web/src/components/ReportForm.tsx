@@ -33,7 +33,6 @@ type FormData = z.infer<typeof baseSchema>
 
 interface ReportFormProps {
   targetType: 'POST' | 'MESSAGE' | 'REVIEW'
-  entityName: string
   descriptionRequired?: boolean
   onReport: (data: { categoryId: string; description?: string }) => Promise<void>
   onSuccess: () => void
@@ -42,7 +41,6 @@ interface ReportFormProps {
 
 export function ReportForm({
   targetType,
-  entityName,
   descriptionRequired = false,
   onReport,
   onSuccess,

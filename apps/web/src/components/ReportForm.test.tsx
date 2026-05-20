@@ -30,7 +30,6 @@ function renderForm(props: Partial<Parameters<typeof ReportForm>[0]> = {}) {
     <QueryClientProvider client={qc}>
       <ReportForm
         targetType={props.targetType ?? 'POST'}
-        entityName={props.entityName ?? 'post'}
         descriptionRequired={props.descriptionRequired ?? false}
         onReport={props.onReport ?? mockOnReport}
         onSuccess={onSuccess}
@@ -89,7 +88,7 @@ describe('ReportForm', () => {
   it('calls onReport and onSuccess when submitted with optional description', async () => {
     mockOnReport.mockResolvedValue(undefined)
     const user = userEvent.setup()
-    const { onSuccess } = renderForm({ entityName: 'message' })
+    const { onSuccess } = renderForm()
 
     await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))
@@ -125,7 +124,7 @@ describe('ReportForm', () => {
   it('shows already-reported message from server on 409', async () => {
     mockOnReport.mockRejectedValue(new ApiError('You have already reported this review'))
     const user = userEvent.setup()
-    renderForm({ entityName: 'review' })
+    renderForm()
 
     await waitFor(() => expect(screen.getByRole('combobox')).not.toBeDisabled())
     await user.click(screen.getByRole('combobox'))

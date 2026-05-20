@@ -109,7 +109,7 @@ function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) 
         navigate({
           search: (prev) => ({
             ...prev,
-            category: value === 'all' ? undefined : value,
+            category: value === 'all' ? undefined : (value ?? undefined),
             page: undefined,
           }),
         })
