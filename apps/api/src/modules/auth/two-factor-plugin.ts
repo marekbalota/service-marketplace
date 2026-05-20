@@ -59,7 +59,12 @@ async function resolvePendingCookie(ctx: Ctx) {
   return { identifier, userId: verification.value as string, twoFactorCookie }
 }
 
-async function completeSignIn(ctx: Ctx, userId: string, identifier: string, twoFactorCookie: TwoFactorCookie) {
+async function completeSignIn(
+  ctx: Ctx,
+  userId: string,
+  identifier: string,
+  twoFactorCookie: TwoFactorCookie,
+) {
   await ctx.context.internalAdapter.deleteVerificationByIdentifier(identifier)
   expireCookie(ctx, twoFactorCookie)
   const dontRememberMe = await ctx.getSignedCookie(
@@ -228,10 +233,7 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
       after: [
         {
           matcher(context) {
-            return (
-              context.path === '/sign-in/email' ||
-              context.path === '/sign-in/username'
-            )
+            return context.path === '/sign-in/email' || context.path === '/sign-in/username'
           },
           handler: twoFactorAfterHook,
         },
@@ -377,7 +379,11 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
 
       enableEmail: createAuthEndpoint(
         '/two-factor/enable-email',
-        { method: 'POST', body: z.object({ code: z.string().min(1).max(8) }), requireHeaders: true },
+        {
+          method: 'POST',
+          body: z.object({ code: z.string().min(1).max(8) }),
+          requireHeaders: true,
+        },
         async (ctx) => {
           const sessionData = await getSessionFromCtx(ctx)
           if (!sessionData) {
@@ -487,7 +493,9 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             }
           })
           if (emailWasLastMethod) {
-            const trustCookie = ctx.context.createAuthCookie('trust_device', { maxAge: TRUST_DEVICE_MAX_AGE_SECS })
+            const trustCookie = ctx.context.createAuthCookie('trust_device', {
+              maxAge: TRUST_DEVICE_MAX_AGE_SECS,
+            })
             const trustValue = await ctx.getSignedCookie(trustCookie.name, ctx.context.secret)
             if (trustValue) {
               expireCookie(ctx, trustCookie)
@@ -538,7 +546,11 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
 
       enableTotp: createAuthEndpoint(
         '/two-factor/enable-totp',
-        { method: 'POST', body: z.object({ code: z.string().min(1).max(8) }), requireHeaders: true },
+        {
+          method: 'POST',
+          body: z.object({ code: z.string().min(1).max(8) }),
+          requireHeaders: true,
+        },
         async (ctx) => {
           const sessionData = await getSessionFromCtx(ctx)
           if (!sessionData) {
@@ -706,7 +718,9 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
             }
           })
           if (totpWasLastMethod) {
-            const trustCookie = ctx.context.createAuthCookie('trust_device', { maxAge: TRUST_DEVICE_MAX_AGE_SECS })
+            const trustCookie = ctx.context.createAuthCookie('trust_device', {
+              maxAge: TRUST_DEVICE_MAX_AGE_SECS,
+            })
             const trustValue = await ctx.getSignedCookie(trustCookie.name, ctx.context.secret)
             if (trustValue) {
               expireCookie(ctx, trustCookie)
@@ -724,7 +738,11 @@ export function twoFactorPlugin(options: TwoFactorPluginOptions): BetterAuthPlug
 
       verifyBackupCode: createAuthEndpoint(
         '/two-factor/verify-backup-code',
-        { method: 'POST', body: z.object({ code: z.string().min(11).max(11) }), requireHeaders: true },
+        {
+          method: 'POST',
+          body: z.object({ code: z.string().min(11).max(11) }),
+          requireHeaders: true,
+        },
         async (ctx) => {
           const { identifier, userId, twoFactorCookie } = await resolvePendingCookie(ctx)
           const unusedCodes = await db.query.userBackupCodes.findMany({

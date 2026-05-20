@@ -16,7 +16,11 @@ export function ProfileFields({ control }: { control: Control<ProfileFormValues>
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>{t('profiles.name')} *</FieldLabel>
-              <Input placeholder={t('profiles.namePlaceholder')} aria-invalid={fieldState.invalid} {...field} />
+              <Input
+                placeholder={t('profiles.namePlaceholder')}
+                aria-invalid={fieldState.invalid}
+                {...field}
+              />
               <FieldError errors={[fieldState.error]} />
             </Field>
           )}

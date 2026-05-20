@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '#/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '#/components/ui/select'
 
 type Language = 'en' | 'sk' | 'cs'
 

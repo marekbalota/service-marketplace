@@ -12,9 +12,7 @@ function MessagesIndexPage() {
     <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
       <MessageSquare className="mb-4 size-12 text-muted-foreground/30" />
       <p className="font-medium">{t('messages.selectConversation')}</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {t('messages.selectConversationHint')}
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t('messages.selectConversationHint')}</p>
     </div>
   )
 }

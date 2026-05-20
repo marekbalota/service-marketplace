@@ -189,7 +189,6 @@ function EditPostPage() {
         </CardHeader>
         <CardContent className="pt-3">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-
             {/* Row 1: Post Type — full width */}
             <PostTypeToggle control={form.control} />
 

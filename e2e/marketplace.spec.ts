@@ -423,9 +423,7 @@ test.describe('Language switching', () => {
     // Switch back to EN
     await page.getByRole('banner').getByRole('combobox').click()
     await page.getByRole('option', { name: 'EN' }).click()
-    await expect(
-      page.getByPlaceholder('Search services, providers, or keywords…'),
-    ).toBeVisible()
+    await expect(page.getByPlaceholder('Search services, providers, or keywords…')).toBeVisible()
   })
 })
 

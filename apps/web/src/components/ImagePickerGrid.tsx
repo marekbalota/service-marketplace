@@ -96,9 +96,7 @@ export function ImagePickerGrid({
       {rejectedCount > 0 && (
         <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
-          <span>
-            {t('imagePicker.rejected', { count: rejectedCount })}
-          </span>
+          <span>{t('imagePicker.rejected', { count: rejectedCount })}</span>
           <Button
             type="button"
             variant="ghost"

@@ -114,7 +114,11 @@ function UserDetailContent({ userId }: { userId: string }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4" />
-                    <span>{t('admin.users.joined', { date: new Date(user.createdAt).toLocaleDateString() })}</span>
+                    <span>
+                      {t('admin.users.joined', {
+                        date: new Date(user.createdAt).toLocaleDateString(),
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -185,7 +189,9 @@ function UserDetailContent({ userId }: { userId: string }) {
                             {profile.fax && <span>📠 {profile.fax}</span>}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {t('admin.users.detail.created', { date: new Date(profile.createdAt).toLocaleDateString() })}
+                            {t('admin.users.detail.created', {
+                              date: new Date(profile.createdAt).toLocaleDateString(),
+                            })}
                           </p>
                         </div>
                       </div>

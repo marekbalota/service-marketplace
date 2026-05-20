@@ -125,7 +125,10 @@ function EmailChallengePage() {
           <Button
             variant="link"
             className="h-auto p-0"
-            onClick={() => { setIsSending(true); sendCode.mutate() }}
+            onClick={() => {
+              setIsSending(true)
+              sendCode.mutate()
+            }}
             disabled={isSending || resendCooldown > 0}
           >
             {isSending

@@ -97,7 +97,9 @@ export function BackupCodesDialog({
           <>
             <DialogHeader>
               <DialogTitle>{t('twoFactor.backupCodesDialog.title')}</DialogTitle>
-              <DialogDescription>{t('twoFactor.backupCodesDialog.enterPasswordDesc')}</DialogDescription>
+              <DialogDescription>
+                {t('twoFactor.backupCodesDialog.enterPasswordDesc')}
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-3">
               <Label htmlFor="backup-view-password">{t('twoFactor.common.password')}</Label>

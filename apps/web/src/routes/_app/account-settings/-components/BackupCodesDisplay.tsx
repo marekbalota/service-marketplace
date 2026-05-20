@@ -52,7 +52,9 @@ export function BackupCodesDisplay({ codes }: { codes: BackupCodeEntry[] }) {
           onClick={handleCopyAll}
           className="flex-1"
         >
-          {copied ? t('twoFactor.backupCodesDisplay.copied') : t('twoFactor.backupCodesDisplay.copyAll')}
+          {copied
+            ? t('twoFactor.backupCodesDisplay.copied')
+            : t('twoFactor.backupCodesDisplay.copyAll')}
         </Button>
         <Button
           type="button"

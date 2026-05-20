@@ -147,7 +147,9 @@ export function EnableEmailDialog({
                 onClick={() => sendCode.mutate(undefined, { onSuccess: () => setStep(2) })}
                 disabled={!password || sendCode.isPending}
               >
-                {sendCode.isPending ? t('twoFactor.common.sending') : t('twoFactor.common.continue')}
+                {sendCode.isPending
+                  ? t('twoFactor.common.sending')
+                  : t('twoFactor.common.continue')}
               </Button>
             </DialogFooter>
           </>
@@ -179,7 +181,8 @@ export function EnableEmailDialog({
                 </InputOTP>
                 <div className="text-center text-sm text-muted-foreground">
                   {sendCode.isPending && t('twoFactor.common.sendingCode')}
-                  {!sendCode.isPending && resendCooldown > 0 &&
+                  {!sendCode.isPending &&
+                    resendCooldown > 0 &&
                     t('twoFactor.common.resendIn', { countdown: formatCountdown(resendCooldown) })}
                   {!sendCode.isPending && resendCooldown === 0 && (
                     <Button variant="link" className="h-auto p-0" onClick={() => sendCode.mutate()}>
@@ -202,7 +205,9 @@ export function EnableEmailDialog({
                 onClick={() => enableEmail.mutate()}
                 disabled={otpCode.length !== 6 || enableEmail.isPending}
               >
-                {enableEmail.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
+                {enableEmail.isPending
+                  ? t('twoFactor.common.verifying')
+                  : t('twoFactor.common.verify')}
               </Button>
             </DialogFooter>
           </>

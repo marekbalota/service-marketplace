@@ -62,7 +62,9 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <XCircle className="h-8 w-8 text-destructive" />
           </div>
-          <h2 className="font-heading text-2xl font-medium">{t('auth.resetPassword.invalidTitle')}</h2>
+          <h2 className="font-heading text-2xl font-medium">
+            {t('auth.resetPassword.invalidTitle')}
+          </h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-center text-sm text-muted-foreground">
@@ -83,7 +85,9 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
             <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
           </div>
-          <h2 className="font-heading text-2xl font-medium">{t('auth.resetPassword.successTitle')}</h2>
+          <h2 className="font-heading text-2xl font-medium">
+            {t('auth.resetPassword.successTitle')}
+          </h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-center text-sm text-muted-foreground">
@@ -109,7 +113,9 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="new-password">{t('auth.resetPassword.newPassword')}</FieldLabel>
+                <FieldLabel htmlFor="new-password">
+                  {t('auth.resetPassword.newPassword')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id="new-password"
@@ -127,7 +133,9 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="confirm-password">{t('auth.resetPassword.confirmPassword')}</FieldLabel>
+                <FieldLabel htmlFor="confirm-password">
+                  {t('auth.resetPassword.confirmPassword')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id="confirm-password"
@@ -142,7 +150,9 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           />
           <FieldError errors={[form.formState.errors.root]} />
           <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
+            {form.formState.isSubmitting
+              ? t('auth.resetPassword.submitting')
+              : t('auth.resetPassword.submit')}
           </Button>
         </form>
       </CardContent>

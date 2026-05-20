@@ -1,16 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import {
-  User,
-  Bell,
-  Key,
-  Shield,
-  LogOut,
-  Users,
-  Mail,
-  Lock,
-  Plus,
-} from 'lucide-react'
+import { User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
@@ -39,12 +29,36 @@ export const Route = createFileRoute('/_app/account-settings/')({
 type SectionId = (typeof SECTIONS)[number]['id']
 
 const SECTIONS = [
-  { id: 'account-information' as const, icon: User, labelKey: 'accountSettings.sections.accountInformation' as const },
-  { id: 'notifications' as const, icon: Bell, labelKey: 'accountSettings.sections.notifications' as const },
-  { id: 'connected-accounts' as const, icon: Key, labelKey: 'accountSettings.sections.connectedAccounts' as const },
-  { id: 'two-factor-auth' as const, icon: Shield, labelKey: 'accountSettings.sections.twoFactorAuth' as const },
-  { id: 'login-management' as const, icon: LogOut, labelKey: 'accountSettings.sections.loginManagement' as const },
-  { id: 'user-profiles' as const, icon: Users, labelKey: 'accountSettings.sections.userProfiles' as const },
+  {
+    id: 'account-information' as const,
+    icon: User,
+    labelKey: 'accountSettings.sections.accountInformation' as const,
+  },
+  {
+    id: 'notifications' as const,
+    icon: Bell,
+    labelKey: 'accountSettings.sections.notifications' as const,
+  },
+  {
+    id: 'connected-accounts' as const,
+    icon: Key,
+    labelKey: 'accountSettings.sections.connectedAccounts' as const,
+  },
+  {
+    id: 'two-factor-auth' as const,
+    icon: Shield,
+    labelKey: 'accountSettings.sections.twoFactorAuth' as const,
+  },
+  {
+    id: 'login-management' as const,
+    icon: LogOut,
+    labelKey: 'accountSettings.sections.loginManagement' as const,
+  },
+  {
+    id: 'user-profiles' as const,
+    icon: Users,
+    labelKey: 'accountSettings.sections.userProfiles' as const,
+  },
 ] as const
 
 const NOTIFICATION_ROWS = [
@@ -91,7 +105,6 @@ const OAUTH_PROVIDERS = [
   },
   { id: 'apple', label: 'Apple', className: 'bg-black text-white border-black hover:bg-black' },
 ] as const
-
 
 function AccountSettingsHubSkeleton() {
   return (
@@ -253,9 +266,7 @@ function AccountSettingsHubPage() {
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">{t('accountSettings.title')}</h1>
-        <p className="mt-1 text-muted-foreground">
-          {t('accountSettings.subtitle')}
-        </p>
+        <p className="mt-1 text-muted-foreground">{t('accountSettings.subtitle')}</p>
       </div>
 
       <div className="flex gap-8">
@@ -409,10 +420,13 @@ function AccountSettingsHubPage() {
               <CardDescription>{t('accountSettings.loginManagementSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {t('accountSettings.logoutAllHint')}
-              </p>
-              <Button variant="destructive" disabled title={t('accountSettings.comingSoon')} className="gap-2">
+              <p className="text-sm text-muted-foreground">{t('accountSettings.logoutAllHint')}</p>
+              <Button
+                variant="destructive"
+                disabled
+                title={t('accountSettings.comingSoon')}
+                className="gap-2"
+              >
                 <LogOut className="size-4" />
                 {t('accountSettings.logoutAll')}
               </Button>
@@ -434,7 +448,9 @@ function AccountSettingsHubPage() {
                   <p className="text-sm font-medium">
                     {t('accountSettings.activeProfiles', { count: user?.profiles.length ?? 0 })}
                   </p>
-                  <p className="text-xs text-muted-foreground">{t('accountSettings.profilesDesc')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('accountSettings.profilesDesc')}
+                  </p>
                 </div>
               </div>
               <Link

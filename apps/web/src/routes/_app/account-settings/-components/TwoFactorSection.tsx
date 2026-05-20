@@ -113,8 +113,12 @@ export function TwoFactorSection() {
                       <Shield className="size-5 text-emerald-700 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{t('twoFactor.section.backupCodes.label')}</p>
-                      <p className="text-sm text-muted-foreground">{t('twoFactor.section.backupCodes.description')}</p>
+                      <p className="text-sm font-medium">
+                        {t('twoFactor.section.backupCodes.label')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('twoFactor.section.backupCodes.description')}
+                      </p>
                     </div>
                   </div>
                   <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>

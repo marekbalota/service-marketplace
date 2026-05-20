@@ -50,7 +50,9 @@ export function PostReviewsCard({ postId }: { postId: string }) {
       <Card className="lg:col-span-2 lg:row-start-2">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">{t('posts.detail.reviews', { count: post.reviewCount })}</h2>
+            <h2 className="text-lg font-medium">
+              {t('posts.detail.reviews', { count: post.reviewCount })}
+            </h2>
             {showReviewButton && (
               <Button
                 variant="outline"

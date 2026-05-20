@@ -158,7 +158,9 @@ export function EnableTotpDialog({
                 className="h-auto p-0 text-muted-foreground"
                 onClick={() => setShowManualKey((v) => !v)}
               >
-                {showManualKey ? t('twoFactor.enableTotp.hideKey') : t('twoFactor.enableTotp.cantScan')}
+                {showManualKey
+                  ? t('twoFactor.enableTotp.hideKey')
+                  : t('twoFactor.enableTotp.cantScan')}
               </Button>
               {showManualKey && (
                 <div className="rounded-md bg-muted px-4 py-3 font-mono text-sm break-all text-center">

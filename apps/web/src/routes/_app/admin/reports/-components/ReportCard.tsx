@@ -102,16 +102,21 @@ export function ReportCard({ report }: { report: ReportItem }) {
             <div className="space-y-1 text-sm text-muted-foreground">
               {report.reportedUserName && (
                 <p>
-                  <span className="font-medium text-foreground">{t('admin.reports.reportedUser')}:</span>{' '}
+                  <span className="font-medium text-foreground">
+                    {t('admin.reports.reportedUser')}:
+                  </span>{' '}
                   {report.reportedUserName}
                 </p>
               )}
               <p>
-                <span className="font-medium text-foreground">{t('admin.reports.reportedBy')}:</span>{' '}
+                <span className="font-medium text-foreground">
+                  {t('admin.reports.reportedBy')}:
+                </span>{' '}
                 {report.reporterName}
               </p>
               <p>
-                <span className="font-medium text-foreground">{t('admin.reports.reason')}:</span> {report.categoryLabel}
+                <span className="font-medium text-foreground">{t('admin.reports.reason')}:</span>{' '}
+                {report.categoryLabel}
               </p>
               <p>
                 <span className="font-medium text-foreground">{t('admin.reports.date')}:</span>{' '}

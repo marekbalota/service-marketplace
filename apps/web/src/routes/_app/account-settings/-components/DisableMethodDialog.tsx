@@ -76,7 +76,9 @@ export function DisableMethodDialog({
             onClick={() => onSubmit(password)}
             disabled={!password || isPending}
           >
-            {isPending ? t('twoFactor.disableDialog.disabling') : t('twoFactor.disableDialog.disable')}
+            {isPending
+              ? t('twoFactor.disableDialog.disabling')
+              : t('twoFactor.disableDialog.disable')}
           </Button>
         </DialogFooter>
       </DialogContent>

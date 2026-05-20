@@ -57,7 +57,12 @@ export function PostSidebarCard({ postId }: { postId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t('posts.detail.rateType')}</p>
                   <p className="font-medium">
-                    {t(`posts.rateType.${post.rateType.toLowerCase()}` as 'posts.rateType.hourly' | 'posts.rateType.daily' | 'posts.rateType.fixed')}
+                    {t(
+                      `posts.rateType.${post.rateType.toLowerCase()}` as
+                        | 'posts.rateType.hourly'
+                        | 'posts.rateType.daily'
+                        | 'posts.rateType.fixed',
+                    )}
                   </p>
                 </div>
               </div>
@@ -72,7 +77,8 @@ export function PostSidebarCard({ postId }: { postId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t('posts.detail.rating')}</p>
                   <p className="font-medium">
-                    {post.averageRating!.toFixed(1)} ({t('posts.detail.reviews', { count: post.reviewCount })})
+                    {post.averageRating!.toFixed(1)} (
+                    {t('posts.detail.reviews', { count: post.reviewCount })})
                   </p>
                 </div>
               </div>

@@ -44,9 +44,7 @@ function ThreadSidebar({
       <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <MessageSquare className="mb-4 size-10 text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">{t('messages.noMessages')}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t('messages.noMessagesHint')}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('messages.noMessagesHint')}</p>
       </div>
     )
   }
