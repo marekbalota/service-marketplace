@@ -215,7 +215,10 @@ describe('Password reset', () => {
       new Request('http://localhost:3001/api/auth/request-password-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: RESET_EMAIL, redirectTo: 'http://localhost:3000/reset-password' }),
+        body: JSON.stringify({
+          email: RESET_EMAIL,
+          redirectTo: 'http://localhost:3000/reset-password',
+        }),
       }),
     )
     expect(res.status).toBe(400)

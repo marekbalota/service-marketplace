@@ -24,7 +24,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
-  
+
   if (!post) return null
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user != null

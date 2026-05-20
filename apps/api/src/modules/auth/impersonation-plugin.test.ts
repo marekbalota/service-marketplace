@@ -344,7 +344,11 @@ describe('two-factor status during impersonation', () => {
     expect(impersonateRes.status).toBe(200)
     const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
 
-    const statusRes = await (auth.api as unknown as { twoFactorStatus: (opts: { headers: Headers; asResponse: true }) => Promise<Response> }).twoFactorStatus({
+    const statusRes = await (
+      auth.api as unknown as {
+        twoFactorStatus: (opts: { headers: Headers; asResponse: true }) => Promise<Response>
+      }
+    ).twoFactorStatus({
       headers: new Headers({ Cookie: impersonationCookies }),
       asResponse: true,
     })
@@ -365,7 +369,15 @@ describe('two-factor status during impersonation', () => {
     })
     const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
 
-    const setupRes = await (auth.api as unknown as { setupEmail: (opts: { body: { password: string }; headers: Headers; asResponse: true }) => Promise<Response> }).setupEmail({
+    const setupRes = await (
+      auth.api as unknown as {
+        setupEmail: (opts: {
+          body: { password: string }
+          headers: Headers
+          asResponse: true
+        }) => Promise<Response>
+      }
+    ).setupEmail({
       body: { password: 'password123' },
       headers: new Headers({ Cookie: impersonationCookies }),
       asResponse: true,

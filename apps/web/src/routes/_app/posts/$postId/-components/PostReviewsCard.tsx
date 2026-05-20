@@ -78,18 +78,16 @@ export function PostReviewsCard({ postId }: { postId: string }) {
             <EmptyState message={t('posts.detail.noReviews')} />
           ) : (
             <div className="space-y-4">
-              {post.reviews.map(
-                (review: ReviewType) => (
-                  <ReviewCard
-                    key={review.reviewId}
-                    review={review}
-                    onDelete={(id) => setDeletingReviewId(id)}
-                    isDeleting={deleteMutation.isPending}
-                    onReport={(id) => setReportingReviewId(id)}
-                    isAuthenticated={isAuthenticated}
-                  />
-                ),
-              )}
+              {post.reviews.map((review: ReviewType) => (
+                <ReviewCard
+                  key={review.reviewId}
+                  review={review}
+                  onDelete={(id) => setDeletingReviewId(id)}
+                  isDeleting={deleteMutation.isPending}
+                  onReport={(id) => setReportingReviewId(id)}
+                  isAuthenticated={isAuthenticated}
+                />
+              ))}
             </div>
           )}
         </CardContent>
