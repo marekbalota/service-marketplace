@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Mail, Smartphone, Shield } from 'lucide-react'
-import { useSuspenseQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import type { TwoFactorMethod } from '@marketplace/shared'
@@ -36,7 +36,7 @@ const METHODS = [
 
 export function TwoFactorSection() {
   const { t } = useTranslation()
-  const { data } = useSuspenseQuery(twoFactorStatusQueryOptions)
+  const { data } = useQuery(twoFactorStatusQueryOptions)
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null)
   const [disableMethod, setDisableMethod] = useState<TwoFactorMethod>('email')
   const { data: user } = useCurrentUser()

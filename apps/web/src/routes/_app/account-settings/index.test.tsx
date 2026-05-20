@@ -9,9 +9,15 @@ import {
 import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
+vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
+
 vi.mock('#/lib/queries/users', () => ({
   currentUserQueryOptions: { queryKey: ['users', 'me'] },
   useCurrentUser: vi.fn(),
+}))
+
+vi.mock('./-components/TwoFactorSection', () => ({
+  TwoFactorSection: () => <div id="two-factor-auth">Two-Factor Authentication</div>,
 }))
 
 // Switch uses Radix internals — stub it to a simple checkbox
@@ -92,7 +98,7 @@ describe('AccountSettingsHubPage', () => {
 
   it('renders Change buttons as enabled', async () => {
     await renderPage()
-    const changeButtons = screen.getAllByRole('button', { name: /^change$/i })
+    const changeButtons = screen.getAllByRole('button', { name: /^change (email|password)$/i })
     expect(changeButtons).toHaveLength(2)
     changeButtons.forEach((btn) => expect(btn).not.toBeDisabled())
   })
@@ -102,7 +108,7 @@ describe('AccountSettingsHubPage', () => {
       data: { email: 'alice@example.com', profiles: [], impersonatedBy: 'admin-uuid' },
     } as unknown as ReturnType<typeof useCurrentUser>)
     await renderPage()
-    const changeButtons = screen.getAllByRole('button', { name: /^change$/i })
+    const changeButtons = screen.getAllByRole('button', { name: /^change (email|password)$/i })
     expect(changeButtons).toHaveLength(2)
     changeButtons.forEach((btn) => expect(btn).toBeDisabled())
   })

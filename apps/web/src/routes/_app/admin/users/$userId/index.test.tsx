@@ -30,6 +30,14 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   }
 })
 
+vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() }, routerRef: null }))
+vi.mock('#/auth', () => ({
+  authClient: {
+    signOut: vi.fn(),
+    admin: { impersonateUser: vi.fn(), stopImpersonating: vi.fn() },
+  },
+}))
+
 vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
@@ -95,7 +103,7 @@ describe('UserDetailPage', () => {
 
   it('shows active badge for a non-banned user', async () => {
     await renderPage()
-    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.getByText(/^active$/i)).toBeInTheDocument()
   })
 
   it('shows banned badge for a banned user', async () => {
@@ -106,7 +114,7 @@ describe('UserDetailPage', () => {
       return { data: { ...baseUser, isBanned: true } }
     })
     await renderPage()
-    expect(screen.getByText('banned')).toBeInTheDocument()
+    expect(screen.getByText(/^banned$/i)).toBeInTheDocument()
   })
 
   it('shows empty state when user has no profiles', async () => {

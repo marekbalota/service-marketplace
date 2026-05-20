@@ -40,58 +40,47 @@ describe('EnableEmailDialog', () => {
     expect(screen.getByRole('button', { name: /continue/i })).toBeDisabled()
   })
 
-  it('moves to step 2 (send code screen) after password confirm — no API call', async () => {
+  it('moves to step 2 with OTP input after clicking Continue', async () => {
     wrap(<EnableEmailDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /send code/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-input-otp]')).toBeInTheDocument()
     })
-    expect(mockSetupEmail).not.toHaveBeenCalled()
+    expect(mockSetupEmail).toHaveBeenCalledWith({ password: 'pass123' })
   })
 
-  it('Back button visible on step 2 before and after sending code', async () => {
+  it('Cancel button visible on step 2', async () => {
     wrap(<EnableEmailDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    await waitFor(() => screen.getByRole('button', { name: /send code/i }))
-    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /send code/i }))
-    await waitFor(() => {
-      expect(mockSetupEmail).toHaveBeenCalled()
-    })
-    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
+    await waitFor(() => document.querySelector('[data-input-otp]'))
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
   })
 
-  it('clicking Send Code calls setupEmail with password', async () => {
+  it('clicking Continue calls setupEmail with password', async () => {
     wrap(<EnableEmailDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    await waitFor(() => screen.getByRole('button', { name: /send code/i }))
-    fireEvent.click(screen.getByRole('button', { name: /send code/i }))
     await waitFor(() => {
       expect(mockSetupEmail).toHaveBeenCalledWith({ password: 'pass123' })
     })
   })
 
-  it('after Send Code, OTP input appears', async () => {
+  it('after Continue, OTP input and Verify button appear', async () => {
     wrap(<EnableEmailDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    await waitFor(() => screen.getByRole('button', { name: /send code/i }))
-    fireEvent.click(screen.getByRole('button', { name: /send code/i }))
-    await waitFor(() => mockSetupEmail.mock.calls.length > 0)
     await waitFor(() => {
       expect(document.querySelector('[data-input-otp]')).toBeInTheDocument()
     })
+    expect(screen.getByRole('button', { name: /verify/i })).toBeInTheDocument()
   })
 
   it('after entering OTP and clicking Verify, calls enableEmail and invalidates query', async () => {
     wrap(<EnableEmailDialog open onOpenChange={vi.fn()} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    await waitFor(() => screen.getByRole('button', { name: /send code/i }))
-    fireEvent.click(screen.getByRole('button', { name: /send code/i }))
     await waitFor(() => document.querySelector('[data-input-otp]'))
     const otpInput = document.querySelector('[data-input-otp]') as HTMLInputElement
     fireEvent.change(otpInput, { target: { value: '654321' } })

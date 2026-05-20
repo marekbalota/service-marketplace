@@ -142,7 +142,7 @@ describe('RegisterForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /register/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/name is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/this field is required/i)).toBeInTheDocument()
     })
   })
 

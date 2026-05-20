@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: ['zod'],
+    noExternal: ['zod', '@hookform/resolvers'],
   },
   test: {
     environment: 'jsdom',

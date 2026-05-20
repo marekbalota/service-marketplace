@@ -7,74 +7,74 @@ function wrap(ui: React.ReactElement) {
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
 }
 
-const mockDisableEmail = vi.hoisted(() => vi.fn())
-const mockDisableTotp = vi.hoisted(() => vi.fn())
-const mockInvalidate = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 vi.mock('#/auth', () => ({
-  authClient: { twoFactor: { disableEmail: mockDisableEmail, disableTotp: mockDisableTotp } },
+  authClient: { twoFactor: { disableEmail: vi.fn(), disableTotp: vi.fn() } },
 }))
-vi.mock('#/router', () => ({ queryClient: { invalidateQueries: mockInvalidate } }))
+vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
 
 import { DisableMethodDialog } from './DisableMethodDialog'
+
+const defaultProps = {
+  open: true,
+  onOpenChange: vi.fn(),
+  warning: 'This will disable the selected method.',
+  isPending: false,
+  error: null,
+  onSubmit: vi.fn(),
+}
 
 describe('DisableMethodDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockDisableEmail.mockResolvedValue({ data: {}, error: null })
-    mockDisableTotp.mockResolvedValue({ data: {}, error: null })
   })
 
   it('renders password field', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod />)
+    wrap(<DisableMethodDialog {...defaultProps} />)
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
   })
 
   it('Disable button disabled when password empty', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod />)
+    wrap(<DisableMethodDialog {...defaultProps} />)
     expect(screen.getByRole('button', { name: /^disable$/i })).toBeDisabled()
   })
 
-  it('shows "turn off 2FA entirely" warning when isLastMethod', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod />)
-    expect(
-      screen.getByText(/turn off two-factor authentication for your account entirely/i),
-    ).toBeInTheDocument()
+  it('shows the provided warning text', () => {
+    const warning = 'turn off two-factor authentication for your account entirely'
+    wrap(<DisableMethodDialog {...defaultProps} warning={warning} />)
+    expect(screen.getByText(warning)).toBeInTheDocument()
   })
 
-  it('does not show "turn off 2FA entirely" when not isLastMethod', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod={false} />)
-    expect(
-      screen.queryByText(/turn off two-factor authentication for your account entirely/i),
-    ).not.toBeInTheDocument()
+  it('shows email-specific warning when passed as warning prop', () => {
+    const warning = 'disable email verification codes from being used'
+    wrap(<DisableMethodDialog {...defaultProps} warning={warning} />)
+    expect(screen.getByText(warning)).toBeInTheDocument()
   })
 
-  it('shows email-specific warning for email method', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod={false} />)
-    expect(screen.getByText(/disable email verification/i)).toBeInTheDocument()
+  it('shows totp-specific warning when passed as warning prop', () => {
+    const warning = 'disable your authenticator app from being used'
+    wrap(<DisableMethodDialog {...defaultProps} warning={warning} />)
+    expect(screen.getByText(warning)).toBeInTheDocument()
   })
 
-  it('shows totp-specific warning for totp method', () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="totp" isLastMethod={false} />)
-    expect(screen.getByText(/disable your authenticator app/i)).toBeInTheDocument()
-  })
-
-  it('calls disableEmail and invalidates on confirm', async () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="email" isLastMethod />)
+  it('calls onSubmit with the entered password on confirm', async () => {
+    const onSubmit = vi.fn()
+    wrap(<DisableMethodDialog {...defaultProps} onSubmit={onSubmit} />)
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'mypass' } })
     fireEvent.click(screen.getByRole('button', { name: /^disable$/i }))
     await waitFor(() => {
-      expect(mockDisableEmail).toHaveBeenCalledWith({ password: 'mypass' })
-      expect(mockInvalidate).toHaveBeenCalled()
+      expect(onSubmit).toHaveBeenCalledWith('mypass')
     })
   })
 
-  it('calls disableTotp when method is totp', async () => {
-    wrap(<DisableMethodDialog open onOpenChange={vi.fn()} method="totp" isLastMethod={false} />)
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'mypass' } })
+  it('does not call onSubmit when password is empty', () => {
+    const onSubmit = vi.fn()
+    wrap(<DisableMethodDialog {...defaultProps} onSubmit={onSubmit} />)
     fireEvent.click(screen.getByRole('button', { name: /^disable$/i }))
-    await waitFor(() => {
-      expect(mockDisableTotp).toHaveBeenCalledWith({ password: 'mypass' })
-      expect(mockDisableEmail).not.toHaveBeenCalled()
-    })
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('shows error message when error prop is set', () => {
+    wrap(<DisableMethodDialog {...defaultProps} error={new Error('Wrong password')} />)
+    expect(screen.getByText('Wrong password')).toBeInTheDocument()
   })
 })

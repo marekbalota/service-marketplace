@@ -38,7 +38,7 @@ describe('ProfileFields', () => {
     render(<Wrapper />)
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
-      expect(screen.getByText(/name is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/this field is required/i)).toBeInTheDocument()
     })
   })
 
@@ -46,7 +46,7 @@ describe('ProfileFields', () => {
     render(<Wrapper defaultValues={{ name: 'Alice', email: 'not-an-email' }} />)
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument()
+      expect(screen.getByText(/valid email/i)).toBeInTheDocument()
     })
   })
 

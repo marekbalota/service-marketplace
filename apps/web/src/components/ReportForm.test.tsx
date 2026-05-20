@@ -82,7 +82,7 @@ describe('ReportForm', () => {
     await waitFor(() => expect(screen.getByText('Spam')).toBeInTheDocument())
     await user.click(screen.getByText('Spam'))
     await user.click(screen.getByRole('button', { name: /submit report/i }))
-    await waitFor(() => expect(screen.getByText('Description is required')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('This field is required')).toBeInTheDocument())
     expect(mockOnReport).not.toHaveBeenCalled()
   })
 
