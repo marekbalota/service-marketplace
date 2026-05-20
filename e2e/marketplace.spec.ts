@@ -33,7 +33,7 @@ test.describe('Marketplace index', () => {
   })
 
   test('shows the search input and filter controls', async ({ page }) => {
-    await expect(page.getByPlaceholder('Search services, providers, or keywords...')).toBeVisible()
+    await expect(page.getByPlaceholder('Search services, providers, or keywords…')).toBeVisible()
     // Desktop filter selects
     await expect(page.getByRole('combobox').first()).toBeVisible()
   })
@@ -55,7 +55,7 @@ test.describe('Marketplace index', () => {
     const totalText = await page.getByText(/\d+ service/).textContent()
     const totalBefore = parseInt(totalText!.match(/\d+/)![0]!)
 
-    await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
+    await page.getByPlaceholder('Search services, providers, or keywords…').fill('zzznomatch999')
     await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
 
     const filteredText = await page.getByText(/\d+ service/).textContent()
@@ -65,7 +65,7 @@ test.describe('Marketplace index', () => {
   })
 
   test('shows empty state when search yields no results', async ({ page }) => {
-    await page.getByPlaceholder('Search services, providers, or keywords...').fill('zzznomatch999')
+    await page.getByPlaceholder('Search services, providers, or keywords…').fill('zzznomatch999')
     await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
 
     await expect(page.getByText('No services found matching your criteria.')).toBeVisible()
@@ -108,7 +108,7 @@ test.describe('Marketplace index', () => {
     await expect(page.getByText(/\d+ service/)).toBeVisible()
 
     // Open the post-type combobox and choose "Offers Only"
-    await page.getByRole('combobox').first().click()
+    await page.getByRole('combobox').filter({ hasText: 'All Types' }).click()
     await page.getByRole('option', { name: 'Offers Only' }).click()
 
     // URL should reflect the active filter
@@ -181,6 +181,21 @@ test.describe('Account Settings — Profile CRUD', () => {
   })
 })
 
+test.describe('Account Settings — 2FA section', () => {
+  test.use({ storageState: 'e2e/.auth/alice.json' })
+
+  test('shows the Two-Factor Authentication card with available methods', async ({ page }) => {
+    await page.goto('/account-settings')
+    const twoFactorCard = page.locator('#two-factor-auth')
+    await expect(twoFactorCard).toBeVisible({ timeout: 10000 })
+    // Alice has no 2FA enabled — both TOTP and Email show as available to enable
+    await expect(twoFactorCard.getByText('Authenticator App', { exact: true })).toBeVisible()
+    await expect(twoFactorCard.getByText('Email', { exact: true })).toBeVisible()
+    const enableButtons = twoFactorCard.getByRole('button', { name: /enable/i })
+    await expect(enableButtons.first()).toBeEnabled()
+  })
+})
+
 test.describe('Create Post', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
@@ -228,7 +243,7 @@ test.describe('Messages', () => {
     await page.goto('/posts')
 
     // Search for Carol's posts by name to get a non-alice post
-    await page.getByPlaceholder('Search services, providers, or keywords...').fill('Carol White')
+    await page.getByPlaceholder('Search services, providers, or keywords…').fill('Carol White')
     await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
     // Wait for post cards to be visible (not just in DOM)
     await expect(
@@ -592,15 +607,59 @@ test.describe('User Impersonation', () => {
   })
 })
 
+test.describe('2FA section impersonation gating', () => {
+  let aliceUserId: string
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
+    await page.locator('input[type="password"]').fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto('/admin/users')
+    const searchResponse = page.waitForResponse((r) => r.url().includes('/admin/users'))
+    await page.getByPlaceholder(/search by name or email/i).fill('alice')
+    await searchResponse
+    await page.getByRole('link', { name: /view/i }).first().click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
+    aliceUserId = page.url().split('/').pop()!
+    await context.close()
+  })
+
+  test('2FA buttons are disabled during impersonation', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
+    await page.locator('input[type="password"]').fill('admin123')
+    await page.getByRole('button', { name: /log in/i }).click()
+    await page.waitForURL('/posts')
+    await page.goto(`/admin/users/${aliceUserId}`)
+    await page.getByRole('button', { name: /impersonate user/i }).click()
+    await page.waitForURL('/posts')
+    await expect(page.getByText(/impersonating alice/i)).toBeVisible()
+
+    await page.goto('/account-settings')
+    const twoFactorCard = page.locator('#two-factor-auth')
+    await expect(twoFactorCard).toBeVisible({ timeout: 10000 })
+    // All buttons in the 2FA card are disabled during impersonation
+    const buttons = twoFactorCard.getByRole('button')
+    const count = await buttons.count()
+    for (let i = 0; i < count; i++) {
+      await expect(buttons.nth(i)).toBeDisabled()
+    }
+  })
+})
+
 test.describe('2FA challenge routes', () => {
   test('verify-2fa selection page renders when navigated to directly', async ({ page }) => {
     // Navigate directly to the challenge page (without a pending 2FA session)
     // The page renders — no redirect happens because there's no fully-authenticated user
     await page.goto('/verify-2fa')
     await expect(page.getByText('2-Step Verification')).toBeVisible()
-    await expect(page.getByText('Authenticator App')).toBeVisible()
-    await expect(page.getByText('Email')).toBeVisible()
-    await expect(page.getByText(/backup code/i)).toBeVisible()
+    await expect(page.getByText('Authenticator App', { exact: true })).toBeVisible()
+    await expect(page.getByText('Email', { exact: true })).toBeVisible()
+    await expect(page.getByText('Use a backup code instead', { exact: true })).toBeVisible()
   })
 
   test('verify-2fa/totp renders TOTP challenge', async ({ page }) => {
