@@ -204,7 +204,7 @@ export const auth = betterAuth({
         }
       }
 
-      if (ctx.path.startsWith('/two-factor/')) {
+      if (ctx.path.startsWith('/two-factor/') && ctx.path !== '/two-factor/status') {
         const session = await getSessionFromCtx(ctx)
         if (session?.session.impersonatedBy) {
           return new APIError('FORBIDDEN', {

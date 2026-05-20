@@ -1,11 +1,29 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
-vi.mock('@tanstack/react-query', () => ({ useSuspenseQuery: mockUseSuspenseQuery }))
+const mockUseCurrentUser = vi.hoisted(() => vi.fn())
+vi.mock('@tanstack/react-query', () => ({
+  useSuspenseQuery: mockUseSuspenseQuery,
+  useMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() })),
+}))
 vi.mock('#/lib/queries/two-factor', () => ({
   twoFactorStatusQueryOptions: { queryKey: ['two-factor', 'status'] },
 }))
+vi.mock('#/lib/queries/users', () => ({
+  useCurrentUser: mockUseCurrentUser,
+  currentUserQueryOptions: { queryKey: ['users', 'me'] },
+}))
+vi.mock('#/auth', () => ({
+  authClient: {
+    twoFactor: {
+      disableEmail: vi.fn(),
+      disableTotp: vi.fn(),
+    },
+  },
+}))
+vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
+vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
 vi.mock('./EnableTotpDialog', () => ({
   EnableTotpDialog: ({ open }: { open: boolean }) => (open ? <div>EnableTotpDialog</div> : null),
 }))
@@ -23,6 +41,10 @@ vi.mock('./DisableMethodDialog', () => ({
 import { TwoFactorSection } from './TwoFactorSection'
 
 describe('TwoFactorSection', () => {
+  beforeEach(() => {
+    mockUseCurrentUser.mockReturnValue({ data: { email: 'alice@example.com' } })
+  })
+
   it('shows both methods in Available group when 2FA is disabled', () => {
     mockUseSuspenseQuery.mockReturnValue({
       data: { twoFactorEnabled: false, enabledMethods: [] },
@@ -53,5 +75,40 @@ describe('TwoFactorSection', () => {
     render(<TwoFactorSection />)
     expect(screen.getByText(/enabled/i)).toBeInTheDocument()
     expect(screen.queryByText(/available/i)).not.toBeInTheDocument()
+  })
+
+  describe('during impersonation', () => {
+    beforeEach(() => {
+      mockUseCurrentUser.mockReturnValue({
+        data: { impersonatedBy: 'admin-uuid' },
+      })
+    })
+
+    it('disables Enable buttons for available methods', () => {
+      mockUseSuspenseQuery.mockReturnValue({
+        data: { twoFactorEnabled: false, enabledMethods: [] },
+      })
+      render(<TwoFactorSection />)
+      const enableButtons = screen.getAllByRole('button', { name: /^enable$/i })
+      enableButtons.forEach((btn) => expect(btn).toBeDisabled())
+    })
+
+    it('disables Disable buttons for enabled methods', () => {
+      mockUseSuspenseQuery.mockReturnValue({
+        data: { twoFactorEnabled: true, enabledMethods: ['email'] },
+      })
+      render(<TwoFactorSection />)
+      const disableButton = screen.getByRole('button', { name: /^disable$/i })
+      expect(disableButton).toBeDisabled()
+    })
+
+    it('disables Manage Backup Codes button', () => {
+      mockUseSuspenseQuery.mockReturnValue({
+        data: { twoFactorEnabled: true, enabledMethods: ['email'] },
+      })
+      render(<TwoFactorSection />)
+      const manageButton = screen.getByRole('button', { name: /^manage$/i })
+      expect(manageButton).toBeDisabled()
+    })
   })
 })

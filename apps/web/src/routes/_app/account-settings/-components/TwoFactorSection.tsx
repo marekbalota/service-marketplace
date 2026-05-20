@@ -7,9 +7,11 @@ import type { TwoFactorMethod } from '@marketplace/shared'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
 import { Separator } from '#/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
 import { authClient } from '#/auth'
 import { queryClient } from '#/router'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
+import { useCurrentUser } from '#/lib/queries/users'
 import { EnableTotpDialog } from './EnableTotpDialog'
 import { EnableEmailDialog } from './EnableEmailDialog'
 import { BackupCodesDialog } from './BackupCodesDialog'
@@ -37,6 +39,8 @@ export function TwoFactorSection() {
   const { data } = useSuspenseQuery(twoFactorStatusQueryOptions)
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null)
   const [disableMethod, setDisableMethod] = useState<TwoFactorMethod>('email')
+  const { data: user } = useCurrentUser()
+  const isImpersonating = !user || !!user.impersonatedBy
 
   function buildDisableWarning(method: TwoFactorMethod, isLastMethod: boolean): string {
     const base =
@@ -102,9 +106,26 @@ export function TwoFactorSection() {
                         <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                       </div>
                     </div>
-                    <Button variant="destructive" onClick={() => openDisableDialog(id)}>
-                      {t('twoFactor.section.disable')}
-                    </Button>
+                    {isImpersonating ? (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <span tabIndex={0} className="inline-flex">
+                              <Button variant="destructive" disabled>
+                                {t('twoFactor.section.disable')}
+                              </Button>
+                            </span>
+                          }
+                        />
+                        <TooltipContent>
+                          {t('accountSettings.impersonationRestricted')}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Button variant="destructive" onClick={() => openDisableDialog(id)}>
+                        {t('twoFactor.section.disable')}
+                      </Button>
+                    )}
                   </div>
                 ))}
                 <div className="flex items-center justify-between gap-4">
@@ -121,9 +142,26 @@ export function TwoFactorSection() {
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                    {t('twoFactor.section.manage')}
-                  </Button>
+                  {isImpersonating ? (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span tabIndex={0} className="inline-flex">
+                            <Button variant="outline" disabled>
+                              {t('twoFactor.section.manage')}
+                            </Button>
+                          </span>
+                        }
+                      />
+                      <TooltipContent>
+                        {t('accountSettings.impersonationRestricted')}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
+                      {t('twoFactor.section.manage')}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -148,9 +186,24 @@ export function TwoFactorSection() {
                         <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                       </div>
                     </div>
-                    <Button onClick={() => setOpenDialog(`enable-${id}`)}>
-                      {t('twoFactor.section.enable')}
-                    </Button>
+                    {isImpersonating ? (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <span tabIndex={0} className="inline-flex">
+                              <Button disabled>{t('twoFactor.section.enable')}</Button>
+                            </span>
+                          }
+                        />
+                        <TooltipContent>
+                          {t('accountSettings.impersonationRestricted')}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Button onClick={() => setOpenDialog(`enable-${id}`)}>
+                        {t('twoFactor.section.enable')}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

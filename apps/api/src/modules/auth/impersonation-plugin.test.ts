@@ -327,3 +327,49 @@ describe('Impersonation gate: changeEmail and changePassword are blocked while i
     expect(res.status).not.toBe(403)
   })
 })
+
+describe('two-factor status during impersonation', () => {
+  it('returns 200 for GET /two-factor/status while impersonating', async () => {
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: 'admin@example.com', password: 'admin123' },
+      asResponse: true,
+    })
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers)
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    })
+    expect(impersonateRes.status).toBe(200)
+    const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
+
+    const statusRes = await (auth.api as unknown as { twoFactorStatus: (opts: { headers: Headers; asResponse: true }) => Promise<Response> }).twoFactorStatus({
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    })
+    expect(statusRes.status).toBe(200)
+  })
+
+  it('still returns 403 for POST /two-factor/setup-email while impersonating', async () => {
+    const adminSignIn = await auth.api.signInEmail({
+      body: { email: 'admin@example.com', password: 'admin123' },
+      asResponse: true,
+    })
+    const freshAdminCookie = setCookiesToRequestCookie(adminSignIn.headers)
+
+    const impersonateRes = await auth.api.impersonateUser({
+      body: { userId: aliceUserId },
+      headers: new Headers({ Cookie: freshAdminCookie }),
+      asResponse: true,
+    })
+    const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
+
+    const setupRes = await (auth.api as unknown as { setupEmail: (opts: { body: { password: string }; headers: Headers; asResponse: true }) => Promise<Response> }).setupEmail({
+      body: { password: 'password123' },
+      headers: new Headers({ Cookie: impersonationCookies }),
+      asResponse: true,
+    })
+    expect(setupRes.status).toBe(403)
+  })
+})
