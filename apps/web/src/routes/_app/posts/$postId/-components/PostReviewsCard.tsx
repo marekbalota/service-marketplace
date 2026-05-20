@@ -24,17 +24,12 @@ export function PostReviewsCard({ postId }: { postId: string }) {
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
 
-  if (!post) return null
-  const isOwner = activeProfile?.userProfileId === post.authorId
-  const isAuthenticated = user != null
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reportingReviewId, setReportingReviewId] = useState<string | null>(null)
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null)
 
-  const hasReviewed = post.reviews.some(
-    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId,
-  )
-  const showReviewButton = !isOwner && activeProfile && !hasReviewed
+  const isOwner = activeProfile?.userProfileId === post?.authorId
+  const isAuthenticated = user != null
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -46,6 +41,13 @@ export function PostReviewsCard({ postId }: { postId: string }) {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
     },
   })
+
+  if (!post) return null
+
+  const hasReviewed = post.reviews.some(
+    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId,
+  )
+  const showReviewButton = !isOwner && activeProfile && !hasReviewed
 
   return (
     <>

@@ -25,21 +25,23 @@ export function PostInfoCard({ postId }: { postId: string }) {
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
 
-  if (!post) return null
-  const isOwner = activeProfile?.userProfileId === post.authorId
-  const isAuthenticated = user != null
   const [showReportForm, setShowReportForm] = useState(false)
+
+  const isOwner = activeProfile?.userProfileId === post?.authorId
+  const isAuthenticated = user != null
+
+  const { data: hasReported } = useQuery({
+    ...hasReportedPostQueryOptions(postId, activeProfile?.userProfileId ?? ''),
+    enabled: !!post && isAuthenticated && !isOwner && !!activeProfile?.userProfileId,
+  })
+
+  if (!post) return null
 
   const RATE_LABELS: Record<string, string> = {
     HOURLY: t('posts.rateType.perHour'),
     DAILY: t('posts.rateType.perDay'),
     FIXED: t('posts.rateType.fixed'),
   }
-
-  const { data: hasReported } = useQuery({
-    ...hasReportedPostQueryOptions(postId, activeProfile?.userProfileId ?? ''),
-    enabled: isAuthenticated && !isOwner && !!activeProfile?.userProfileId,
-  })
 
   const price = post.price ? parseFloat(post.price) : null
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
