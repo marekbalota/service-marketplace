@@ -600,5 +600,135 @@
     "expiryRequired": "Datum vypršení je povinné",
     "expiryFuture": "Datum vypršení musí být v budoucnosti",
     "invalid": "Neplatná hodnota"
+  },
+  "twoFactor": {
+    "common": {
+      "password": "Heslo",
+      "done": "Hotovo",
+      "verify": "Ověřit",
+      "verifying": "Ověřuji…",
+      "continue": "Pokračovat",
+      "sending": "Odesílám…",
+      "sendingCode": "Odesílám kód…",
+      "savedCodes": "Uložil(a) jsem tyto kódy",
+      "rememberBrowser": "Zapamatovat si tento prohlížeč na 30 dní",
+      "tryAnotherWay": "Zkusit jiný způsob",
+      "resendCode": "Znovu odeslat kód",
+      "resendIn": "Odeslat znovu za {{countdown}}",
+      "enterPasswordToContinue": "Zadejte heslo pro pokračování."
+    },
+    "section": {
+      "enabled": "Povoleno",
+      "available": "Dostupné",
+      "totp": {
+        "label": "Aplikace Authenticator",
+        "description": "Použijte aplikaci jako Google Authenticator nebo Authy"
+      },
+      "email": {
+        "label": "E-mail",
+        "description": "Dostávejte ověřovací kód e-mailem"
+      },
+      "backupCodes": {
+        "label": "Záložní kódy",
+        "description": "Nouzové přístupové kódy"
+      },
+      "enable": "Povolit",
+      "disable": "Zakázat",
+      "manage": "Spravovat",
+      "disableWarning": {
+        "email": "Tím vypnete ověření e-mailem pro váš účet.",
+        "totp": "Tím vypnete aplikaci Authenticator pro váš účet.",
+        "lastMethod": "Tím zcela vypnete dvoufaktorové ověření pro váš účet."
+      },
+      "toast": {
+        "emailDisabled": "E-mail 2FA byl vypnut",
+        "totpDisabled": "Aplikace Authenticator byla vypnuta",
+        "emailEnabled": "E-mail 2FA byl zapnut",
+        "totpEnabled": "Aplikace Authenticator byla zapnuta"
+      }
+    },
+    "backupCodesDialog": {
+      "title": "Záložní kódy",
+      "enterPasswordDesc": "Zadejte heslo pro zobrazení záložních kódů.",
+      "viewCodes": "Zobrazit kódy",
+      "loading": "Načítám…",
+      "currentCodes": "Aktuální kódy",
+      "regenerateTab": "Obnovit",
+      "regenerateWarning": "Tím natrvalo zneplatníte všechny stávající záložní kódy a vygenerujete nové.",
+      "regenerateCodes": "Obnovit kódy",
+      "generating": "Generuji…",
+      "errorRetrieve": "Nepodařilo se načíst záložní kódy",
+      "errorRegenerate": "Nepodařilo se obnovit záložní kódy"
+    },
+    "backupCodesDisplay": {
+      "copyAll": "Kopírovat vše",
+      "copied": "Zkopírováno!",
+      "download": "Stáhnout jako .txt"
+    },
+    "disableDialog": {
+      "title": "Vypnout dvoufaktorové ověření",
+      "description": "Zadejte heslo pro potvrzení.",
+      "disabling": "Vypínám…",
+      "disable": "Vypnout"
+    },
+    "enableEmail": {
+      "step1Title": "Povolit ověření e-mailem",
+      "step2Title": "Ověřit váš e-mail",
+      "step2Description": "Na vaši e-mailovou adresu jsme odeslali 6místný kód.",
+      "step3Title": "Uložte záložní kódy",
+      "step3Description": "Uložte je na bezpečné místo. Každý kód lze použít pouze jednou.",
+      "warningMessage": "Pokud ztratíte přístup k e-mailu, tyto kódy jsou vaším jediným způsobem přihlášení.",
+      "errorSend": "Nepodařilo se odeslat kód",
+      "errorInvalidCode": "Neplatný kód"
+    },
+    "enableTotp": {
+      "step1Title": "Povolit aplikaci Authenticator",
+      "step2Title": "Naskenujte QR kód",
+      "step2Description": "Otevřete svou aplikaci Authenticator a naskenujte kód níže.",
+      "hideKey": "Skrýt ruční klíč",
+      "cantScan": "Nemůžete skenovat? Zadejte klíč ručně",
+      "next": "Dále",
+      "step3Title": "Ověřit kód",
+      "step3Description": "Zadejte 6místný kód z aplikace Authenticator.",
+      "step4Title": "Uložte záložní kódy",
+      "step4Description": "Uložte tyto kódy na bezpečné místo. Každý kód lze použít pouze jednou.",
+      "warningMessage": "Pokud ztratíte přístup k aplikaci Authenticator, tyto kódy jsou vaším jediným způsobem přihlášení.",
+      "errorOccurred": "Nastala chyba",
+      "errorInvalidCode": "Neplatný kód"
+    },
+    "verifySelection": {
+      "title": "Dvoukrokové ověření",
+      "description": "Vyberte, jak chcete ověřit svou identitu.",
+      "totp": {
+        "label": "Aplikace Authenticator",
+        "description": "Zadejte kód z aplikace Authenticator"
+      },
+      "email": {
+        "label": "E-mail",
+        "description": "Dostávejte ověřovací kód e-mailem"
+      },
+      "backup": {
+        "label": "Použít záložní kód",
+        "description": "Použijte jeden ze svých uložených záložních kódů"
+      },
+      "backToLogin": "Zpět na přihlášení"
+    },
+    "verifyTotp": {
+      "title": "Zkontrolujte svou aplikaci Authenticator",
+      "description": "Zadejte šestimístný kód z aplikace Authenticator.",
+      "errorInvalidCode": "Neplatný kód"
+    },
+    "verifyEmail": {
+      "title": "Zkontrolujte e-mail",
+      "description": "Na vaši e-mailovou adresu odešleme šestimístný kód.",
+      "errorSend": "Nepodařilo se odeslat kód",
+      "errorInvalidCode": "Neplatný kód"
+    },
+    "verifyBackup": {
+      "title": "Použít záložní kód",
+      "description": "Každý záložní kód lze použít pouze jednou.",
+      "codeLabel": "Záložní kód",
+      "errorInvalidCode": "Neplatný záložní kód"
+    }
   }
 }

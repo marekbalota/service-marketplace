@@ -18,7 +18,7 @@ function Wrapper() {
 describe('PostCategoryField', () => {
   it('renders the category label', () => {
     render(<Wrapper />)
-    expect(screen.getByText(/categories/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/categories/i)[0]).toBeInTheDocument()
   })
 
   it('renders the hint text', () => {

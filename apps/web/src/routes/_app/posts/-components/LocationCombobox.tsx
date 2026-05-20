@@ -122,7 +122,9 @@ export function LocationCombobox({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={t('posts.location.searchPlaceholder', { location: placeholder.toLowerCase() })}
+            placeholder={t('posts.location.searchPlaceholder', {
+              location: placeholder.toLowerCase(),
+            })}
             value={search}
             onValueChange={setSearch}
           />

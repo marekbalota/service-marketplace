@@ -5,9 +5,8 @@ import { z } from 'zod'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
-import { authClient } from '#/auth'
+import { authClient, setPendingTwoFactorContext } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
-import { ErrorCodes } from '@marketplace/shared'
 import { handleBanError } from '#/lib/ban-handler'
 import { formatCountdown } from '#/lib/format'
 import { queryClient } from '#/router'
@@ -60,7 +59,8 @@ export function LoginForm({ redirect }: { redirect?: string }) {
   const isValidEmail = z.email().safeParse(watchedEmail).success
 
   const onSubmit: SubmitHandler<LoginValues> = async (values) => {
-    const { error } = await authClient.signIn.email({
+    setPendingTwoFactorContext(values.email, redirect)
+    const result = await authClient.signIn.email({
       email: values.email,
       password: values.password,
       rememberMe: values.rememberMe,
@@ -74,7 +74,10 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         },
       },
     })
+    const { error } = result
     if (!error) {
+      const data = result.data as { twoFactorRedirect?: boolean } | undefined
+      if (data?.twoFactorRedirect) return // navigation already handled by onTwoFactorRedirect in auth.ts
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       void navigate({ to: (redirect?.startsWith('/') ? redirect : '/') as '/' })
       return
@@ -83,11 +86,12 @@ export function LoginForm({ redirect }: { redirect?: string }) {
     if (error.status === 429) return
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
-      if (body?.code === ErrorCodes.CaptchaVerificationFailed) {
+      if (body?.code === 'VERIFICATION_FAILED') {
         setCaptchaToken(null)
         setCaptchaVisible(true)
         turnstileRef.current?.reset()
-        form.setError('root', { message: (body.message as string) ?? error.message })
+        const msg = typeof body.message === 'string' ? body.message : error.message
+        form.setError('root', { message: msg })
         return
       }
       void navigate({ to: '/verify-email', search: { email: values.email } })

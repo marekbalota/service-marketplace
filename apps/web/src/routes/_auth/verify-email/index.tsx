@@ -76,9 +76,7 @@ function VerifyEmailPage() {
         </div>
         <CardTitle className="text-2xl">{t('auth.verifyEmail.title')}</CardTitle>
         <CardDescription>
-          {email
-            ? t('auth.verifyEmail.sentTo', { email })
-            : t('auth.verifyEmail.sentGeneric')}
+          {email ? t('auth.verifyEmail.sentTo', { email }) : t('auth.verifyEmail.sentGeneric')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -92,7 +90,9 @@ function VerifyEmailPage() {
             variant="outline"
             className="w-full"
           >
-            {cooldown > 0 ? t('auth.verifyEmail.resendCooldown', { cooldown }) : t('auth.verifyEmail.resend')}
+            {cooldown > 0
+              ? t('auth.verifyEmail.resendCooldown', { cooldown })
+              : t('auth.verifyEmail.resend')}
           </Button>
         )}
         {resendError && <p className="text-center text-sm text-destructive">{resendError}</p>}

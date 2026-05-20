@@ -33,7 +33,6 @@ type FormData = z.infer<typeof baseSchema>
 
 interface ReportFormProps {
   targetType: 'POST' | 'MESSAGE' | 'REVIEW'
-  entityName: string
   descriptionRequired?: boolean
   onReport: (data: { categoryId: string; description?: string }) => Promise<void>
   onSuccess: () => void
@@ -42,7 +41,6 @@ interface ReportFormProps {
 
 export function ReportForm({
   targetType,
-  entityName,
   descriptionRequired = false,
   onReport,
   onSuccess,
@@ -100,7 +98,9 @@ export function ReportForm({
                 >
                   <SelectTrigger aria-invalid={fieldState.invalid}>
                     <SelectValue
-                      placeholder={categoriesLoading ? t('common.loading') : t('report.selectReason')}
+                      placeholder={
+                        categoriesLoading ? t('common.loading') : t('report.selectReason')
+                      }
                     >
                       {selectedLabel}
                     </SelectValue>
@@ -124,7 +124,9 @@ export function ReportForm({
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>{descriptionRequired ? t('report.descriptionRequired') : t('report.description')}</FieldLabel>
+              <FieldLabel>
+                {descriptionRequired ? t('report.descriptionRequired') : t('report.description')}
+              </FieldLabel>
               <Textarea
                 placeholder={t('report.descriptionPlaceholder')}
                 maxLength={1000}

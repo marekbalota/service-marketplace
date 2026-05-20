@@ -96,7 +96,6 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
           {reportingMessageId && (
             <ReportForm
               targetType="MESSAGE"
-              entityName="message"
               onReport={async (data) => {
                 const { error } = await api
                   .threads({ threadId })

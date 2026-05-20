@@ -8,7 +8,9 @@ import * as schema from '../../db/schema'
 import { users, roles, userProfiles, sessions } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
+import { captcha } from 'better-auth/plugins'
 import { impersonationPlugin } from './impersonation-plugin'
+import { twoFactorPlugin } from './two-factor-plugin'
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -19,20 +21,6 @@ import {
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
 
-const CAPTCHA_PROTECTED_PATHS = ['/sign-up/email', '/sign-in/email', '/request-password-reset']
-const TURNSTILE_SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-
-async function verifyCaptchaToken(token: string): Promise<boolean> {
-  try {
-    const body = new URLSearchParams({ secret: env.turnstile.secretKey, response: token })
-    const res = await fetch(TURNSTILE_SITEVERIFY_URL, { method: 'POST', body })
-    const data = (await res.json()) as { success: boolean }
-    return data.success === true
-  } catch {
-    return false
-  }
-}
-
 export const verificationTokenStore = new Map<string, string>()
 export const resetTokenStore = new Map<string, string>()
 export const existingSignupNotifiedEmails = new Set<string>()
@@ -40,7 +28,11 @@ export const existingSignupNotifiedEmails = new Set<string>()
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   trustedOrigins: [env.frontendUrl],
-  plugins: [impersonationPlugin()],
+  plugins: [
+    impersonationPlugin(),
+    twoFactorPlugin({ issuer: 'Marketplace' }),
+    captcha({ provider: 'cloudflare-turnstile', secretKey: env.turnstile.secretKey }),
+  ],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -68,6 +60,7 @@ export const auth = betterAuth({
       isBanned: { type: 'boolean', input: false },
       banReason: { type: 'string', input: false },
       banExpiration: { type: 'date', input: false },
+      twoFactorEnabled: { type: 'boolean', input: false, defaultValue: false },
     },
   },
   emailAndPassword: {
@@ -180,25 +173,6 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // Internal auth.api.* calls (seed, tests) have no HTTP host header — skip CAPTCHA.
-      // CAPTCHA is a browser-facing control; internal callers are trusted by design.
-      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path) && ctx.headers?.get('host')) {
-        const token = ctx.headers?.get('x-captcha-response')
-        if (!token) {
-          return new APIError('BAD_REQUEST', {
-            message: AuthErrorMessages.missingCaptchaResponse,
-            code: ErrorCodes.MissingCaptchaResponse,
-          })
-        }
-        const valid = await verifyCaptchaToken(token)
-        if (!valid) {
-          return new APIError('FORBIDDEN', {
-            message: AuthErrorMessages.captchaVerificationFailed,
-            code: ErrorCodes.CaptchaVerificationFailed,
-          })
-        }
-      }
-
       if (env.nodeEnv !== 'test' && ctx.path === '/sign-in/email') {
         const user = await db.query.users.findFirst({
           where: eq(users.email, ctx.body.email),
@@ -221,6 +195,16 @@ export const auth = betterAuth({
 
       // Block changeEmail and changePassword during impersonation
       if (['/change-email', '/change-password'].includes(ctx.path)) {
+        const session = await getSessionFromCtx(ctx)
+        if (session?.session.impersonatedBy) {
+          return new APIError('FORBIDDEN', {
+            code: ErrorCodes.ImpersonationReadOnly,
+            message: AuthErrorMessages.impersonationReadOnly,
+          })
+        }
+      }
+
+      if (ctx.path.startsWith('/two-factor/') && ctx.path !== '/two-factor/status') {
         const session = await getSessionFromCtx(ctx)
         if (session?.session.impersonatedBy) {
           return new APIError('FORBIDDEN', {

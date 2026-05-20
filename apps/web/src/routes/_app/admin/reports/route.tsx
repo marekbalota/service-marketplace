@@ -109,7 +109,7 @@ function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) 
         navigate({
           search: (prev) => ({
             ...prev,
-            category: value === 'all' ? undefined : value,
+            category: value === 'all' ? undefined : (value ?? undefined),
             page: undefined,
           }),
         })
@@ -119,7 +119,8 @@ function CategorySelectInner({ type }: { type: 'POST' | 'MESSAGE' | 'REVIEW' }) 
         <SelectValue>
           {category === 'all'
             ? t('admin.reports.allReasons')
-            : (categories.find((c) => c.categoryId === category)?.label ?? t('admin.reports.allReasons'))}
+            : (categories.find((c) => c.categoryId === category)?.label ??
+              t('admin.reports.allReasons'))}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="w-[var(--anchor-width)]">
@@ -226,10 +227,7 @@ function ManageReports() {
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton onClick={() => navigate({ to: '/admin' })} label={t('admin.backToAdmin')} />
 
-      <PageHeader
-        title={t('admin.reports.title')}
-        description={t('admin.reports.subtitle')}
-      />
+      <PageHeader title={t('admin.reports.title')} description={t('admin.reports.subtitle')} />
 
       <Card className="mb-6">
         <CardContent>

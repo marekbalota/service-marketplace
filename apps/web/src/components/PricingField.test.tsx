@@ -30,5 +30,4 @@ describe('PricingField', () => {
     render(<Wrapper priceValue="50" />)
     expect(screen.getByRole('combobox')).not.toBeDisabled()
   })
-
 })

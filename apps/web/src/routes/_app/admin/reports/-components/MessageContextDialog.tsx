@@ -58,7 +58,9 @@ export function MessageContextDialog({ reportId, open, onClose }: Props) {
                 </div>
                 <p className="text-muted-foreground break-words">{msg.content}</p>
                 {msg.isReported && (
-                  <p className="text-xs text-red-500 mt-1.5 font-medium">{t('admin.reports.reportedMessage')}</p>
+                  <p className="text-xs text-red-500 mt-1.5 font-medium">
+                    {t('admin.reports.reportedMessage')}
+                  </p>
                 )}
               </div>
             ))}

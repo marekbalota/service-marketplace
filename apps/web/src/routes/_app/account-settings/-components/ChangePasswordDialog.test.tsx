@@ -36,7 +36,7 @@ describe('ChangePasswordDialog', () => {
     await user.clear(screen.getByLabelText(/current password/i))
     await user.tab()
     await waitFor(() => {
-      expect(screen.getByText(/current password is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/this field is required/i)).toBeInTheDocument()
     })
   })
 

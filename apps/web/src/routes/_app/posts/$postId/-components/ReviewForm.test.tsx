@@ -62,7 +62,7 @@ describe('ReviewForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /submit review/i }))
     })
     await waitFor(() => {
-      expect(screen.getByText(/rating is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/must be at least 1/i)).toBeInTheDocument()
     })
   })
 

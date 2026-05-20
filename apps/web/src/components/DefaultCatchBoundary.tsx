@@ -13,10 +13,10 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
       <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
         {t('error.label')}
       </p>
-      <h1 className="mb-4 text-3xl font-semibold text-foreground">{t('error.somethingWentWrong')}</h1>
-      <p className="mb-8 text-muted-foreground">
-        {error.message || t('error.unexpected')}
-      </p>
+      <h1 className="mb-4 text-3xl font-semibold text-foreground">
+        {t('error.somethingWentWrong')}
+      </h1>
+      <p className="mb-8 text-muted-foreground">{error.message || t('error.unexpected')}</p>
       <Button variant="outline" onClick={() => router.invalidate()}>
         {t('error.tryAgain')}
       </Button>

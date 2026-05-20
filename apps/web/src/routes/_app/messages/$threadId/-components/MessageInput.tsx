@@ -49,9 +49,7 @@ export function MessageInput({
           <Send className="size-5" />
         </Button>
       </div>
-      {isError && (
-        <p className="mt-1 text-xs text-destructive">{t('messages.sendFailed')}</p>
-      )}
+      {isError && <p className="mt-1 text-xs text-destructive">{t('messages.sendFailed')}</p>}
     </div>
   )
 }

@@ -37,6 +37,10 @@ export function zodErrorMap(issue: $ZodRawIssue): { message: string } | null {
     case 'invalid_value':
       // Enum values — user selected something not in the allowed set
       return { message: i18next.t('validation.selectOption') }
+
+    case 'custom':
+      // Let ctx.addIssue message pass through unchanged
+      return null
   }
 
   // Catch-all: prevents any English leaking through for unhandled codes

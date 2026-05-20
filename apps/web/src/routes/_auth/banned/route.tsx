@@ -46,19 +46,21 @@ function BannedPage() {
         <CardTitle className="text-2xl">{t('auth.banned.title')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-muted-foreground text-center">
-          {t('auth.banned.message')}
-        </p>
+        <p className="text-muted-foreground text-center">{t('auth.banned.message')}</p>
 
         {banInfo.reason && (
           <div className="bg-muted p-4 rounded-lg">
-            <p className="text-sm font-medium text-muted-foreground mb-1">{t('auth.banned.reason')}</p>
+            <p className="text-sm font-medium text-muted-foreground mb-1">
+              {t('auth.banned.reason')}
+            </p>
             <p className="text-foreground">{banInfo.reason}</p>
           </div>
         )}
 
         <div className="bg-muted p-4 rounded-lg">
-          <p className="text-sm font-medium text-muted-foreground mb-1">{t('auth.banned.duration')}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">
+            {t('auth.banned.duration')}
+          </p>
           <p className="text-foreground">{formattedExpiration}</p>
         </div>
 

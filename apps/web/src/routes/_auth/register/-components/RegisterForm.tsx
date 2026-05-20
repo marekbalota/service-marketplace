@@ -7,7 +7,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { authClient } from '#/auth'
 import { parseAuthErrorBody } from '#/lib/api-error'
-import { ErrorCodes } from '@marketplace/shared'
 import { env } from '#/env'
 import { useAppTheme } from '#/lib/theme'
 import { Button } from '#/components/ui/button'
@@ -45,11 +44,12 @@ export function RegisterForm() {
     }
     if (error.status === 403) {
       const body = parseAuthErrorBody(error)
-      if (body?.code === ErrorCodes.CaptchaVerificationFailed) {
+      if (body?.code === 'VERIFICATION_FAILED') {
         setCaptchaToken(null)
         setCaptchaVisible(true)
         turnstileRef.current?.reset()
-        form.setError('root', { message: (body.message as string) ?? error.message })
+        const msg = typeof body.message === 'string' ? body.message : error.message
+        form.setError('root', { message: msg })
         return
       }
     }

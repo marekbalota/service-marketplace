@@ -91,12 +91,8 @@ export function PostsList({
           {favouritesOnly ? (
             <>
               <Heart className="mx-auto size-12 text-muted-foreground/50" />
-              <p className="mt-4 text-muted-foreground">
-                {t('posts.noFavourites')}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('posts.noFavouritesHint')}
-              </p>
+              <p className="mt-4 text-muted-foreground">{t('posts.noFavourites')}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t('posts.noFavouritesHint')}</p>
             </>
           ) : (
             <p className="text-muted-foreground">{t('posts.noServices')}</p>

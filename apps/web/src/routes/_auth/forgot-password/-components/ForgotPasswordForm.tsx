@@ -80,9 +80,7 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail?: string }) 
             <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
           </div>
           <CardTitle className="text-2xl">{t('auth.forgotPassword.successTitle')}</CardTitle>
-          <CardDescription>
-            {t('auth.forgotPassword.successMessage')}
-          </CardDescription>
+          <CardDescription>{t('auth.forgotPassword.successMessage')}</CardDescription>
         </CardHeader>
       </Card>
     )

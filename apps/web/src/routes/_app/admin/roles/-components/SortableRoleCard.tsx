@@ -92,7 +92,9 @@ export function SortableRoleCard({
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle>{role.name}</CardTitle>
                   {role.isDefault && (
-                    <Badge className="bg-purple-100 text-purple-800">{t('admin.roles.defaultBadge')}</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">
+                      {t('admin.roles.defaultBadge')}
+                    </Badge>
                   )}
                   {role.userCount > 0 && (
                     <Badge variant="outline">
@@ -168,7 +170,9 @@ export function SortableRoleCard({
           </CardHeader>
           <CardContent>
             <div>
-              <p className="text-sm font-medium mb-3">{t('admin.roles.permissionsCount', { count: role.permissions.length })}</p>
+              <p className="text-sm font-medium mb-3">
+                {t('admin.roles.permissionsCount', { count: role.permissions.length })}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {role.permissions.map((permId) => {
                   const perm = permissions.find((p) => p.permissionId === permId)
