@@ -36,16 +36,37 @@ export const Route = createFileRoute('/_app/account-settings/')({
   component: AccountSettingsHubPage,
 })
 
-const SECTION_IDS = [
-  'account-information',
-  'notifications',
-  'connected-accounts',
-  'two-factor-auth',
-  'login-management',
-  'user-profiles',
+type SectionId = (typeof SECTIONS)[number]['id']
+
+const SECTIONS = [
+  { id: 'account-information' as const, icon: User, labelKey: 'accountSettings.sections.accountInformation' as const },
+  { id: 'notifications' as const, icon: Bell, labelKey: 'accountSettings.sections.notifications' as const },
+  { id: 'connected-accounts' as const, icon: Key, labelKey: 'accountSettings.sections.connectedAccounts' as const },
+  { id: 'two-factor-auth' as const, icon: Shield, labelKey: 'accountSettings.sections.twoFactorAuth' as const },
+  { id: 'login-management' as const, icon: LogOut, labelKey: 'accountSettings.sections.loginManagement' as const },
+  { id: 'user-profiles' as const, icon: Users, labelKey: 'accountSettings.sections.userProfiles' as const },
 ] as const
 
-type SectionId = (typeof SECTION_IDS)[number]
+const NOTIFICATION_ROWS = [
+  {
+    id: 'notif-email',
+    icon: Bell,
+    labelKey: 'accountSettings.emailNotifications' as const,
+    descriptionKey: 'accountSettings.emailNotificationsDesc' as const,
+  },
+  {
+    id: 'notif-messages',
+    icon: Mail,
+    labelKey: 'accountSettings.messageNotifications' as const,
+    descriptionKey: 'accountSettings.messageNotificationsDesc' as const,
+  },
+  {
+    id: 'notif-reviews',
+    icon: Bell,
+    labelKey: 'accountSettings.reviewNotifications' as const,
+    descriptionKey: 'accountSettings.reviewNotificationsDesc' as const,
+  },
+] as const
 
 const OAUTH_PROVIDERS = [
   {
@@ -206,41 +227,11 @@ function AccountSettingsHubPage() {
   const [showChangePassword, setShowChangePassword] = useState(false)
   const observersRef = useRef<IntersectionObserver[]>([])
 
-  const SECTIONS = [
-    { id: 'account-information' as const, label: t('accountSettings.sections.accountInformation'), icon: User },
-    { id: 'notifications' as const, label: t('accountSettings.sections.notifications'), icon: Bell },
-    { id: 'connected-accounts' as const, label: t('accountSettings.sections.connectedAccounts'), icon: Key },
-    { id: 'two-factor-auth' as const, label: t('accountSettings.sections.twoFactorAuth'), icon: Shield },
-    { id: 'login-management' as const, label: t('accountSettings.sections.loginManagement'), icon: LogOut },
-    { id: 'user-profiles' as const, label: t('accountSettings.sections.userProfiles'), icon: Users },
-  ]
-
-  const NOTIFICATION_ROWS = [
-    {
-      id: 'notif-email',
-      label: t('accountSettings.emailNotifications'),
-      description: t('accountSettings.emailNotificationsDesc'),
-      icon: Bell,
-    },
-    {
-      id: 'notif-messages',
-      label: t('accountSettings.messageNotifications'),
-      description: t('accountSettings.messageNotificationsDesc'),
-      icon: Mail,
-    },
-    {
-      id: 'notif-reviews',
-      label: t('accountSettings.reviewNotifications'),
-      description: t('accountSettings.reviewNotificationsDesc'),
-      icon: Bell,
-    },
-  ]
-
   useEffect(() => {
     observersRef.current.forEach((o) => o.disconnect())
     observersRef.current = []
 
-    SECTION_IDS.forEach((id) => {
+    SECTIONS.forEach(({ id }) => {
       const el = document.getElementById(id)
       if (!el) return
       const observer = new IntersectionObserver(
@@ -271,7 +262,7 @@ function AccountSettingsHubPage() {
         {/* Sticky sidebar — hidden on mobile */}
         <aside className="hidden lg:block w-56 shrink-0">
           <nav className="sticky top-24 flex flex-col gap-1">
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
+            {SECTIONS.map(({ id, icon: Icon, labelKey }) => (
               <Button
                 key={id}
                 type="button"
@@ -285,7 +276,7 @@ function AccountSettingsHubPage() {
                 )}
               >
                 <Icon className="size-4 shrink-0" />
-                {label}
+                {t(labelKey)}
               </Button>
             ))}
           </nav>
@@ -365,15 +356,15 @@ function AccountSettingsHubPage() {
               <CardDescription>{t('accountSettings.notificationsSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {NOTIFICATION_ROWS.map(({ id, label, description, icon: Icon }) => (
+              {NOTIFICATION_ROWS.map(({ id, icon: Icon, labelKey, descriptionKey }) => (
                 <div key={id} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Icon className="size-5 text-muted-foreground shrink-0" />
                     <div>
                       <Label htmlFor={id} className="text-sm font-medium">
-                        {label}
+                        {t(labelKey)}
                       </Label>
-                      <p className="text-sm text-muted-foreground">{description}</p>
+                      <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                     </div>
                   </div>
                   <Switch id={id} disabled />
