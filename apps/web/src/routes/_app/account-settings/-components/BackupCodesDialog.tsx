@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { authClient } from '#/auth'
 import { cn } from '#/lib/utils'
@@ -26,6 +27,7 @@ export function BackupCodesDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
   const [codes, setCodes] = useState<BackupCodeEntry[]>([])
@@ -34,7 +36,7 @@ export function BackupCodesDialog({
   const viewCodes = useMutation({
     mutationFn: async () => {
       const { data, error } = await authClient.twoFactor.getBackupCodes({ password })
-      if (error) throw new Error(error.message ?? 'Failed to retrieve backup codes')
+      if (error) throw new Error(error.message ?? t('twoFactor.backupCodesDialog.errorRetrieve'))
       return data?.codes ?? []
     },
     onSuccess: (fetchedCodes) => {
@@ -46,7 +48,7 @@ export function BackupCodesDialog({
   const regenerate = useMutation({
     mutationFn: async () => {
       const { data, error } = await authClient.twoFactor.regenerateBackupCodes({ password })
-      if (error) throw new Error(error.message ?? 'Failed to regenerate backup codes')
+      if (error) throw new Error(error.message ?? t('twoFactor.backupCodesDialog.errorRegenerate'))
       return data?.codes ?? []
     },
     onSuccess: (newCodes) => {
@@ -94,11 +96,11 @@ export function BackupCodesDialog({
         {step === 1 && (
           <>
             <DialogHeader>
-              <DialogTitle>Backup Codes</DialogTitle>
-              <DialogDescription>Enter your password to view your backup codes.</DialogDescription>
+              <DialogTitle>{t('twoFactor.backupCodesDialog.title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.backupCodesDialog.enterPasswordDesc')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-3">
-              <Label htmlFor="backup-view-password">Password</Label>
+              <Label htmlFor="backup-view-password">{t('twoFactor.common.password')}</Label>
               <Input
                 id="backup-view-password"
                 type="password"
@@ -115,13 +117,15 @@ export function BackupCodesDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={() => viewCodes.mutate()}
                 disabled={!password || viewCodes.isPending}
               >
-                {viewCodes.isPending ? 'Loading…' : 'View Codes'}
+                {viewCodes.isPending
+                  ? t('twoFactor.backupCodesDialog.loading')
+                  : t('twoFactor.backupCodesDialog.viewCodes')}
               </Button>
             </DialogFooter>
           </>
@@ -130,16 +134,16 @@ export function BackupCodesDialog({
         {step === 2 && (
           <>
             <DialogHeader>
-              <DialogTitle>Backup Codes</DialogTitle>
+              <DialogTitle>{t('twoFactor.backupCodesDialog.title')}</DialogTitle>
             </DialogHeader>
             <div className="py-2">
               <Tabs defaultValue="current">
                 <TabsList className="w-full">
                   <TabsTrigger value="current" className="flex-1">
-                    Current Codes
+                    {t('twoFactor.backupCodesDialog.currentCodes')}
                   </TabsTrigger>
                   <TabsTrigger value="regenerate" className="flex-1">
-                    Regenerate
+                    {t('twoFactor.backupCodesDialog.regenerateTab')}
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="current" className="pt-4">
@@ -148,8 +152,7 @@ export function BackupCodesDialog({
                 <TabsContent value="regenerate" className="pt-4 space-y-4">
                   {!regenerate.isSuccess && (
                     <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                      This will permanently invalidate all existing backup codes and generate new
-                      ones.
+                      {t('twoFactor.backupCodesDialog.regenerateWarning')}
                     </div>
                   )}
                   {regenerate.isSuccess && <BackupCodesDisplay codes={codes} />}
@@ -163,7 +166,9 @@ export function BackupCodesDialog({
                       disabled={regenerate.isPending}
                       className="w-full"
                     >
-                      {regenerate.isPending ? 'Generating…' : 'Regenerate Codes'}
+                      {regenerate.isPending
+                        ? t('twoFactor.backupCodesDialog.generating')
+                        : t('twoFactor.backupCodesDialog.regenerateCodes')}
                     </Button>
                   )}
                 </TabsContent>
@@ -178,7 +183,7 @@ export function BackupCodesDialog({
                   onCheckedChange={(c) => setSavedCodes(c === true)}
                 />
                 <Label htmlFor="backup-saved-codes" className="cursor-pointer">
-                  I have saved these codes
+                  {t('twoFactor.common.savedCodes')}
                 </Label>
               </div>
             )}
@@ -187,7 +192,7 @@ export function BackupCodesDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={regenerate.isSuccess && !savedCodes}
               >
-                Done
+                {t('twoFactor.common.done')}
               </Button>
             </DialogFooter>
           </>

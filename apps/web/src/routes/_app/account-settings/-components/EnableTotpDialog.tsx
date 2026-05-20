@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
@@ -30,6 +31,7 @@ export function EnableTotpDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
   const [totpURI, setTotpURI] = useState('')
@@ -41,7 +43,7 @@ export function EnableTotpDialog({
   const setup = useMutation({
     mutationFn: async () => {
       const { data, error } = await authClient.twoFactor.setupTotp({ password })
-      if (error) throw new Error(error.message ?? 'An error occurred')
+      if (error) throw new Error(error.message ?? t('twoFactor.enableTotp.errorOccurred'))
       return data
     },
     onSuccess: (data) => {
@@ -53,12 +55,12 @@ export function EnableTotpDialog({
   const verify = useMutation({
     mutationFn: async () => {
       const { data, error } = await authClient.twoFactor.enableTotp({ code: otpCode })
-      if (error) throw new Error(error.message ?? 'Invalid code')
+      if (error) throw new Error(error.message ?? t('twoFactor.enableTotp.errorInvalidCode'))
       return data
     },
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-      toast.success('Authenticator app enabled')
+      toast.success(t('twoFactor.section.toast.totpEnabled'))
 
       const codes = (data?.backupCodes ?? []).map((code) => ({ code, usedAt: null }))
       if (codes.length > 0) {
@@ -111,11 +113,11 @@ export function EnableTotpDialog({
         {step === 1 && (
           <>
             <DialogHeader>
-              <DialogTitle>Enable Authenticator App</DialogTitle>
-              <DialogDescription>Enter your password to continue.</DialogDescription>
+              <DialogTitle>{t('twoFactor.enableTotp.step1Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.common.enterPasswordToContinue')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-3">
-              <Label htmlFor="totp-password">Password</Label>
+              <Label htmlFor="totp-password">{t('twoFactor.common.password')}</Label>
               <Input
                 id="totp-password"
                 type="password"
@@ -130,10 +132,10 @@ export function EnableTotpDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={() => setup.mutate()} disabled={!password || setup.isPending}>
-                {setup.isPending ? 'Verifying…' : 'Continue'}
+                {setup.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.continue')}
               </Button>
             </DialogFooter>
           </>
@@ -142,10 +144,8 @@ export function EnableTotpDialog({
         {step === 2 && (
           <>
             <DialogHeader>
-              <DialogTitle>Scan the QR Code</DialogTitle>
-              <DialogDescription>
-                Open your authenticator app and scan the code below.
-              </DialogDescription>
+              <DialogTitle>{t('twoFactor.enableTotp.step2Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.enableTotp.step2Description')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
               {totpURI && (
@@ -158,7 +158,7 @@ export function EnableTotpDialog({
                 className="h-auto p-0 text-muted-foreground"
                 onClick={() => setShowManualKey((v) => !v)}
               >
-                {showManualKey ? 'Hide manual key' : "Can't scan? Enter key manually"}
+                {showManualKey ? t('twoFactor.enableTotp.hideKey') : t('twoFactor.enableTotp.cantScan')}
               </Button>
               {showManualKey && (
                 <div className="rounded-md bg-muted px-4 py-3 font-mono text-sm break-all text-center">
@@ -168,9 +168,9 @@ export function EnableTotpDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
-              <Button onClick={() => setStep(3)}>Next</Button>
+              <Button onClick={() => setStep(3)}>{t('twoFactor.enableTotp.next')}</Button>
             </DialogFooter>
           </>
         )}
@@ -178,10 +178,8 @@ export function EnableTotpDialog({
         {step === 3 && !verify.isSuccess && (
           <>
             <DialogHeader>
-              <DialogTitle>Verify Code</DialogTitle>
-              <DialogDescription>
-                Enter the 6-digit code from your authenticator app.
-              </DialogDescription>
+              <DialogTitle>{t('twoFactor.enableTotp.step3Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.enableTotp.step3Description')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center gap-4">
               <InputOTP
@@ -204,13 +202,13 @@ export function EnableTotpDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={() => verify.mutate()}
                 disabled={otpCode.length !== 6 || verify.isPending}
               >
-                {verify.isPending ? 'Verifying…' : 'Verify'}
+                {verify.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
               </Button>
             </DialogFooter>
           </>
@@ -219,14 +217,12 @@ export function EnableTotpDialog({
         {step === 3 && verify.isSuccess && backupCodes.length > 0 && (
           <>
             <DialogHeader>
-              <DialogTitle>Save Your Backup Codes</DialogTitle>
-              <DialogDescription>
-                Store these codes somewhere safe. Each code can only be used once.
-              </DialogDescription>
+              <DialogTitle>{t('twoFactor.enableTotp.step4Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.enableTotp.step4Description')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                If you lose access to your authenticator app, these codes are your only way in.
+                {t('twoFactor.enableTotp.warningMessage')}
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
@@ -237,13 +233,13 @@ export function EnableTotpDialog({
                   onCheckedChange={(c) => setSavedCodes(c === true)}
                 />
                 <Label htmlFor="totp-saved-codes" className="cursor-pointer">
-                  I have saved these codes
+                  {t('twoFactor.common.savedCodes')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>
-                Done
+                {t('twoFactor.common.done')}
               </Button>
             </DialogFooter>
           </>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { authClient } from '#/auth'
@@ -30,6 +31,7 @@ export function EnableEmailDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>(1)
   const [password, setPassword] = useState('')
   const [otpCode, setOtpCode] = useState('')
@@ -54,7 +56,7 @@ export function EnableEmailDialog({
   const sendCode = useMutation({
     mutationFn: async () => {
       const { error } = await authClient.twoFactor.setupEmail({ password })
-      if (error) throw new Error(error.message ?? 'Failed to send code')
+      if (error) throw new Error(error.message ?? t('twoFactor.enableEmail.errorSend'))
     },
     onSuccess: () => setResendCooldown(60),
   })
@@ -62,12 +64,12 @@ export function EnableEmailDialog({
   const enableEmail = useMutation({
     mutationFn: async () => {
       const { data, error } = await authClient.twoFactor.enableEmail({ code: otpCode })
-      if (error) throw new Error(error.message ?? 'Invalid code')
+      if (error) throw new Error(error.message ?? t('twoFactor.enableEmail.errorInvalidCode'))
       return data
     },
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-      toast.success('Email 2FA enabled')
+      toast.success(t('twoFactor.section.toast.emailEnabled'))
 
       const codes = data?.backupCodes ?? []
       if (codes.length > 0) {
@@ -117,11 +119,11 @@ export function EnableEmailDialog({
         {step === 1 && (
           <>
             <DialogHeader>
-              <DialogTitle>Enable Email Verification</DialogTitle>
-              <DialogDescription>Enter your password to continue.</DialogDescription>
+              <DialogTitle>{t('twoFactor.enableEmail.step1Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.common.enterPasswordToContinue')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-3">
-              <Label htmlFor="email-otp-password">Password</Label>
+              <Label htmlFor="email-otp-password">{t('twoFactor.common.password')}</Label>
               <Input
                 id="email-otp-password"
                 type="password"
@@ -139,13 +141,13 @@ export function EnableEmailDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={() => sendCode.mutate(undefined, { onSuccess: () => setStep(2) })}
                 disabled={!password || sendCode.isPending}
               >
-                {sendCode.isPending ? 'Sending…' : 'Continue'}
+                {sendCode.isPending ? t('twoFactor.common.sending') : t('twoFactor.common.continue')}
               </Button>
             </DialogFooter>
           </>
@@ -154,8 +156,8 @@ export function EnableEmailDialog({
         {step === 2 && !enableEmail.isSuccess && (
           <>
             <DialogHeader>
-              <DialogTitle>Verify Your Email</DialogTitle>
-              <DialogDescription>We sent a 6-digit code to your email address.</DialogDescription>
+              <DialogTitle>{t('twoFactor.enableEmail.step2Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.enableEmail.step2Description')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="flex flex-col items-center gap-4">
@@ -176,13 +178,12 @@ export function EnableEmailDialog({
                   ))}
                 </InputOTP>
                 <div className="text-center text-sm text-muted-foreground">
-                  {sendCode.isPending && 'Sending code…'}
-                  {!sendCode.isPending &&
-                    resendCooldown > 0 &&
-                    `Resend in ${formatCountdown(resendCooldown)}`}
+                  {sendCode.isPending && t('twoFactor.common.sendingCode')}
+                  {!sendCode.isPending && resendCooldown > 0 &&
+                    t('twoFactor.common.resendIn', { countdown: formatCountdown(resendCooldown) })}
                   {!sendCode.isPending && resendCooldown === 0 && (
                     <Button variant="link" className="h-auto p-0" onClick={() => sendCode.mutate()}>
-                      Resend code
+                      {t('twoFactor.common.resendCode')}
                     </Button>
                   )}
                 </div>
@@ -195,13 +196,13 @@ export function EnableEmailDialog({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={() => enableEmail.mutate()}
                 disabled={otpCode.length !== 6 || enableEmail.isPending}
               >
-                {enableEmail.isPending ? 'Verifying…' : 'Verify'}
+                {enableEmail.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
               </Button>
             </DialogFooter>
           </>
@@ -210,14 +211,12 @@ export function EnableEmailDialog({
         {step === 2 && enableEmail.isSuccess && backupCodes.length > 0 && (
           <>
             <DialogHeader>
-              <DialogTitle>Save Your Backup Codes</DialogTitle>
-              <DialogDescription>
-                Save these somewhere safe. Each code can only be used once.
-              </DialogDescription>
+              <DialogTitle>{t('twoFactor.enableEmail.step3Title')}</DialogTitle>
+              <DialogDescription>{t('twoFactor.enableEmail.step3Description')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-                If you lose access to your email, these codes are your only way in.
+                {t('twoFactor.enableEmail.warningMessage')}
               </div>
               <BackupCodesDisplay codes={backupCodes} />
               <div className="flex items-center gap-2">
@@ -228,13 +227,13 @@ export function EnableEmailDialog({
                   onCheckedChange={(c) => setSavedCodes(c === true)}
                 />
                 <Label htmlFor="email-saved-codes" className="cursor-pointer">
-                  I have saved these codes
+                  {t('twoFactor.common.savedCodes')}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button onClick={() => onOpenChange(false)} disabled={!savedCodes}>
-                Done
+                {t('twoFactor.common.done')}
               </Button>
             </DialogFooter>
           </>

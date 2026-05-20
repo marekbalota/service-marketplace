@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Mail, Smartphone, Shield } from 'lucide-react'
 import { useSuspenseQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import type { TwoFactorMethod } from '@marketplace/shared'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button } from '#/components/ui/button'
@@ -19,32 +20,31 @@ type DialogId = 'enable-totp' | 'enable-email' | 'backup-codes' | `disable-${Two
 const METHODS = [
   {
     id: 'totp' as const,
-    label: 'Authenticator App',
-    description: 'Use an app like Google Authenticator or Authy',
     icon: Smartphone,
+    labelKey: 'twoFactor.section.totp.label' as const,
+    descriptionKey: 'twoFactor.section.totp.description' as const,
   },
   {
     id: 'email' as const,
-    label: 'Email',
-    description: 'Receive a verification code via email',
     icon: Mail,
+    labelKey: 'twoFactor.section.email.label' as const,
+    descriptionKey: 'twoFactor.section.email.description' as const,
   },
 ] as const
 
-function buildDisableWarning(method: TwoFactorMethod, isLastMethod: boolean): string {
-  const base =
-    method === 'email'
-      ? 'This will disable email verification for your account.'
-      : 'This will disable your authenticator app for your account.'
-  return isLastMethod
-    ? `${base} This will turn off two-factor authentication for your account entirely.`
-    : base
-}
-
 export function TwoFactorSection() {
+  const { t } = useTranslation()
   const { data } = useSuspenseQuery(twoFactorStatusQueryOptions)
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null)
   const [disableMethod, setDisableMethod] = useState<TwoFactorMethod>('email')
+
+  function buildDisableWarning(method: TwoFactorMethod, isLastMethod: boolean): string {
+    const base =
+      method === 'email'
+        ? t('twoFactor.section.disableWarning.email')
+        : t('twoFactor.section.disableWarning.totp')
+    return isLastMethod ? `${base} ${t('twoFactor.section.disableWarning.lastMethod')}` : base
+  }
 
   const disableMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -53,11 +53,15 @@ export function TwoFactorSection() {
           ? authClient.twoFactor.disableEmail
           : authClient.twoFactor.disableTotp
       const { error } = await fn({ password })
-      if (error) throw new Error(error.message ?? 'An error occurred')
+      if (error) throw new Error(error.message ?? t('twoFactor.enableTotp.errorOccurred'))
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: twoFactorStatusQueryOptions.queryKey })
-      toast.success(disableMethod === 'email' ? 'Email 2FA disabled' : 'Authenticator app disabled')
+      toast.success(
+        disableMethod === 'email'
+          ? t('twoFactor.section.toast.emailDisabled')
+          : t('twoFactor.section.toast.totpDisabled'),
+      )
       setOpenDialog(null)
     },
   })
@@ -77,29 +81,29 @@ export function TwoFactorSection() {
     <>
       <Card id="two-factor-auth">
         <CardHeader>
-          <CardTitle>Two-Factor Authentication</CardTitle>
-          <CardDescription>Add an extra layer of security to your account</CardDescription>
+          <CardTitle>{t('accountSettings.twoFactor')}</CardTitle>
+          <CardDescription>{t('accountSettings.twoFactorSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {enabledMethods.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Enabled
+                {t('twoFactor.section.enabled')}
               </p>
               <div className="space-y-3">
-                {enabledMethods.map(({ id, label, description, icon: Icon }) => (
+                {enabledMethods.map(({ id, icon: Icon, labelKey, descriptionKey }) => (
                   <div key={id} className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
                         <Icon className="size-5 text-emerald-700 dark:text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{label}</p>
-                        <p className="text-sm text-muted-foreground">{description}</p>
+                        <p className="text-sm font-medium">{t(labelKey)}</p>
+                        <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                       </div>
                     </div>
                     <Button variant="destructive" onClick={() => openDisableDialog(id)}>
-                      Disable
+                      {t('twoFactor.section.disable')}
                     </Button>
                   </div>
                 ))}
@@ -109,12 +113,12 @@ export function TwoFactorSection() {
                       <Shield className="size-5 text-emerald-700 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Backup Codes</p>
-                      <p className="text-sm text-muted-foreground">Emergency access codes</p>
+                      <p className="text-sm font-medium">{t('twoFactor.section.backupCodes.label')}</p>
+                      <p className="text-sm text-muted-foreground">{t('twoFactor.section.backupCodes.description')}</p>
                     </div>
                   </div>
                   <Button variant="outline" onClick={() => setOpenDialog('backup-codes')}>
-                    Manage
+                    {t('twoFactor.section.manage')}
                   </Button>
                 </div>
               </div>
@@ -126,21 +130,23 @@ export function TwoFactorSection() {
           {availableMethods.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Available
+                {t('twoFactor.section.available')}
               </p>
               <div className="space-y-3">
-                {availableMethods.map(({ id, label, description, icon: Icon }) => (
+                {availableMethods.map(({ id, icon: Icon, labelKey, descriptionKey }) => (
                   <div key={id} className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <Icon className="size-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{label}</p>
-                        <p className="text-sm text-muted-foreground">{description}</p>
+                        <p className="text-sm font-medium">{t(labelKey)}</p>
+                        <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                       </div>
                     </div>
-                    <Button onClick={() => setOpenDialog(`enable-${id}`)}>Enable</Button>
+                    <Button onClick={() => setOpenDialog(`enable-${id}`)}>
+                      {t('twoFactor.section.enable')}
+                    </Button>
                   </div>
                 ))}
               </div>

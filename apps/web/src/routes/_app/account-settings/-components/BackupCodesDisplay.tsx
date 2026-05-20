@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { saveAs } from 'file-saver'
 import { cn } from '#/lib/utils'
 import { Button } from '#/components/ui/button'
@@ -6,6 +7,7 @@ import { Button } from '#/components/ui/button'
 export type BackupCodeEntry = { code: string; usedAt: string | null }
 
 export function BackupCodesDisplay({ codes }: { codes: BackupCodeEntry[] }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -50,7 +52,7 @@ export function BackupCodesDisplay({ codes }: { codes: BackupCodeEntry[] }) {
           onClick={handleCopyAll}
           className="flex-1"
         >
-          {copied ? 'Copied!' : 'Copy All'}
+          {copied ? t('twoFactor.backupCodesDisplay.copied') : t('twoFactor.backupCodesDisplay.copyAll')}
         </Button>
         <Button
           type="button"
@@ -59,7 +61,7 @@ export function BackupCodesDisplay({ codes }: { codes: BackupCodeEntry[] }) {
           onClick={handleDownload}
           className="flex-1"
         >
-          Download as .txt
+          {t('twoFactor.backupCodesDisplay.download')}
         </Button>
       </div>
     </div>

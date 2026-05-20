@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
@@ -20,6 +21,7 @@ export const Route = createFileRoute('/_auth/verify-2fa/backup')({
 })
 
 function BackupChallengePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
@@ -27,7 +29,7 @@ function BackupChallengePage() {
   const verify = useMutation({
     mutationFn: async () => {
       const { error } = await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
-      if (error) throw new Error(error.message ?? 'Invalid backup code')
+      if (error) throw new Error(error.message ?? t('twoFactor.verifyBackup.errorInvalidCode'))
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
@@ -38,12 +40,12 @@ function BackupChallengePage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Use a backup code</CardTitle>
-        <CardDescription>Each backup code can only be used once.</CardDescription>
+        <CardTitle className="text-2xl">{t('twoFactor.verifyBackup.title')}</CardTitle>
+        <CardDescription>{t('twoFactor.verifyBackup.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="backup-code-input">Backup code</Label>
+          <Label htmlFor="backup-code-input">{t('twoFactor.verifyBackup.codeLabel')}</Label>
           <Input
             id="backup-code-input"
             value={code}
@@ -62,7 +64,7 @@ function BackupChallengePage() {
           onClick={() => verify.mutate()}
           disabled={!code || verify.isPending}
         >
-          {verify.isPending ? 'Verifying…' : 'Verify'}
+          {verify.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
         </Button>
         <div className="text-center">
           <Link
@@ -71,7 +73,7 @@ function BackupChallengePage() {
             replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
-            Try another way
+            {t('twoFactor.common.tryAnotherWay')}
           </Link>
         </div>
       </CardContent>

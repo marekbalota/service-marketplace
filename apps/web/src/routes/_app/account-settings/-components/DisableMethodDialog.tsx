@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
@@ -26,6 +27,7 @@ export function DisableMethodDialog({
   error: Error | null
   onSubmit: (password: string) => void
 }) {
+  const { t } = useTranslation()
   const [password, setPassword] = useState('')
 
   function handleOpenChange(next: boolean) {
@@ -43,15 +45,15 @@ export function DisableMethodDialog({
     >
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
-          <DialogDescription>Enter your password to confirm.</DialogDescription>
+          <DialogTitle>{t('twoFactor.disableDialog.title')}</DialogTitle>
+          <DialogDescription>{t('twoFactor.disableDialog.description')}</DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
           <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {warning}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="disable-2fa-password">Password</Label>
+            <Label htmlFor="disable-2fa-password">{t('twoFactor.common.password')}</Label>
             <Input
               id="disable-2fa-password"
               type="password"
@@ -67,14 +69,14 @@ export function DisableMethodDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={() => onSubmit(password)}
             disabled={!password || isPending}
           >
-            {isPending ? 'Disabling…' : 'Disable'}
+            {isPending ? t('twoFactor.disableDialog.disabling') : t('twoFactor.disableDialog.disable')}
           </Button>
         </DialogFooter>
       </DialogContent>

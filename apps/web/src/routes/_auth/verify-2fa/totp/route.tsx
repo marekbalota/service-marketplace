@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/_auth/verify-2fa/totp')({
 })
 
 function TotpChallengePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
@@ -34,7 +36,7 @@ function TotpChallengePage() {
   const verify = useMutation({
     mutationFn: async () => {
       const { error } = await authClient.twoFactor.verifyTotp({ code, trustDevice: rememberDevice })
-      if (error) throw new Error(error.message ?? 'Invalid code')
+      if (error) throw new Error(error.message ?? t('twoFactor.verifyTotp.errorInvalidCode'))
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
@@ -45,10 +47,8 @@ function TotpChallengePage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Check your authentication app</CardTitle>
-        <CardDescription>
-          Enter the six-digit code from your authenticator app below.
-        </CardDescription>
+        <CardTitle className="text-2xl">{t('twoFactor.verifyTotp.title')}</CardTitle>
+        <CardDescription>{t('twoFactor.verifyTotp.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-center">
@@ -76,7 +76,7 @@ function TotpChallengePage() {
             onCheckedChange={(c) => setRememberDevice(c === true)}
           />
           <Label htmlFor="totp-remember" className="cursor-pointer">
-            Remember this browser for 30 days
+            {t('twoFactor.common.rememberBrowser')}
           </Label>
         </div>
         {verify.error && (
@@ -87,7 +87,7 @@ function TotpChallengePage() {
           onClick={() => verify.mutate()}
           disabled={code.length !== 6 || verify.isPending}
         >
-          {verify.isPending ? 'Verifying…' : 'Verify'}
+          {verify.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
         </Button>
         <div className="text-center">
           <Link
@@ -96,7 +96,7 @@ function TotpChallengePage() {
             replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
-            Try another way
+            {t('twoFactor.common.tryAnotherWay')}
           </Link>
         </div>
       </CardContent>

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authClient } from '#/auth'
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/_auth/verify-2fa/email')({
 })
 
 function EmailChallengePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { redirect, email, twoFactorMethods } = Route.useSearch()
   const [code, setCode] = useState('')
@@ -54,7 +56,7 @@ function EmailChallengePage() {
   const sendCode = useMutation({
     mutationFn: async () => {
       const { error } = await authClient.twoFactor.sendEmailOtp()
-      if (error) throw new Error(error.message ?? 'Failed to send code')
+      if (error) throw new Error(error.message ?? t('twoFactor.verifyEmail.errorSend'))
     },
     onSuccess: () => {
       sessionStorage.setItem(SENT_AT_KEY, Date.now().toString())
@@ -70,7 +72,7 @@ function EmailChallengePage() {
         code,
         trustDevice: rememberDevice,
       })
-      if (error) throw new Error(error.message ?? 'Invalid code')
+      if (error) throw new Error(error.message ?? t('twoFactor.verifyEmail.errorInvalidCode'))
     },
     onSuccess: async () => {
       sessionStorage.removeItem(SENT_AT_KEY)
@@ -98,8 +100,8 @@ function EmailChallengePage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Check your email</CardTitle>
-        <CardDescription>We'll send a six-digit code to your email address.</CardDescription>
+        <CardTitle className="text-2xl">{t('twoFactor.verifyEmail.title')}</CardTitle>
+        <CardDescription>{t('twoFactor.verifyEmail.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-center">
@@ -127,10 +129,10 @@ function EmailChallengePage() {
             disabled={isSending || resendCooldown > 0}
           >
             {isSending
-              ? 'Sending…'
+              ? t('twoFactor.common.sending')
               : resendCooldown > 0
-                ? `Resend in ${formatCountdown(resendCooldown)}`
-                : 'Resend code'}
+                ? t('twoFactor.common.resendIn', { countdown: formatCountdown(resendCooldown) })
+                : t('twoFactor.common.resendCode')}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -141,7 +143,7 @@ function EmailChallengePage() {
             onCheckedChange={(c) => setRememberDevice(c === true)}
           />
           <Label htmlFor="email-remember" className="cursor-pointer">
-            Remember this browser for 30 days
+            {t('twoFactor.common.rememberBrowser')}
           </Label>
         </div>
         {(sendCode.error || verify.error) && (
@@ -154,7 +156,7 @@ function EmailChallengePage() {
           onClick={() => verify.mutate()}
           disabled={code.length !== 6 || verify.isPending}
         >
-          {verify.isPending ? 'Verifying…' : 'Verify'}
+          {verify.isPending ? t('twoFactor.common.verifying') : t('twoFactor.common.verify')}
         </Button>
         <div className="text-center">
           <Link
@@ -163,7 +165,7 @@ function EmailChallengePage() {
             replace
             className="font-medium hover:text-foreground text-muted-foreground"
           >
-            Try another way
+            {t('twoFactor.common.tryAnotherWay')}
           </Link>
         </div>
       </CardContent>
