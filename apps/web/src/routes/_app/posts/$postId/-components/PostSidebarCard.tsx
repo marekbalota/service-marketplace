@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { DollarSign, MapPin, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -12,8 +12,10 @@ import { SendMessageSection } from './SendMessageSection'
 
 export function PostSidebarCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
+
+  if (!post) return null
   const isOwner = activeProfile?.userProfileId === post.authorId
   const locationText = post.location ? formatLocation(post.location) : null
 

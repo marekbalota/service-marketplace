@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
-import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DollarSign, Flag, Pencil } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -20,10 +20,12 @@ import { hasReportedPostQueryOptions } from '../-queries/posts'
 
 export function PostInfoCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
+  
+  if (!post) return null
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user != null
   const [showReportForm, setShowReportForm] = useState(false)
@@ -117,7 +119,6 @@ export function PostInfoCard({ postId }: { postId: string }) {
           {activeProfile && (
             <ReportForm
               targetType="POST"
-              entityName="post"
               descriptionRequired
               onReport={async (data) => {
                 const { error } = await api.posts({ id: postId }).reports.post(data)

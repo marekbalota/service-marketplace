@@ -9,7 +9,7 @@ import {
 import { Route } from './route'
 import { useCurrentUser } from '#/lib/queries/users'
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const mockUseQuery = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -24,8 +24,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery: vi.fn(() => ({ data: undefined, isLoading: false })),
+    useQuery: mockUseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
     useMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false, isError: false })),
   }
@@ -79,7 +78,10 @@ async function renderPage() {
 describe('PostDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSuspenseQuery.mockReturnValue({ data: basePost })
+    mockUseQuery
+      .mockReturnValueOnce({ data: basePost })
+      .mockReturnValueOnce({ data: undefined })
+      .mockReturnValue({ data: basePost })
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
       typeof useCurrentUser
     >)

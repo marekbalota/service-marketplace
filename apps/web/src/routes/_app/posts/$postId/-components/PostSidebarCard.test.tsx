@@ -3,13 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useActiveProfile } from '#/context/activeProfile'
 import { PostSidebarCard } from './PostSidebarCard'
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const mockUseQuery = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
+    useQuery: mockUseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
@@ -43,7 +43,7 @@ const basePost = {
 describe('PostSidebarCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSuspenseQuery.mockReturnValue({ data: basePost })
+    mockUseQuery.mockReturnValueOnce({ data: basePost }).mockReturnValue({ data: undefined })
     vi.mocked(useActiveProfile).mockReturnValue({ activeProfile: null } as ReturnType<
       typeof useActiveProfile
     >)

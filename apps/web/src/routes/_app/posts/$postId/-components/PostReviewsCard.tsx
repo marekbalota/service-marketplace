@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
@@ -14,15 +14,17 @@ import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { ReportForm } from '#/components/ReportForm'
 import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { hasReportedReviewQueryOptions } from '../-queries/posts'
-import { ReviewCard } from './ReviewCard'
+import { ReviewCard, type ReviewType } from './ReviewCard'
 import { ReviewForm } from './ReviewForm'
 
 export function PostReviewsCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
+
+  if (!post) return null
   const isOwner = activeProfile?.userProfileId === post.authorId
   const isAuthenticated = user != null
   const [showReviewForm, setShowReviewForm] = useState(false)
@@ -77,14 +79,7 @@ export function PostReviewsCard({ postId }: { postId: string }) {
           ) : (
             <div className="space-y-4">
               {post.reviews.map(
-                (review: {
-                  reviewId: string
-                  reviewerName: string
-                  createdAt: Date
-                  rating: number
-                  reviewDescription: string | null
-                  reviewerId: string
-                }) => (
+                (review: ReviewType) => (
                   <ReviewCard
                     key={review.reviewId}
                     review={review}
@@ -133,7 +128,6 @@ export function PostReviewsCard({ postId }: { postId: string }) {
           {reportingReviewId && (
             <ReportForm
               targetType="REVIEW"
-              entityName="review"
               onReport={async (data) => {
                 const { error } = await api.reviews({ id: reportingReviewId }).reports.post(data)
                 if (error) throw wrapEdenError(error, 'Failed to submit report.')

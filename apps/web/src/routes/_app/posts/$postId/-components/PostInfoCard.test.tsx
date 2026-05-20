@@ -4,14 +4,13 @@ import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { PostInfoCard } from './PostInfoCard'
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const mockUseQuery = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery: vi.fn(() => ({ data: undefined })),
+    useQuery: mockUseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
@@ -57,7 +56,7 @@ const basePost = {
 describe('PostInfoCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSuspenseQuery.mockReturnValue({ data: basePost })
+    mockUseQuery.mockReturnValueOnce({ data: basePost }).mockReturnValue({ data: undefined })
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
       typeof useCurrentUser
     >)
