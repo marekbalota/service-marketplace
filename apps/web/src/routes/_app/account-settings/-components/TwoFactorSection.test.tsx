@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const mockUseQuery = vi.hoisted(() => vi.fn())
 const mockUseCurrentUser = vi.hoisted(() => vi.fn())
 vi.mock('@tanstack/react-query', () => ({
-  useSuspenseQuery: mockUseSuspenseQuery,
+  useQuery: mockUseQuery,
   useMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false, error: null, reset: vi.fn() })),
+  useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
 }))
 vi.mock('#/lib/queries/two-factor', () => ({
   twoFactorStatusQueryOptions: { queryKey: ['two-factor', 'status'] },
@@ -46,7 +47,7 @@ describe('TwoFactorSection', () => {
   })
 
   it('shows both methods in Available group when 2FA is disabled', () => {
-    mockUseSuspenseQuery.mockReturnValue({
+    mockUseQuery.mockReturnValue({
       data: { twoFactorEnabled: false, enabledMethods: [] },
     })
     render(<TwoFactorSection />)
@@ -58,7 +59,7 @@ describe('TwoFactorSection', () => {
   })
 
   it('shows Email in Enabled group and Backup Codes when email-only 2FA is on', () => {
-    mockUseSuspenseQuery.mockReturnValue({
+    mockUseQuery.mockReturnValue({
       data: { twoFactorEnabled: true, enabledMethods: ['email'] },
     })
     render(<TwoFactorSection />)
@@ -69,7 +70,7 @@ describe('TwoFactorSection', () => {
   })
 
   it('shows both methods in Enabled group and no Available group when both are on', () => {
-    mockUseSuspenseQuery.mockReturnValue({
+    mockUseQuery.mockReturnValue({
       data: { twoFactorEnabled: true, enabledMethods: ['email', 'totp'] },
     })
     render(<TwoFactorSection />)
@@ -85,7 +86,7 @@ describe('TwoFactorSection', () => {
     })
 
     it('disables Enable buttons for available methods', () => {
-      mockUseSuspenseQuery.mockReturnValue({
+      mockUseQuery.mockReturnValue({
         data: { twoFactorEnabled: false, enabledMethods: [] },
       })
       render(<TwoFactorSection />)
@@ -94,7 +95,7 @@ describe('TwoFactorSection', () => {
     })
 
     it('disables Disable buttons for enabled methods', () => {
-      mockUseSuspenseQuery.mockReturnValue({
+      mockUseQuery.mockReturnValue({
         data: { twoFactorEnabled: true, enabledMethods: ['email'] },
       })
       render(<TwoFactorSection />)
@@ -103,7 +104,7 @@ describe('TwoFactorSection', () => {
     })
 
     it('disables Manage Backup Codes button', () => {
-      mockUseSuspenseQuery.mockReturnValue({
+      mockUseQuery.mockReturnValue({
         data: { twoFactorEnabled: true, enabledMethods: ['email'] },
       })
       render(<TwoFactorSection />)
