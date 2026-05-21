@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth'
 import { ErrorCodes } from '@marketplace/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/api'
-import { eq } from 'drizzle-orm'
+import { and, asc, eq, gt, isNull } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
 import { users, roles, userProfiles, sessions } from '../../db/schema'
@@ -20,6 +20,7 @@ import {
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
+import { lookup as geoLookup } from 'geoip-lite'
 
 export const verificationTokenStore = new Map<string, string>()
 export const resetTokenStore = new Map<string, string>()
@@ -32,6 +33,17 @@ export const auth = betterAuth({
     impersonationPlugin(),
     twoFactorPlugin({ issuer: 'Marketplace' }),
     captcha({ provider: 'cloudflare-turnstile', secretKey: env.turnstile.secretKey }),
+  ],
+  disabledPaths: [
+    '/list-sessions',
+    '/revoke-session',
+    '/revoke-other-sessions',
+    '/revoke-sessions',
+    '/sign-in/social',
+    '/verify-password',
+    '/update-user',
+    '/delete-user',
+    '/delete-user/callback',
   ],
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -131,6 +143,12 @@ export const auth = betterAuth({
   },
   session: {
     storeSessionInDatabase: true,
+    expiresIn: 60 * 60 * 24,
+    rememberMeExpiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 12,
+    additionalFields: {
+      location: { type: 'string', input: false },
+    },
   },
   rateLimit: {
     enabled: env.nodeEnv === 'production',
@@ -152,6 +170,37 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          if (session.ipAddress) {
+            const geo = geoLookup(session.ipAddress)
+            const location = geo ? [geo.city, geo.country].filter(Boolean).join(', ') : null
+            if (location) {
+              await db.update(sessions).set({ location }).where(eq(sessions.id, session.id))
+            }
+          }
+
+          const SESSION_CAP = 10
+          const active = await db.query.sessions.findMany({
+            where: and(
+              eq(sessions.userId, session.userId),
+              isNull(sessions.impersonatedBy),
+              gt(sessions.expiresAt, new Date()),
+            ),
+            orderBy: asc(sessions.createdAt),
+            columns: { id: true, token: true },
+          })
+          const excess = active.slice(0, Math.max(0, active.length - SESSION_CAP))
+          if (excess.length > 0) {
+            const { internalAdapter } = await auth.$context
+            for (const old of excess) {
+              await internalAdapter.deleteSession(old.token)
+            }
+          }
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {
@@ -181,7 +230,7 @@ export const auth = betterAuth({
         if (user) {
           const banStatus = await AuthService.checkBanStatus(user.id)
           if (banStatus) {
-            await AuthService.clearUserSessions(user.id)
+            await ctx.context.internalAdapter.deleteSessions(user.id)
 
             return new APIError('FORBIDDEN', {
               code: ErrorCodes.Banned,
@@ -244,9 +293,5 @@ export abstract class AuthService {
       reason: user.banReason,
       expiresAt: user.banExpiration,
     }
-  }
-
-  static async clearUserSessions(userId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.userId, userId))
   }
 }

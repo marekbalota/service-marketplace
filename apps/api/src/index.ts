@@ -27,6 +27,7 @@ import { reportCategoriesRoutes } from './modules/reports'
 import { initBucket } from './lib/storage'
 import { locationsRoutes } from './modules/locations'
 import { twoFactorRoutes } from './modules/two-factor'
+import { sessionsRoutes } from './modules/sessions'
 
 export const app = new Elysia()
   .use(errorsPlugin)
@@ -59,6 +60,7 @@ export const app = new Elysia()
           { name: 'Reviews', description: 'Post reviews and ratings' },
           { name: 'Reports', description: 'Post reports' },
           { name: 'Locations', description: 'Distinct location values for filtering' },
+          { name: 'Sessions', description: 'Active session management' },
         ],
       },
     }),
@@ -67,6 +69,7 @@ export const app = new Elysia()
   .get('/', () => 'Marketplace API')
   .use(authRoutes)
   .use(twoFactorRoutes)
+  .use(sessionsRoutes)
   .use(usersRoutes)
   .use(postsRoutes)
   .use(reviewsRoutes)

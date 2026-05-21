@@ -120,6 +120,13 @@
       "when": 1779117540365,
       "tag": "0016_lying_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1779356965029,
+      "tag": "0017_add_session_location",
+      "breakpoints": true
     }
   ]
 }
