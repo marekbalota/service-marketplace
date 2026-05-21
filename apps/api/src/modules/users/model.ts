@@ -3,6 +3,7 @@ import { t, type UnwrapSchema } from 'elysia'
 export const UsersModel = {
   meResponse: t.Object({
     userId: t.String(),
+    sessionId: t.String(),
     name: t.String(),
     email: t.String(),
     impersonatedBy: t.Nullable(t.String()),

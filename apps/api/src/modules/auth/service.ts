@@ -5,7 +5,7 @@ import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/a
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
-import { users, roles, userProfiles, sessions } from '../../db/schema'
+import { users, roles, userProfiles } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
 import { captcha } from 'better-auth/plugins'
@@ -32,6 +32,17 @@ export const auth = betterAuth({
     impersonationPlugin(),
     twoFactorPlugin({ issuer: 'Marketplace' }),
     captcha({ provider: 'cloudflare-turnstile', secretKey: env.turnstile.secretKey }),
+  ],
+  disabledPaths: [
+    '/list-sessions',
+    '/revoke-session',
+    '/revoke-other-sessions',
+    '/revoke-sessions',
+    '/sign-in/social',
+    '/verify-password',
+    '/update-user',
+    '/delete-user',
+    '/delete-user/callback',
   ],
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -181,7 +192,7 @@ export const auth = betterAuth({
         if (user) {
           const banStatus = await AuthService.checkBanStatus(user.id)
           if (banStatus) {
-            await AuthService.clearUserSessions(user.id)
+            await ctx.context.internalAdapter.deleteSessions(user.id)
 
             return new APIError('FORBIDDEN', {
               code: ErrorCodes.Banned,
@@ -246,7 +257,4 @@ export abstract class AuthService {
     }
   }
 
-  static async clearUserSessions(userId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.userId, userId))
-  }
 }

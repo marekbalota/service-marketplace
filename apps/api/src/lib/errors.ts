@@ -20,6 +20,7 @@ export const ErrorMessages = {
   roleNotFound: 'Role not found',
   cannotDeleteDefaultRole: 'Cannot delete the default role',
   noDefaultRoleFound: 'No default role found',
+  sessionNotFound: 'Session not found',
 } as const
 
 export const ImpersonationErrorMessages = {
