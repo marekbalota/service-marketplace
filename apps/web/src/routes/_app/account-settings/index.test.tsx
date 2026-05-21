@@ -20,6 +20,15 @@ vi.mock('./-components/TwoFactorSection', () => ({
   TwoFactorSection: () => <div id="two-factor-auth">Two-Factor Authentication</div>,
 }))
 
+vi.mock('./-components/LoginManagementSection', () => ({
+  LoginManagementSection: () => (
+    <div id="login-management">
+      <p>Login Management</p>
+      <button disabled>Log out from all other devices</button>
+    </div>
+  ),
+}))
+
 // Switch uses Radix internals — stub it to a simple checkbox
 vi.mock('#/components/ui/switch', () => ({
   Switch: ({ id, disabled }: { id?: string; disabled?: boolean }) => (
@@ -86,9 +95,9 @@ describe('AccountSettingsHubPage', () => {
     expect(link).toHaveAttribute('href', '/account-settings/profiles')
   })
 
-  it('renders the Log Out All Devices button as disabled', async () => {
+  it('renders the bulk logout button as disabled', async () => {
     await renderPage()
-    expect(screen.getByRole('button', { name: /log out all devices/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /log out from all other devices/i })).toBeDisabled()
   })
 
   it('renders the profile count in the User Profiles card', async () => {

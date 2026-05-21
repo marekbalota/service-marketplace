@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "test": "bun test apps/api && bun run --filter web test",
+    "test:be": "bun test apps/api",
+    "test:fe": "bun run --filter web test",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
