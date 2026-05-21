@@ -142,6 +142,9 @@ export const auth = betterAuth({
   },
   session: {
     storeSessionInDatabase: true,
+    expiresIn: 60 * 60 * 24,
+    rememberMeExpiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 12,
   },
   rateLimit: {
     enabled: env.nodeEnv === 'production',
