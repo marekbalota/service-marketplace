@@ -40,7 +40,6 @@ export function ThreadHeader({
       <ProfileAvatar
         name={otherPartyName}
         className="size-9 shrink-0"
-        fallbackClassName="text-sm font-semibold"
       />
 
       <div className="min-w-0 flex-1">

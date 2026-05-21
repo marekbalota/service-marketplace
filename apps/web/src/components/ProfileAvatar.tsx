@@ -15,7 +15,7 @@ export function ProfileAvatar({
       <AvatarFallback
         className={
           fallbackClassName ??
-          'bg-gradient-to-br from-[var(--lagoon)] to-[var(--lagoon-deep)] text-white'
+          'bg-gradient-to-br from-indigo-500 to-violet-600 text-white'
         }
       >
         {getInitials(name)}
