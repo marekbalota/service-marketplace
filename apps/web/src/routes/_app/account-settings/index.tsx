@@ -14,6 +14,8 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { ChangeEmailDialog } from './-components/ChangeEmailDialog'
 import { ChangePasswordDialog } from './-components/ChangePasswordDialog'
 import { TwoFactorSection } from './-components/TwoFactorSection'
+import { LoginManagementSection } from './-components/LoginManagementSection'
+import { sessionsQueryOptions } from './-queries/sessions'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
@@ -21,6 +23,7 @@ export const Route = createFileRoute('/_app/account-settings/')({
     Promise.all([
       queryClient.ensureQueryData(currentUserQueryOptions),
       queryClient.ensureQueryData(twoFactorStatusQueryOptions),
+      queryClient.ensureQueryData(sessionsQueryOptions),
     ]),
   pendingComponent: AccountSettingsHubSkeleton,
   component: AccountSettingsHubPage,
@@ -414,26 +417,9 @@ function AccountSettingsHubPage() {
           <TwoFactorSection />
 
           {/* 5 — Login Management */}
-          <Card id="login-management">
-            <CardHeader>
-              <CardTitle>{t('accountSettings.loginManagement')}</CardTitle>
-              <CardDescription>{t('accountSettings.loginManagementSubtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">{t('accountSettings.logoutAllHint')}</p>
-              <Button
-                variant="destructive"
-                disabled
-                title={t('accountSettings.comingSoon')}
-                className="gap-2"
-              >
-                <LogOut className="size-4" />
-                {t('accountSettings.logoutAll')}
-              </Button>
-            </CardContent>
-          </Card>
+          <LoginManagementSection />
 
-          {/* 5 — User Profiles */}
+          {/* 6 — User Profiles */}
           <Card id="user-profiles">
             <CardHeader>
               <CardTitle>{t('accountSettings.userProfiles')}</CardTitle>
