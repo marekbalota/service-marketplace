@@ -12,7 +12,7 @@ export const sessionsRoutes = new Elysia({ prefix: '/sessions' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ request }) => SessionsService.listSessions(request.headers),
+    async ({ user }) => SessionsService.listSessions(user.id),
     {
       auth: true,
       response: {

@@ -1,4 +1,4 @@
-import { and, eq, isNull, not } from 'drizzle-orm'
+import { and, eq, gt, isNull, not } from 'drizzle-orm'
 import { auth } from '../auth/service'
 import { db } from '../../db'
 import { sessions } from '../../db/schema'
@@ -6,18 +6,22 @@ import { NotFoundError, ErrorMessages } from '../../lib/errors'
 import type { SessionsModel } from './model'
 
 export abstract class SessionsService {
-  static async listSessions(headers: Headers): Promise<SessionsModel['sessionItem'][]> {
-    const all = await auth.api.listSessions({ headers })
-    return all
-      .filter((s) => !s.impersonatedBy)
-      .map(({ id, createdAt, updatedAt, expiresAt, ipAddress, userAgent }) => ({
-        id,
-        createdAt,
-        updatedAt,
-        expiresAt,
-        ipAddress: ipAddress ?? null,
-        userAgent: userAgent ?? null,
-      }))
+  static async listSessions(userId: string): Promise<SessionsModel['sessionItem'][]> {
+    return db.query.sessions.findMany({
+      where: and(
+        eq(sessions.userId, userId),
+        isNull(sessions.impersonatedBy),
+        gt(sessions.expiresAt, new Date()),
+      ),
+      columns: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        expiresAt: true,
+        ipAddress: true,
+        userAgent: true,
+      },
+    })
   }
 
   static async revokeSession(sessionId: string, userId: string, headers: Headers): Promise<void> {
