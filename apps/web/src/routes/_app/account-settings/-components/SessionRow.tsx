@@ -12,6 +12,7 @@ type Session = {
   expiresAt: Date | string
   ipAddress: string | null
   userAgent: string | null
+  location: string | null
 }
 
 type Props = {
@@ -60,7 +61,12 @@ export function SessionRow({ session, isCurrent, isImpersonating = false, onRevo
     year: 'numeric',
   }).format(createdAt)
 
-  const ip = session.ipAddress ?? '—'
+  const meta = [
+    t('accountSettings.sessions.sessionMeta', { signedIn: signedInDate }),
+    session.location ?? session.ipAddress,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <div className="flex items-start gap-3 py-3 border-b border-border last:border-b-0">
@@ -77,12 +83,7 @@ export function SessionRow({ session, isCurrent, isImpersonating = false, onRevo
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t('accountSettings.sessions.sessionMeta', {
-            signedIn: signedInDate,
-            ip,
-          })}
-        </p>
+        <p className="text-xs text-muted-foreground">{meta}</p>
       </div>
 
       {isCurrent ? (

@@ -83,6 +83,7 @@ export const sessions = pgTable('session', {
     .$onUpdate(() => new Date()),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
+  location: text('location'),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),

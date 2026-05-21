@@ -8,6 +8,7 @@ export const SessionsModel = {
     expiresAt: t.Date(),
     ipAddress: t.Nullable(t.String()),
     userAgent: t.Nullable(t.String()),
+    location: t.Nullable(t.String()),
   }),
   idParams: t.Object({ id: t.String() }),
 } as const

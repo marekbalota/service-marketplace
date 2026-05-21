@@ -334,7 +334,7 @@
       "thisDevice": "This device",
       "current": "Current",
       "revoke": "Revoke",
-      "sessionMeta": "Signed in {{signedIn}} · {{ip}}",
+      "sessionMeta": "Signed in {{signedIn}}",
       "noOtherSessions": "No other active sessions.",
       "logoutOtherDevices": "Log out from all other devices",
       "logoutOtherHint": "Signs you out of all active sessions except this one.",

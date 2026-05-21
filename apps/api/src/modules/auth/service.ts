@@ -5,7 +5,7 @@ import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/a
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
-import { users, roles, userProfiles } from '../../db/schema'
+import { users, roles, userProfiles, sessions } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
 import { captcha } from 'better-auth/plugins'
@@ -20,6 +20,7 @@ import {
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
+import { lookup as geoLookup } from 'geoip-lite'
 
 export const verificationTokenStore = new Map<string, string>()
 export const resetTokenStore = new Map<string, string>()
@@ -145,6 +146,9 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24,
     rememberMeExpiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 12,
+    additionalFields: {
+      location: { type: 'string', input: false },
+    },
   },
   rateLimit: {
     enabled: env.nodeEnv === 'production',
@@ -166,6 +170,19 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          if (!session.ipAddress) return
+          const geo = geoLookup(session.ipAddress)
+          if (!geo) return
+          const location = [geo.city, geo.country].filter(Boolean).join(', ')
+          if (location) {
+            await db.update(sessions).set({ location }).where(eq(sessions.id, session.id))
+          }
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {

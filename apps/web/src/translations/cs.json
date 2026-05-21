@@ -334,7 +334,7 @@
       "thisDevice": "Toto zařízení",
       "current": "Aktuální",
       "revoke": "Zrušit",
-      "sessionMeta": "Přihlášení {{signedIn}} · {{ip}}",
+      "sessionMeta": "Přihlášení {{signedIn}}",
       "noOtherSessions": "Žádné další aktivní relace.",
       "logoutOtherDevices": "Odhlásit ze všech ostatních zařízení",
       "logoutOtherHint": "Odhlásí vás ze všech aktivních relací kromě této.",

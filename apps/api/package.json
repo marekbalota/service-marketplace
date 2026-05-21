@@ -17,6 +17,7 @@
     "better-auth": "^1.6.2",
     "drizzle-orm": "^0.45.2",
     "elysia": "latest",
+    "geoip-lite": "^2.0.2",
     "ioredis": "^5.10.1",
     "minio": "^8.0.7",
     "postgres": "^3.4.8",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@elysiajs/eden": "^1.4.9",
+    "@types/geoip-lite": "^1.4.4",
     "bun-types": "latest",
     "drizzle-kit": "^0.31.10"
   },

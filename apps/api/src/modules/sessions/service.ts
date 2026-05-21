@@ -20,6 +20,7 @@ export abstract class SessionsService {
         expiresAt: true,
         ipAddress: true,
         userAgent: true,
+        location: true,
       },
     })
   }
