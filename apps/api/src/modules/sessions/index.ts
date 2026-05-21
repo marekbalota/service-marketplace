@@ -1,31 +1,23 @@
 import { Elysia, t } from 'elysia'
 import { authRoutes } from '../auth'
-import {
-  forbiddenResponse,
-  notFoundResponse,
-  unauthorizedResponse,
-} from '../../lib/errors'
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../../lib/errors'
 import { SessionsModel } from './model'
 import { SessionsService } from './service'
 
 export const sessionsRoutes = new Elysia({ prefix: '/sessions' })
   .use(authRoutes)
-  .get(
-    '/',
-    async ({ user }) => SessionsService.listSessions(user.id),
-    {
-      auth: true,
-      response: {
-        200: t.Array(SessionsModel.sessionItem),
-        ...unauthorizedResponse,
-      },
-      detail: {
-        summary: 'List active sessions for current user',
-        operationId: 'listSessions',
-        tags: ['Sessions'],
-      },
+  .get('/', async ({ user }) => SessionsService.listSessions(user.id), {
+    auth: true,
+    response: {
+      200: t.Array(SessionsModel.sessionItem),
+      ...unauthorizedResponse,
     },
-  )
+    detail: {
+      summary: 'List active sessions for current user',
+      operationId: 'listSessions',
+      tags: ['Sessions'],
+    },
+  })
   .delete(
     '/:id',
     async ({ params, user, request, set }) => {

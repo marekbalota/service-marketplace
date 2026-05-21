@@ -93,7 +93,9 @@ describe('DELETE /sessions/:id', () => {
   it('returns 404 for a session belonging to another user', async () => {
     const { data: bobSessions } = await client.sessions.get({ headers: { Cookie: anotherCookie } })
     const bobSessionId = bobSessions![0]!.id
-    const { status } = await client.sessions({ id: bobSessionId }).delete(undefined, { headers: { Cookie: cookie } })
+    const { status } = await client
+      .sessions({ id: bobSessionId })
+      .delete(undefined, { headers: { Cookie: cookie } })
     expect(status).toBe(404)
   })
 

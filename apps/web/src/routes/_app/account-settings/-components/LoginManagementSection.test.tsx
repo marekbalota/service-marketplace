@@ -22,7 +22,15 @@ vi.mock('../-queries/sessions', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
 vi.mock('./SessionRow', () => ({
-  SessionRow: ({ session, isCurrent, onRevoke }: { session: { id: string; userAgent: string | null }; isCurrent: boolean; onRevoke: (id: string) => void }) => (
+  SessionRow: ({
+    session,
+    isCurrent,
+    onRevoke,
+  }: {
+    session: { id: string; userAgent: string | null }
+    isCurrent: boolean
+    onRevoke: (id: string) => void
+  }) => (
     <div data-testid={`row-${session.id}`}>
       {isCurrent && <span>current-row</span>}
       {!isCurrent && <button onClick={() => onRevoke(session.id)}>Revoke</button>}
@@ -61,9 +69,30 @@ describe('LoginManagementSection', () => {
   it('renders current session first regardless of server order', () => {
     // Server returns [session-1, session-2, session-current] — current is last
     const sessions = [
-      { id: 'session-1', createdAt: new Date(), updatedAt: new Date(), expiresAt: new Date(Date.now() + 3_600_000), ipAddress: '127.0.0.1', userAgent: null },
-      { id: 'session-2', createdAt: new Date(), updatedAt: new Date(), expiresAt: new Date(Date.now() + 3_600_000), ipAddress: '127.0.0.1', userAgent: null },
-      { id: 'session-current', createdAt: new Date(), updatedAt: new Date(), expiresAt: new Date(Date.now() + 3_600_000), ipAddress: '127.0.0.1', userAgent: null },
+      {
+        id: 'session-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3_600_000),
+        ipAddress: '127.0.0.1',
+        userAgent: null,
+      },
+      {
+        id: 'session-2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3_600_000),
+        ipAddress: '127.0.0.1',
+        userAgent: null,
+      },
+      {
+        id: 'session-current',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3_600_000),
+        ipAddress: '127.0.0.1',
+        userAgent: null,
+      },
     ]
     mockUseQuery.mockReturnValue({ data: sessions })
     render(<LoginManagementSection />)

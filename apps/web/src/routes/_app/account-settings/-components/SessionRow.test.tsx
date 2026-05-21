@@ -23,40 +23,30 @@ const baseSession = {
 
 describe('SessionRow', () => {
   it('renders browser/OS from userAgent', () => {
-    render(
-      <SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />,
-    )
+    render(<SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />)
     expect(screen.getByText('Chrome on Windows')).toBeInTheDocument()
   })
 
   it('renders IP address', () => {
-    render(
-      <SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />,
-    )
+    render(<SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />)
     expect(screen.getByText(/192\.168\.1\.1/)).toBeInTheDocument()
   })
 
   it('shows "This device" badge and disabled Current button for current session', () => {
-    render(
-      <SessionRow session={baseSession} isCurrent={true} onRevoke={vi.fn()} />,
-    )
+    render(<SessionRow session={baseSession} isCurrent={true} onRevoke={vi.fn()} />)
     expect(screen.getByText(/this device/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /current/i })).toBeDisabled()
   })
 
   it('shows Revoke button for non-current sessions', () => {
-    render(
-      <SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />,
-    )
+    render(<SessionRow session={baseSession} isCurrent={false} onRevoke={vi.fn()} />)
     expect(screen.queryByText(/this device/i)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /revoke/i })).toBeInTheDocument()
   })
 
   it('calls onRevoke with session id when Revoke is clicked', async () => {
     const onRevoke = vi.fn()
-    render(
-      <SessionRow session={baseSession} isCurrent={false} onRevoke={onRevoke} />,
-    )
+    render(<SessionRow session={baseSession} isCurrent={false} onRevoke={onRevoke} />)
     await userEvent.click(screen.getByRole('button', { name: /revoke/i }))
     expect(onRevoke).toHaveBeenCalledWith('session-1')
   })

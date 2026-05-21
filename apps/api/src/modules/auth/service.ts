@@ -259,5 +259,4 @@ export abstract class AuthService {
       expiresAt: user.banExpiration,
     }
   }
-
 }

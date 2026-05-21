@@ -38,7 +38,11 @@ export abstract class SessionsService {
     await auth.api.revokeSession({ body: { token: target.token }, headers })
   }
 
-  static async revokeOtherSessions(userId: string, currentSessionId: string, headers: Headers): Promise<void> {
+  static async revokeOtherSessions(
+    userId: string,
+    currentSessionId: string,
+    headers: Headers,
+  ): Promise<void> {
     const targets = await db.query.sessions.findMany({
       where: and(
         eq(sessions.userId, userId),

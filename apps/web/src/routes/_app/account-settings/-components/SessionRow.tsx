@@ -46,7 +46,6 @@ function parseDevice(userAgent: string | null, fallbackLabel: string) {
   return { label: `${browser} on ${os}`, DeviceIcon, testId }
 }
 
-
 export function SessionRow({ session, isCurrent, isImpersonating = false, onRevoke }: Props) {
   const { t, i18n } = useTranslation()
   const { label, DeviceIcon, testId } = parseDevice(
