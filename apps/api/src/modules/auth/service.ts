@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth'
 import { ErrorCodes } from '@marketplace/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/api'
-import { eq } from 'drizzle-orm'
+import { and, asc, eq, gt, isNull } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
 import { users, roles, userProfiles, sessions } from '../../db/schema'
@@ -173,12 +173,30 @@ export const auth = betterAuth({
     session: {
       create: {
         after: async (session) => {
-          if (!session.ipAddress) return
-          const geo = geoLookup(session.ipAddress)
-          if (!geo) return
-          const location = [geo.city, geo.country].filter(Boolean).join(', ')
-          if (location) {
-            await db.update(sessions).set({ location }).where(eq(sessions.id, session.id))
+          if (session.ipAddress) {
+            const geo = geoLookup(session.ipAddress)
+            const location = geo ? [geo.city, geo.country].filter(Boolean).join(', ') : null
+            if (location) {
+              await db.update(sessions).set({ location }).where(eq(sessions.id, session.id))
+            }
+          }
+
+          const SESSION_CAP = 10
+          const active = await db.query.sessions.findMany({
+            where: and(
+              eq(sessions.userId, session.userId),
+              isNull(sessions.impersonatedBy),
+              gt(sessions.expiresAt, new Date()),
+            ),
+            orderBy: asc(sessions.createdAt),
+            columns: { id: true, token: true },
+          })
+          const excess = active.slice(0, Math.max(0, active.length - SESSION_CAP))
+          if (excess.length > 0) {
+            const { internalAdapter } = await auth.$context
+            for (const old of excess) {
+              await internalAdapter.deleteSession(old.token)
+            }
           }
         },
       },

@@ -25,34 +25,34 @@ export abstract class SessionsService {
     })
   }
 
-  static async revokeSession(sessionId: string, userId: string, headers: Headers): Promise<void> {
+  static async revokeSession(sessionId: string, userId: string): Promise<void> {
     const target = await db.query.sessions.findFirst({
       where: and(
         eq(sessions.id, sessionId),
         eq(sessions.userId, userId),
         isNull(sessions.impersonatedBy),
       ),
+      columns: { token: true },
     })
     if (!target) {
       throw new NotFoundError(ErrorMessages.sessionNotFound)
     }
-    await auth.api.revokeSession({ body: { token: target.token }, headers })
+    const { internalAdapter } = await auth.$context
+    await internalAdapter.deleteSession(target.token)
   }
 
-  static async revokeOtherSessions(
-    userId: string,
-    currentSessionId: string,
-    headers: Headers,
-  ): Promise<void> {
+  static async revokeOtherSessions(userId: string, currentSessionId: string): Promise<void> {
     const targets = await db.query.sessions.findMany({
       where: and(
         eq(sessions.userId, userId),
         not(eq(sessions.id, currentSessionId)),
         isNull(sessions.impersonatedBy),
       ),
+      columns: { token: true },
     })
+    const { internalAdapter } = await auth.$context
     for (const target of targets) {
-      await auth.api.revokeSession({ body: { token: target.token }, headers })
+      await internalAdapter.deleteSession(target.token)
     }
   }
 }

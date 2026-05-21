@@ -20,8 +20,8 @@ export const sessionsRoutes = new Elysia({ prefix: '/sessions' })
   })
   .delete(
     '/:id',
-    async ({ params, user, request, set }) => {
-      await SessionsService.revokeSession(params.id, user.id, request.headers)
+    async ({ params, user, set }) => {
+      await SessionsService.revokeSession(params.id, user.id)
       set.status = 204
     },
     {
@@ -42,8 +42,8 @@ export const sessionsRoutes = new Elysia({ prefix: '/sessions' })
   )
   .delete(
     '/',
-    async ({ user, session: currentSession, request, set }) => {
-      await SessionsService.revokeOtherSessions(user.id, currentSession.id, request.headers)
+    async ({ user, session: currentSession, set }) => {
+      await SessionsService.revokeOtherSessions(user.id, currentSession.id)
       set.status = 204
     },
     {
