@@ -165,7 +165,13 @@ export async function sendReviewNotificationEmail(params: {
 }
 
 export async function sendTwoFactorOtpEmail(params: { email: string; otp: string }): Promise<void> {
-  console.log(`[email-2fa-otp] ${params.email} → ${params.otp}`)
+  const html = baseTemplate(
+    'Your two-factor authentication code',
+    `<p>Your one-time verification code is:</p>
+     <p style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#3b82f6;">${escapeHtml(params.otp)}</p>
+     <p style="font-size:13px;color:#6b7280;">This code expires in 10 minutes. If you didn't request this, please secure your account immediately.</p>`,
+  )
+  await sendEmail(params.email, 'Your two-factor authentication code', html)
 }
 
 export async function sendSecurityAlertEmail(params: {
@@ -173,5 +179,10 @@ export async function sendSecurityAlertEmail(params: {
   subject: string
   message: string
 }): Promise<void> {
-  console.log(`[email-security-alert] ${params.email} — ${params.subject}: ${params.message}`)
+  const html = baseTemplate(
+    escapeHtml(params.subject),
+    `<p>${escapeHtml(params.message)}</p>
+     <p style="font-size:13px;color:#6b7280;">If you did not perform this action, please contact support immediately.</p>`,
+  )
+  await sendEmail(params.email, params.subject, html)
 }
