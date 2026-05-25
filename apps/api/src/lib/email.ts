@@ -10,10 +10,7 @@ function createTransport() {
     host: env.smtp.host,
     port: env.smtp.port,
     secure: false,
-    auth:
-      env.smtp.user
-        ? { user: env.smtp.user, pass: env.smtp.pass }
-        : undefined,
+    auth: env.smtp.user ? { user: env.smtp.user, pass: env.smtp.pass } : undefined,
   })
 }
 
@@ -41,7 +38,10 @@ export const sentNotifications: SentNotification[] = []
 // ---------------------------------------------------------------------------
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c]!)
+  return text.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c]!,
+  )
 }
 
 function baseTemplate(title: string, bodyHtml: string): string {
