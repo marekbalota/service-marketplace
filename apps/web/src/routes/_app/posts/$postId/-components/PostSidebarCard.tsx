@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { DollarSign, MapPin, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useActiveProfile } from '#/context/activeProfile'
@@ -12,8 +12,10 @@ import { SendMessageSection } from './SendMessageSection'
 
 export function PostSidebarCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId))
   const { activeProfile } = useActiveProfile()
+
+  if (!post) return null
   const isOwner = activeProfile?.userProfileId === post.authorId
   const locationText = post.location ? formatLocation(post.location) : null
 
@@ -57,7 +59,12 @@ export function PostSidebarCard({ postId }: { postId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t('posts.detail.rateType')}</p>
                   <p className="font-medium">
-                    {t(`posts.rateType.${post.rateType.toLowerCase()}` as 'posts.rateType.hourly' | 'posts.rateType.daily' | 'posts.rateType.fixed')}
+                    {t(
+                      `posts.rateType.${post.rateType.toLowerCase()}` as
+                        | 'posts.rateType.hourly'
+                        | 'posts.rateType.daily'
+                        | 'posts.rateType.fixed',
+                    )}
                   </p>
                 </div>
               </div>
@@ -72,7 +79,8 @@ export function PostSidebarCard({ postId }: { postId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t('posts.detail.rating')}</p>
                   <p className="font-medium">
-                    {post.averageRating!.toFixed(1)} ({t('posts.detail.reviews', { count: post.reviewCount })})
+                    {post.averageRating!.toFixed(1)} (
+                    {t('posts.detail.reviews', { count: post.reviewCount })})
                   </p>
                 </div>
               </div>

@@ -32,7 +32,11 @@ const banFormSchema = z
   .superRefine((data, ctx) => {
     if (data.durationType === 'until-date') {
       if (!data.expiresAt) {
-        ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: i18n.t('validation.expiryRequired') })
+        ctx.addIssue({
+          code: 'custom',
+          path: ['expiresAt'],
+          message: i18n.t('validation.expiryRequired'),
+        })
       } else if (new Date(data.expiresAt) <= new Date()) {
         ctx.addIssue({
           code: 'custom',

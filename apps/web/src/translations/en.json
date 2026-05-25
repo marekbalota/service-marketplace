@@ -329,6 +329,24 @@
     "loginManagementSubtitle": "Manage your active sessions",
     "logoutAll": "Log Out All Devices",
     "logoutAllHint": "Signing out of all devices will end all active sessions except your current one.",
+    "sessions": {
+      "activeSessions": "Active Sessions",
+      "thisDevice": "This device",
+      "current": "Current",
+      "revoke": "Revoke",
+      "sessionMeta": "Signed in {{signedIn}}",
+      "noOtherSessions": "No other active sessions.",
+      "logoutOtherDevices": "Log out from all other devices",
+      "logoutOtherHint": "Signs you out of all active sessions except this one.",
+      "confirmTitle": "Log out from all other devices?",
+      "confirmDescription": "This will sign you out of all other devices.",
+      "confirmButton": "Log out",
+      "revokedSuccess": "Session revoked.",
+      "revokedError": "Failed to revoke session.",
+      "logoutAllSuccess": "Signed out of all other devices.",
+      "logoutAllError": "Failed to sign out of other devices.",
+      "unknownBrowser": "Unknown browser"
+    },
     "userProfiles": "User Profiles",
     "userProfilesSubtitle": "Manage your service profiles for posting",
     "profilesDesc": "Profiles for posting services",
@@ -600,5 +618,135 @@
     "expiryRequired": "Expiry date is required",
     "expiryFuture": "Expiry date must be in the future",
     "invalid": "Invalid value"
+  },
+  "twoFactor": {
+    "common": {
+      "password": "Password",
+      "done": "Done",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "continue": "Continue",
+      "sending": "Sending…",
+      "sendingCode": "Sending code…",
+      "savedCodes": "I have saved these codes",
+      "rememberBrowser": "Remember this browser for 30 days",
+      "tryAnotherWay": "Try another way",
+      "resendCode": "Resend code",
+      "resendIn": "Resend in {{countdown}}",
+      "enterPasswordToContinue": "Enter your password to continue."
+    },
+    "section": {
+      "enabled": "Enabled",
+      "available": "Available",
+      "totp": {
+        "label": "Authenticator App",
+        "description": "Use an app like Google Authenticator or Authy"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Receive a verification code via email"
+      },
+      "backupCodes": {
+        "label": "Backup Codes",
+        "description": "Emergency access codes"
+      },
+      "enable": "Enable",
+      "disable": "Disable",
+      "manage": "Manage",
+      "disableWarning": {
+        "email": "This will disable email verification for your account.",
+        "totp": "This will disable your authenticator app for your account.",
+        "lastMethod": "This will turn off two-factor authentication for your account entirely."
+      },
+      "toast": {
+        "emailDisabled": "Email 2FA disabled",
+        "totpDisabled": "Authenticator app disabled",
+        "emailEnabled": "Email 2FA enabled",
+        "totpEnabled": "Authenticator app enabled"
+      }
+    },
+    "backupCodesDialog": {
+      "title": "Backup Codes",
+      "enterPasswordDesc": "Enter your password to view your backup codes.",
+      "viewCodes": "View Codes",
+      "loading": "Loading…",
+      "currentCodes": "Current Codes",
+      "regenerateTab": "Regenerate",
+      "regenerateWarning": "This will permanently invalidate all existing backup codes and generate new ones.",
+      "regenerateCodes": "Regenerate Codes",
+      "generating": "Generating…",
+      "errorRetrieve": "Failed to retrieve backup codes",
+      "errorRegenerate": "Failed to regenerate backup codes"
+    },
+    "backupCodesDisplay": {
+      "copyAll": "Copy All",
+      "copied": "Copied!",
+      "download": "Download as .txt"
+    },
+    "disableDialog": {
+      "title": "Disable Two-Factor Authentication",
+      "description": "Enter your password to confirm.",
+      "disabling": "Disabling…",
+      "disable": "Disable"
+    },
+    "enableEmail": {
+      "step1Title": "Enable Email Verification",
+      "step2Title": "Verify Your Email",
+      "step2Description": "We sent a 6-digit code to your email address.",
+      "step3Title": "Save Your Backup Codes",
+      "step3Description": "Save these somewhere safe. Each code can only be used once.",
+      "warningMessage": "If you lose access to your email, these codes are your only way in.",
+      "errorSend": "Failed to send code",
+      "errorInvalidCode": "Invalid code"
+    },
+    "enableTotp": {
+      "step1Title": "Enable Authenticator App",
+      "step2Title": "Scan the QR Code",
+      "step2Description": "Open your authenticator app and scan the code below.",
+      "hideKey": "Hide manual key",
+      "cantScan": "Can't scan? Enter key manually",
+      "next": "Next",
+      "step3Title": "Verify Code",
+      "step3Description": "Enter the 6-digit code from your authenticator app.",
+      "step4Title": "Save Your Backup Codes",
+      "step4Description": "Store these codes somewhere safe. Each code can only be used once.",
+      "warningMessage": "If you lose access to your authenticator app, these codes are your only way in.",
+      "errorOccurred": "An error occurred",
+      "errorInvalidCode": "Invalid code"
+    },
+    "verifySelection": {
+      "title": "2-Step Verification",
+      "description": "Choose how you want to verify your identity.",
+      "totp": {
+        "label": "Authenticator App",
+        "description": "Enter a code from your authenticator app"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Receive a verification code via email"
+      },
+      "backup": {
+        "label": "Use a backup code instead",
+        "description": "Use one of your saved backup codes"
+      },
+      "backToLogin": "Back to login"
+    },
+    "verifyTotp": {
+      "title": "Check your authentication app",
+      "description": "Enter the six-digit code from your authenticator app below.",
+      "errorInvalidCode": "Invalid code"
+    },
+    "verifyEmail": {
+      "title": "Check your email",
+      "description": "We'll send a six-digit code to your email address.",
+      "errorSend": "Failed to send code",
+      "errorInvalidCode": "Invalid code"
+    },
+    "verifyBackup": {
+      "title": "Use a backup code",
+      "description": "Each backup code can only be used once.",
+      "codeLabel": "Backup code",
+      "errorInvalidCode": "Invalid backup code"
+    }
   }
 }

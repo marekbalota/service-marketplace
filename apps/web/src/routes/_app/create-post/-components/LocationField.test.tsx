@@ -69,6 +69,6 @@ describe('LocationField', () => {
     render(<Wrapper isManualLocation={true} />)
     expect(screen.getByLabelText(/region/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/house no/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/house number/i)).toBeInTheDocument()
   })
 })

@@ -124,7 +124,11 @@ function ProfilePostsList({
   const { t } = useTranslation()
 
   if (posts.length === 0) {
-    return <EmptyState message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')} />
+    return (
+      <EmptyState
+        message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')}
+      />
+    )
   }
 
   return (
@@ -201,10 +205,12 @@ function ProfileDetailPage() {
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList variant="line" className="gap-6 mb-4">
           <TabsTrigger value="active">
-            {t('profiles.activeTab')}{postCounts ? ` (${postCounts.active})` : ''}
+            {t('profiles.activeTab')}
+            {postCounts ? ` (${postCounts.active})` : ''}
           </TabsTrigger>
           <TabsTrigger value="archived">
-            {t('profiles.archivedTab')}{postCounts ? ` (${postCounts.archived})` : ''}
+            {t('profiles.archivedTab')}
+            {postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="active">

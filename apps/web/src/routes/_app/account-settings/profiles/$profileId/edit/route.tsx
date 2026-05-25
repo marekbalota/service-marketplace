@@ -198,9 +198,7 @@ function EditProfilePage() {
 
       <div className="mb-6">
         <h2 className="mb-2">{t('profiles.editTitle')}</h2>
-        <p className="text-muted-foreground">
-          {t('profiles.editSubtitle')}
-        </p>
+        <p className="text-muted-foreground">{t('profiles.editSubtitle')}</p>
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

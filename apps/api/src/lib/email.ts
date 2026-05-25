@@ -163,3 +163,15 @@ export async function sendReviewNotificationEmail(params: {
   )
   await sendEmail(params.recipientEmail, `New review on "${params.postTitle}"`, html)
 }
+
+export async function sendTwoFactorOtpEmail(params: { email: string; otp: string }): Promise<void> {
+  console.log(`[email-2fa-otp] ${params.email} → ${params.otp}`)
+}
+
+export async function sendSecurityAlertEmail(params: {
+  email: string
+  subject: string
+  message: string
+}): Promise<void> {
+  console.log(`[email-security-alert] ${params.email} — ${params.subject}: ${params.message}`)
+}

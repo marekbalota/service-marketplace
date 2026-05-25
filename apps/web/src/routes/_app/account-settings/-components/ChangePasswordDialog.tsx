@@ -77,7 +77,9 @@ export function ChangePasswordDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('accountSettings.changePasswordDialog.title')}</DialogTitle>
-          <DialogDescription>{t('accountSettings.changePasswordDialog.description')}</DialogDescription>
+          <DialogDescription>
+            {t('accountSettings.changePasswordDialog.description')}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -86,7 +88,9 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="current-password">{t('accountSettings.changePasswordDialog.currentPassword')}</FieldLabel>
+                  <FieldLabel htmlFor="current-password">
+                    {t('accountSettings.changePasswordDialog.currentPassword')}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="current-password"
@@ -104,7 +108,9 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-password">{t('accountSettings.changePasswordDialog.newPassword')}</FieldLabel>
+                  <FieldLabel htmlFor="new-password">
+                    {t('accountSettings.changePasswordDialog.newPassword')}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="new-password"
@@ -122,7 +128,9 @@ export function ChangePasswordDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="confirm-password">{t('accountSettings.changePasswordDialog.confirmPassword')}</FieldLabel>
+                  <FieldLabel htmlFor="confirm-password">
+                    {t('accountSettings.changePasswordDialog.confirmPassword')}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="confirm-password"

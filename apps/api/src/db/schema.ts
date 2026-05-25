@@ -19,6 +19,7 @@ export const postTypeEnum = pgEnum('post_type', ['REQUEST', 'OFFER'])
 export const rateTypeEnum = pgEnum('rate_type', ['HOURLY', 'DAILY', 'FIXED'])
 export const reportTargetTypeEnum = pgEnum('report_target_type', ['POST', 'MESSAGE', 'REVIEW'])
 export const reportStatusEnum = pgEnum('report_status', ['PENDING', 'RESOLVED', 'DISMISSED'])
+export const twoFactorMethodEnum = pgEnum('two_factor_method', ['totp', 'email'])
 
 // Tables
 
@@ -82,6 +83,7 @@ export const sessions = pgTable('session', {
     .$onUpdate(() => new Date()),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
+  location: text('location'),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -117,18 +119,41 @@ export const verifications = pgTable('verification', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
 
-export const twoFactors = pgTable(
-  'two_factor',
+export const userTwoFactorMethods = pgTable(
+  'user_two_factor_method',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    secret: text('secret').notNull(),
-    backupCodes: text('backup_codes').notNull(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    verified: boolean('verified'),
+    method: twoFactorMethodEnum('method').notNull(),
+    enabledAt: timestamp('enabled_at', { withTimezone: true }).notNull(),
   },
-  (table) => [unique('two_factor_user_id_unique').on(table.userId)],
+  (t) => [unique().on(t.userId, t.method)],
+)
+
+export const userTotpCredentials = pgTable('user_totp_credential', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  methodId: uuid('method_id')
+    .notNull()
+    .unique()
+    .references(() => userTwoFactorMethods.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(),
+})
+
+export const userBackupCodes = pgTable(
+  'user_backup_code',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeIndex: integer('code_index').notNull(),
+    codeEncrypted: text('code_encrypted').notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.codeIndex)],
 )
 
 export const userProfiles = pgTable('user_profiles', {
@@ -345,17 +370,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   userProfiles: many(userProfiles),
   sessions: many(sessions),
-  twoFactor: one(twoFactors, {
-    fields: [users.id],
-    references: [twoFactors.userId],
-  }),
-}))
-
-export const twoFactorsRelations = relations(twoFactors, ({ one }) => ({
-  user: one(users, {
-    fields: [twoFactors.userId],
-    references: [users.id],
-  }),
 }))
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({

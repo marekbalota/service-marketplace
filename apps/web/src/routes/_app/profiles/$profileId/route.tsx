@@ -109,7 +109,11 @@ function ProfilePostsGrid({
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }), replace: true })
 
   if (posts.length === 0) {
-    return <EmptyState message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')} />
+    return (
+      <EmptyState
+        message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')}
+      />
+    )
   }
 
   return (
@@ -175,7 +179,9 @@ function ProfileViewPage() {
               <div className="text-center">
                 <h1 className="text-xl font-semibold">{profile.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  {t('profiles.memberSince', { date: new Date(profile.createdAt).toLocaleDateString() })}
+                  {t('profiles.memberSince', {
+                    date: new Date(profile.createdAt).toLocaleDateString(),
+                  })}
                 </p>
               </div>
 
@@ -246,10 +252,12 @@ function ProfileViewPage() {
                 {isAuthenticated && (
                   <TabsList>
                     <TabsTrigger value="active">
-                      {t('profiles.activeTab')}{postCounts ? ` (${postCounts.active})` : ''}
+                      {t('profiles.activeTab')}
+                      {postCounts ? ` (${postCounts.active})` : ''}
                     </TabsTrigger>
                     <TabsTrigger value="archived">
-                      {t('profiles.archivedTab')}{postCounts ? ` (${postCounts.archived})` : ''}
+                      {t('profiles.archivedTab')}
+                      {postCounts ? ` (${postCounts.archived})` : ''}
                     </TabsTrigger>
                   </TabsList>
                 )}

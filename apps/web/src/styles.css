@@ -17,8 +17,6 @@ html {
 }
 
 :root {
-  --lagoon: #4fb8b2;
-  --lagoon-deep: #328f97;
   --background: #f9fafb;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -151,8 +149,6 @@ a {
 }
 
 .dark {
-  --lagoon: #60d7cf;
-  --lagoon-deep: #8de5db;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

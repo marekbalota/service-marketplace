@@ -172,10 +172,7 @@ function ManageAccounts() {
     <main className="max-w-7xl mx-auto px-4 py-6">
       <BackButton onClick={() => navigate({ to: '/admin' })} label={t('admin.backToAdmin')} />
 
-      <PageHeader
-        title={t('admin.users.title')}
-        description={t('admin.users.subtitle')}
-      />
+      <PageHeader title={t('admin.users.title')} description={t('admin.users.subtitle')} />
 
       <Card className="mb-6">
         <CardContent>
@@ -187,7 +184,11 @@ function ManageAccounts() {
             }
             filters={[
               { label: t('admin.users.role'), control: <RoleSelect />, desktopWidth: 'w-[180px]' },
-              { label: t('admin.users.status'), control: <StatusSelect />, desktopWidth: 'w-[160px]' },
+              {
+                label: t('admin.users.status'),
+                control: <StatusSelect />,
+                desktopWidth: 'w-[160px]',
+              },
             ]}
             sheetTitle={t('admin.users.filterTitle')}
             sheetDescription={t('admin.users.filterSubtitle')}

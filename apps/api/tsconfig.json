@@ -3,8 +3,9 @@
   "compilerOptions": {
     "target": "ES2021",
     "lib": ["ES2021"],
-    "module": "ES2022",
-    "moduleResolution": "node",
+    "module": "Preserve",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
     "types": ["bun-types"],
     "esModuleInterop": true,
     "paths": {

@@ -156,10 +156,12 @@ function MyPostingsPage() {
       <Tabs value={tab ?? 'active'} onValueChange={handleTabChange}>
         <TabsList variant="line" className="gap-6 mb-6">
           <TabsTrigger value="active">
-            {t('myPostings.active')}{postCounts ? ` (${postCounts.active})` : ''}
+            {t('myPostings.active')}
+            {postCounts ? ` (${postCounts.active})` : ''}
           </TabsTrigger>
           <TabsTrigger value="archived">
-            {t('myPostings.archived')}{postCounts ? ` (${postCounts.archived})` : ''}
+            {t('myPostings.archived')}
+            {postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
         </TabsList>
 

@@ -1,4 +1,5 @@
-import { defineConfig } from 'vitest/config'
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -12,7 +13,7 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: ['zod'],
+    noExternal: ['zod', '@hookform/resolvers'],
   },
   test: {
     environment: 'jsdom',

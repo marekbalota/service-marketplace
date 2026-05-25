@@ -1,20 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import {
-  User,
-  Bell,
-  Key,
-  Shield,
-  LogOut,
-  Users,
-  Mail,
-  Lock,
-  Smartphone,
-  MessageSquare,
-  Plus,
-} from 'lucide-react'
+import { User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
+import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '#/components/ui/tooltip'
@@ -24,24 +13,77 @@ import { Switch } from '#/components/ui/switch'
 import { Skeleton } from '#/components/ui/skeleton'
 import { ChangeEmailDialog } from './-components/ChangeEmailDialog'
 import { ChangePasswordDialog } from './-components/ChangePasswordDialog'
+import { TwoFactorSection } from './-components/TwoFactorSection'
+import { LoginManagementSection } from './-components/LoginManagementSection'
+import { sessionsQueryOptions } from './-queries/sessions'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/_app/account-settings/')({
-  loader: ({ context: { queryClient } }) => queryClient.ensureQueryData(currentUserQueryOptions),
+  loader: ({ context: { queryClient } }) =>
+    Promise.all([
+      queryClient.ensureQueryData(currentUserQueryOptions),
+      queryClient.ensureQueryData(twoFactorStatusQueryOptions),
+      queryClient.ensureQueryData(sessionsQueryOptions),
+    ]),
   pendingComponent: AccountSettingsHubSkeleton,
   component: AccountSettingsHubPage,
 })
 
-const SECTION_IDS = [
-  'account-information',
-  'notifications',
-  'connected-accounts',
-  'two-factor-auth',
-  'login-management',
-  'user-profiles',
+type SectionId = (typeof SECTIONS)[number]['id']
+
+const SECTIONS = [
+  {
+    id: 'account-information' as const,
+    icon: User,
+    labelKey: 'accountSettings.sections.accountInformation' as const,
+  },
+  {
+    id: 'notifications' as const,
+    icon: Bell,
+    labelKey: 'accountSettings.sections.notifications' as const,
+  },
+  {
+    id: 'connected-accounts' as const,
+    icon: Key,
+    labelKey: 'accountSettings.sections.connectedAccounts' as const,
+  },
+  {
+    id: 'two-factor-auth' as const,
+    icon: Shield,
+    labelKey: 'accountSettings.sections.twoFactorAuth' as const,
+  },
+  {
+    id: 'login-management' as const,
+    icon: LogOut,
+    labelKey: 'accountSettings.sections.loginManagement' as const,
+  },
+  {
+    id: 'user-profiles' as const,
+    icon: Users,
+    labelKey: 'accountSettings.sections.userProfiles' as const,
+  },
 ] as const
 
-type SectionId = (typeof SECTION_IDS)[number]
+const NOTIFICATION_ROWS = [
+  {
+    id: 'notif-email',
+    icon: Bell,
+    labelKey: 'accountSettings.emailNotifications' as const,
+    descriptionKey: 'accountSettings.emailNotificationsDesc' as const,
+  },
+  {
+    id: 'notif-messages',
+    icon: Mail,
+    labelKey: 'accountSettings.messageNotifications' as const,
+    descriptionKey: 'accountSettings.messageNotificationsDesc' as const,
+  },
+  {
+    id: 'notif-reviews',
+    icon: Bell,
+    labelKey: 'accountSettings.reviewNotifications' as const,
+    descriptionKey: 'accountSettings.reviewNotificationsDesc' as const,
+  },
+] as const
 
 const OAUTH_PROVIDERS = [
   {
@@ -70,26 +112,123 @@ const OAUTH_PROVIDERS = [
 function AccountSettingsHubSkeleton() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
-      <Skeleton className="mb-8 h-8 w-48" />
+      <div className="mb-8">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="mt-1 h-4 w-72" />
+      </div>
       <div className="flex gap-8">
-        <div className="hidden lg:block w-56 shrink-0 space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full" />
-          ))}
+        <div className="hidden lg:block w-56 shrink-0">
+          <div className="sticky top-24 flex flex-col gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
         </div>
-        <div className="flex-1 space-y-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-4 w-64" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex-1 space-y-8 min-w-0">
+          {/* Account Information */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-44" />
+              <Skeleton className="h-4 w-52" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-5 shrink-0" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+                <Skeleton className="h-9 w-20 shrink-0" />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-5 shrink-0" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-9 w-20 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-4 w-60" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-5 shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-4 w-64" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-10 rounded-full shrink-0" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Two-Factor Authentication */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-52" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-10 rounded-full shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-56" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-9 w-20 shrink-0" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Login Management */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-9 w-44" />
+            </CardContent>
+          </Card>
+
+          {/* User Profiles */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-4 w-56" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-4 py-3">
+                <Skeleton className="size-10 rounded-full shrink-0" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-full" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>
@@ -104,52 +243,11 @@ function AccountSettingsHubPage() {
   const [showChangePassword, setShowChangePassword] = useState(false)
   const observersRef = useRef<IntersectionObserver[]>([])
 
-  const SECTIONS = [
-    { id: 'account-information' as const, label: t('accountSettings.sections.accountInformation'), icon: User },
-    { id: 'notifications' as const, label: t('accountSettings.sections.notifications'), icon: Bell },
-    { id: 'connected-accounts' as const, label: t('accountSettings.sections.connectedAccounts'), icon: Key },
-    { id: 'two-factor-auth' as const, label: t('accountSettings.sections.twoFactorAuth'), icon: Shield },
-    { id: 'login-management' as const, label: t('accountSettings.sections.loginManagement'), icon: LogOut },
-    { id: 'user-profiles' as const, label: t('accountSettings.sections.userProfiles'), icon: Users },
-  ]
-
-  const NOTIFICATION_ROWS = [
-    {
-      id: 'notif-email',
-      label: t('accountSettings.emailNotifications'),
-      description: t('accountSettings.emailNotificationsDesc'),
-      icon: Bell,
-    },
-    {
-      id: 'notif-messages',
-      label: t('accountSettings.messageNotifications'),
-      description: t('accountSettings.messageNotificationsDesc'),
-      icon: Mail,
-    },
-    {
-      id: 'notif-reviews',
-      label: t('accountSettings.reviewNotifications'),
-      description: t('accountSettings.reviewNotificationsDesc'),
-      icon: Bell,
-    },
-  ]
-
-  const TWO_FA_METHODS = [
-    { id: 'email', label: t('accountSettings.twoFactorEmail'), description: t('accountSettings.twoFactorEmailDesc'), icon: Mail },
-    {
-      id: 'authenticator',
-      label: t('accountSettings.twoFactorApp'),
-      description: t('accountSettings.twoFactorAppDesc'),
-      icon: Smartphone,
-    },
-    { id: 'sms', label: t('accountSettings.twoFactorSms'), description: t('accountSettings.twoFactorSmsDesc'), icon: MessageSquare },
-  ]
-
   useEffect(() => {
     observersRef.current.forEach((o) => o.disconnect())
     observersRef.current = []
 
-    SECTION_IDS.forEach((id) => {
+    SECTIONS.forEach(({ id }) => {
       const el = document.getElementById(id)
       if (!el) return
       const observer = new IntersectionObserver(
@@ -171,16 +269,14 @@ function AccountSettingsHubPage() {
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">{t('accountSettings.title')}</h1>
-        <p className="mt-1 text-muted-foreground">
-          {t('accountSettings.subtitle')}
-        </p>
+        <p className="mt-1 text-muted-foreground">{t('accountSettings.subtitle')}</p>
       </div>
 
       <div className="flex gap-8">
         {/* Sticky sidebar — hidden on mobile */}
         <aside className="hidden lg:block w-56 shrink-0">
           <nav className="sticky top-24 flex flex-col gap-1">
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
+            {SECTIONS.map(({ id, icon: Icon, labelKey }) => (
               <Button
                 key={id}
                 type="button"
@@ -194,7 +290,7 @@ function AccountSettingsHubPage() {
                 )}
               >
                 <Icon className="size-4 shrink-0" />
-                {label}
+                {t(labelKey)}
               </Button>
             ))}
           </nav>
@@ -274,15 +370,15 @@ function AccountSettingsHubPage() {
               <CardDescription>{t('accountSettings.notificationsSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {NOTIFICATION_ROWS.map(({ id, label, description, icon: Icon }) => (
+              {NOTIFICATION_ROWS.map(({ id, icon: Icon, labelKey, descriptionKey }) => (
                 <div key={id} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Icon className="size-5 text-muted-foreground shrink-0" />
                     <div>
                       <Label htmlFor={id} className="text-sm font-medium">
-                        {label}
+                        {t(labelKey)}
                       </Label>
-                      <p className="text-sm text-muted-foreground">{description}</p>
+                      <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
                     </div>
                   </div>
                   <Switch id={id} disabled />
@@ -318,47 +414,10 @@ function AccountSettingsHubPage() {
           </Card>
 
           {/* 4 — Two-Factor Authentication */}
-          <Card id="two-factor-auth">
-            <CardHeader>
-              <CardTitle>{t('accountSettings.twoFactor')}</CardTitle>
-              <CardDescription>{t('accountSettings.twoFactorSubtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {TWO_FA_METHODS.map(({ id, label, description, icon: Icon }) => (
-                <div key={id} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <Icon className="size-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-sm text-muted-foreground">{description}</p>
-                    </div>
-                  </div>
-                  <Button size="sm" disabled title={t('accountSettings.comingSoon')}>
-                    {t('accountSettings.enable')}
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <TwoFactorSection />
 
           {/* 5 — Login Management */}
-          <Card id="login-management">
-            <CardHeader>
-              <CardTitle>{t('accountSettings.loginManagement')}</CardTitle>
-              <CardDescription>{t('accountSettings.loginManagementSubtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {t('accountSettings.logoutAllHint')}
-              </p>
-              <Button variant="destructive" disabled title={t('accountSettings.comingSoon')} className="gap-2">
-                <LogOut className="size-4" />
-                {t('accountSettings.logoutAll')}
-              </Button>
-            </CardContent>
-          </Card>
+          <LoginManagementSection />
 
           {/* 6 — User Profiles */}
           <Card id="user-profiles">
@@ -375,7 +434,9 @@ function AccountSettingsHubPage() {
                   <p className="text-sm font-medium">
                     {t('accountSettings.activeProfiles', { count: user?.profiles.length ?? 0 })}
                   </p>
-                  <p className="text-xs text-muted-foreground">{t('accountSettings.profilesDesc')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('accountSettings.profilesDesc')}
+                  </p>
                 </div>
               </div>
               <Link

@@ -20,6 +20,7 @@ export const ErrorMessages = {
   roleNotFound: 'Role not found',
   cannotDeleteDefaultRole: 'Cannot delete the default role',
   noDefaultRoleFound: 'No default role found',
+  sessionNotFound: 'Session not found',
 } as const
 
 export const ImpersonationErrorMessages = {
@@ -35,8 +36,6 @@ export const AuthErrorMessages = {
   unauthorized: 'Unauthorized',
   forbidden: 'Forbidden',
   banned: 'Account banned',
-  missingCaptchaResponse: 'Captcha response is required',
-  captchaVerificationFailed: 'Captcha verification failed',
   missingPermissions: 'Missing permissions',
   impersonationReadOnly: 'Cannot make changes during impersonation',
   cannotManageRole: 'Cannot manage users with equal or higher role',

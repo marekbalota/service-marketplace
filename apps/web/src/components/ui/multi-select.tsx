@@ -265,8 +265,12 @@ export function MultiSelect({
             <CommandEmpty>{emptyText}</CommandEmpty>
             {showControls && !search && (
               <CommandGroup className="p-0">
-                {value.length === 0 && <CommandItem onSelect={selectAll}>{t('common.selectAll')}</CommandItem>}
-                {value.length > 0 && <CommandItem onSelect={clearAll}>{t('common.clearSelection')}</CommandItem>}
+                {value.length === 0 && (
+                  <CommandItem onSelect={selectAll}>{t('common.selectAll')}</CommandItem>
+                )}
+                {value.length > 0 && (
+                  <CommandItem onSelect={clearAll}>{t('common.clearSelection')}</CommandItem>
+                )}
               </CommandGroup>
             )}
             <CommandGroup className="p-0">

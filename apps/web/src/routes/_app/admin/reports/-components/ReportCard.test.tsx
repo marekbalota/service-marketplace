@@ -58,7 +58,7 @@ describe('ReportCard', () => {
   it('renders report information', () => {
     render(<ReportCard report={baseReport} />)
     expect(screen.getByText('Test Service Post')).toBeInTheDocument()
-    expect(screen.getByText('Post')).toBeInTheDocument()
+    expect(screen.getByText('Posts')).toBeInTheDocument()
     expect(screen.getByText('Pending')).toBeInTheDocument()
     expect(screen.getByText(/Bob Smith/)).toBeInTheDocument()
     expect(screen.getByText(/Alice Johnson/)).toBeInTheDocument()

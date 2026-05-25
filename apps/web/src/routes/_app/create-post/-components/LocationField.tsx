@@ -45,7 +45,9 @@ export function LocationField<T extends FieldValues>({
         </div>
         <Button type="button" variant="outline" size="sm" className="h-9 gap-2" onClick={onToggle}>
           <MapPin className="size-4" />
-          {isManualLocation ? t('createPost.usePreviousLocation') : t('createPost.enterNewLocation')}
+          {isManualLocation
+            ? t('createPost.usePreviousLocation')
+            : t('createPost.enterNewLocation')}
         </Button>
       </div>
 
@@ -148,7 +150,11 @@ export function LocationField<T extends FieldValues>({
                 render={({ field }) => (
                   <Field className="md:col-span-2">
                     <FieldLabel htmlFor="street">{t('profiles.location.street')}</FieldLabel>
-                    <Input {...field} id="street" placeholder={t('profiles.location.streetPlaceholder')} />
+                    <Input
+                      {...field}
+                      id="street"
+                      placeholder={t('profiles.location.streetPlaceholder')}
+                    />
                   </Field>
                 )}
               />
@@ -157,8 +163,14 @@ export function LocationField<T extends FieldValues>({
                 name="houseNumber"
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel htmlFor="houseNumber">{t('profiles.location.houseNumber')}</FieldLabel>
-                    <Input {...field} id="houseNumber" placeholder={t('profiles.location.houseNumberPlaceholder')} />
+                    <FieldLabel htmlFor="houseNumber">
+                      {t('profiles.location.houseNumber')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="houseNumber"
+                      placeholder={t('profiles.location.houseNumberPlaceholder')}
+                    />
                   </Field>
                 )}
               />

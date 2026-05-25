@@ -2,13 +2,15 @@ import { betterAuth } from 'better-auth'
 import { ErrorCodes } from '@marketplace/shared'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { createAuthMiddleware, APIError, getSessionFromCtx } from 'better-auth/api'
-import { eq } from 'drizzle-orm'
+import { and, asc, eq, gt, isNull } from 'drizzle-orm'
 import { db } from '../../db'
 import * as schema from '../../db/schema'
 import { users, roles, userProfiles, sessions } from '../../db/schema'
 import type { AuthModel } from './model'
 import { AuthErrorMessages } from '../../lib/errors'
+import { captcha } from 'better-auth/plugins'
 import { impersonationPlugin } from './impersonation-plugin'
+import { twoFactorPlugin } from './two-factor-plugin'
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -18,20 +20,7 @@ import {
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
-
-const CAPTCHA_PROTECTED_PATHS = ['/sign-up/email', '/sign-in/email', '/request-password-reset']
-const TURNSTILE_SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-
-async function verifyCaptchaToken(token: string): Promise<boolean> {
-  try {
-    const body = new URLSearchParams({ secret: env.turnstile.secretKey, response: token })
-    const res = await fetch(TURNSTILE_SITEVERIFY_URL, { method: 'POST', body })
-    const data = (await res.json()) as { success: boolean }
-    return data.success === true
-  } catch {
-    return false
-  }
-}
+import { lookup as geoLookup } from 'geoip-lite'
 
 export const verificationTokenStore = new Map<string, string>()
 export const resetTokenStore = new Map<string, string>()
@@ -40,7 +29,22 @@ export const existingSignupNotifiedEmails = new Set<string>()
 export const auth = betterAuth({
   baseURL: env.betterAuthUrl,
   trustedOrigins: [env.frontendUrl],
-  plugins: [impersonationPlugin()],
+  plugins: [
+    impersonationPlugin(),
+    twoFactorPlugin({ issuer: 'Marketplace' }),
+    captcha({ provider: 'cloudflare-turnstile', secretKey: env.turnstile.secretKey }),
+  ],
+  disabledPaths: [
+    '/list-sessions',
+    '/revoke-session',
+    '/revoke-other-sessions',
+    '/revoke-sessions',
+    '/sign-in/social',
+    '/verify-password',
+    '/update-user',
+    '/delete-user',
+    '/delete-user/callback',
+  ],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -68,6 +72,7 @@ export const auth = betterAuth({
       isBanned: { type: 'boolean', input: false },
       banReason: { type: 'string', input: false },
       banExpiration: { type: 'date', input: false },
+      twoFactorEnabled: { type: 'boolean', input: false, defaultValue: false },
     },
   },
   emailAndPassword: {
@@ -138,6 +143,12 @@ export const auth = betterAuth({
   },
   session: {
     storeSessionInDatabase: true,
+    expiresIn: 60 * 60 * 24,
+    rememberMeExpiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 12,
+    additionalFields: {
+      location: { type: 'string', input: false },
+    },
   },
   rateLimit: {
     enabled: env.nodeEnv === 'production',
@@ -159,6 +170,37 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          if (session.ipAddress) {
+            const geo = geoLookup(session.ipAddress)
+            const location = geo ? [geo.city, geo.country].filter(Boolean).join(', ') : null
+            if (location) {
+              await db.update(sessions).set({ location }).where(eq(sessions.id, session.id))
+            }
+          }
+
+          const SESSION_CAP = 10
+          const active = await db.query.sessions.findMany({
+            where: and(
+              eq(sessions.userId, session.userId),
+              isNull(sessions.impersonatedBy),
+              gt(sessions.expiresAt, new Date()),
+            ),
+            orderBy: asc(sessions.createdAt),
+            columns: { id: true, token: true },
+          })
+          const excess = active.slice(0, Math.max(0, active.length - SESSION_CAP))
+          if (excess.length > 0) {
+            const { internalAdapter } = await auth.$context
+            for (const old of excess) {
+              await internalAdapter.deleteSession(old.token)
+            }
+          }
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {
@@ -180,25 +222,6 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // Internal auth.api.* calls (seed, tests) have no HTTP host header — skip CAPTCHA.
-      // CAPTCHA is a browser-facing control; internal callers are trusted by design.
-      if (CAPTCHA_PROTECTED_PATHS.includes(ctx.path) && ctx.headers?.get('host')) {
-        const token = ctx.headers?.get('x-captcha-response')
-        if (!token) {
-          return new APIError('BAD_REQUEST', {
-            message: AuthErrorMessages.missingCaptchaResponse,
-            code: ErrorCodes.MissingCaptchaResponse,
-          })
-        }
-        const valid = await verifyCaptchaToken(token)
-        if (!valid) {
-          return new APIError('FORBIDDEN', {
-            message: AuthErrorMessages.captchaVerificationFailed,
-            code: ErrorCodes.CaptchaVerificationFailed,
-          })
-        }
-      }
-
       if (env.nodeEnv !== 'test' && ctx.path === '/sign-in/email') {
         const user = await db.query.users.findFirst({
           where: eq(users.email, ctx.body.email),
@@ -207,7 +230,7 @@ export const auth = betterAuth({
         if (user) {
           const banStatus = await AuthService.checkBanStatus(user.id)
           if (banStatus) {
-            await AuthService.clearUserSessions(user.id)
+            await ctx.context.internalAdapter.deleteSessions(user.id)
 
             return new APIError('FORBIDDEN', {
               code: ErrorCodes.Banned,
@@ -221,6 +244,16 @@ export const auth = betterAuth({
 
       // Block changeEmail and changePassword during impersonation
       if (['/change-email', '/change-password'].includes(ctx.path)) {
+        const session = await getSessionFromCtx(ctx)
+        if (session?.session.impersonatedBy) {
+          return new APIError('FORBIDDEN', {
+            code: ErrorCodes.ImpersonationReadOnly,
+            message: AuthErrorMessages.impersonationReadOnly,
+          })
+        }
+      }
+
+      if (ctx.path.startsWith('/two-factor/') && ctx.path !== '/two-factor/status') {
         const session = await getSessionFromCtx(ctx)
         if (session?.session.impersonatedBy) {
           return new APIError('FORBIDDEN', {
@@ -260,9 +293,5 @@ export abstract class AuthService {
       reason: user.banReason,
       expiresAt: user.banExpiration,
     }
-  }
-
-  static async clearUserSessions(userId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.userId, userId))
   }
 }

@@ -7,7 +7,7 @@ import { NotFoundError, ErrorMessages } from '../../lib/errors'
 export abstract class UsersService {
   static async getCurrentUser(
     userId: string,
-  ): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy'>> {
+  ): Promise<Omit<UsersModel['meResponse'], 'impersonatedBy' | 'sessionId'>> {
     const [row] = await db
       .select({
         userId: users.id,

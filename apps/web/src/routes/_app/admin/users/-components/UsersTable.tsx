@@ -98,7 +98,9 @@ function UserCard({ user }: { user: User }) {
             </div>
             <p className="text-sm text-muted-foreground mb-1">{user.email}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{t('admin.users.joined', { date: new Date(user.createdAt).toLocaleDateString() })}</span>
+              <span>
+                {t('admin.users.joined', { date: new Date(user.createdAt).toLocaleDateString() })}
+              </span>
             </div>
           </div>
 

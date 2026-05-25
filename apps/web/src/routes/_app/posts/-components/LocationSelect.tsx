@@ -63,7 +63,9 @@ export function LocationSelect() {
       >
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">{t('posts.location.country')}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t('posts.location.country')}
+            </p>
             <LocationCombobox
               value={country}
               options={countries}
@@ -84,7 +86,9 @@ export function LocationSelect() {
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">{t('posts.location.region')}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t('posts.location.region')}
+            </p>
             <LocationCombobox
               value={region}
               options={regions}

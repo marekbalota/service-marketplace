@@ -25,7 +25,7 @@ describe('BanDialog', () => {
       fireEvent.click(screen.getByRole('button', { name: /ban user/i }))
     })
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/reason is required/i)
+      expect(screen.getByRole('alert')).toHaveTextContent(/this field is required/i)
     })
   })
 

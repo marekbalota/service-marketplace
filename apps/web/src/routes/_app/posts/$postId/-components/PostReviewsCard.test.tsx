@@ -4,14 +4,13 @@ import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
 import { PostReviewsCard } from './PostReviewsCard'
 
-const mockUseSuspenseQuery = vi.hoisted(() => vi.fn())
+const mockUseQuery = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
     ...actual,
-    useSuspenseQuery: mockUseSuspenseQuery,
-    useQuery: vi.fn(() => ({ data: undefined })),
+    useQuery: mockUseQuery,
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
     useMutation: vi.fn(() => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false })),
   }
@@ -53,7 +52,7 @@ const basePost = {
 describe('PostReviewsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSuspenseQuery.mockReturnValue({ data: basePost })
+    mockUseQuery.mockReturnValue({ data: basePost })
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
       typeof useCurrentUser
     >)
@@ -63,7 +62,7 @@ describe('PostReviewsCard', () => {
   })
 
   it('renders review cards for each review', async () => {
-    mockUseSuspenseQuery.mockReturnValue({
+    mockUseQuery.mockReturnValue({
       data: {
         ...basePost,
         reviewCount: 2,
@@ -122,7 +121,7 @@ describe('PostReviewsCard', () => {
 
   it('shows already reviewed message when the user has a review', async () => {
     const profileId = 'profile-visitor'
-    mockUseSuspenseQuery.mockReturnValue({
+    mockUseQuery.mockReturnValue({
       data: {
         ...basePost,
         reviewCount: 1,

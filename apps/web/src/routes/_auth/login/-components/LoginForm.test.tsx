@@ -8,6 +8,7 @@ vi.mock('#/auth', () => ({
       email: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
   },
+  setPendingTwoFactorContext: vi.fn(),
 }))
 
 const mockNavigate = vi.hoisted(() => vi.fn())
@@ -170,6 +171,33 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows captcha error message and makes widget visible on 400 VERIFICATION_FAILED', async () => {
+    const { authClient } = await import('#/auth')
+    vi.mocked(authClient.signIn.email).mockResolvedValueOnce({
+      data: null,
+      error: {
+        status: 403,
+        message: 'Captcha verification failed',
+        body: { code: 'VERIFICATION_FAILED', message: 'Captcha verification failed' },
+      } as never,
+    })
+
+    render(<LoginForm />)
+    act(() => {
+      fireTurnstileSuccess?.('test-token')
+    })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@a.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/captcha verification failed/i)).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /log in/i })).toBeDisabled()
     })
   })
 

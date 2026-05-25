@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
@@ -14,25 +14,22 @@ import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { ReportForm } from '#/components/ReportForm'
 import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { hasReportedReviewQueryOptions } from '../-queries/posts'
-import { ReviewCard } from './ReviewCard'
+import { ReviewCard, type ReviewType } from './ReviewCard'
 import { ReviewForm } from './ReviewForm'
 
 export function PostReviewsCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()
-  const isOwner = activeProfile?.userProfileId === post.authorId
-  const isAuthenticated = user != null
+
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reportingReviewId, setReportingReviewId] = useState<string | null>(null)
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null)
 
-  const hasReviewed = post.reviews.some(
-    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId,
-  )
-  const showReviewButton = !isOwner && activeProfile && !hasReviewed
+  const isOwner = activeProfile?.userProfileId === post?.authorId
+  const isAuthenticated = user != null
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -45,12 +42,21 @@ export function PostReviewsCard({ postId }: { postId: string }) {
     },
   })
 
+  if (!post) return null
+
+  const hasReviewed = post.reviews.some(
+    (r: { reviewerId: string }) => r.reviewerId === activeProfile?.userProfileId,
+  )
+  const showReviewButton = !isOwner && activeProfile && !hasReviewed
+
   return (
     <>
       <Card className="lg:col-span-2 lg:row-start-2">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">{t('posts.detail.reviews', { count: post.reviewCount })}</h2>
+            <h2 className="text-lg font-medium">
+              {t('posts.detail.reviews', { count: post.reviewCount })}
+            </h2>
             {showReviewButton && (
               <Button
                 variant="outline"
@@ -74,25 +80,16 @@ export function PostReviewsCard({ postId }: { postId: string }) {
             <EmptyState message={t('posts.detail.noReviews')} />
           ) : (
             <div className="space-y-4">
-              {post.reviews.map(
-                (review: {
-                  reviewId: string
-                  reviewerName: string
-                  createdAt: Date
-                  rating: number
-                  reviewDescription: string | null
-                  reviewerId: string
-                }) => (
-                  <ReviewCard
-                    key={review.reviewId}
-                    review={review}
-                    onDelete={(id) => setDeletingReviewId(id)}
-                    isDeleting={deleteMutation.isPending}
-                    onReport={(id) => setReportingReviewId(id)}
-                    isAuthenticated={isAuthenticated}
-                  />
-                ),
-              )}
+              {post.reviews.map((review: ReviewType) => (
+                <ReviewCard
+                  key={review.reviewId}
+                  review={review}
+                  onDelete={(id) => setDeletingReviewId(id)}
+                  isDeleting={deleteMutation.isPending}
+                  onReport={(id) => setReportingReviewId(id)}
+                  isAuthenticated={isAuthenticated}
+                />
+              ))}
             </div>
           )}
         </CardContent>
@@ -131,7 +128,6 @@ export function PostReviewsCard({ postId }: { postId: string }) {
           {reportingReviewId && (
             <ReportForm
               targetType="REVIEW"
-              entityName="review"
               onReport={async (data) => {
                 const { error } = await api.reviews({ id: reportingReviewId }).reports.post(data)
                 if (error) throw wrapEdenError(error, 'Failed to submit report.')

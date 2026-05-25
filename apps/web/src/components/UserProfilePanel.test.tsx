@@ -79,6 +79,7 @@ const baseUser: User = {
   userId: 'user-1',
   name: 'Alice',
   email: 'alice@example.com',
+  sessionId: 'mock-session-id',
   impersonatedBy: null,
   role: null,
   profiles: [baseProfile],

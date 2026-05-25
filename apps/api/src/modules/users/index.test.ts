@@ -57,6 +57,15 @@ describe('GET /users/me', () => {
     }
   })
 
+  it('returns sessionId in response', async () => {
+    const { data, error } = await client.users.me.get({
+      headers: { Cookie: userCookie },
+    })
+    expect(error).toBeNull()
+    expect(typeof data!.sessionId).toBe('string')
+    expect(data!.sessionId.length).toBeGreaterThan(0)
+  })
+
   it('returns user with profiles array', async () => {
     const { data, error } = await client.users.me.get({
       headers: { Cookie: userCookie },

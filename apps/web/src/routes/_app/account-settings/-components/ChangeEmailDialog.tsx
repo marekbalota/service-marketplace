@@ -60,7 +60,9 @@ export function ChangeEmailDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('accountSettings.changeEmailDialog.title')}</DialogTitle>
-          <DialogDescription>{t('accountSettings.changeEmailDialog.description')}</DialogDescription>
+          <DialogDescription>
+            {t('accountSettings.changeEmailDialog.description')}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -69,7 +71,9 @@ export function ChangeEmailDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-email">{t('accountSettings.changeEmailDialog.newEmail')}</FieldLabel>
+                  <FieldLabel htmlFor="new-email">
+                    {t('accountSettings.changeEmailDialog.newEmail')}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="new-email"
