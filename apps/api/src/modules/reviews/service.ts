@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { reviews, posts } from '../../db/schema'
+import { reviews, posts, userProfiles, users } from '../../db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import type { ReviewsModel } from './model'
 import {
@@ -10,6 +10,8 @@ import {
   AuthErrorMessages,
 } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
+import { sendReviewNotificationEmail } from '../../lib/email'
+import { env } from '../../lib/env'
 
 export abstract class ReviewsService {
   /**
@@ -22,14 +24,20 @@ export abstract class ReviewsService {
     reviewerId: string,
     body: ReviewsModel['createBody'],
   ): Promise<ReviewsModel['createResponse']> {
-    return db.transaction(async (tx) => {
+    let capturedPostTitle = ''
+    let capturedAuthorId = ''
+
+    const result = await db.transaction(async (tx) => {
       const [post] = await tx
-        .select({ postId: posts.postId })
+        .select({ postId: posts.postId, postTitle: posts.postTitle, authorId: posts.authorId })
         .from(posts)
         .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
         .limit(1)
 
       if (!post) throw new NotFoundError(ErrorMessages.postNotFound)
+
+      capturedPostTitle = post.postTitle
+      capturedAuthorId = post.authorId
 
       const [existingReview] = await tx
         .select({ reviewId: reviews.reviewId })
@@ -57,6 +65,38 @@ export abstract class ReviewsService {
 
       return review!
     })
+
+    // Fire-and-forget: notify the post author about the new review
+    void (async () => {
+      try {
+        const [authorEmailRow, reviewerRow] = await Promise.all([
+          db
+            .select({ email: users.email })
+            .from(userProfiles)
+            .innerJoin(users, eq(userProfiles.accountId, users.id))
+            .where(eq(userProfiles.userProfileId, capturedAuthorId))
+            .limit(1),
+          db
+            .select({ name: userProfiles.name })
+            .from(userProfiles)
+            .where(eq(userProfiles.userProfileId, reviewerId))
+            .limit(1),
+        ])
+        if (authorEmailRow[0] && reviewerRow[0]) {
+          await sendReviewNotificationEmail({
+            recipientEmail: authorEmailRow[0].email,
+            reviewerName: reviewerRow[0].name,
+            postTitle: capturedPostTitle,
+            rating: result.rating,
+            postUrl: `${env.frontendUrl}/posts/${postId}`,
+          })
+        }
+      } catch (notifyErr) {
+        console.error('[notification] review notification failed:', notifyErr)
+      }
+    })()
+
+    return result
   }
 
   /**

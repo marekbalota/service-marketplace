@@ -57,6 +57,10 @@ Schema is defined in `apps/api/src/db/schema.ts`. The ERD (`docs/erd.puml`) is t
 - `reviews.rating` is constrained to values 1–5.
 - Junction tables (`role_permissions`, `post_categories`, `post_locations`, `favourites`) use composite primary keys.
 
+## Email Notifications
+
+Nodemailer + SMTP via `env.smtp` (`apps/api/src/lib/email.ts`). Dev: Mailpit catches all mail locally (http://localhost:8025). Prod: swap SMTP env vars, no code changes. Sends are fire-and-forget. In `NODE_ENV=test`, emails are captured in the exported `sentNotifications` array instead of hitting SMTP — import in tests to assert.
+
 ## Internationalisation (i18n)
 
 Supports EN/SK/CS via react-i18next. Always use `useTranslation()` + `t('key')` for UI strings — never hardcode English. Keys are type-safe (`src/i18next.d.ts`); translations live in `src/translations/{en,sk,cs}.json` — add new keys to all three. Zod validation errors are translated globally via `src/lib/zodErrorMap.ts` — use `.min(3)` not `.min(3, 'message')`. Do not translate user-generated content or database-driven content (categories).
