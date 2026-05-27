@@ -462,9 +462,77 @@
       "activeBans": "Active Bans",
       "viewAnalytics": "View Analytics →"
     },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "subtitle": "Latest platform events"
+    "newUsers": {
+      "title": "New Users",
+      "subtitle": "Recently registered accounts"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "usersTab": "Users",
+      "postsTab": "Posts",
+      "messagesTab": "Messages",
+      "total": "Total",
+      "periodTotal": "Period Total",
+      "dailyAverage": "Daily Average",
+      "weeklyAverage": "Weekly Average",
+      "monthlyAverage": "Monthly Average",
+      "yearlyAverage": "Yearly Average",
+      "hourlyAverage": "Hourly Average",
+      "last7Days": "Last 7 Days",
+      "peakHour": "Peak Hour",
+      "topPeriods": "Top Performing Periods",
+      "topDays": "Top Performing Days",
+      "topDaysDesc": "Highest activity in this period",
+      "insightsTitle": "Insights",
+      "insightsDesc": "Key observations from the data",
+      "activityOverTime": "Activity Over Time",
+      "perDay": "per day",
+      "perHour": "per hour",
+      "clickToZoom": "Select a bar to view detail",
+      "backToRange": "Back to {{range}} view",
+      "viewingDate": "Viewing data for {{date}}",
+      "perWeek": "per week",
+      "perMonth": "per month",
+      "perYear": "per year",
+      "granularity": {
+        "label": "Group by",
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "insights": {
+        "growthTrend": "Growth Trend",
+        "vsLastPeriods": "vs previous 7 periods",
+        "peakActivity": "Peak Activity",
+        "highestOn": "Highest activity on",
+        "consistency": "Consistency",
+        "averageOf": "Average of"
+      },
+      "users": {
+        "title": "User Analytics",
+        "description": "Track user registrations and activity",
+        "label": "New Users"
+      },
+      "posts": {
+        "title": "Post Analytics",
+        "description": "Monitor post creation and engagement",
+        "label": "New Posts"
+      },
+      "messages": {
+        "title": "Message Analytics",
+        "description": "Analyze messaging activity and engagement",
+        "label": "Messages Sent"
+      },
+      "rangeLabel": "Time range",
+      "ranges": {
+        "1d": "Today",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days",
+        "1y": "Last year",
+        "all": "All time"
+      }
     },
     "roles": {
       "title": "Manage Roles",

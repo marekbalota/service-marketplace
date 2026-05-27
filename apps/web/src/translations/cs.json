@@ -462,9 +462,77 @@
       "activeBans": "Aktivní bany",
       "viewAnalytics": "Zobrazit analytiku →"
     },
-    "recentActivity": {
-      "title": "Nedávná aktivita",
-      "subtitle": "Nejnovější události platformy"
+    "newUsers": {
+      "title": "Noví uživatelé",
+      "subtitle": "Nedávno zaregistrované účty"
+    },
+    "analytics": {
+      "title": "Analytika",
+      "usersTab": "Uživatelé",
+      "postsTab": "Příspěvky",
+      "messagesTab": "Zprávy",
+      "total": "Celkem",
+      "periodTotal": "Celkem za období",
+      "dailyAverage": "Denní průměr",
+      "weeklyAverage": "Týdenní průměr",
+      "monthlyAverage": "Měsíční průměr",
+      "yearlyAverage": "Roční průměr",
+      "hourlyAverage": "Hodinový průměr",
+      "last7Days": "Posledních 7 dní",
+      "peakHour": "Špičková hodina",
+      "topPeriods": "Nejlepší období",
+      "topDays": "Nejlepší dny",
+      "topDaysDesc": "Nejvyšší aktivita v tomto období",
+      "insightsTitle": "Poznatky",
+      "insightsDesc": "Klíčová pozorování z dat",
+      "activityOverTime": "Aktivita v čase",
+      "perDay": "za den",
+      "perHour": "za hodinu",
+      "clickToZoom": "Vyberte sloupec pro zobrazení detailu",
+      "backToRange": "Zpět na {{range}}",
+      "viewingDate": "Zobrazení dat pro {{date}}",
+      "perWeek": "za týden",
+      "perMonth": "za měsíc",
+      "perYear": "za rok",
+      "granularity": {
+        "label": "Seskupit podle",
+        "day": "Den",
+        "week": "Týden",
+        "month": "Měsíc",
+        "year": "Rok"
+      },
+      "insights": {
+        "growthTrend": "Trend růstu",
+        "vsLastPeriods": "oproti předchozím 7 obdobím",
+        "peakActivity": "Vrcholová aktivita",
+        "highestOn": "Nejvyšší aktivita dne",
+        "consistency": "Konzistence",
+        "averageOf": "Průměr"
+      },
+      "users": {
+        "title": "Analytika uživatelů",
+        "description": "Sledování registrací a aktivity uživatelů",
+        "label": "Noví uživatelé"
+      },
+      "posts": {
+        "title": "Analytika příspěvků",
+        "description": "Sledování tvorby příspěvků a aktivity",
+        "label": "Nové příspěvky"
+      },
+      "messages": {
+        "title": "Analytika zpráv",
+        "description": "Analýza aktivity zasílání zpráv",
+        "label": "Odeslané zprávy"
+      },
+      "rangeLabel": "Časové období",
+      "ranges": {
+        "1d": "Dnes",
+        "7d": "Posledních 7 dní",
+        "30d": "Posledních 30 dní",
+        "90d": "Posledních 90 dní",
+        "1y": "Poslední rok",
+        "all": "Celý čas"
+      }
     },
     "roles": {
       "title": "Správa rolí",
