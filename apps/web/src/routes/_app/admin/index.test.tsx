@@ -6,12 +6,38 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
 vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
+
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return { ...actual, useQuery: vi.fn() }
+})
+
+const defaultStats = { totalUsers: 0, activePosts: 0, totalMessages: 0, activeBans: 0 }
+const defaultRecentUsers = { items: [] as never[] }
+
+function mockQueries(
+  stats = defaultStats,
+  recentUsers = defaultRecentUsers,
+  isPending = false,
+) {
+  vi.mocked(useQuery).mockImplementation(((options: { queryKey: unknown[] }) => {
+    const key = options.queryKey
+    if (key[1] === 'stats' && key[2] === 'recent-users') {
+      return { data: recentUsers, isPending }
+    }
+    if (key[1] === 'stats') {
+      return { data: stats, isPending }
+    }
+    return { data: undefined, isPending: false }
+  }) as typeof useQuery)
+}
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })
@@ -22,12 +48,15 @@ async function renderPage() {
 }
 
 describe('AdminDashboard', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('renders Admin Dashboard heading', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockQueries()
     vi.mocked(useCurrentUser).mockReturnValue({ data: null } as unknown as ReturnType<
       typeof useCurrentUser
     >)
+  })
+
+  it('renders Admin Dashboard heading', async () => {
     await renderPage()
     expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument()
   })
@@ -66,5 +95,34 @@ describe('AdminDashboard', () => {
     expect(screen.queryByText('Manage Roles')).not.toBeInTheDocument()
     expect(screen.queryByText('Manage Reports and Bans')).not.toBeInTheDocument()
     expect(screen.queryByText('Manage Categories')).not.toBeInTheDocument()
+  })
+
+  it('shows live stat numbers from adminStatsQueryOptions', async () => {
+    mockQueries({ totalUsers: 99, activePosts: 42, totalMessages: 7, activeBans: 3 })
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { userId: 'u1', role: { permissions: ['admin:users:view'] } },
+    } as unknown as ReturnType<typeof useCurrentUser>)
+    await renderPage()
+    expect(screen.getByText('99')).toBeInTheDocument()
+    expect(screen.getByText('42')).toBeInTheDocument()
+  })
+
+  it('shows new users list', async () => {
+    mockQueries(defaultStats, {
+      items: [
+        {
+          userId: 'u1',
+          name: 'Alice Smith',
+          email: 'alice@example.com',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    })
+    vi.mocked(useCurrentUser).mockReturnValue({
+      data: { userId: 'u1', role: { permissions: ['admin:users:view'] } },
+    } as unknown as ReturnType<typeof useCurrentUser>)
+    await renderPage()
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument()
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument()
   })
 })
