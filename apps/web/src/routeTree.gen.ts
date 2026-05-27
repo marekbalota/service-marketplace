@@ -47,6 +47,7 @@ import { Route as AppAccountSettingsProfilesIndexRouteImport } from './routes/_a
 import { Route as AppAdminUsersUserIdRouteRouteImport } from './routes/_app/admin/users/$userId/route'
 import { Route as AppAccountSettingsProfilesCreateRouteRouteImport } from './routes/_app/account-settings/profiles/create/route'
 import { Route as AppAdminUsersUserIdIndexRouteImport } from './routes/_app/admin/users/$userId/index'
+import { Route as AppAdminAnalyticsMetricIndexRouteImport } from './routes/_app/admin/analytics/$metric/index'
 import { Route as AppAccountSettingsProfilesProfileIdEditRouteRouteImport } from './routes/_app/account-settings/profiles/$profileId/edit/route'
 import { Route as AppAdminUsersUserIdProfileProfileIdIndexRouteImport } from './routes/_app/admin/users/$userId/profile/$profileId/index'
 
@@ -247,6 +248,12 @@ const AppAdminUsersUserIdIndexRoute =
     path: '/',
     getParentRoute: () => AppAdminUsersUserIdRouteRoute,
   } as any)
+const AppAdminAnalyticsMetricIndexRoute =
+  AppAdminAnalyticsMetricIndexRouteImport.update({
+    id: '/analytics/$metric/',
+    path: '/analytics/$metric/',
+    getParentRoute: () => AppAdminRouteRoute,
+  } as any)
 const AppAccountSettingsProfilesProfileIdEditRouteRoute =
   AppAccountSettingsProfilesProfileIdEditRouteRouteImport.update({
     id: '/profiles/$profileId/edit',
@@ -297,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/account-settings/profiles/': typeof AppAccountSettingsProfilesIndexRoute
   '/admin/users/': typeof AppAdminUsersIndexRoute
   '/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/admin/analytics/$metric/': typeof AppAdminAnalyticsMetricIndexRoute
   '/admin/users/$userId/': typeof AppAdminUsersUserIdIndexRoute
   '/admin/users/$userId/profile/$profileId/': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
 }
@@ -330,6 +338,7 @@ export interface FileRoutesByTo {
   '/account-settings/profiles': typeof AppAccountSettingsProfilesIndexRoute
   '/admin/users': typeof AppAdminUsersIndexRoute
   '/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/admin/analytics/$metric': typeof AppAdminAnalyticsMetricIndexRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdIndexRoute
   '/admin/users/$userId/profile/$profileId': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
 }
@@ -373,6 +382,7 @@ export interface FileRoutesById {
   '/_app/account-settings/profiles/': typeof AppAccountSettingsProfilesIndexRoute
   '/_app/admin/users/': typeof AppAdminUsersIndexRoute
   '/_app/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/_app/admin/analytics/$metric/': typeof AppAdminAnalyticsMetricIndexRoute
   '/_app/admin/users/$userId/': typeof AppAdminUsersUserIdIndexRoute
   '/_app/admin/users/$userId/profile/$profileId/': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
 }
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/account-settings/profiles/'
     | '/admin/users/'
     | '/account-settings/profiles/$profileId/edit'
+    | '/admin/analytics/$metric/'
     | '/admin/users/$userId/'
     | '/admin/users/$userId/profile/$profileId/'
   fileRoutesByTo: FileRoutesByTo
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/account-settings/profiles'
     | '/admin/users'
     | '/account-settings/profiles/$profileId/edit'
+    | '/admin/analytics/$metric'
     | '/admin/users/$userId'
     | '/admin/users/$userId/profile/$profileId'
   id:
@@ -490,6 +502,7 @@ export interface FileRouteTypes {
     | '/_app/account-settings/profiles/'
     | '/_app/admin/users/'
     | '/_app/account-settings/profiles/$profileId/edit'
+    | '/_app/admin/analytics/$metric/'
     | '/_app/admin/users/$userId/'
     | '/_app/admin/users/$userId/profile/$profileId/'
   fileRoutesById: FileRoutesById
@@ -767,6 +780,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersUserIdIndexRouteImport
       parentRoute: typeof AppAdminUsersUserIdRouteRoute
     }
+    '/_app/admin/analytics/$metric/': {
+      id: '/_app/admin/analytics/$metric/'
+      path: '/analytics/$metric'
+      fullPath: '/admin/analytics/$metric/'
+      preLoaderRoute: typeof AppAdminAnalyticsMetricIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/_app/account-settings/profiles/$profileId/edit': {
       id: '/_app/account-settings/profiles/$profileId/edit'
       path: '/profiles/$profileId/edit'
@@ -841,6 +861,7 @@ interface AppAdminRouteRouteChildren {
   AppAdminRolesRouteRoute: typeof AppAdminRolesRouteRoute
   AppAdminUsersRouteRoute: typeof AppAdminUsersRouteRouteWithChildren
   AppAdminIndexRoute: typeof AppAdminIndexRoute
+  AppAdminAnalyticsMetricIndexRoute: typeof AppAdminAnalyticsMetricIndexRoute
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
@@ -848,6 +869,7 @@ const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
   AppAdminRolesRouteRoute: AppAdminRolesRouteRoute,
   AppAdminUsersRouteRoute: AppAdminUsersRouteRouteWithChildren,
   AppAdminIndexRoute: AppAdminIndexRoute,
+  AppAdminAnalyticsMetricIndexRoute: AppAdminAnalyticsMetricIndexRoute,
 }
 
 const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
