@@ -26,7 +26,7 @@ function advanceDate(d: Date, gran: string): void {
   else d.setUTCDate(d.getUTCDate() + 1)
 }
 
-function fillGaps(
+export function fillGaps(
   rows: { bucket: string; count: number }[],
   gran: Granularity,
   startDate: Date | null,

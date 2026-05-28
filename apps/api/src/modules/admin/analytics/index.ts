@@ -8,7 +8,7 @@ import { forbiddenResponse, unauthorizedResponse } from '../../../lib/errors'
 export const adminAnalyticsRoutes = new Elysia({ prefix: '/admin/analytics' })
   .use(authRoutes)
   .get('/users', async ({ query }) => AdminAnalyticsService.getAnalyticsUsers(query.from, query.to, query.granularity), {
-    authWithPermissions: Permissions.AdminUsersView,
+    authWithPermissions: Permissions.AdminAnalyticsView,
     query: AdminAnalyticsModel.analyticsQuery,
     response: {
       200: AdminAnalyticsModel.analyticsResponse,
@@ -22,7 +22,7 @@ export const adminAnalyticsRoutes = new Elysia({ prefix: '/admin/analytics' })
     },
   })
   .get('/posts', async ({ query }) => AdminAnalyticsService.getAnalyticsPosts(query.from, query.to, query.granularity), {
-    authWithPermissions: Permissions.AdminUsersView,
+    authWithPermissions: Permissions.AdminAnalyticsView,
     query: AdminAnalyticsModel.analyticsQuery,
     response: {
       200: AdminAnalyticsModel.analyticsResponse,
@@ -39,7 +39,7 @@ export const adminAnalyticsRoutes = new Elysia({ prefix: '/admin/analytics' })
     '/messages',
     async ({ query }) => AdminAnalyticsService.getAnalyticsMessages(query.from, query.to, query.granularity),
     {
-      authWithPermissions: Permissions.AdminUsersView,
+      authWithPermissions: Permissions.AdminAnalyticsView,
       query: AdminAnalyticsModel.analyticsQuery,
       response: {
         200: AdminAnalyticsModel.analyticsResponse,

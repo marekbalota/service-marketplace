@@ -8,7 +8,7 @@ import { forbiddenResponse, unauthorizedResponse } from '../../../lib/errors'
 export const adminStatsRoutes = new Elysia({ prefix: '/admin/stats' })
   .use(authRoutes)
   .get('/', async () => AdminStatsService.getStats(), {
-    authWithPermissions: Permissions.AdminUsersView,
+    authWithPermissions: Permissions.AdminStatsView,
     response: {
       200: AdminStatsModel.statsResponse,
       ...unauthorizedResponse,
@@ -17,7 +17,7 @@ export const adminStatsRoutes = new Elysia({ prefix: '/admin/stats' })
     detail: { summary: 'Get dashboard stats', operationId: 'getAdminStats', tags: ['Admin'] },
   })
   .get('/recent-users', async ({ query }) => AdminStatsService.getRecentUsers(query.limit ?? 4), {
-    authWithPermissions: Permissions.AdminUsersView,
+    authWithPermissions: Permissions.AdminStatsView,
     query: AdminStatsModel.recentUsersQuery,
     response: {
       200: AdminStatsModel.recentUsersResponse,
