@@ -84,7 +84,9 @@ export function StatOverviewCard({ canViewAnalytics, className }: StatOverviewCa
                     {getValue(stats!).toLocaleString()}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">{t(labelKey)}</p>
-                  <p className={`text-xs ${colorClasses.text} mt-2 font-medium flex items-center gap-1 ${canViewAnalytics ? '' : 'invisible'}`}>
+                  <p
+                    className={`text-xs ${colorClasses.text} mt-2 font-medium flex items-center gap-1 ${canViewAnalytics ? '' : 'invisible'}`}
+                  >
                     {t('admin.overview.viewAnalytics')}
                     <ArrowRight className="size-3" />
                   </p>
@@ -105,10 +107,10 @@ export function StatOverviewCard({ canViewAnalytics, className }: StatOverviewCa
                 <p className="text-3xl font-bold text-red-600 dark:text-red-300">
                   {stats?.activeBans.toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.activeBans')}</p>
-                <p className="text-xs mt-2 font-medium flex items-center gap-1 invisible">
-                  &nbsp;
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('admin.overview.activeBans')}
                 </p>
+                <p className="text-xs mt-2 font-medium flex items-center gap-1 invisible">&nbsp;</p>
               </>
             )}
           </div>

@@ -208,7 +208,10 @@ export function UsersTable() {
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard value={total.toLocaleString()} label={t('admin.users.totalUsers')} />
-        <StatCard value={(total - totalBanned).toLocaleString()} label={t('admin.users.activeUsers')} />
+        <StatCard
+          value={(total - totalBanned).toLocaleString()}
+          label={t('admin.users.activeUsers')}
+        />
         <StatCard value={totalBanned.toLocaleString()} label={t('admin.users.banned')} />
       </div>
 

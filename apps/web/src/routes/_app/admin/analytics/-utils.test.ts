@@ -76,8 +76,9 @@ describe('getPreviousWindow', () => {
   it('windows are non-overlapping and contiguous', () => {
     const result = getPreviousWindow('2026-05-01', '2026-05-31')
     // prevTo must be the day before from
-    expect(new Date(result!.to + 'T00:00:00Z').getTime())
-      .toBe(new Date('2026-04-30T00:00:00Z').getTime())
+    expect(new Date(result!.to + 'T00:00:00Z').getTime()).toBe(
+      new Date('2026-04-30T00:00:00Z').getTime(),
+    )
   })
 })
 

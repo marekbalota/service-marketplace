@@ -98,7 +98,10 @@ function AnalyticsPage() {
     const { bucket } = barData as { bucket: Date }
     const next = getDrillDown(bucket, activeGranularity)
     if (next) {
-      setDrillStack((prev) => [...prev, { ...next, label: formatBucketLabel(bucket, activeGranularity, i18n.language) }])
+      setDrillStack((prev) => [
+        ...prev,
+        { ...next, label: formatBucketLabel(bucket, activeGranularity, i18n.language) },
+      ])
     }
   }
 

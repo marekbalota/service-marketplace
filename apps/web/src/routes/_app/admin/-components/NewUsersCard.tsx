@@ -50,7 +50,11 @@ export function NewUsersCard({ className }: { className?: string }) {
                 key={user.userId}
                 className={`flex items-center gap-3 py-3 ${idx < data.items.length - 1 ? 'border-b' : ''}`}
               >
-                <ProfileAvatar name={user.name} className="size-9 shrink-0" fallbackClassName={avatarGradient(user.name)} />
+                <ProfileAvatar
+                  name={user.name}
+                  className="size-9 shrink-0"
+                  fallbackClassName={avatarGradient(user.name)}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{user.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>

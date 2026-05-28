@@ -30,7 +30,10 @@ export function ReportsContent({ targetType, categoryId, status, page }: Props) 
         <StatCard value={data.total.toLocaleString()} label={t('admin.reports.totalReports')} />
         <StatCard value={data.totalPending.toLocaleString()} label={t('admin.reports.pending')} />
         <StatCard value={data.totalResolved.toLocaleString()} label={t('admin.reports.resolved')} />
-        <StatCard value={data.totalDismissed.toLocaleString()} label={t('admin.reports.dismissed')} />
+        <StatCard
+          value={data.totalDismissed.toLocaleString()}
+          label={t('admin.reports.dismissed')}
+        />
       </div>
 
       <div className="space-y-4">

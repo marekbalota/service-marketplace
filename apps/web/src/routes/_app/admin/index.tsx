@@ -46,9 +46,7 @@ function AdminDashboard() {
               className={cn(!canViewUsers && 'lg:col-span-2')}
             />
           )}
-          {canViewUsers && (
-            <NewUsersCard className={cn(!canViewStats && 'lg:col-span-2')} />
-          )}
+          {canViewUsers && <NewUsersCard className={cn(!canViewStats && 'lg:col-span-2')} />}
         </div>
       )}
     </main>

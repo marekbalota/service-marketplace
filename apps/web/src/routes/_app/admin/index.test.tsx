@@ -20,13 +20,11 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 })
 
 const defaultStats = { totalUsers: 0, activePosts: 0, totalMessages: 0, activeBans: 0 }
-const defaultRecentUsers = { items: [] as { userId: string; name: string; email: string; createdAt: string }[] }
+const defaultRecentUsers = {
+  items: [] as { userId: string; name: string; email: string; createdAt: string }[],
+}
 
-function mockQueries(
-  stats = defaultStats,
-  recentUsers = defaultRecentUsers,
-  isPending = false,
-) {
+function mockQueries(stats = defaultStats, recentUsers = defaultRecentUsers, isPending = false) {
   vi.mocked(useQuery).mockImplementation(((options: { queryKey: unknown[] }) => {
     const key = options.queryKey
     if (key[1] === 'stats' && key[2] === 'recent-users') {
@@ -137,7 +135,14 @@ describe('AdminDashboard', () => {
 
   it('hides new users list when user lacks AdminUsersView', async () => {
     mockQueries(defaultStats, {
-      items: [{ userId: 'u1', name: 'Alice Smith', email: 'alice@example.com', createdAt: new Date().toISOString() }],
+      items: [
+        {
+          userId: 'u1',
+          name: 'Alice Smith',
+          email: 'alice@example.com',
+          createdAt: new Date().toISOString(),
+        },
+      ],
     })
     vi.mocked(useCurrentUser).mockReturnValue({
       data: { userId: 'u1', role: { permissions: ['admin:stats:view'] } },
@@ -163,6 +168,8 @@ describe('AdminDashboard', () => {
     } as unknown as ReturnType<typeof useCurrentUser>)
     await renderPage()
     expect(screen.getByText('5')).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /total users|active posts|messages/i }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('link', { name: /total users|active posts|messages/i }).length,
+    ).toBeGreaterThan(0)
   })
 })

@@ -81,7 +81,11 @@ export function formatBucket(d: Date, granularity: AnalyticsGranularity, locale 
   return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
-export function formatBucketLabel(d: Date, granularity: AnalyticsGranularity, locale = 'en'): string {
+export function formatBucketLabel(
+  d: Date,
+  granularity: AnalyticsGranularity,
+  locale = 'en',
+): string {
   if (granularity === 'week') {
     const end = new Date(d)
     end.setUTCDate(end.getUTCDate() + 6)
@@ -133,7 +137,9 @@ export function resolveGranularity(
   if (!urlGranularity) return DEFAULT_GRANULARITY[range]
   const options = GRANULARITY_OPTIONS[range]
   if (!options) return DEFAULT_GRANULARITY[range]
-  return (options as string[]).includes(urlGranularity) ? urlGranularity : DEFAULT_GRANULARITY[range]
+  return (options as string[]).includes(urlGranularity)
+    ? urlGranularity
+    : DEFAULT_GRANULARITY[range]
 }
 
 export function getPreviousWindow(

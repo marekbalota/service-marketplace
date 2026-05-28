@@ -22,11 +22,16 @@ export function TopPeriodsCard({
 
   const title = (() => {
     switch (activeGranularity) {
-      case 'hour': return t('admin.analytics.topHours')
-      case 'week': return t('admin.analytics.topWeeks')
-      case 'month': return t('admin.analytics.topMonths')
-      case 'year': return t('admin.analytics.topYears')
-      default: return t('admin.analytics.topDays')
+      case 'hour':
+        return t('admin.analytics.topHours')
+      case 'week':
+        return t('admin.analytics.topWeeks')
+      case 'month':
+        return t('admin.analytics.topMonths')
+      case 'year':
+        return t('admin.analytics.topYears')
+      default:
+        return t('admin.analytics.topDays')
     }
   })()
 
@@ -52,10 +57,7 @@ export function TopPeriodsCard({
         ) : (
           <div className="space-y-4">
             {topPeriods.map((item, idx) => (
-              <div
-                key={item.bucket.toISOString()}
-                className="flex items-center justify-between"
-              >
+              <div key={item.bucket.toISOString()} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={`size-8 rounded-full ${config.rankBg} flex items-center justify-center`}
@@ -71,7 +73,7 @@ export function TopPeriodsCard({
             ))}
           </div>
         )}
-        </CardContent>
+      </CardContent>
     </Card>
   )
 }

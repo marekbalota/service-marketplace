@@ -66,11 +66,16 @@ export function AnalyticsChartCard({
 
   const perLabel = (() => {
     switch (activeGranularity) {
-      case 'hour': return t('admin.analytics.perHour')
-      case 'week': return t('admin.analytics.perWeek')
-      case 'month': return t('admin.analytics.perMonth')
-      case 'year': return t('admin.analytics.perYear')
-      default: return t('admin.analytics.perDay')
+      case 'hour':
+        return t('admin.analytics.perHour')
+      case 'week':
+        return t('admin.analytics.perWeek')
+      case 'month':
+        return t('admin.analytics.perMonth')
+      case 'year':
+        return t('admin.analytics.perYear')
+      default:
+        return t('admin.analytics.perDay')
     }
   })()
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -133,7 +138,9 @@ export function AnalyticsChartCard({
               {visibleGranularityOptions && (
                 <ToggleGroup
                   value={[activeGranularity]}
-                  onValueChange={(v) => { if (v.length > 0) onGranularityChange(v[0] as GranularityOption) }}
+                  onValueChange={(v) => {
+                    if (v.length > 0) onGranularityChange(v[0] as GranularityOption)
+                  }}
                   className="overflow-hidden rounded-md border"
                 >
                   {visibleGranularityOptions.map((g) => (

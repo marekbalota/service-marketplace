@@ -12,8 +12,9 @@ function truncateDate(d: Date, gran: string): Date {
     return out
   }
   out.setUTCHours(0, 0, 0, 0)
-  if (gran === 'year') { out.setUTCMonth(0, 1) }
-  else if (gran === 'month') out.setUTCDate(1)
+  if (gran === 'year') {
+    out.setUTCMonth(0, 1)
+  } else if (gran === 'month') out.setUTCDate(1)
   else if (gran === 'week') out.setUTCDate(out.getUTCDate() - ((out.getUTCDay() + 6) % 7))
   return out
 }
@@ -63,11 +64,18 @@ export abstract class AdminAnalyticsService {
         cnt: count(),
       })
       .from(users)
-      .where(and(startDate ? gte(users.createdAt, startDate) : undefined, lt(users.createdAt, endDate)))
+      .where(
+        and(startDate ? gte(users.createdAt, startDate) : undefined, lt(users.createdAt, endDate)),
+      )
       .groupBy(sql`1`)
       .orderBy(sql`1`)
     return {
-      items: fillGaps(rows.map((r) => ({ bucket: r.bucket, count: r.cnt })), gran, startDate, endDate),
+      items: fillGaps(
+        rows.map((r) => ({ bucket: r.bucket, count: r.cnt })),
+        gran,
+        startDate,
+        endDate,
+      ),
       total: totalRow?.total ?? 0,
     }
   }
@@ -88,11 +96,18 @@ export abstract class AdminAnalyticsService {
         cnt: count(),
       })
       .from(posts)
-      .where(and(startDate ? gte(posts.createdAt, startDate) : undefined, lt(posts.createdAt, endDate)))
+      .where(
+        and(startDate ? gte(posts.createdAt, startDate) : undefined, lt(posts.createdAt, endDate)),
+      )
       .groupBy(sql`1`)
       .orderBy(sql`1`)
     return {
-      items: fillGaps(rows.map((r) => ({ bucket: r.bucket, count: r.cnt })), gran, startDate, endDate),
+      items: fillGaps(
+        rows.map((r) => ({ bucket: r.bucket, count: r.cnt })),
+        gran,
+        startDate,
+        endDate,
+      ),
       total: totalRow?.total ?? 0,
     }
   }
@@ -113,11 +128,21 @@ export abstract class AdminAnalyticsService {
         cnt: count(),
       })
       .from(messages)
-      .where(and(startDate ? gte(messages.createdAt, startDate) : undefined, lt(messages.createdAt, endDate)))
+      .where(
+        and(
+          startDate ? gte(messages.createdAt, startDate) : undefined,
+          lt(messages.createdAt, endDate),
+        ),
+      )
       .groupBy(sql`1`)
       .orderBy(sql`1`)
     return {
-      items: fillGaps(rows.map((r) => ({ bucket: r.bucket, count: r.cnt })), gran, startDate, endDate),
+      items: fillGaps(
+        rows.map((r) => ({ bucket: r.bucket, count: r.cnt })),
+        gran,
+        startDate,
+        endDate,
+      ),
       total: totalRow?.total ?? 0,
     }
   }

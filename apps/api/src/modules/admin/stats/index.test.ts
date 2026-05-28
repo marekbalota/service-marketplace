@@ -91,4 +91,3 @@ describe('GET /admin/stats/recent-users', () => {
     }
   })
 })
-

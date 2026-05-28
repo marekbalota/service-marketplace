@@ -18,19 +18,20 @@ type PeriodComparisonCardProps = {
 
 function pctChange(current: number, prev: number): number | null {
   if (prev === 0) return null
-  return parseFloat(((current - prev) / prev * 100).toFixed(1))
+  return parseFloat((((current - prev) / prev) * 100).toFixed(1))
 }
 
 function ChangeIndicator({ pct }: { pct: number | null }) {
   if (pct === null) return null
   const positive = pct >= 0
   return (
-    <div className={`flex items-center gap-1 ${positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-      {positive
-        ? <TrendingUp className="size-4" />
-        : <TrendingDown className="size-4" />}
+    <div
+      className={`flex items-center gap-1 ${positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+    >
+      {positive ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
       <span className="text-sm font-semibold">
-        {positive ? '+' : ''}{pct}%
+        {positive ? '+' : ''}
+        {pct}%
       </span>
     </div>
   )
@@ -66,7 +67,9 @@ function ComparisonSection({
           ) : (
             <>
               <p className="text-lg font-bold">{current.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">{t('admin.analytics.comparison.currentPeriod')}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.analytics.comparison.currentPeriod')}
+              </p>
             </>
           )}
         </div>
@@ -79,7 +82,9 @@ function ComparisonSection({
           ) : prev !== undefined ? (
             <>
               <p className="text-sm font-medium text-muted-foreground">{prev.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">{t('admin.analytics.comparison.previousPeriod')}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.analytics.comparison.previousPeriod')}
+              </p>
             </>
           ) : null}
         </div>
@@ -101,7 +106,12 @@ export function PeriodComparisonCard({
   const prevWindow = getPreviousWindow(activeFrom, activeTo)
 
   const { data: prevData, isPending: isPrevPending } = useQuery({
-    ...adminAnalyticsQueryOptions(typedMetric, prevWindow?.from, prevWindow?.to ?? activeTo, activeGranularity),
+    ...adminAnalyticsQueryOptions(
+      typedMetric,
+      prevWindow?.from,
+      prevWindow?.to ?? activeTo,
+      activeGranularity,
+    ),
     enabled: !!prevWindow,
   })
 
@@ -125,7 +135,9 @@ export function PeriodComparisonCard({
       </CardHeader>
       <CardContent>
         {!hasPrev ? (
-          <p className="text-sm text-muted-foreground">{t('admin.analytics.comparison.noComparison')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('admin.analytics.comparison.noComparison')}
+          </p>
         ) : (
           <div className="space-y-4">
             <ComparisonSection

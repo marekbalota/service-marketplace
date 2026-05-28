@@ -29,21 +29,31 @@ export function AnalyticsStatCards({
 
   const avgLabel = (() => {
     switch (activeGranularity) {
-      case 'hour': return t('admin.analytics.hourlyAverage')
-      case 'week': return t('admin.analytics.weeklyAverage')
-      case 'month': return t('admin.analytics.monthlyAverage')
-      case 'year': return t('admin.analytics.yearlyAverage')
-      default: return t('admin.analytics.dailyAverage')
+      case 'hour':
+        return t('admin.analytics.hourlyAverage')
+      case 'week':
+        return t('admin.analytics.weeklyAverage')
+      case 'month':
+        return t('admin.analytics.monthlyAverage')
+      case 'year':
+        return t('admin.analytics.yearlyAverage')
+      default:
+        return t('admin.analytics.dailyAverage')
     }
   })()
 
   const peakLabel = (() => {
     switch (activeGranularity) {
-      case 'hour': return t('admin.analytics.peakHour')
-      case 'week': return t('admin.analytics.peakWeek')
-      case 'month': return t('admin.analytics.peakMonth')
-      case 'year': return t('admin.analytics.peakYear')
-      default: return t('admin.analytics.peakDay')
+      case 'hour':
+        return t('admin.analytics.peakHour')
+      case 'week':
+        return t('admin.analytics.peakWeek')
+      case 'month':
+        return t('admin.analytics.peakMonth')
+      case 'year':
+        return t('admin.analytics.peakYear')
+      default:
+        return t('admin.analytics.peakDay')
     }
   })()
 
