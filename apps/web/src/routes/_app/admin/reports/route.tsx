@@ -30,15 +30,7 @@ export const Route = createFileRoute('/_app/admin/reports')({
   validateSearch: searchSchema,
   beforeLoad: ({ context: { user } }) => {
     const permissions = user?.role?.permissions ?? []
-    if (
-      !hasAnyPermission(permissions, [
-        Permissions.AdminUsersView,
-        Permissions.AdminUsersBan,
-        Permissions.AdminUsersAssignRole,
-        Permissions.AdminUsersImpersonate,
-        Permissions.AdminPostsDeleteAny,
-      ])
-    ) {
+    if (!hasAnyPermission(permissions, [Permissions.AdminReportsManage])) {
       throw redirect({ to: '/admin' })
     }
   },

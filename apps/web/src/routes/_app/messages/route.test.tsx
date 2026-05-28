@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { formatRelativeTime } from './-utils'
+import { formatRelativeTime } from '#/lib/format'
 import type { TFunction } from 'i18next'
 
 const t = ((key: string, opts?: Record<string, unknown>) => {
-  if (key === 'messages.justNow') return 'just now'
-  if (key === 'messages.minutesAgo') return `${opts?.count}m ago`
-  if (key === 'messages.hoursAgo') return `${opts?.count}h ago`
-  if (key === 'messages.daysAgo') return `${opts?.count}d ago`
+  if (key === 'common.justNow') return 'just now'
+  if (key === 'common.minutesAgo') return `${opts?.count}m ago`
+  if (key === 'common.hoursAgo') return `${opts?.count}h ago`
+  if (key === 'common.daysAgo') return `${opts?.count}d ago`
   return key
 }) as unknown as TFunction
 

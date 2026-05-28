@@ -2,6 +2,8 @@
 export type { AdminRolesModel } from './modules/admin/roles/model'
 export type { AdminUsersModel } from './modules/admin/users/model'
 export type { AdminReportsModel } from './modules/admin/reports/model'
+export type { AdminStatsModel } from './modules/admin/stats/model'
+export type { AdminAnalyticsModel } from './modules/admin/analytics/model'
 
 import { env } from './lib/env'
 import { Elysia } from 'elysia'
@@ -18,6 +20,8 @@ import { adminRolesRoutes } from './modules/admin/roles'
 import { adminUsersRoutes } from './modules/admin/users'
 import { adminPostsRoutes } from './modules/admin/posts'
 import { adminReportsRoutes } from './modules/admin/reports'
+import { adminStatsRoutes } from './modules/admin/stats'
+import { adminAnalyticsRoutes } from './modules/admin/analytics'
 import { errorsPlugin } from './lib/errors'
 import { favouritesRoutes } from './modules/favourites'
 import { messagesRoutes } from './modules/messages'
@@ -81,6 +85,8 @@ export const app = new Elysia()
   .use(adminUsersRoutes)
   .use(adminPostsRoutes)
   .use(adminReportsRoutes)
+  .use(adminStatsRoutes)
+  .use(adminAnalyticsRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
   .use(reportCategoriesRoutes)

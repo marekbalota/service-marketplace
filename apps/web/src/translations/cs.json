@@ -18,7 +18,11 @@
     "preview": "Náhled",
     "image": "Obrázek",
     "previousImage": "Předchozí obrázek",
-    "nextImage": "Následující obrázek"
+    "nextImage": "Následující obrázek",
+    "justNow": "právě teď",
+    "minutesAgo": "před {{count}} min",
+    "hoursAgo": "před {{count}} hod",
+    "daysAgo": "před {{count}} d"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -280,11 +284,7 @@
     "viewPost": "Zobrazit inzerát",
     "sendFailed": "Odeslání se nezdařilo. Zkuste to znovu.",
     "writePlaceholder": "Napište zprávu…",
-    "send": "Odeslat zprávu",
-    "justNow": "právě teď",
-    "minutesAgo": "před {{count}} min",
-    "hoursAgo": "před {{count}} hod",
-    "daysAgo": "před {{count}} d"
+    "send": "Odeslat zprávu"
   },
   "pricing": {
     "label": "Cena (nepovinná)",
@@ -460,11 +460,86 @@
       "activePosts": "Aktivní příspěvky",
       "totalMessages": "Celkový počet zpráv",
       "activeBans": "Aktivní bany",
-      "viewAnalytics": "Zobrazit analytiku →"
+      "viewAnalytics": "Zobrazit analytiku"
     },
-    "recentActivity": {
-      "title": "Nedávná aktivita",
-      "subtitle": "Nejnovější události platformy"
+    "newUsers": {
+      "title": "Noví uživatelé",
+      "subtitle": "Nedávno zaregistrované účty"
+    },
+    "analytics": {
+      "title": "Analytika",
+      "usersTab": "Uživatelé",
+      "postsTab": "Příspěvky",
+      "messagesTab": "Zprávy",
+      "total": "Celkem",
+      "periodTotal": "Celkem za období",
+      "dailyAverage": "Denní průměr",
+      "weeklyAverage": "Týdenní průměr",
+      "monthlyAverage": "Měsíční průměr",
+      "yearlyAverage": "Roční průměr",
+      "hourlyAverage": "Hodinový průměr",
+      "peakHour": "Špičková hodina",
+      "peakDay": "Špičkový den",
+      "peakWeek": "Špičkový týden",
+      "peakMonth": "Špičkový měsíc",
+      "peakYear": "Špičkový rok",
+      "topPeriods": "Nejlepší období",
+      "topHours": "Nejlepší hodiny",
+      "topDays": "Nejlepší dny",
+      "topWeeks": "Nejlepší týdny",
+      "topMonths": "Nejlepší měsíce",
+      "topYears": "Nejlepší roky",
+      "topDaysDesc": "Nejvyšší aktivita v tomto období",
+      "comparison": {
+        "title": "Porovnání období",
+        "desc": "Aktuální období vs předchozí období stejné délky",
+        "periodTotal": "Celkem za období",
+        "average": "Průměr",
+        "peak": "Maximum",
+        "currentPeriod": "Aktuální období",
+        "previousPeriod": "Předchozí období",
+        "noComparison": "Pro zobrazení všech dob není k dispozici předchozí období."
+      },
+      "activityOverTime": "Aktivita v čase",
+      "perDay": "za den",
+      "perHour": "za hodinu",
+      "clickToZoom": "Vyberte sloupec pro zobrazení detailu",
+      "backToRange": "Zpět na {{range}}",
+      "viewingDate": "Zobrazení dat pro {{date}}",
+      "perWeek": "za týden",
+      "perMonth": "za měsíc",
+      "perYear": "za rok",
+      "granularity": {
+        "label": "Seskupit podle",
+        "day": "Den",
+        "week": "Týden",
+        "month": "Měsíc",
+        "year": "Rok"
+      },
+      "users": {
+        "title": "Analytika uživatelů",
+        "description": "Sledování registrací a aktivity uživatelů",
+        "label": "Noví uživatelé"
+      },
+      "posts": {
+        "title": "Analytika příspěvků",
+        "description": "Sledování tvorby příspěvků a aktivity",
+        "label": "Nové příspěvky"
+      },
+      "messages": {
+        "title": "Analytika zpráv",
+        "description": "Analýza aktivity zasílání zpráv",
+        "label": "Odeslané zprávy"
+      },
+      "rangeLabel": "Časové období",
+      "ranges": {
+        "1d": "Dnes",
+        "7d": "Posledních 7 dní",
+        "30d": "Posledních 30 dní",
+        "90d": "Posledních 90 dní",
+        "1y": "Poslední rok",
+        "all": "Celý čas"
+      }
     },
     "roles": {
       "title": "Správa rolí",

@@ -18,7 +18,11 @@
     "preview": "Náhľad",
     "image": "Obrázok",
     "previousImage": "Predchádzajúci obrázok",
-    "nextImage": "Nasledujúci obrázok"
+    "nextImage": "Nasledujúci obrázok",
+    "justNow": "práve teraz",
+    "minutesAgo": "pred {{count}} min",
+    "hoursAgo": "pred {{count}} hod",
+    "daysAgo": "pred {{count}} d"
   },
   "nav": {
     "login": "Prihlásiť sa",
@@ -280,11 +284,7 @@
     "viewPost": "Zobraziť inzerát",
     "sendFailed": "Odoslanie zlyhalo. Skúste to znova.",
     "writePlaceholder": "Napíšte správu…",
-    "send": "Odoslať správu",
-    "justNow": "práve teraz",
-    "minutesAgo": "pred {{count}} min",
-    "hoursAgo": "pred {{count}} hod",
-    "daysAgo": "pred {{count}} d"
+    "send": "Odoslať správu"
   },
   "pricing": {
     "label": "Cena (nepovinná)",
@@ -460,11 +460,86 @@
       "activePosts": "Aktívne príspevky",
       "totalMessages": "Celkový počet správ",
       "activeBans": "Aktívne zábanzy",
-      "viewAnalytics": "Zobraziť analytiku →"
+      "viewAnalytics": "Zobraziť analytiku"
     },
-    "recentActivity": {
-      "title": "Nedávna aktivita",
-      "subtitle": "Najnovšie udalosti platformy"
+    "newUsers": {
+      "title": "Noví používatelia",
+      "subtitle": "Nedávno zaregistrované účty"
+    },
+    "analytics": {
+      "title": "Analytika",
+      "usersTab": "Používatelia",
+      "postsTab": "Príspevky",
+      "messagesTab": "Správy",
+      "total": "Celkovo",
+      "periodTotal": "Celkovo za obdobie",
+      "dailyAverage": "Denný priemer",
+      "weeklyAverage": "Týždenný priemer",
+      "monthlyAverage": "Mesačný priemer",
+      "yearlyAverage": "Ročný priemer",
+      "hourlyAverage": "Hodinový priemer",
+      "peakHour": "Špičková hodina",
+      "peakDay": "Špičkový deň",
+      "peakWeek": "Špičkový týždeň",
+      "peakMonth": "Špičkový mesiac",
+      "peakYear": "Špičkový rok",
+      "topPeriods": "Najlepšie obdobia",
+      "topHours": "Najlepšie hodiny",
+      "topDays": "Najlepšie dni",
+      "topWeeks": "Najlepšie týždne",
+      "topMonths": "Najlepšie mesiace",
+      "topYears": "Najlepšie roky",
+      "topDaysDesc": "Najvyššia aktivita v tomto období",
+      "comparison": {
+        "title": "Porovnanie období",
+        "desc": "Aktuálne obdobie vs predchádzajúce obdobie rovnakej dĺžky",
+        "periodTotal": "Celkom za obdobie",
+        "average": "Priemer",
+        "peak": "Maximum",
+        "currentPeriod": "Aktuálne obdobie",
+        "previousPeriod": "Predchádzajúce obdobie",
+        "noComparison": "Pre zobrazenie všetkých čias nie je k dispozícii predchádzajúce obdobie."
+      },
+      "activityOverTime": "Aktivita v čase",
+      "perDay": "za deň",
+      "perHour": "za hodinu",
+      "clickToZoom": "Vyberte stĺpec pre zobrazenie detailu",
+      "backToRange": "Späť na {{range}}",
+      "viewingDate": "Zobrazenie dát pre {{date}}",
+      "perWeek": "za týždeň",
+      "perMonth": "za mesiac",
+      "perYear": "za rok",
+      "granularity": {
+        "label": "Zoskupiť podľa",
+        "day": "Deň",
+        "week": "Týždeň",
+        "month": "Mesiac",
+        "year": "Rok"
+      },
+      "users": {
+        "title": "Analytika používateľov",
+        "description": "Sledovanie registrácií a aktivity používateľov",
+        "label": "Noví používatelia"
+      },
+      "posts": {
+        "title": "Analytika príspevkov",
+        "description": "Monitorovanie tvorby príspevkov a aktivity",
+        "label": "Nové príspevky"
+      },
+      "messages": {
+        "title": "Analytika správ",
+        "description": "Analýza aktivity zasielania správ",
+        "label": "Odoslané správy"
+      },
+      "rangeLabel": "Časové obdobie",
+      "ranges": {
+        "1d": "Dnes",
+        "7d": "Posledných 7 dní",
+        "30d": "Posledných 30 dní",
+        "90d": "Posledných 90 dní",
+        "1y": "Posledný rok",
+        "all": "Celý čas"
+      }
     },
     "roles": {
       "title": "Správa rolí",

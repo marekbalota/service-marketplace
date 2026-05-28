@@ -8,13 +8,7 @@ import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from '../..
 export const adminReportsRoutes = new Elysia({ prefix: '/admin/reports' })
   .use(authRoutes)
   .get('/', async ({ query }) => AdminReportsService.findAll(query), {
-    authWithPermissions: [
-      Permissions.AdminUsersView,
-      Permissions.AdminUsersBan,
-      Permissions.AdminUsersAssignRole,
-      Permissions.AdminUsersImpersonate,
-      Permissions.AdminPostsDeleteAny,
-    ],
+    authWithPermissions: Permissions.AdminReportsManage,
     query: AdminReportsModel.reportsQuery,
     response: {
       200: AdminReportsModel.reportsResponse,
@@ -27,13 +21,7 @@ export const adminReportsRoutes = new Elysia({ prefix: '/admin/reports' })
     '/:id/message-context',
     async ({ params }) => AdminReportsService.getMessageContext(params.id),
     {
-      authWithPermissions: [
-        Permissions.AdminUsersView,
-        Permissions.AdminUsersBan,
-        Permissions.AdminUsersAssignRole,
-        Permissions.AdminUsersImpersonate,
-        Permissions.AdminPostsDeleteAny,
-      ],
+      authWithPermissions: Permissions.AdminReportsManage,
       params: AdminReportsModel.reportParams,
       response: {
         200: AdminReportsModel.messageContextResponse,
@@ -55,7 +43,7 @@ export const adminReportsRoutes = new Elysia({ prefix: '/admin/reports' })
       set.status = 204
     },
     {
-      authWithPermissions: Permissions.AdminUsersBan,
+      authWithPermissions: Permissions.AdminReportsManage,
       params: AdminReportsModel.reportParams,
       response: {
         204: t.Void(),
@@ -73,7 +61,7 @@ export const adminReportsRoutes = new Elysia({ prefix: '/admin/reports' })
       set.status = 204
     },
     {
-      authWithPermissions: Permissions.AdminUsersBan,
+      authWithPermissions: Permissions.AdminReportsManage,
       params: AdminReportsModel.reportParams,
       response: {
         204: t.Void(),

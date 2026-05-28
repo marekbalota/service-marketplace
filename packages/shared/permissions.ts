@@ -22,6 +22,13 @@ export const Permissions = {
 
   // Admin - Category Management
   AdminCategoriesManage: 'admin:categories:manage',
+
+  // Admin - Reports Management
+  AdminReportsManage: 'admin:reports:manage',
+
+  // Admin - Analytics & Stats
+  AdminStatsView: 'admin:stats:view',
+  AdminAnalyticsView: 'admin:analytics:view',
 } as const
 
 export type Permission = (typeof Permissions)[keyof typeof Permissions]

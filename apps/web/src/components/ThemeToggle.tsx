@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Sun, Moon, Monitor } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 
 type ThemeMode = 'light' | 'dark' | 'auto'
@@ -23,6 +24,12 @@ function applyThemeMode(mode: ThemeMode) {
   } else {
     document.documentElement.setAttribute('data-theme', mode)
   }
+}
+
+function ThemeIcon({ mode }: { mode: ThemeMode }) {
+  if (mode === 'light') return <Sun className="size-4" />
+  if (mode === 'dark') return <Moon className="size-4" />
+  return <Monitor className="size-4" />
 }
 
 export function ThemeToggle() {
@@ -58,12 +65,13 @@ export function ThemeToggle() {
   return (
     <Button
       type="button"
+      variant="ghost"
+      size="icon"
       onClick={toggleMode}
       aria-label={ariaLabel}
       title={ariaLabel}
-      className="bg-foreground text-background hover:bg-foreground/90"
     >
-      {modeLabel}
+      <ThemeIcon mode={mode} />
     </Button>
   )
 }

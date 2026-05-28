@@ -18,7 +18,11 @@
     "preview": "Preview",
     "image": "Image",
     "previousImage": "Previous image",
-    "nextImage": "Next image"
+    "nextImage": "Next image",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
   },
   "nav": {
     "login": "Log in",
@@ -460,11 +464,86 @@
       "activePosts": "Active Posts",
       "totalMessages": "Total Messages",
       "activeBans": "Active Bans",
-      "viewAnalytics": "View Analytics →"
+      "viewAnalytics": "View Analytics"
     },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "subtitle": "Latest platform events"
+    "newUsers": {
+      "title": "New Users",
+      "subtitle": "Recently registered accounts"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "usersTab": "Users",
+      "postsTab": "Posts",
+      "messagesTab": "Messages",
+      "total": "Total",
+      "periodTotal": "Period Total",
+      "dailyAverage": "Daily Average",
+      "weeklyAverage": "Weekly Average",
+      "monthlyAverage": "Monthly Average",
+      "yearlyAverage": "Yearly Average",
+      "hourlyAverage": "Hourly Average",
+      "peakHour": "Peak Hour",
+      "peakDay": "Peak Day",
+      "peakWeek": "Peak Week",
+      "peakMonth": "Peak Month",
+      "peakYear": "Peak Year",
+      "topPeriods": "Top Performing Periods",
+      "topHours": "Top Performing Hours",
+      "topDays": "Top Performing Days",
+      "topWeeks": "Top Performing Weeks",
+      "topMonths": "Top Performing Months",
+      "topYears": "Top Performing Years",
+      "topDaysDesc": "Highest activity in this period",
+      "comparison": {
+        "title": "Period Comparison",
+        "desc": "Current period vs the previous period of the same length",
+        "periodTotal": "Period Total",
+        "average": "Average",
+        "peak": "Peak",
+        "currentPeriod": "Current period",
+        "previousPeriod": "Previous period",
+        "noComparison": "No previous period available for the all-time view."
+      },
+      "activityOverTime": "Activity Over Time",
+      "perDay": "per day",
+      "perHour": "per hour",
+      "clickToZoom": "Select a bar to view detail",
+      "backToRange": "Back to {{range}} view",
+      "viewingDate": "Viewing data for {{date}}",
+      "perWeek": "per week",
+      "perMonth": "per month",
+      "perYear": "per year",
+      "granularity": {
+        "label": "Group by",
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "users": {
+        "title": "User Analytics",
+        "description": "Track user registrations and activity",
+        "label": "New Users"
+      },
+      "posts": {
+        "title": "Post Analytics",
+        "description": "Monitor post creation and engagement",
+        "label": "New Posts"
+      },
+      "messages": {
+        "title": "Message Analytics",
+        "description": "Analyze messaging activity and engagement",
+        "label": "Messages Sent"
+      },
+      "rangeLabel": "Time range",
+      "ranges": {
+        "1d": "Today",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days",
+        "1y": "Last year",
+        "all": "All time"
+      }
     },
     "roles": {
       "title": "Manage Roles",

@@ -17,6 +17,9 @@ const permissionDefinitions = [
   { name: Permissions.AdminUsersImpersonate, description: 'Impersonate users' },
   { name: Permissions.AdminRolesManage, description: 'Create, edit, delete roles' },
   { name: Permissions.AdminCategoriesManage, description: 'Manage categories' },
+  { name: Permissions.AdminReportsManage, description: 'View and manage reports' },
+  { name: Permissions.AdminStatsView, description: 'View admin dashboard stats' },
+  { name: Permissions.AdminAnalyticsView, description: 'View analytics data' },
 ]
 
 async function upsertRole(

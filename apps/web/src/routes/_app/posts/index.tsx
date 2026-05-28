@@ -168,11 +168,31 @@ function HomePage() {
           },
         ]
       : []),
-    { label: t('posts.postType'), control: <PostTypeSelect />, desktopWidth: 'w-[200px]' },
-    { label: t('posts.category'), control: <CategorySelect />, desktopWidth: 'w-[200px]' },
-    { label: t('posts.ratingLabel'), control: <RatingSelect />, desktopWidth: 'w-[200px]' },
-    { label: t('posts.sortBy'), control: <SortSelect />, desktopWidth: 'w-[200px]' },
-    { label: t('posts.locations'), control: <LocationSelect />, desktopWidth: 'w-[240px]' },
+    {
+      label: t('posts.postType'),
+      control: <PostTypeSelect />,
+      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+    },
+    {
+      label: t('posts.category'),
+      control: <CategorySelect />,
+      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+    },
+    {
+      label: t('posts.ratingLabel'),
+      control: <RatingSelect />,
+      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+    },
+    {
+      label: t('posts.sortBy'),
+      control: <SortSelect />,
+      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+    },
+    {
+      label: t('posts.locations'),
+      control: <LocationSelect />,
+      desktopWidth: isAuthenticated ? 'w-[240px]' : 'flex-1',
+    },
   ]
 
   return (

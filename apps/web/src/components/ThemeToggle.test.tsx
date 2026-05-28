@@ -22,13 +22,13 @@ beforeEach(() => {
 describe('ThemeToggle', () => {
   it('starts in Auto mode when localStorage is empty', () => {
     render(<ThemeToggle />)
-    expect(screen.getByRole('button')).toHaveTextContent('Auto')
+    expect(screen.getByRole('button')).toHaveAccessibleName(/auto/i)
   })
 
   it('reads initial mode from localStorage', () => {
     localStorage.setItem('theme', 'dark')
     render(<ThemeToggle />)
-    expect(screen.getByRole('button')).toHaveTextContent('Dark')
+    expect(screen.getByRole('button')).toHaveAccessibleName(/dark/i)
   })
 
   it('cycles Auto → Light → Dark → Auto on repeated clicks', () => {
@@ -36,13 +36,13 @@ describe('ThemeToggle', () => {
     const button = screen.getByRole('button')
 
     fireEvent.click(button)
-    expect(button).toHaveTextContent('Light')
+    expect(button).toHaveAccessibleName(/light/i)
 
     fireEvent.click(button)
-    expect(button).toHaveTextContent('Dark')
+    expect(button).toHaveAccessibleName(/dark/i)
 
     fireEvent.click(button)
-    expect(button).toHaveTextContent('Auto')
+    expect(button).toHaveAccessibleName(/auto/i)
   })
 
   it('persists the selected mode to localStorage after each click', () => {

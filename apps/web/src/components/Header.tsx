@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { User, ChevronDown } from 'lucide-react'
+import { User, ChevronDown, Menu } from 'lucide-react'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '#/components/ui/sheet'
@@ -33,10 +33,48 @@ export function Header() {
             <ThemeToggle />
             {user === null && (
               <>
-                <Link to="/login" className={cn(buttonVariants({ variant: 'outline' }))}>
+                {/* Mobile: hamburger opens a sheet with the auth links */}
+                <Sheet>
+                  <SheetTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="sm:hidden"
+                        aria-label={t('nav.navigation')}
+                      />
+                    }
+                  >
+                    <Menu className="size-5" />
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-64 sm:max-w-64">
+                    <div className="flex flex-col gap-3 p-4 pt-14">
+                      <Link
+                        to="/login"
+                        className={cn(
+                          buttonVariants({ variant: 'outline' }),
+                          'w-full justify-center',
+                        )}
+                      >
+                        {t('nav.login')}
+                      </Link>
+                      <Link
+                        to="/register"
+                        className={cn(buttonVariants(), 'w-full justify-center')}
+                      >
+                        {t('nav.register')}
+                      </Link>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+                {/* Desktop: inline buttons */}
+                <Link
+                  to="/login"
+                  className={cn(buttonVariants({ variant: 'outline' }), 'hidden sm:inline-flex')}
+                >
                   {t('nav.login')}
                 </Link>
-                <Link to="/register" className={cn(buttonVariants())}>
+                <Link to="/register" className={cn(buttonVariants(), 'hidden sm:inline-flex')}>
                   {t('nav.register')}
                 </Link>
               </>

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '#/components/ui/badge'
 import { cn } from '#/lib/utils'
-import { formatRelativeTime } from '../-utils'
+import { formatRelativeTime } from '#/lib/format'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import type { Thread } from '../-queries/threads'
 
