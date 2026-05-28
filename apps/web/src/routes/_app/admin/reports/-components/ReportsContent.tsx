@@ -27,10 +27,10 @@ export function ReportsContent({ targetType, categoryId, status, page }: Props) 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard value={data.total} label={t('admin.reports.totalReports')} />
-        <StatCard value={data.totalPending} label={t('admin.reports.pending')} />
-        <StatCard value={data.totalResolved} label={t('admin.reports.resolved')} />
-        <StatCard value={data.totalDismissed} label={t('admin.reports.dismissed')} />
+        <StatCard value={data.total.toLocaleString()} label={t('admin.reports.totalReports')} />
+        <StatCard value={data.totalPending.toLocaleString()} label={t('admin.reports.pending')} />
+        <StatCard value={data.totalResolved.toLocaleString()} label={t('admin.reports.resolved')} />
+        <StatCard value={data.totalDismissed.toLocaleString()} label={t('admin.reports.dismissed')} />
       </div>
 
       <div className="space-y-4">

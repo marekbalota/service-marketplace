@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { cn } from '#/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import {
   Select,
@@ -25,6 +24,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '#/components/ui/breadcrumb'
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { getEvenTicks, TICK_SLOT_PX, UI_RANGES } from '../-utils'
 import type { AnalyticsMetric, AnalyticsRange, AnalyticsGranularity } from '#/lib/queries/admin'
 import type { DrillFrame, GranularityOption } from '../-utils'
@@ -131,23 +131,26 @@ export function AnalyticsChartCard({
           {(visibleGranularityOptions || !isDrilling) && (
             <div className="flex items-center gap-2 shrink-0">
               {visibleGranularityOptions && (
-                <div className="flex items-center border rounded-md overflow-hidden text-xs">
+                <ToggleGroup
+                  value={[activeGranularity]}
+                  onValueChange={(v) => { if (v.length > 0) onGranularityChange(v[0] as GranularityOption) }}
+                  className="overflow-hidden rounded-md border"
+                >
                   {visibleGranularityOptions.map((g) => (
-                    <button
+                    <ToggleGroupItem
                       key={g}
-                      type="button"
-                      onClick={() => onGranularityChange(g)}
-                      className={cn(
-                        'px-3 py-1.5 font-medium transition-colors',
+                      value={g}
+                      className={[
+                        'h-auto rounded-none px-3 py-1.5 text-xs font-medium',
                         activeGranularity === g
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-muted',
-                      )}
+                          ? 'aria-pressed:bg-primary aria-pressed:text-primary-foreground'
+                          : 'bg-background text-muted-foreground hover:bg-muted',
+                      ].join(' ')}
                     >
                       {t(`admin.analytics.granularity.${g}`)}
-                    </button>
+                    </ToggleGroupItem>
                   ))}
-                </div>
+                </ToggleGroup>
               )}
 
               {!isDrilling && (

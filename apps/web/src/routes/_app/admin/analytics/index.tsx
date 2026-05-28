@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -8,11 +8,12 @@ import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { BackButton } from '#/components/BackButton'
 import { adminAnalyticsQueryOptions, rangeToWindow } from '#/lib/queries/admin'
 import {
-  VALID_METRICS,
   GRANULARITY_OPTIONS,
   METRIC_CONFIG,
   formatBucket,
+  formatBucketLabel,
   getDrillDown,
+  getPreviousWindow,
   granularityOptionsForWindow,
   resolveGranularity,
 } from './-utils'
@@ -21,37 +22,34 @@ import type { GranularityOption, DrillFrame } from './-utils'
 import { AnalyticsStatCards } from './-components/AnalyticsStatCards'
 import { AnalyticsChartCard } from './-components/AnalyticsChartCard'
 import { TopPeriodsCard } from './-components/TopPeriodsCard'
-import { InsightsCard } from './-components/InsightsCard'
+import { PeriodComparisonCard } from './-components/PeriodComparisonCard'
 
-export const Route = createFileRoute('/_app/admin/analytics/$metric/')({
+export const Route = createFileRoute('/_app/admin/analytics/')({
   validateSearch: z.object({
+    metric: z.enum(['users', 'posts', 'messages']).default('users'),
     range: z.enum(['7d', '30d', '90d', '1y', 'all']).default('30d'),
     granularity: z.enum(['day', 'week', 'month', 'year']).optional(),
   }),
-  beforeLoad: ({ params }) => {
-    if (!VALID_METRICS.includes(params.metric as AnalyticsMetric)) {
-      throw redirect({
-        to: '/admin/analytics/$metric',
-        params: { metric: 'users' },
-        search: { range: '30d' },
-      })
-    }
-  },
-  loaderDeps: ({ search: { range, granularity } }) => ({ range, granularity }),
-  loader: ({ context: { queryClient }, params: { metric }, deps: { range, granularity } }) => {
+  loaderDeps: ({ search: { metric, range, granularity } }) => ({ metric, range, granularity }),
+  loader: ({ context: { queryClient }, deps: { metric, range, granularity } }) => {
     const { from, to } = rangeToWindow(range)
     const gran = resolveGranularity(range, granularity)
     void queryClient.prefetchQuery(
       adminAnalyticsQueryOptions(metric as AnalyticsMetric, from, to, gran),
     )
+    const prevWindow = getPreviousWindow(from, to)
+    if (prevWindow) {
+      void queryClient.prefetchQuery(
+        adminAnalyticsQueryOptions(metric as AnalyticsMetric, prevWindow.from, prevWindow.to, gran),
+      )
+    }
   },
   component: AnalyticsPage,
 })
 
 function AnalyticsPage() {
   const { t, i18n } = useTranslation()
-  const { metric } = Route.useParams()
-  const { range, granularity: urlGranularity } = Route.useSearch()
+  const { metric, range, granularity: urlGranularity } = Route.useSearch()
   const navigate = useNavigate()
   const typedMetric = metric as AnalyticsMetric
   const config = METRIC_CONFIG[typedMetric]
@@ -89,22 +87,11 @@ function AnalyticsPage() {
       : null
     : GRANULARITY_OPTIONS[range]
 
-  function drillLabel(bucket: Date, granularity: AnalyticsGranularity): string {
-    if (granularity === 'week') {
-      const end = new Date(bucket)
-      end.setUTCDate(end.getUTCDate() + 6)
-      const fmt = (d: Date) =>
-        d.toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', timeZone: 'UTC' })
-      return `${fmt(bucket)} – ${fmt(end)}`
-    }
-    return formatBucket(bucket, granularity, i18n.language)
-  }
-
   function handleBarClick(barData: unknown) {
     const { bucket } = barData as { bucket: Date }
     const next = getDrillDown(bucket, activeGranularity)
     if (next) {
-      setDrillStack((prev) => [...prev, { ...next, label: drillLabel(bucket, activeGranularity) }])
+      setDrillStack((prev) => [...prev, { ...next, label: formatBucketLabel(bucket, activeGranularity, i18n.language) }])
     }
   }
 
@@ -117,9 +104,8 @@ function AnalyticsPage() {
       })
     } else {
       navigate({
-        to: '/admin/analytics/$metric',
-        params: { metric },
-        search: { range, granularity: g },
+        to: '/admin/analytics',
+        search: (prev) => ({ ...prev, granularity: g }),
         replace: true,
       })
     }
@@ -138,9 +124,8 @@ function AnalyticsPage() {
         value={typedMetric}
         onValueChange={(v) =>
           navigate({
-            to: '/admin/analytics/$metric',
-            params: { metric: v },
-            search: { range },
+            to: '/admin/analytics',
+            search: (prev) => ({ ...prev, metric: v as AnalyticsMetric, granularity: undefined }),
             replace: true,
           })
         }
@@ -186,9 +171,8 @@ function AnalyticsPage() {
         onPopToIndex={(idx) => setDrillStack((prev) => prev.slice(0, idx + 1))}
         onRangeChange={(r) =>
           navigate({
-            to: '/admin/analytics/$metric',
-            params: { metric },
-            search: { range: r },
+            to: '/admin/analytics',
+            search: (prev) => ({ ...prev, range: r, granularity: undefined }),
             replace: true,
           })
         }
@@ -200,14 +184,14 @@ function AnalyticsPage() {
           isPending={isPending}
           config={config}
           activeGranularity={activeGranularity}
-          locale={i18n.language}
         />
-        <InsightsCard
+        <PeriodComparisonCard
           items={items}
-          isPending={isPending}
+          activeFrom={activeFrom}
+          activeTo={activeTo}
           activeGranularity={activeGranularity}
           typedMetric={typedMetric}
-          locale={i18n.language}
+          isPending={isPending}
         />
       </div>
     </main>

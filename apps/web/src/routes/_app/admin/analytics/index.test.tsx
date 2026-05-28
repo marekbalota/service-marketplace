@@ -40,12 +40,15 @@ async function renderPage() {
     data: mockData,
     isPending: false,
   } as ReturnType<typeof useQuery>)
-  vi.spyOn(Route, 'useParams').mockReturnValue({ metric: 'users' } as any)
-  vi.spyOn(Route, 'useSearch').mockReturnValue({ range: '30d', granularity: undefined } as any)
+  vi.spyOn(Route, 'useSearch').mockReturnValue({
+    metric: 'users',
+    range: '30d',
+    granularity: undefined,
+  } as any)
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({
     routeTree: rootRoute,
-    history: createMemoryHistory({ initialEntries: ['/admin/analytics/users?range=30d'] }),
+    history: createMemoryHistory({ initialEntries: ['/admin/analytics?metric=users&range=30d'] }),
   })
   await act(async () => {
     render(<RouterProvider router={router} />)
@@ -65,7 +68,6 @@ describe('Analytics page', () => {
   it('shows correct Period Total derived from items', async () => {
     await renderPage()
     const periodTotal = mockData.items.reduce((s, r) => s + r.count, 0) // 50
-    // Period Total and Last 7 Days are both 50 for this dataset — use getAllByText
     const matches = screen.getAllByText(periodTotal.toString())
     expect(matches.length).toBeGreaterThanOrEqual(1)
   })

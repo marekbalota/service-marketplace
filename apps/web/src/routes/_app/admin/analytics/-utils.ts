@@ -12,7 +12,6 @@ export type DrillFrame = {
 
 const MS_PER_DAY = 86_400_000
 
-export const VALID_METRICS: AnalyticsMetric[] = ['users', 'posts', 'messages']
 export const UI_RANGES: AnalyticsRange[] = ['7d', '30d', '90d', '1y', 'all']
 
 export const DEFAULT_GRANULARITY: Record<AnalyticsRange, AnalyticsGranularity> = {
@@ -82,6 +81,17 @@ export function formatBucket(d: Date, granularity: AnalyticsGranularity, locale 
   return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
+export function formatBucketLabel(d: Date, granularity: AnalyticsGranularity, locale = 'en'): string {
+  if (granularity === 'week') {
+    const end = new Date(d)
+    end.setUTCDate(end.getUTCDate() + 6)
+    const fmt = (date: Date) =>
+      date.toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    return `${fmt(d)} – ${fmt(end)}`
+  }
+  return formatBucket(d, granularity, locale)
+}
+
 export function getDrillDown(
   bucket: Date,
   granularity: AnalyticsGranularity,
@@ -124,6 +134,24 @@ export function resolveGranularity(
   const options = GRANULARITY_OPTIONS[range]
   if (!options) return DEFAULT_GRANULARITY[range]
   return (options as string[]).includes(urlGranularity) ? urlGranularity : DEFAULT_GRANULARITY[range]
+}
+
+export function getPreviousWindow(
+  from: string | undefined,
+  to: string,
+): { from: string; to: string } | null {
+  if (!from) return null
+  const fromDate = new Date(from + 'T00:00:00Z')
+  const toDate = new Date(to + 'T00:00:00Z')
+  const windowDays = Math.round((toDate.getTime() - fromDate.getTime()) / MS_PER_DAY) + 1
+  const prevTo = new Date(fromDate)
+  prevTo.setUTCDate(prevTo.getUTCDate() - 1)
+  const prevFrom = new Date(prevTo)
+  prevFrom.setUTCDate(prevFrom.getUTCDate() - (windowDays - 1))
+  return {
+    from: prevFrom.toISOString().slice(0, 10),
+    to: prevTo.toISOString().slice(0, 10),
+  }
 }
 
 export function granularityOptionsForWindow(from: string, to: string): GranularityOption[] | null {

@@ -484,10 +484,22 @@
       "peakMonth": "Špičkový měsíc",
       "peakYear": "Špičkový rok",
       "topPeriods": "Nejlepší období",
+      "topHours": "Nejlepší hodiny",
       "topDays": "Nejlepší dny",
+      "topWeeks": "Nejlepší týdny",
+      "topMonths": "Nejlepší měsíce",
+      "topYears": "Nejlepší roky",
       "topDaysDesc": "Nejvyšší aktivita v tomto období",
-      "insightsTitle": "Poznatky",
-      "insightsDesc": "Klíčová pozorování z dat",
+      "comparison": {
+        "title": "Porovnání období",
+        "desc": "Aktuální období vs předchozí období stejné délky",
+        "periodTotal": "Celkem za období",
+        "average": "Průměr",
+        "peak": "Maximum",
+        "currentPeriod": "Aktuální období",
+        "previousPeriod": "Předchozí období",
+        "noComparison": "Pro zobrazení všech dob není k dispozici předchozí období."
+      },
       "activityOverTime": "Aktivita v čase",
       "perDay": "za den",
       "perHour": "za hodinu",
@@ -503,14 +515,6 @@
         "week": "Týden",
         "month": "Měsíc",
         "year": "Rok"
-      },
-      "insights": {
-        "growthTrend": "Trend růstu",
-        "vsLastPeriods": "oproti předchozím 7 obdobím",
-        "peakActivity": "Vrcholová aktivita",
-        "highestOn": "Nejvyšší aktivita dne",
-        "consistency": "Konzistence",
-        "averageOf": "Průměr"
       },
       "users": {
         "title": "Analytika uživatelů",

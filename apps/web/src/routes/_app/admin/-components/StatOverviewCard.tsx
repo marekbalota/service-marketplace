@@ -67,9 +67,8 @@ export function StatOverviewCard() {
             ) : (
               <Link
                 key={metric}
-                to="/admin/analytics/$metric"
-                params={{ metric }}
-                search={{ range: '30d' }}
+                to="/admin/analytics"
+                search={{ metric, range: '30d' }}
                 className="block"
               >
                 <div

@@ -488,10 +488,22 @@
       "peakMonth": "Peak Month",
       "peakYear": "Peak Year",
       "topPeriods": "Top Performing Periods",
+      "topHours": "Top Performing Hours",
       "topDays": "Top Performing Days",
+      "topWeeks": "Top Performing Weeks",
+      "topMonths": "Top Performing Months",
+      "topYears": "Top Performing Years",
       "topDaysDesc": "Highest activity in this period",
-      "insightsTitle": "Insights",
-      "insightsDesc": "Key observations from the data",
+      "comparison": {
+        "title": "Period Comparison",
+        "desc": "Current period vs the previous period of the same length",
+        "periodTotal": "Period Total",
+        "average": "Average",
+        "peak": "Peak",
+        "currentPeriod": "Current period",
+        "previousPeriod": "Previous period",
+        "noComparison": "No previous period available for the all-time view."
+      },
       "activityOverTime": "Activity Over Time",
       "perDay": "per day",
       "perHour": "per hour",
@@ -507,14 +519,6 @@
         "week": "Week",
         "month": "Month",
         "year": "Year"
-      },
-      "insights": {
-        "growthTrend": "Growth Trend",
-        "vsLastPeriods": "vs previous 7 periods",
-        "peakActivity": "Peak Activity",
-        "highestOn": "Highest activity on",
-        "consistency": "Consistency",
-        "averageOf": "Average of"
       },
       "users": {
         "title": "User Analytics",

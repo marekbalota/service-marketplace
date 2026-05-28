@@ -484,10 +484,22 @@
       "peakMonth": "Špičkový mesiac",
       "peakYear": "Špičkový rok",
       "topPeriods": "Najlepšie obdobia",
+      "topHours": "Najlepšie hodiny",
       "topDays": "Najlepšie dni",
+      "topWeeks": "Najlepšie týždne",
+      "topMonths": "Najlepšie mesiace",
+      "topYears": "Najlepšie roky",
       "topDaysDesc": "Najvyššia aktivita v tomto období",
-      "insightsTitle": "Postrehy",
-      "insightsDesc": "Kľúčové pozorovania z dát",
+      "comparison": {
+        "title": "Porovnanie období",
+        "desc": "Aktuálne obdobie vs predchádzajúce obdobie rovnakej dĺžky",
+        "periodTotal": "Celkom za obdobie",
+        "average": "Priemer",
+        "peak": "Maximum",
+        "currentPeriod": "Aktuálne obdobie",
+        "previousPeriod": "Predchádzajúce obdobie",
+        "noComparison": "Pre zobrazenie všetkých čias nie je k dispozícii predchádzajúce obdobie."
+      },
       "activityOverTime": "Aktivita v čase",
       "perDay": "za deň",
       "perHour": "za hodinu",
@@ -503,14 +515,6 @@
         "week": "Týždeň",
         "month": "Mesiac",
         "year": "Rok"
-      },
-      "insights": {
-        "growthTrend": "Trend rastu",
-        "vsLastPeriods": "oproti predchádzajúcim 7 obdobiam",
-        "peakActivity": "Vrcholová aktivita",
-        "highestOn": "Najvyššia aktivita dňa",
-        "consistency": "Konzistentnosť",
-        "averageOf": "Priemer"
       },
       "users": {
         "title": "Analytika používateľov",

@@ -112,10 +112,10 @@ export function RolesContent({ userPriority, userPermissionNames }: RolesContent
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard value={roles.length} label={t('admin.roles.totalRoles')} />
-        <StatCard value={permissions.length} label={t('admin.roles.totalPermissions')} />
+        <StatCard value={roles.length.toLocaleString()} label={t('admin.roles.totalRoles')} />
+        <StatCard value={permissions.length.toLocaleString()} label={t('admin.roles.totalPermissions')} />
         <StatCard
-          value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0)}
+          value={roles.reduce((sum, r) => sum + (r.userCount || 0), 0).toLocaleString()}
           label={t('admin.roles.totalUsersWithRoles')}
         />
       </div>
