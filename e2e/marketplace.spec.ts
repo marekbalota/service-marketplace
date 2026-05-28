@@ -346,7 +346,7 @@ test.describe('Admin', () => {
 
   test('analytics page loads with metric tabs and chart', async ({ page }) => {
     await page.goto('/admin/analytics?metric=users&range=30d')
-    await expect(page.getByRole('heading', { name: /user registrations/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /user analytics/i })).toBeVisible({
       timeout: 15000,
     })
     await expect(page.getByRole('tab', { name: /users/i })).toBeVisible()
@@ -359,7 +359,7 @@ test.describe('Admin', () => {
     await expect(page.getByRole('tab', { name: /users/i })).toBeVisible({ timeout: 15000 })
     await page.getByRole('tab', { name: /posts/i }).click()
     await expect(page).toHaveURL(/metric=posts/)
-    await expect(page.getByRole('heading', { name: /post creations/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /post analytics/i })).toBeVisible()
   })
 
   test('analytics back button navigates to admin dashboard', async ({ page }) => {

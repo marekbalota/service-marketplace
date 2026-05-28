@@ -55,15 +55,17 @@ export default async function globalSetup() {
   await browserContext.storageState({ path: 'e2e/.auth/alice.json' })
   console.log('[global-setup] Auth state saved to e2e/.auth/alice.json')
   await browserContext.clearCookies()
+  await context.dispose()
 
-  const adminResponse = await context.post('/api/auth/sign-in/email', {
+  const adminContext = await request.newContext({ baseURL: API_URL })
+  const adminResponse = await adminContext.post('/api/auth/sign-in/email', {
     data: { email: 'admin@example.com', password: 'admin123' },
     headers: { 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' },
   })
   if (!adminResponse.ok()) {
     throw new Error(`Admin login failed: ${adminResponse.status()} ${await adminResponse.text()}`)
   }
-  const adminCookies = await context.storageState()
+  const adminCookies = await adminContext.storageState()
   await browserContext.addCookies(
     adminCookies.cookies.map(({ name, value, path, expires, httpOnly, secure, sameSite }) => ({
       name,
@@ -80,5 +82,5 @@ export default async function globalSetup() {
   console.log('[global-setup] Auth state saved to e2e/.auth/admin.json')
 
   await browser.close()
-  await context.dispose()
+  await adminContext.dispose()
 }
