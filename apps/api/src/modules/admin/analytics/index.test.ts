@@ -62,7 +62,7 @@ describe('GET /admin/analytics/:metric', () => {
       expect(Array.isArray(data!.items)).toBe(true)
       expect(typeof data!.total).toBe('number')
       data!.items.forEach((item) => {
-        expect(typeof item.bucket).toBe('string')
+        expect(item.bucket).toBeInstanceOf(Date)
         expect(typeof item.count).toBe('number')
       })
     },

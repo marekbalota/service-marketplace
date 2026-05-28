@@ -18,7 +18,11 @@
     "preview": "Preview",
     "image": "Image",
     "previousImage": "Previous image",
-    "nextImage": "Next image"
+    "nextImage": "Next image",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
   },
   "nav": {
     "login": "Log in",
@@ -460,7 +464,7 @@
       "activePosts": "Active Posts",
       "totalMessages": "Total Messages",
       "activeBans": "Active Bans",
-      "viewAnalytics": "View Analytics →"
+      "viewAnalytics": "View Analytics"
     },
     "newUsers": {
       "title": "New Users",
@@ -478,8 +482,11 @@
       "monthlyAverage": "Monthly Average",
       "yearlyAverage": "Yearly Average",
       "hourlyAverage": "Hourly Average",
-      "last7Days": "Last 7 Days",
       "peakHour": "Peak Hour",
+      "peakDay": "Peak Day",
+      "peakWeek": "Peak Week",
+      "peakMonth": "Peak Month",
+      "peakYear": "Peak Year",
       "topPeriods": "Top Performing Periods",
       "topDays": "Top Performing Days",
       "topDaysDesc": "Highest activity in this period",

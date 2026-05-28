@@ -18,7 +18,11 @@
     "preview": "Náhled",
     "image": "Obrázek",
     "previousImage": "Předchozí obrázek",
-    "nextImage": "Následující obrázek"
+    "nextImage": "Následující obrázek",
+    "justNow": "právě teď",
+    "minutesAgo": "před {{count}} min",
+    "hoursAgo": "před {{count}} hod",
+    "daysAgo": "před {{count}} d"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -280,11 +284,7 @@
     "viewPost": "Zobrazit inzerát",
     "sendFailed": "Odeslání se nezdařilo. Zkuste to znovu.",
     "writePlaceholder": "Napište zprávu…",
-    "send": "Odeslat zprávu",
-    "justNow": "právě teď",
-    "minutesAgo": "před {{count}} min",
-    "hoursAgo": "před {{count}} hod",
-    "daysAgo": "před {{count}} d"
+    "send": "Odeslat zprávu"
   },
   "pricing": {
     "label": "Cena (nepovinná)",
@@ -460,7 +460,7 @@
       "activePosts": "Aktivní příspěvky",
       "totalMessages": "Celkový počet zpráv",
       "activeBans": "Aktivní bany",
-      "viewAnalytics": "Zobrazit analytiku →"
+      "viewAnalytics": "Zobrazit analytiku"
     },
     "newUsers": {
       "title": "Noví uživatelé",
@@ -478,8 +478,11 @@
       "monthlyAverage": "Měsíční průměr",
       "yearlyAverage": "Roční průměr",
       "hourlyAverage": "Hodinový průměr",
-      "last7Days": "Posledních 7 dní",
       "peakHour": "Špičková hodina",
+      "peakDay": "Špičkový den",
+      "peakWeek": "Špičkový týden",
+      "peakMonth": "Špičkový měsíc",
+      "peakYear": "Špičkový rok",
       "topPeriods": "Nejlepší období",
       "topDays": "Nejlepší dny",
       "topDaysDesc": "Nejvyšší aktivita v tomto období",

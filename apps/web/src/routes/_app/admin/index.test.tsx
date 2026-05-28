@@ -20,7 +20,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 })
 
 const defaultStats = { totalUsers: 0, activePosts: 0, totalMessages: 0, activeBans: 0 }
-const defaultRecentUsers = { items: [] as never[] }
+const defaultRecentUsers = { items: [] as { userId: string; name: string; email: string; createdAt: string }[] }
 
 function mockQueries(
   stats = defaultStats,

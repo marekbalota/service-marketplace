@@ -25,13 +25,13 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 const mockData = {
   total: 150,
   items: [
-    { bucket: '2026.05.01', count: 5 },
-    { bucket: '2026.05.02', count: 8 },
-    { bucket: '2026.05.03', count: 12 },
-    { bucket: '2026.05.04', count: 3 },
-    { bucket: '2026.05.05', count: 7 },
-    { bucket: '2026.05.06', count: 9 },
-    { bucket: '2026.05.07', count: 6 },
+    { bucket: new Date('2026-05-01T00:00:00Z'), count: 5 },
+    { bucket: new Date('2026-05-02T00:00:00Z'), count: 8 },
+    { bucket: new Date('2026-05-03T00:00:00Z'), count: 12 },
+    { bucket: new Date('2026-05-04T00:00:00Z'), count: 3 },
+    { bucket: new Date('2026-05-05T00:00:00Z'), count: 7 },
+    { bucket: new Date('2026-05-06T00:00:00Z'), count: 9 },
+    { bucket: new Date('2026-05-07T00:00:00Z'), count: 6 },
   ],
 }
 
