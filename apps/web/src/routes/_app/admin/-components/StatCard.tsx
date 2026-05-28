@@ -18,12 +18,12 @@ export function StatCard({ label, value, isPending, icon: Icon, iconBg, iconText
       <CardContent>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
             {isPending ? (
-              <Skeleton className="h-8 w-20 mt-1" />
+              <Skeleton className="h-8 w-20 mb-1" />
             ) : (
               <p className="text-2xl font-bold">{value}</p>
             )}
+            <p className="text-sm text-muted-foreground">{label}</p>
           </div>
           {Icon && (
             <div className={cn('p-3 rounded-lg', iconBg)}>

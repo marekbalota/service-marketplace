@@ -82,9 +82,9 @@ describe('Analytics page', () => {
     expect(screen.getByText(/top performing days/i)).toBeInTheDocument()
   })
 
-  it('shows Insights card', async () => {
+  it('shows Period Comparison card', async () => {
     await renderPage()
-    expect(screen.getByText(/insights/i)).toBeInTheDocument()
+    expect(screen.getByText(/period comparison/i)).toBeInTheDocument()
   })
 
   it('shows granularity toggle for 30d range', async () => {
