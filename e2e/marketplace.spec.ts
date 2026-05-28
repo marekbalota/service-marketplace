@@ -283,13 +283,7 @@ test.describe('Messages', () => {
 })
 
 test.describe('Admin', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
-    await page.locator('input[type="password"]').fill('admin123')
-    await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-  })
+  test.use({ storageState: 'e2e/.auth/admin.json' })
 
   test('shows the admin dashboard', async ({ page }) => {
     await page.goto('/admin')
@@ -341,6 +335,40 @@ test.describe('Admin', () => {
       .getByRole('button', { name: /^create role$/i })
       .click()
     await expect(page.getByText(roleName)).toBeVisible({ timeout: 15000 })
+  })
+
+  test('admin dashboard shows live stat cards', async ({ page }) => {
+    await page.goto('/admin')
+    await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible()
+    // StatOverviewCard renders once data loads — wait for any numeric stat to appear
+    await expect(page.getByText(/total users/i)).toBeVisible({ timeout: 15000 })
+  })
+
+  test('analytics page loads with metric tabs and chart', async ({ page }) => {
+    await page.goto('/admin/analytics?metric=users&range=30d')
+    await expect(page.getByRole('heading', { name: /user registrations/i })).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(page.getByRole('tab', { name: /users/i })).toBeVisible()
+    await expect(page.getByRole('tab', { name: /posts/i })).toBeVisible()
+    await expect(page.getByRole('tab', { name: /messages/i })).toBeVisible()
+  })
+
+  test('analytics page switches metric via tab', async ({ page }) => {
+    await page.goto('/admin/analytics?metric=users&range=30d')
+    await expect(page.getByRole('tab', { name: /users/i })).toBeVisible({ timeout: 15000 })
+    await page.getByRole('tab', { name: /posts/i }).click()
+    await expect(page).toHaveURL(/metric=posts/)
+    await expect(page.getByRole('heading', { name: /post creations/i })).toBeVisible()
+  })
+
+  test('analytics back button navigates to admin dashboard', async ({ page }) => {
+    await page.goto('/admin/analytics?metric=users&range=30d')
+    await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible({
+      timeout: 15000,
+    })
+    await page.getByRole('button', { name: /back to admin/i }).click()
+    await expect(page).toHaveURL('/admin')
   })
 
   test('bans and unbans a user', async ({ page }) => {
