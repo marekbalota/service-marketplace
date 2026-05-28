@@ -1,5 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
+import { Permissions, hasPermissions } from '@marketplace/shared'
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -25,6 +26,12 @@ import { TopPeriodsCard } from './-components/TopPeriodsCard'
 import { PeriodComparisonCard } from './-components/PeriodComparisonCard'
 
 export const Route = createFileRoute('/_app/admin/analytics/')({
+  beforeLoad: ({ context: { user } }) => {
+    const permissions = user?.role?.permissions ?? []
+    if (!hasPermissions(permissions, [Permissions.AdminAnalyticsView])) {
+      throw redirect({ to: '/admin' })
+    }
+  },
   validateSearch: z.object({
     metric: z.enum(['users', 'posts', 'messages']).default('users'),
     range: z.enum(['7d', '30d', '90d', '1y', 'all']).default('30d'),

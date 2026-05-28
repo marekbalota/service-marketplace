@@ -42,12 +42,17 @@ const STAT_CONFIGS = [
   },
 ] as const
 
-export function StatOverviewCard() {
+interface StatOverviewCardProps {
+  canViewAnalytics: boolean
+  className?: string
+}
+
+export function StatOverviewCard({ canViewAnalytics, className }: StatOverviewCardProps) {
   const { t } = useTranslation()
   const { data: stats, isPending } = useQuery(adminStatsQueryOptions)
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>{t('admin.overview.title')}</CardTitle>
         <CardDescription>{t('admin.overview.subtitle')}</CardDescription>
@@ -69,16 +74,17 @@ export function StatOverviewCard() {
                 key={metric}
                 to="/admin/analytics"
                 search={{ metric, range: '30d' }}
-                className="block"
+                disabled={!canViewAnalytics}
+                className={`block ${canViewAnalytics ? '' : 'pointer-events-none'}`}
               >
                 <div
-                  className={`p-4 rounded-lg border ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover} transition-colors cursor-pointer`}
+                  className={`p-4 rounded-lg border ${colorClasses.bg} ${colorClasses.border} ${canViewAnalytics ? `${colorClasses.hover} transition-colors cursor-pointer` : ''}`}
                 >
                   <p className={`text-3xl font-bold ${colorClasses.text}`}>
                     {getValue(stats!).toLocaleString()}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">{t(labelKey)}</p>
-                  <p className={`text-xs ${colorClasses.text} mt-2 font-medium flex items-center gap-1`}>
+                  <p className={`text-xs ${colorClasses.text} mt-2 font-medium flex items-center gap-1 ${canViewAnalytics ? '' : 'invisible'}`}>
                     {t('admin.overview.viewAnalytics')}
                     <ArrowRight className="size-3" />
                   </p>
@@ -91,7 +97,8 @@ export function StatOverviewCard() {
             {isPending ? (
               <>
                 <Skeleton className="h-9 w-16 mb-2" />
-                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24 mb-3" />
+                <Skeleton className="h-3 w-20" />
               </>
             ) : (
               <>
@@ -99,6 +106,9 @@ export function StatOverviewCard() {
                   {stats?.activeBans.toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">{t('admin.overview.activeBans')}</p>
+                <p className="text-xs mt-2 font-medium flex items-center gap-1 invisible">
+                  &nbsp;
+                </p>
               </>
             )}
           </div>

@@ -4,6 +4,15 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared'
 import { useCurrentUser } from '#/lib/queries/users'
+import { cn } from '#/lib/utils'
+
+const RESPONSIVE_COLS = [
+  '',
+  'lg:grid-cols-1',
+  'md:grid-cols-2',
+  'md:grid-cols-3',
+  'md:grid-cols-2 lg:grid-cols-4',
+] as const
 
 export function AdminOptions() {
   const { t } = useTranslation()
@@ -49,18 +58,21 @@ export function AdminOptions() {
     Permissions.AdminPostsDeleteAny,
   ])
   const canManageRoles = hasPermissions(permissions, [Permissions.AdminRolesManage])
+  const canManageReports = hasPermissions(permissions, [Permissions.AdminReportsManage])
   const canManageCategories = hasPermissions(permissions, [Permissions.AdminCategoriesManage])
 
   const visibleOptions = adminOptions.filter((option) => {
     if (option.id === 'users') return canManageUsers
     if (option.id === 'roles') return canManageRoles
-    if (option.id === 'reports') return canManageUsers
+    if (option.id === 'reports') return canManageReports
     if (option.id === 'categories') return canManageCategories
     return true
   })
 
+  if (visibleOptions.length === 0) return null
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className={cn('grid grid-cols-1 gap-6', RESPONSIVE_COLS[visibleOptions.length])}>
       {visibleOptions.map((option) => {
         const Icon = option.icon
         return (

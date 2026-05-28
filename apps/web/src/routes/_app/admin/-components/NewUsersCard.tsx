@@ -19,12 +19,12 @@ function avatarGradient(name: string): string {
   return AVATAR_GRADIENTS[name.charCodeAt(0) % AVATAR_GRADIENTS.length]!
 }
 
-export function NewUsersCard() {
+export function NewUsersCard({ className }: { className?: string }) {
   const { t } = useTranslation()
   const { data, isPending } = useQuery(adminRecentUsersQueryOptions)
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>{t('admin.newUsers.title')}</CardTitle>
         <CardDescription>{t('admin.newUsers.subtitle')}</CardDescription>

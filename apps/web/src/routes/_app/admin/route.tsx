@@ -14,6 +14,9 @@ export const Route = createFileRoute('/_app/admin')({
       Permissions.AdminPostsDeleteAny,
       Permissions.AdminRolesManage,
       Permissions.AdminCategoriesManage,
+      Permissions.AdminReportsManage,
+      Permissions.AdminStatsView,
+      Permissions.AdminAnalyticsView,
     ])
     if (!hasAdminAccess) throw redirect({ to: '/' })
   },
