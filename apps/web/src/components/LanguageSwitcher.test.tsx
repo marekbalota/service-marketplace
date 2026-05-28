@@ -10,20 +10,22 @@ beforeEach(() => {
 describe('LanguageSwitcher', () => {
   it('shows EN as default when localStorage is empty', () => {
     render(<LanguageSwitcher />)
-    expect(screen.getByRole('combobox')).toHaveTextContent('EN')
+    const trigger = screen.getByRole('button', { name: /language/i })
+    expect(trigger).toHaveTextContent('EN')
   })
 
   it('reads initial language from localStorage', () => {
     localStorage.setItem('language', 'sk')
     render(<LanguageSwitcher />)
-    expect(screen.getByRole('combobox')).toHaveTextContent('SK')
+    const trigger = screen.getByRole('button', { name: /language/i })
+    expect(trigger).toHaveTextContent('SK')
   })
 
   it('persists selected language to localStorage on change', async () => {
     const user = userEvent.setup()
     render(<LanguageSwitcher />)
-    await user.click(screen.getByRole('combobox'))
-    await user.click(screen.getByRole('option', { name: 'CS' }))
+    await user.click(screen.getByRole('button', { name: /language/i }))
+    await user.click(await screen.findByRole('menuitem', { name: /čeština/i }))
     expect(localStorage.getItem('language')).toBe('cs')
   })
 })
