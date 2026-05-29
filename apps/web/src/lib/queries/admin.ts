@@ -71,3 +71,23 @@ export function adminAnalyticsQueryOptions(
     staleTime: 5 * 60 * 1000,
   })
 }
+
+export const adminCategoriesQueryOptions = (params: {
+  search: string
+  offset: number
+  size: number
+}) =>
+  queryOptions({
+    queryKey: ['admin', 'categories', params] as const,
+    queryFn: async () => {
+      const { data, error } = await api.admin.categories.get({
+        query: {
+          ...(params.search && { search: params.search }),
+          offset: params.offset,
+          size: params.size,
+        },
+      })
+      if (error) throw error
+      return data!
+    },
+  })

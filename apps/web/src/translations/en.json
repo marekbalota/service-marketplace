@@ -16,6 +16,7 @@
     "clearSelection": "Clear selection",
     "dismiss": "Dismiss",
     "preview": "Preview",
+    "rename": "Rename",
     "image": "Image",
     "previousImage": "Previous image",
     "nextImage": "Next image",
@@ -643,6 +644,28 @@
       "messageContext": "Message Context",
       "messageContextError": "Failed to load message context.",
       "reportedMessage": "Reported message"
+    },
+    "categories": {
+      "title": "Manage Categories",
+      "subtitle": "Create, edit, and organize service categories",
+      "count": "Categories ({{count}})",
+      "searchPlaceholder": "Search categories...",
+      "newCategory": "New Category",
+      "createTitle": "Create Category",
+      "createDesc": "Add a new service category to the platform",
+      "editTitle": "Rename Category",
+      "editDesc": "Enter a new name for this category",
+      "categoryName": "Category Name",
+      "categoryNamePlaceholder": "e.g. Gardening Services",
+      "nameConflict": "A category with this name already exists",
+      "deleteTitle": "Delete Category",
+      "deleteDesc": "Are you sure you want to delete \"{{name}}\"? Posts in this category will lose this tag. This cannot be undone.",
+      "noCategories": "No categories yet",
+      "noCategoriesFound": "No categories match your search",
+      "cardDescription": "Organize and manage service categories",
+      "activePosts": "{{count}} active",
+      "archivedPosts": "{{count}} archived",
+      "totalPosts": "{{count}} total"
     }
   },
   "report": {

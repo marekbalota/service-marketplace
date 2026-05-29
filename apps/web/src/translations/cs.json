@@ -16,6 +16,7 @@
     "clearSelection": "Zrušit výběr",
     "dismiss": "Zavřít",
     "preview": "Náhled",
+    "rename": "Přejmenovat",
     "image": "Obrázek",
     "previousImage": "Předchozí obrázek",
     "nextImage": "Následující obrázek",
@@ -639,6 +640,28 @@
       "messageContext": "Kontext zprávy",
       "messageContextError": "Nepodařilo se načíst kontext zprávy.",
       "reportedMessage": "Nahlášená zpráva"
+    },
+    "categories": {
+      "title": "Správa kategorií",
+      "subtitle": "Vytvářejte, upravujte a organizujte kategorie služeb",
+      "count": "Kategorie ({{count}})",
+      "searchPlaceholder": "Hledat kategorie...",
+      "newCategory": "Nová kategorie",
+      "createTitle": "Vytvořit kategorii",
+      "createDesc": "Přidejte novou kategorii služeb na platformu",
+      "editTitle": "Přejmenovat kategorii",
+      "editDesc": "Zadejte nový název pro tuto kategorii",
+      "categoryName": "Název kategorie",
+      "categoryNamePlaceholder": "např. Zahradní služby",
+      "nameConflict": "Kategorie s tímto názvem již existuje",
+      "deleteTitle": "Smazat kategorii",
+      "deleteDesc": "Opravdu chcete smazat \"{{name}}\"? Příspěvky v této kategorii ztratí tento štítek. Tuto akci nelze vrátit zpět.",
+      "noCategories": "Zatím žádné kategorie",
+      "noCategoriesFound": "Žádné kategorie neodpovídají vašemu hledání",
+      "cardDescription": "Organizujte a spravujte kategorie služeb",
+      "activePosts": "{{count}} aktivních",
+      "archivedPosts": "{{count}} archivovaných",
+      "totalPosts": "{{count}} celkem"
     }
   },
   "report": {

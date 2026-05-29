@@ -42,6 +42,7 @@ import { Route as AppEditPostPostIdRouteRouteImport } from './routes/_app/edit-p
 import { Route as AppAdminUsersRouteRouteImport } from './routes/_app/admin/users/route'
 import { Route as AppAdminRolesRouteRouteImport } from './routes/_app/admin/roles/route'
 import { Route as AppAdminReportsRouteRouteImport } from './routes/_app/admin/reports/route'
+import { Route as AppAdminCategoriesRouteRouteImport } from './routes/_app/admin/categories/route'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
 import { Route as AppAdminAnalyticsIndexRouteImport } from './routes/_app/admin/analytics/index'
 import { Route as AppAccountSettingsProfilesIndexRouteImport } from './routes/_app/account-settings/profiles/index'
@@ -219,6 +220,11 @@ const AppAdminReportsRouteRoute = AppAdminReportsRouteRouteImport.update({
   path: '/reports',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminCategoriesRouteRoute = AppAdminCategoriesRouteRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof AuthResetPasswordRouteRoute
   '/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
   '/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
+  '/admin/categories': typeof AppAdminCategoriesRouteRoute
   '/admin/reports': typeof AppAdminReportsRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
   '/admin/users': typeof AppAdminUsersRouteRouteWithChildren
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRouteRoute
   '/register': typeof AuthRegisterRouteRoute
   '/reset-password': typeof AuthResetPasswordRouteRoute
+  '/admin/categories': typeof AppAdminCategoriesRouteRoute
   '/admin/reports': typeof AppAdminReportsRouteRoute
   '/admin/roles': typeof AppAdminRolesRouteRoute
   '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/_auth/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
   '/_auth/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/categories': typeof AppAdminCategoriesRouteRoute
   '/_app/admin/reports': typeof AppAdminReportsRouteRoute
   '/_app/admin/roles': typeof AppAdminRolesRouteRoute
   '/_app/admin/users': typeof AppAdminUsersRouteRouteWithChildren
@@ -402,6 +411,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-2fa'
     | '/verify-email'
+    | '/admin/categories'
     | '/admin/reports'
     | '/admin/roles'
     | '/admin/users'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/admin/categories'
     | '/admin/reports'
     | '/admin/roles'
     | '/edit-post/$postId'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/_auth/verify-2fa'
     | '/_auth/verify-email'
     | '/_app/'
+    | '/_app/admin/categories'
     | '/_app/admin/reports'
     | '/_app/admin/roles'
     | '/_app/admin/users'
@@ -744,6 +756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminReportsRouteRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/categories': {
+      id: '/_app/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AppAdminCategoriesRouteRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/_app/admin/users/': {
       id: '/_app/admin/users/'
       path: '/'
@@ -856,6 +875,7 @@ const AppAdminUsersRouteRouteWithChildren =
   AppAdminUsersRouteRoute._addFileChildren(AppAdminUsersRouteRouteChildren)
 
 interface AppAdminRouteRouteChildren {
+  AppAdminCategoriesRouteRoute: typeof AppAdminCategoriesRouteRoute
   AppAdminReportsRouteRoute: typeof AppAdminReportsRouteRoute
   AppAdminRolesRouteRoute: typeof AppAdminRolesRouteRoute
   AppAdminUsersRouteRoute: typeof AppAdminUsersRouteRouteWithChildren
@@ -864,6 +884,7 @@ interface AppAdminRouteRouteChildren {
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminCategoriesRouteRoute: AppAdminCategoriesRouteRoute,
   AppAdminReportsRouteRoute: AppAdminReportsRouteRoute,
   AppAdminRolesRouteRoute: AppAdminRolesRouteRoute,
   AppAdminUsersRouteRoute: AppAdminUsersRouteRouteWithChildren,
