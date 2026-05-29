@@ -207,9 +207,7 @@ export const reviews = pgTable(
 export const categories = pgTable('categories', {
   categoryId: uuid('category_id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
-  description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'),
 })
 
 export const postCategories = pgTable(
@@ -220,7 +218,7 @@ export const postCategories = pgTable(
       .references(() => posts.postId),
     categoryId: uuid('category_id')
       .notNull()
-      .references(() => categories.categoryId),
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
   },
   (table) => [primaryKey({ columns: [table.postId, table.categoryId] })],
 )

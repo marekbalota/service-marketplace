@@ -27,6 +27,7 @@ entity User {
     is_banned : boolean <<NOT NULL>>
     ban_reason : text
     ban_expiration : timestamp
+    two_factor_enabled : boolean <<NOT NULL>>
     created_at : timestamp <<NOT NULL>>
     updated_at : timestamp <<NOT NULL>>
 }
@@ -35,10 +36,12 @@ entity Session {
     id : uuid <<PK>>
     ---
     user_id : uuid <<FK>> <<NOT NULL>>
+    impersonated_by : uuid <<FK>>
     expires_at : timestamp <<NOT NULL>>
     token : text <<NOT NULL>> <<UNIQUE>>
     ip_address : text
     user_agent : text
+    location : text
     created_at : timestamp <<NOT NULL>>
     updated_at : timestamp <<NOT NULL>>
 }
@@ -164,6 +167,7 @@ entity Report {
     message_id : uuid <<FK>>
     review_id : uuid <<FK>>
     description : text
+    status : enum('PENDING','RESOLVED','DISMISSED') <<NOT NULL>>
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
     CHECK: exactly one of (post_id, message_id, review_id) is NOT NULL
@@ -173,9 +177,7 @@ entity Category {
     category_id : uuid <<PK>>
     ---
     name : text <<NOT NULL>> <<UNIQUE>>
-    description : text
     created_at : timestamp <<NOT NULL>>
-    deleted_at : timestamp
 }
 
 entity PostCategory {
@@ -227,6 +229,34 @@ entity ProfileLocation {
     location_id : uuid <<PK>> <<FK>>
     ---
     created_at : timestamp <<NOT NULL>>
+    deleted_at : timestamp
+}
+
+entity UserTwoFactorMethod {
+    id : uuid <<PK>>
+    ---
+    user_id : uuid <<FK>> <<NOT NULL>>
+    method : enum('totp','email') <<NOT NULL>>
+    enabled_at : timestamp <<NOT NULL>>
+    UNIQUE(user_id, method)
+}
+
+entity UserTotpCredential {
+    id : uuid <<PK>>
+    ---
+    method_id : uuid <<FK>> <<NOT NULL>> <<UNIQUE>>
+    secret : text <<NOT NULL>>
+}
+
+entity UserBackupCode {
+    id : uuid <<PK>>
+    ---
+    user_id : uuid <<FK>> <<NOT NULL>>
+    code_index : integer <<NOT NULL>>
+    code_encrypted : text <<NOT NULL>>
+    used_at : timestamp
+    created_at : timestamp <<NOT NULL>>
+    UNIQUE(user_id, code_index)
 }
 
 entity MessageThread {
@@ -262,6 +292,9 @@ User ||--o{ UserProfile
 User }o--|| Role
 User ||--o{ Session
 User ||--o{ OAuthAccount
+User ||--o{ UserTwoFactorMethod
+User ||--o{ UserBackupCode
+UserTwoFactorMethod ||--o| UserTotpCredential
 UserProfile ||--o{ Image
 UserProfile ||--o{ Favourites
 Review ||--o{ ReviewImage : has images

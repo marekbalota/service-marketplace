@@ -152,14 +152,14 @@ async function upsertAdminUser(name: string, email: string, password: string, ro
   console.log(`  Created admin user: ${email} (${roleName})`)
 }
 
-async function upsertCategory(name: string, description: string) {
+async function upsertCategory(name: string) {
   const existing = await db.query.categories.findFirst({
     where: (c, { eq }) => eq(c.name, name),
   })
   if (existing) {
     return existing
   }
-  const [created] = await db.insert(schema.categories).values({ name, description }).returning()
+  const [created] = await db.insert(schema.categories).values({ name }).returning()
   return created!
 }
 
@@ -212,32 +212,26 @@ async function seed() {
   console.log(`  Created: Super Admin (admin@example.com) - password: admin123`)
 
   console.log('\n  Creating categories...')
-  const tutoring = await upsertCategory('Tutoring', 'Academic tutoring and coaching')
-  const plumbing = await upsertCategory('Plumbing', 'Plumbing installation and repairs')
-  const design = await upsertCategory('Design', 'Graphic, web, and UX design')
-  const homeRepair = await upsertCategory('Home Repair', 'General home maintenance and repairs')
-  const cleaning = await upsertCategory('Cleaning', 'Home and office cleaning services')
-  const techSupport = await upsertCategory('Tech Support', 'IT help and computer repairs')
-  await upsertCategory('Marketing & Business', 'Marketing, branding, and business support')
-  await upsertCategory(
-    'Writing & Translation',
-    'Copywriting, content writing, and translation services',
-  )
-  await upsertCategory(
-    'Admin & Virtual Assistance',
-    'Administrative help and virtual assistant services',
-  )
-  await upsertCategory('Transport & Delivery', 'Delivery, moving, and transportation services')
-  await upsertCategory('Construction & Trades', 'Building, carpentry, and skilled trades')
-  await upsertCategory('Automotive', 'Car repair and maintenance services')
-  await upsertCategory('Personal Services', 'Personal assistance and everyday services')
-  await upsertCategory('Beauty & Wellness', 'Hair, makeup, fitness, and wellness services')
-  await upsertCategory('Events & Entertainment', 'Event planning, music, and entertainment')
-  await upsertCategory('Photography & Video', 'Photography, videography, and editing')
-  await upsertCategory('Pet Services', 'Pet care, sitting, and training')
-  await upsertCategory('Childcare & Elderly Care', 'Babysitting and elderly care services')
-  await upsertCategory('Legal & Finance', 'Legal advice, accounting, and financial services')
-  await upsertCategory('Others', 'Services that do not fit into other categories')
+  const tutoring = await upsertCategory('Tutoring')
+  const plumbing = await upsertCategory('Plumbing')
+  const design = await upsertCategory('Design')
+  const homeRepair = await upsertCategory('Home Repair')
+  const cleaning = await upsertCategory('Cleaning')
+  const techSupport = await upsertCategory('Tech Support')
+  await upsertCategory('Marketing & Business')
+  await upsertCategory('Writing & Translation')
+  await upsertCategory('Admin & Virtual Assistance')
+  await upsertCategory('Transport & Delivery')
+  await upsertCategory('Construction & Trades')
+  await upsertCategory('Automotive')
+  await upsertCategory('Personal Services')
+  await upsertCategory('Beauty & Wellness')
+  await upsertCategory('Events & Entertainment')
+  await upsertCategory('Photography & Video')
+  await upsertCategory('Pet Services')
+  await upsertCategory('Childcare & Elderly Care')
+  await upsertCategory('Legal & Finance')
+  await upsertCategory('Others')
   console.log(`  Created 20 categories total`)
 
   const postsData: {
