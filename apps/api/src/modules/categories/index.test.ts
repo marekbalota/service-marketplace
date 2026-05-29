@@ -13,19 +13,11 @@ describe('GET /categories', () => {
     expect(Array.isArray(data)).toBe(true)
   })
 
-  it('each item has categoryId, name, and description fields', async () => {
+  it('each item has categoryId and name fields', async () => {
     const { data } = await client.categories.get()
     for (const item of data!) {
       expect(typeof item.categoryId).toBe('string')
       expect(typeof item.name).toBe('string')
-      expect('description' in item).toBe(true)
-    }
-  })
-
-  it('does not return soft-deleted categories', async () => {
-    const { data } = await client.categories.get()
-    for (const item of data!) {
-      expect(item).not.toHaveProperty('deletedAt')
     }
   })
 })

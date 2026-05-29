@@ -21,6 +21,8 @@ export const ErrorMessages = {
   cannotDeleteDefaultRole: 'Cannot delete the default role',
   noDefaultRoleFound: 'No default role found',
   sessionNotFound: 'Session not found',
+  categoryNotFound: 'Category not found',
+  categoryNameConflict: 'A category with this name already exists',
 } as const
 
 export const ImpersonationErrorMessages = {
@@ -86,6 +88,16 @@ export class ConflictError extends Error {
     super(message)
     this.name = 'ConflictError'
   }
+}
+
+export function getPgCode(e: unknown): string | undefined {
+  if (e && typeof e === 'object') {
+    if ('code' in e) return (e as { code: string }).code
+    if ('cause' in e && e.cause && typeof e.cause === 'object' && 'code' in e.cause) {
+      return (e.cause as { code: string }).code
+    }
+  }
+  return undefined
 }
 
 export class InternalServerError extends Error {

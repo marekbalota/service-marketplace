@@ -3,7 +3,7 @@ import { messageThreads, messages, posts, userProfiles, users } from '../../db/s
 import { eq, or, and, isNull, desc, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { MessagesModel } from './model'
-import { ForbiddenError, ConflictError, AuthErrorMessages } from '../../lib/errors'
+import { ForbiddenError, ConflictError, AuthErrorMessages, getPgCode } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 import { PostsService } from '../posts/service'
 import { sendMessageNotificationEmail } from '../../lib/email'
@@ -261,20 +261,7 @@ export abstract class MessagesService {
         return { threadId: thread!.threadId }
       })
     } catch (err: unknown) {
-      const pgCode =
-        (err && typeof err === 'object' && 'code' in err
-          ? (err as { code: string }).code
-          : undefined) ??
-        (err &&
-        typeof err === 'object' &&
-        'cause' in err &&
-        err.cause &&
-        typeof err.cause === 'object' &&
-        'code' in err.cause
-          ? (err.cause as { code: string }).code
-          : undefined)
-
-      if (pgCode === '23505') throw new ConflictError('A thread for this post already exists')
+      if (getPgCode(err) === '23505') throw new ConflictError('A thread for this post already exists')
       throw err
     }
 
