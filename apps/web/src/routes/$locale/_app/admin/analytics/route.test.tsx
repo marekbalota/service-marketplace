@@ -7,7 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Route } from './index'
+import { Route } from './route'
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()

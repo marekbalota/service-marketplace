@@ -45,8 +45,8 @@ import { Route as LocaleAppAdminUsersRouteRouteImport } from './routes/$locale/_
 import { Route as LocaleAppAdminRolesRouteRouteImport } from './routes/$locale/_app/admin/roles/route'
 import { Route as LocaleAppAdminReportsRouteRouteImport } from './routes/$locale/_app/admin/reports/route'
 import { Route as LocaleAppAdminCategoriesRouteRouteImport } from './routes/$locale/_app/admin/categories/route'
+import { Route as LocaleAppAdminAnalyticsRouteRouteImport } from './routes/$locale/_app/admin/analytics/route'
 import { Route as LocaleAppAdminUsersIndexRouteImport } from './routes/$locale/_app/admin/users/index'
-import { Route as LocaleAppAdminAnalyticsIndexRouteImport } from './routes/$locale/_app/admin/analytics/index'
 import { Route as LocaleAppAccountSettingsProfilesIndexRouteImport } from './routes/$locale/_app/account-settings/profiles/index'
 import { Route as LocaleAppAdminUsersUserIdRouteRouteImport } from './routes/$locale/_app/admin/users/$userId/route'
 import { Route as LocaleAppAccountSettingsProfilesCreateRouteRouteImport } from './routes/$locale/_app/account-settings/profiles/create/route'
@@ -255,17 +255,17 @@ const LocaleAppAdminCategoriesRouteRoute =
     path: '/categories',
     getParentRoute: () => LocaleAppAdminRouteRoute,
   } as any)
+const LocaleAppAdminAnalyticsRouteRoute =
+  LocaleAppAdminAnalyticsRouteRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
 const LocaleAppAdminUsersIndexRoute =
   LocaleAppAdminUsersIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LocaleAppAdminUsersRouteRoute,
-  } as any)
-const LocaleAppAdminAnalyticsIndexRoute =
-  LocaleAppAdminAnalyticsIndexRouteImport.update({
-    id: '/analytics/',
-    path: '/analytics/',
-    getParentRoute: () => LocaleAppAdminRouteRoute,
   } as any)
 const LocaleAppAccountSettingsProfilesIndexRoute =
   LocaleAppAccountSettingsProfilesIndexRouteImport.update({
@@ -321,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/$locale/verify-2fa': typeof LocaleAuthVerify2faRouteRouteWithChildren
   '/$locale/verify-email': typeof LocaleAuthVerifyEmailRouteRouteWithChildren
   '/$locale/': typeof LocaleAppIndexRoute
+  '/$locale/admin/analytics': typeof LocaleAppAdminAnalyticsRouteRoute
   '/$locale/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
   '/$locale/admin/reports': typeof LocaleAppAdminReportsRouteRoute
   '/$locale/admin/roles': typeof LocaleAppAdminRolesRouteRoute
@@ -342,7 +343,6 @@ export interface FileRoutesByFullPath {
   '/$locale/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
   '/$locale/admin/users/$userId': typeof LocaleAppAdminUsersUserIdRouteRouteWithChildren
   '/$locale/account-settings/profiles/': typeof LocaleAppAccountSettingsProfilesIndexRoute
-  '/$locale/admin/analytics/': typeof LocaleAppAdminAnalyticsIndexRoute
   '/$locale/admin/users/': typeof LocaleAppAdminUsersIndexRoute
   '/$locale/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
   '/$locale/admin/users/$userId/': typeof LocaleAppAdminUsersUserIdIndexRoute
@@ -359,6 +359,7 @@ export interface FileRoutesByTo {
   '/$locale/login': typeof LocaleAuthLoginRouteRoute
   '/$locale/register': typeof LocaleAuthRegisterRouteRoute
   '/$locale/reset-password': typeof LocaleAuthResetPasswordRouteRoute
+  '/$locale/admin/analytics': typeof LocaleAppAdminAnalyticsRouteRoute
   '/$locale/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
   '/$locale/admin/reports': typeof LocaleAppAdminReportsRouteRoute
   '/$locale/admin/roles': typeof LocaleAppAdminRolesRouteRoute
@@ -378,7 +379,6 @@ export interface FileRoutesByTo {
   '/$locale/verify-email': typeof LocaleAuthVerifyEmailIndexRoute
   '/$locale/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
   '/$locale/account-settings/profiles': typeof LocaleAppAccountSettingsProfilesIndexRoute
-  '/$locale/admin/analytics': typeof LocaleAppAdminAnalyticsIndexRoute
   '/$locale/admin/users': typeof LocaleAppAdminUsersIndexRoute
   '/$locale/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
   '/$locale/admin/users/$userId': typeof LocaleAppAdminUsersUserIdIndexRoute
@@ -404,6 +404,7 @@ export interface FileRoutesById {
   '/$locale/_auth/verify-2fa': typeof LocaleAuthVerify2faRouteRouteWithChildren
   '/$locale/_auth/verify-email': typeof LocaleAuthVerifyEmailRouteRouteWithChildren
   '/$locale/_app/': typeof LocaleAppIndexRoute
+  '/$locale/_app/admin/analytics': typeof LocaleAppAdminAnalyticsRouteRoute
   '/$locale/_app/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
   '/$locale/_app/admin/reports': typeof LocaleAppAdminReportsRouteRoute
   '/$locale/_app/admin/roles': typeof LocaleAppAdminRolesRouteRoute
@@ -425,7 +426,6 @@ export interface FileRoutesById {
   '/$locale/_app/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
   '/$locale/_app/admin/users/$userId': typeof LocaleAppAdminUsersUserIdRouteRouteWithChildren
   '/$locale/_app/account-settings/profiles/': typeof LocaleAppAccountSettingsProfilesIndexRoute
-  '/$locale/_app/admin/analytics/': typeof LocaleAppAdminAnalyticsIndexRoute
   '/$locale/_app/admin/users/': typeof LocaleAppAdminUsersIndexRoute
   '/$locale/_app/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
   '/$locale/_app/admin/users/$userId/': typeof LocaleAppAdminUsersUserIdIndexRoute
@@ -450,6 +450,7 @@ export interface FileRouteTypes {
     | '/$locale/verify-2fa'
     | '/$locale/verify-email'
     | '/$locale/'
+    | '/$locale/admin/analytics'
     | '/$locale/admin/categories'
     | '/$locale/admin/reports'
     | '/$locale/admin/roles'
@@ -471,7 +472,6 @@ export interface FileRouteTypes {
     | '/$locale/account-settings/profiles/create'
     | '/$locale/admin/users/$userId'
     | '/$locale/account-settings/profiles/'
-    | '/$locale/admin/analytics/'
     | '/$locale/admin/users/'
     | '/$locale/account-settings/profiles/$profileId/edit'
     | '/$locale/admin/users/$userId/'
@@ -488,6 +488,7 @@ export interface FileRouteTypes {
     | '/$locale/login'
     | '/$locale/register'
     | '/$locale/reset-password'
+    | '/$locale/admin/analytics'
     | '/$locale/admin/categories'
     | '/$locale/admin/reports'
     | '/$locale/admin/roles'
@@ -507,7 +508,6 @@ export interface FileRouteTypes {
     | '/$locale/verify-email'
     | '/$locale/account-settings/profiles/create'
     | '/$locale/account-settings/profiles'
-    | '/$locale/admin/analytics'
     | '/$locale/admin/users'
     | '/$locale/account-settings/profiles/$profileId/edit'
     | '/$locale/admin/users/$userId'
@@ -532,6 +532,7 @@ export interface FileRouteTypes {
     | '/$locale/_auth/verify-2fa'
     | '/$locale/_auth/verify-email'
     | '/$locale/_app/'
+    | '/$locale/_app/admin/analytics'
     | '/$locale/_app/admin/categories'
     | '/$locale/_app/admin/reports'
     | '/$locale/_app/admin/roles'
@@ -553,7 +554,6 @@ export interface FileRouteTypes {
     | '/$locale/_app/account-settings/profiles/create'
     | '/$locale/_app/admin/users/$userId'
     | '/$locale/_app/account-settings/profiles/'
-    | '/$locale/_app/admin/analytics/'
     | '/$locale/_app/admin/users/'
     | '/$locale/_app/account-settings/profiles/$profileId/edit'
     | '/$locale/_app/admin/users/$userId/'
@@ -819,19 +819,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleAppAdminCategoriesRouteRouteImport
       parentRoute: typeof LocaleAppAdminRouteRoute
     }
+    '/$locale/_app/admin/analytics': {
+      id: '/$locale/_app/admin/analytics'
+      path: '/analytics'
+      fullPath: '/$locale/admin/analytics'
+      preLoaderRoute: typeof LocaleAppAdminAnalyticsRouteRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
+    }
     '/$locale/_app/admin/users/': {
       id: '/$locale/_app/admin/users/'
       path: '/'
       fullPath: '/$locale/admin/users/'
       preLoaderRoute: typeof LocaleAppAdminUsersIndexRouteImport
       parentRoute: typeof LocaleAppAdminUsersRouteRoute
-    }
-    '/$locale/_app/admin/analytics/': {
-      id: '/$locale/_app/admin/analytics/'
-      path: '/analytics'
-      fullPath: '/$locale/admin/analytics/'
-      preLoaderRoute: typeof LocaleAppAdminAnalyticsIndexRouteImport
-      parentRoute: typeof LocaleAppAdminRouteRoute
     }
     '/$locale/_app/account-settings/profiles/': {
       id: '/$locale/_app/account-settings/profiles/'
@@ -936,21 +936,21 @@ const LocaleAppAdminUsersRouteRouteWithChildren =
   )
 
 interface LocaleAppAdminRouteRouteChildren {
+  LocaleAppAdminAnalyticsRouteRoute: typeof LocaleAppAdminAnalyticsRouteRoute
   LocaleAppAdminCategoriesRouteRoute: typeof LocaleAppAdminCategoriesRouteRoute
   LocaleAppAdminReportsRouteRoute: typeof LocaleAppAdminReportsRouteRoute
   LocaleAppAdminRolesRouteRoute: typeof LocaleAppAdminRolesRouteRoute
   LocaleAppAdminUsersRouteRoute: typeof LocaleAppAdminUsersRouteRouteWithChildren
   LocaleAppAdminIndexRoute: typeof LocaleAppAdminIndexRoute
-  LocaleAppAdminAnalyticsIndexRoute: typeof LocaleAppAdminAnalyticsIndexRoute
 }
 
 const LocaleAppAdminRouteRouteChildren: LocaleAppAdminRouteRouteChildren = {
+  LocaleAppAdminAnalyticsRouteRoute: LocaleAppAdminAnalyticsRouteRoute,
   LocaleAppAdminCategoriesRouteRoute: LocaleAppAdminCategoriesRouteRoute,
   LocaleAppAdminReportsRouteRoute: LocaleAppAdminReportsRouteRoute,
   LocaleAppAdminRolesRouteRoute: LocaleAppAdminRolesRouteRoute,
   LocaleAppAdminUsersRouteRoute: LocaleAppAdminUsersRouteRouteWithChildren,
   LocaleAppAdminIndexRoute: LocaleAppAdminIndexRoute,
-  LocaleAppAdminAnalyticsIndexRoute: LocaleAppAdminAnalyticsIndexRoute,
 }
 
 const LocaleAppAdminRouteRouteWithChildren =

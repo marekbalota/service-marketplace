@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Users, Shield, Flag, ChevronRight, FolderTree } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useLocale } from '#/lib/useLocale'
 import { Card, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Permissions, hasAnyPermission, hasPermissions } from '@marketplace/shared'
 import { useCurrentUser } from '#/lib/queries/users'
@@ -16,6 +17,7 @@ const RESPONSIVE_COLS = [
 
 export function AdminOptions() {
   const { t } = useTranslation()
+  const locale = useLocale()
   const { data: user } = useCurrentUser()
   const permissions = user?.role?.permissions ?? []
 
@@ -25,28 +27,28 @@ export function AdminOptions() {
       title: t('admin.manageAccounts'),
       description: t('admin.manageAccountsDesc'),
       icon: Users,
-      path: '/admin/users',
+      path: '/$locale/admin/users',
     },
     {
       id: 'roles',
       title: t('admin.manageRoles'),
       description: t('admin.manageRolesDesc'),
       icon: Shield,
-      path: '/admin/roles',
+      path: '/$locale/admin/roles',
     },
     {
       id: 'reports',
       title: t('admin.manageReports'),
       description: t('admin.manageReportsDesc'),
       icon: Flag,
-      path: '/admin/reports',
+      path: '/$locale/admin/reports',
     },
     {
       id: 'categories',
       title: t('admin.manageCategories'),
       description: t('admin.manageCategoriesDesc'),
       icon: FolderTree,
-      path: '/admin/categories',
+      path: '/$locale/admin/categories',
     },
   ]
 
@@ -76,7 +78,7 @@ export function AdminOptions() {
       {visibleOptions.map((option) => {
         const Icon = option.icon
         return (
-          <Link key={option.id} to={option.path} className="block group hover:no-underline">
+          <Link key={option.id} to={option.path} params={{ locale }} className="block group hover:no-underline">
             <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
               <CardHeader className="flex-1">
                 <div className="flex items-start justify-between">

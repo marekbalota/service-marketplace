@@ -26,7 +26,7 @@ import { TopPeriodsCard } from './-components/TopPeriodsCard'
 import { PeriodComparisonCard } from './-components/PeriodComparisonCard'
 import { useLocale } from '#/lib/useLocale'
 
-export const Route = createFileRoute('/$locale/_app/admin/analytics/')({
+export const Route = createFileRoute('/$locale/_app/admin/analytics')({
   beforeLoad: ({ context: { user }, params }) => {
     const permissions = user?.role?.permissions ?? []
     if (!hasPermissions(permissions, [Permissions.AdminAnalyticsView])) {
