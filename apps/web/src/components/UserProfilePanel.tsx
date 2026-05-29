@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useRouter, useNavigate } from '@tanstack/react-router'
+import { useLocale } from '#/lib/useLocale'
 import { Settings, FileText, MessageSquare, Shield, Search, LogOut } from 'lucide-react'
 import { ProfileAvatar } from '#/components/ProfileAvatar'
 import { Separator } from '#/components/ui/separator'
@@ -34,6 +35,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation()
   const { data: user } = useCurrentUser()
   const { activeProfile, setActiveProfileId } = useActiveProfile()
+  const locale = useLocale()
   const router = useRouter()
   const navigate = useNavigate()
   const stopMutation = useStopImpersonating({ onSuccess: onClose })
@@ -86,7 +88,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               nativeButton={false}
               render={
                 <Link
-                  to="/posts"
+                  to="/$locale/posts"
+                  params={{ locale }}
                   onClick={onClose}
                   className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
                 />
@@ -102,7 +105,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               nativeButton={false}
               render={
                 <Link
-                  to="/my-postings"
+                  to="/$locale/my-postings"
+                  params={{ locale }}
                   onClick={onClose}
                   className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
                 />
@@ -118,7 +122,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               nativeButton={false}
               render={
                 <Link
-                  to="/messages"
+                  to="/$locale/messages"
+                  params={{ locale }}
                   onClick={onClose}
                   className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
                 />
@@ -135,7 +140,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 nativeButton={false}
                 render={
                   <Link
-                    to="/admin"
+                    to="/$locale/admin"
+                  params={{ locale }}
                     onClick={onClose}
                     className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
                   />
@@ -158,7 +164,8 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             nativeButton={false}
             render={
               <Link
-                to="/account-settings"
+                to="/$locale/account-settings"
+                  params={{ locale }}
                 onClick={onClose}
                 className="flex h-auto w-full items-center justify-start gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
               />
@@ -176,7 +183,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
               } else {
                 await authClient.signOut()
                 queryClient.setQueryData(currentUserQueryOptions.queryKey, null)
-                await navigate({ to: '/posts' })
+                await navigate({ to: '/$locale/posts', params: { locale } })
                 queryClient.clear()
                 router.invalidate()
                 onClose()

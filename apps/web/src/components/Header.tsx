@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocale } from '#/lib/useLocale'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { User, ChevronDown, Menu } from 'lucide-react'
@@ -14,6 +15,7 @@ import { useActiveProfile } from '#/context/activeProfile'
 
 export function Header() {
   const { t } = useTranslation()
+  const locale = useLocale()
   const [open, setOpen] = useState(false)
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
@@ -23,7 +25,7 @@ export function Header() {
       {user?.impersonatedBy && <ImpersonationBanner />}
       <div className="mx-auto max-w-7xl px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="no-underline">
+          <Link to="/$locale/posts" params={{ locale }} className="no-underline">
             <h1 className="text-2xl font-medium text-foreground transition-colors hover:text-primary">
               Service Marketplace
             </h1>
@@ -50,7 +52,8 @@ export function Header() {
                   <SheetContent side="right" className="w-64 sm:max-w-64">
                     <div className="flex flex-col gap-3 p-4 pt-14">
                       <Link
-                        to="/login"
+                        to="/$locale/login"
+                        params={{ locale }}
                         className={cn(
                           buttonVariants({ variant: 'outline' }),
                           'w-full justify-center',
@@ -59,7 +62,8 @@ export function Header() {
                         {t('nav.login')}
                       </Link>
                       <Link
-                        to="/register"
+                        to="/$locale/register"
+                        params={{ locale }}
                         className={cn(buttonVariants(), 'w-full justify-center')}
                       >
                         {t('nav.register')}
@@ -69,12 +73,13 @@ export function Header() {
                 </Sheet>
                 {/* Desktop: inline buttons */}
                 <Link
-                  to="/login"
+                  to="/$locale/login"
+                  params={{ locale }}
                   className={cn(buttonVariants({ variant: 'outline' }), 'hidden sm:inline-flex')}
                 >
                   {t('nav.login')}
                 </Link>
-                <Link to="/register" className={cn(buttonVariants(), 'hidden sm:inline-flex')}>
+                <Link to="/$locale/register" params={{ locale }} className={cn(buttonVariants(), 'hidden sm:inline-flex')}>
                   {t('nav.register')}
                 </Link>
               </>

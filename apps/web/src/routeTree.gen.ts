@@ -9,995 +9,1081 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteRouteImport } from './routes/_auth/route'
-import { Route as AppRouteRouteImport } from './routes/_app/route'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AuthVerifyEmailRouteRouteImport } from './routes/_auth/verify-email/route'
-import { Route as AuthVerify2faRouteRouteImport } from './routes/_auth/verify-2fa/route'
-import { Route as AuthResetPasswordRouteRouteImport } from './routes/_auth/reset-password/route'
-import { Route as AuthRegisterRouteRouteImport } from './routes/_auth/register/route'
-import { Route as AuthLoginRouteRouteImport } from './routes/_auth/login/route'
-import { Route as AuthForgotPasswordRouteRouteImport } from './routes/_auth/forgot-password/route'
-import { Route as AuthChangeEmailPendingRouteRouteImport } from './routes/_auth/change-email-pending/route'
-import { Route as AuthBannedRouteRouteImport } from './routes/_auth/banned/route'
-import { Route as AppMyPostingsRouteRouteImport } from './routes/_app/my-postings/route'
-import { Route as AppMessagesRouteRouteImport } from './routes/_app/messages/route'
-import { Route as AppCreatePostRouteRouteImport } from './routes/_app/create-post/route'
-import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
-import { Route as AppAccountSettingsRouteRouteImport } from './routes/_app/account-settings/route'
-import { Route as AuthVerifyEmailIndexRouteImport } from './routes/_auth/verify-email/index'
-import { Route as AuthVerify2faIndexRouteImport } from './routes/_auth/verify-2fa/index'
-import { Route as AppPostsIndexRouteImport } from './routes/_app/posts/index'
-import { Route as AppMessagesIndexRouteImport } from './routes/_app/messages/index'
-import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
-import { Route as AppAccountSettingsIndexRouteImport } from './routes/_app/account-settings/index'
-import { Route as AuthVerifyEmailCallbackRouteRouteImport } from './routes/_auth/verify-email/callback/route'
-import { Route as AuthVerify2faTotpRouteRouteImport } from './routes/_auth/verify-2fa/totp/route'
-import { Route as AuthVerify2faEmailRouteRouteImport } from './routes/_auth/verify-2fa/email/route'
-import { Route as AuthVerify2faBackupRouteRouteImport } from './routes/_auth/verify-2fa/backup/route'
-import { Route as AppProfilesProfileIdRouteRouteImport } from './routes/_app/profiles/$profileId/route'
-import { Route as AppPostsPostIdRouteRouteImport } from './routes/_app/posts/$postId/route'
-import { Route as AppMessagesThreadIdRouteRouteImport } from './routes/_app/messages/$threadId/route'
-import { Route as AppEditPostPostIdRouteRouteImport } from './routes/_app/edit-post/$postId/route'
-import { Route as AppAdminUsersRouteRouteImport } from './routes/_app/admin/users/route'
-import { Route as AppAdminRolesRouteRouteImport } from './routes/_app/admin/roles/route'
-import { Route as AppAdminReportsRouteRouteImport } from './routes/_app/admin/reports/route'
-import { Route as AppAdminCategoriesRouteRouteImport } from './routes/_app/admin/categories/route'
-import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
-import { Route as AppAdminAnalyticsIndexRouteImport } from './routes/_app/admin/analytics/index'
-import { Route as AppAccountSettingsProfilesIndexRouteImport } from './routes/_app/account-settings/profiles/index'
-import { Route as AppAdminUsersUserIdRouteRouteImport } from './routes/_app/admin/users/$userId/route'
-import { Route as AppAccountSettingsProfilesCreateRouteRouteImport } from './routes/_app/account-settings/profiles/create/route'
-import { Route as AppAdminUsersUserIdIndexRouteImport } from './routes/_app/admin/users/$userId/index'
-import { Route as AppAccountSettingsProfilesProfileIdEditRouteRouteImport } from './routes/_app/account-settings/profiles/$profileId/edit/route'
-import { Route as AppAdminUsersUserIdProfileProfileIdIndexRouteImport } from './routes/_app/admin/users/$userId/profile/$profileId/index'
+import { Route as LocaleRouteRouteImport } from './routes/$locale/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as LocaleAuthRouteRouteImport } from './routes/$locale/_auth/route'
+import { Route as LocaleAppRouteRouteImport } from './routes/$locale/_app/route'
+import { Route as LocaleAppIndexRouteImport } from './routes/$locale/_app/index'
+import { Route as LocaleAuthVerifyEmailRouteRouteImport } from './routes/$locale/_auth/verify-email/route'
+import { Route as LocaleAuthVerify2faRouteRouteImport } from './routes/$locale/_auth/verify-2fa/route'
+import { Route as LocaleAuthResetPasswordRouteRouteImport } from './routes/$locale/_auth/reset-password/route'
+import { Route as LocaleAuthRegisterRouteRouteImport } from './routes/$locale/_auth/register/route'
+import { Route as LocaleAuthLoginRouteRouteImport } from './routes/$locale/_auth/login/route'
+import { Route as LocaleAuthForgotPasswordRouteRouteImport } from './routes/$locale/_auth/forgot-password/route'
+import { Route as LocaleAuthChangeEmailPendingRouteRouteImport } from './routes/$locale/_auth/change-email-pending/route'
+import { Route as LocaleAuthBannedRouteRouteImport } from './routes/$locale/_auth/banned/route'
+import { Route as LocaleAppMyPostingsRouteRouteImport } from './routes/$locale/_app/my-postings/route'
+import { Route as LocaleAppMessagesRouteRouteImport } from './routes/$locale/_app/messages/route'
+import { Route as LocaleAppCreatePostRouteRouteImport } from './routes/$locale/_app/create-post/route'
+import { Route as LocaleAppAdminRouteRouteImport } from './routes/$locale/_app/admin/route'
+import { Route as LocaleAppAccountSettingsRouteRouteImport } from './routes/$locale/_app/account-settings/route'
+import { Route as LocaleAuthVerifyEmailIndexRouteImport } from './routes/$locale/_auth/verify-email/index'
+import { Route as LocaleAuthVerify2faIndexRouteImport } from './routes/$locale/_auth/verify-2fa/index'
+import { Route as LocaleAppPostsIndexRouteImport } from './routes/$locale/_app/posts/index'
+import { Route as LocaleAppMessagesIndexRouteImport } from './routes/$locale/_app/messages/index'
+import { Route as LocaleAppAdminIndexRouteImport } from './routes/$locale/_app/admin/index'
+import { Route as LocaleAppAccountSettingsIndexRouteImport } from './routes/$locale/_app/account-settings/index'
+import { Route as LocaleAuthVerifyEmailCallbackRouteRouteImport } from './routes/$locale/_auth/verify-email/callback/route'
+import { Route as LocaleAuthVerify2faTotpRouteRouteImport } from './routes/$locale/_auth/verify-2fa/totp/route'
+import { Route as LocaleAuthVerify2faEmailRouteRouteImport } from './routes/$locale/_auth/verify-2fa/email/route'
+import { Route as LocaleAuthVerify2faBackupRouteRouteImport } from './routes/$locale/_auth/verify-2fa/backup/route'
+import { Route as LocaleAppProfilesProfileIdRouteRouteImport } from './routes/$locale/_app/profiles/$profileId/route'
+import { Route as LocaleAppPostsPostIdRouteRouteImport } from './routes/$locale/_app/posts/$postId/route'
+import { Route as LocaleAppMessagesThreadIdRouteRouteImport } from './routes/$locale/_app/messages/$threadId/route'
+import { Route as LocaleAppEditPostPostIdRouteRouteImport } from './routes/$locale/_app/edit-post/$postId/route'
+import { Route as LocaleAppAdminUsersRouteRouteImport } from './routes/$locale/_app/admin/users/route'
+import { Route as LocaleAppAdminRolesRouteRouteImport } from './routes/$locale/_app/admin/roles/route'
+import { Route as LocaleAppAdminReportsRouteRouteImport } from './routes/$locale/_app/admin/reports/route'
+import { Route as LocaleAppAdminCategoriesRouteRouteImport } from './routes/$locale/_app/admin/categories/route'
+import { Route as LocaleAppAdminUsersIndexRouteImport } from './routes/$locale/_app/admin/users/index'
+import { Route as LocaleAppAdminAnalyticsIndexRouteImport } from './routes/$locale/_app/admin/analytics/index'
+import { Route as LocaleAppAccountSettingsProfilesIndexRouteImport } from './routes/$locale/_app/account-settings/profiles/index'
+import { Route as LocaleAppAdminUsersUserIdRouteRouteImport } from './routes/$locale/_app/admin/users/$userId/route'
+import { Route as LocaleAppAccountSettingsProfilesCreateRouteRouteImport } from './routes/$locale/_app/account-settings/profiles/create/route'
+import { Route as LocaleAppAdminUsersUserIdIndexRouteImport } from './routes/$locale/_app/admin/users/$userId/index'
+import { Route as LocaleAppAccountSettingsProfilesProfileIdEditRouteRouteImport } from './routes/$locale/_app/account-settings/profiles/$profileId/edit/route'
+import { Route as LocaleAppAdminUsersUserIdProfileProfileIdIndexRouteImport } from './routes/$locale/_app/admin/users/$userId/profile/$profileId/index'
 
-const AuthRouteRoute = AuthRouteRouteImport.update({
-  id: '/_auth',
+const LocaleRouteRoute = LocaleRouteRouteImport.update({
+  id: '/$locale',
+  path: '/$locale',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRouteRoute = AppRouteRouteImport.update({
-  id: '/_app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailRouteRoute = AuthVerifyEmailRouteRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => AuthRouteRoute,
+const LocaleAuthRouteRoute = LocaleAuthRouteRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => LocaleRouteRoute,
 } as any)
-const AuthVerify2faRouteRoute = AuthVerify2faRouteRouteImport.update({
-  id: '/verify-2fa',
-  path: '/verify-2fa',
-  getParentRoute: () => AuthRouteRoute,
+const LocaleAppRouteRoute = LocaleAppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => LocaleRouteRoute,
 } as any)
-const AuthResetPasswordRouteRoute = AuthResetPasswordRouteRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => AuthRouteRoute,
+const LocaleAppIndexRoute = LocaleAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleAppRouteRoute,
 } as any)
-const AuthRegisterRouteRoute = AuthRegisterRouteRouteImport.update({
+const LocaleAuthVerifyEmailRouteRoute =
+  LocaleAuthVerifyEmailRouteRouteImport.update({
+    id: '/verify-email',
+    path: '/verify-email',
+    getParentRoute: () => LocaleAuthRouteRoute,
+  } as any)
+const LocaleAuthVerify2faRouteRoute =
+  LocaleAuthVerify2faRouteRouteImport.update({
+    id: '/verify-2fa',
+    path: '/verify-2fa',
+    getParentRoute: () => LocaleAuthRouteRoute,
+  } as any)
+const LocaleAuthResetPasswordRouteRoute =
+  LocaleAuthResetPasswordRouteRouteImport.update({
+    id: '/reset-password',
+    path: '/reset-password',
+    getParentRoute: () => LocaleAuthRouteRoute,
+  } as any)
+const LocaleAuthRegisterRouteRoute = LocaleAuthRegisterRouteRouteImport.update({
   id: '/register',
   path: '/register',
-  getParentRoute: () => AuthRouteRoute,
+  getParentRoute: () => LocaleAuthRouteRoute,
 } as any)
-const AuthLoginRouteRoute = AuthLoginRouteRouteImport.update({
+const LocaleAuthLoginRouteRoute = LocaleAuthLoginRouteRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => AuthRouteRoute,
+  getParentRoute: () => LocaleAuthRouteRoute,
 } as any)
-const AuthForgotPasswordRouteRoute = AuthForgotPasswordRouteRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => AuthRouteRoute,
-} as any)
-const AuthChangeEmailPendingRouteRoute =
-  AuthChangeEmailPendingRouteRouteImport.update({
+const LocaleAuthForgotPasswordRouteRoute =
+  LocaleAuthForgotPasswordRouteRouteImport.update({
+    id: '/forgot-password',
+    path: '/forgot-password',
+    getParentRoute: () => LocaleAuthRouteRoute,
+  } as any)
+const LocaleAuthChangeEmailPendingRouteRoute =
+  LocaleAuthChangeEmailPendingRouteRouteImport.update({
     id: '/change-email-pending',
     path: '/change-email-pending',
-    getParentRoute: () => AuthRouteRoute,
+    getParentRoute: () => LocaleAuthRouteRoute,
   } as any)
-const AuthBannedRouteRoute = AuthBannedRouteRouteImport.update({
+const LocaleAuthBannedRouteRoute = LocaleAuthBannedRouteRouteImport.update({
   id: '/banned',
   path: '/banned',
-  getParentRoute: () => AuthRouteRoute,
+  getParentRoute: () => LocaleAuthRouteRoute,
 } as any)
-const AppMyPostingsRouteRoute = AppMyPostingsRouteRouteImport.update({
-  id: '/my-postings',
-  path: '/my-postings',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppMessagesRouteRoute = AppMessagesRouteRouteImport.update({
+const LocaleAppMyPostingsRouteRoute =
+  LocaleAppMyPostingsRouteRouteImport.update({
+    id: '/my-postings',
+    path: '/my-postings',
+    getParentRoute: () => LocaleAppRouteRoute,
+  } as any)
+const LocaleAppMessagesRouteRoute = LocaleAppMessagesRouteRouteImport.update({
   id: '/messages',
   path: '/messages',
-  getParentRoute: () => AppRouteRoute,
+  getParentRoute: () => LocaleAppRouteRoute,
 } as any)
-const AppCreatePostRouteRoute = AppCreatePostRouteRouteImport.update({
-  id: '/create-post',
-  path: '/create-post',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+const LocaleAppCreatePostRouteRoute =
+  LocaleAppCreatePostRouteRouteImport.update({
+    id: '/create-post',
+    path: '/create-post',
+    getParentRoute: () => LocaleAppRouteRoute,
+  } as any)
+const LocaleAppAdminRouteRoute = LocaleAppAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => AppRouteRoute,
+  getParentRoute: () => LocaleAppRouteRoute,
 } as any)
-const AppAccountSettingsRouteRoute = AppAccountSettingsRouteRouteImport.update({
-  id: '/account-settings',
-  path: '/account-settings',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AuthVerifyEmailIndexRoute = AuthVerifyEmailIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthVerifyEmailRouteRoute,
-} as any)
-const AuthVerify2faIndexRoute = AuthVerify2faIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthVerify2faRouteRoute,
-} as any)
-const AppPostsIndexRoute = AppPostsIndexRouteImport.update({
-  id: '/posts/',
-  path: '/posts/',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppMessagesIndexRoute = AppMessagesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppMessagesRouteRoute,
-} as any)
-const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAccountSettingsIndexRoute = AppAccountSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppAccountSettingsRouteRoute,
-} as any)
-const AuthVerifyEmailCallbackRouteRoute =
-  AuthVerifyEmailCallbackRouteRouteImport.update({
-    id: '/callback',
-    path: '/callback',
-    getParentRoute: () => AuthVerifyEmailRouteRoute,
+const LocaleAppAccountSettingsRouteRoute =
+  LocaleAppAccountSettingsRouteRouteImport.update({
+    id: '/account-settings',
+    path: '/account-settings',
+    getParentRoute: () => LocaleAppRouteRoute,
   } as any)
-const AuthVerify2faTotpRouteRoute = AuthVerify2faTotpRouteRouteImport.update({
-  id: '/totp',
-  path: '/totp',
-  getParentRoute: () => AuthVerify2faRouteRoute,
-} as any)
-const AuthVerify2faEmailRouteRoute = AuthVerify2faEmailRouteRouteImport.update({
-  id: '/email',
-  path: '/email',
-  getParentRoute: () => AuthVerify2faRouteRoute,
-} as any)
-const AuthVerify2faBackupRouteRoute =
-  AuthVerify2faBackupRouteRouteImport.update({
-    id: '/backup',
-    path: '/backup',
-    getParentRoute: () => AuthVerify2faRouteRoute,
-  } as any)
-const AppProfilesProfileIdRouteRoute =
-  AppProfilesProfileIdRouteRouteImport.update({
-    id: '/profiles/$profileId',
-    path: '/profiles/$profileId',
-    getParentRoute: () => AppRouteRoute,
-  } as any)
-const AppPostsPostIdRouteRoute = AppPostsPostIdRouteRouteImport.update({
-  id: '/posts/$postId',
-  path: '/posts/$postId',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppMessagesThreadIdRouteRoute =
-  AppMessagesThreadIdRouteRouteImport.update({
-    id: '/$threadId',
-    path: '/$threadId',
-    getParentRoute: () => AppMessagesRouteRoute,
-  } as any)
-const AppEditPostPostIdRouteRoute = AppEditPostPostIdRouteRouteImport.update({
-  id: '/edit-post/$postId',
-  path: '/edit-post/$postId',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppAdminUsersRouteRoute = AppAdminUsersRouteRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAdminRolesRouteRoute = AppAdminRolesRouteRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAdminReportsRouteRoute = AppAdminReportsRouteRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAdminCategoriesRouteRoute = AppAdminCategoriesRouteRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppAdminUsersRouteRoute,
-} as any)
-const AppAdminAnalyticsIndexRoute = AppAdminAnalyticsIndexRouteImport.update({
-  id: '/analytics/',
-  path: '/analytics/',
-  getParentRoute: () => AppAdminRouteRoute,
-} as any)
-const AppAccountSettingsProfilesIndexRoute =
-  AppAccountSettingsProfilesIndexRouteImport.update({
-    id: '/profiles/',
-    path: '/profiles/',
-    getParentRoute: () => AppAccountSettingsRouteRoute,
-  } as any)
-const AppAdminUsersUserIdRouteRoute =
-  AppAdminUsersUserIdRouteRouteImport.update({
-    id: '/$userId',
-    path: '/$userId',
-    getParentRoute: () => AppAdminUsersRouteRoute,
-  } as any)
-const AppAccountSettingsProfilesCreateRouteRoute =
-  AppAccountSettingsProfilesCreateRouteRouteImport.update({
-    id: '/profiles/create',
-    path: '/profiles/create',
-    getParentRoute: () => AppAccountSettingsRouteRoute,
-  } as any)
-const AppAdminUsersUserIdIndexRoute =
-  AppAdminUsersUserIdIndexRouteImport.update({
+const LocaleAuthVerifyEmailIndexRoute =
+  LocaleAuthVerifyEmailIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AppAdminUsersUserIdRouteRoute,
+    getParentRoute: () => LocaleAuthVerifyEmailRouteRoute,
   } as any)
-const AppAccountSettingsProfilesProfileIdEditRouteRoute =
-  AppAccountSettingsProfilesProfileIdEditRouteRouteImport.update({
+const LocaleAuthVerify2faIndexRoute =
+  LocaleAuthVerify2faIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LocaleAuthVerify2faRouteRoute,
+  } as any)
+const LocaleAppPostsIndexRoute = LocaleAppPostsIndexRouteImport.update({
+  id: '/posts/',
+  path: '/posts/',
+  getParentRoute: () => LocaleAppRouteRoute,
+} as any)
+const LocaleAppMessagesIndexRoute = LocaleAppMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleAppMessagesRouteRoute,
+} as any)
+const LocaleAppAdminIndexRoute = LocaleAppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleAppAdminRouteRoute,
+} as any)
+const LocaleAppAccountSettingsIndexRoute =
+  LocaleAppAccountSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LocaleAppAccountSettingsRouteRoute,
+  } as any)
+const LocaleAuthVerifyEmailCallbackRouteRoute =
+  LocaleAuthVerifyEmailCallbackRouteRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => LocaleAuthVerifyEmailRouteRoute,
+  } as any)
+const LocaleAuthVerify2faTotpRouteRoute =
+  LocaleAuthVerify2faTotpRouteRouteImport.update({
+    id: '/totp',
+    path: '/totp',
+    getParentRoute: () => LocaleAuthVerify2faRouteRoute,
+  } as any)
+const LocaleAuthVerify2faEmailRouteRoute =
+  LocaleAuthVerify2faEmailRouteRouteImport.update({
+    id: '/email',
+    path: '/email',
+    getParentRoute: () => LocaleAuthVerify2faRouteRoute,
+  } as any)
+const LocaleAuthVerify2faBackupRouteRoute =
+  LocaleAuthVerify2faBackupRouteRouteImport.update({
+    id: '/backup',
+    path: '/backup',
+    getParentRoute: () => LocaleAuthVerify2faRouteRoute,
+  } as any)
+const LocaleAppProfilesProfileIdRouteRoute =
+  LocaleAppProfilesProfileIdRouteRouteImport.update({
+    id: '/profiles/$profileId',
+    path: '/profiles/$profileId',
+    getParentRoute: () => LocaleAppRouteRoute,
+  } as any)
+const LocaleAppPostsPostIdRouteRoute =
+  LocaleAppPostsPostIdRouteRouteImport.update({
+    id: '/posts/$postId',
+    path: '/posts/$postId',
+    getParentRoute: () => LocaleAppRouteRoute,
+  } as any)
+const LocaleAppMessagesThreadIdRouteRoute =
+  LocaleAppMessagesThreadIdRouteRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => LocaleAppMessagesRouteRoute,
+  } as any)
+const LocaleAppEditPostPostIdRouteRoute =
+  LocaleAppEditPostPostIdRouteRouteImport.update({
+    id: '/edit-post/$postId',
+    path: '/edit-post/$postId',
+    getParentRoute: () => LocaleAppRouteRoute,
+  } as any)
+const LocaleAppAdminUsersRouteRoute =
+  LocaleAppAdminUsersRouteRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
+const LocaleAppAdminRolesRouteRoute =
+  LocaleAppAdminRolesRouteRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
+const LocaleAppAdminReportsRouteRoute =
+  LocaleAppAdminReportsRouteRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
+const LocaleAppAdminCategoriesRouteRoute =
+  LocaleAppAdminCategoriesRouteRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
+const LocaleAppAdminUsersIndexRoute =
+  LocaleAppAdminUsersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LocaleAppAdminUsersRouteRoute,
+  } as any)
+const LocaleAppAdminAnalyticsIndexRoute =
+  LocaleAppAdminAnalyticsIndexRouteImport.update({
+    id: '/analytics/',
+    path: '/analytics/',
+    getParentRoute: () => LocaleAppAdminRouteRoute,
+  } as any)
+const LocaleAppAccountSettingsProfilesIndexRoute =
+  LocaleAppAccountSettingsProfilesIndexRouteImport.update({
+    id: '/profiles/',
+    path: '/profiles/',
+    getParentRoute: () => LocaleAppAccountSettingsRouteRoute,
+  } as any)
+const LocaleAppAdminUsersUserIdRouteRoute =
+  LocaleAppAdminUsersUserIdRouteRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => LocaleAppAdminUsersRouteRoute,
+  } as any)
+const LocaleAppAccountSettingsProfilesCreateRouteRoute =
+  LocaleAppAccountSettingsProfilesCreateRouteRouteImport.update({
+    id: '/profiles/create',
+    path: '/profiles/create',
+    getParentRoute: () => LocaleAppAccountSettingsRouteRoute,
+  } as any)
+const LocaleAppAdminUsersUserIdIndexRoute =
+  LocaleAppAdminUsersUserIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LocaleAppAdminUsersUserIdRouteRoute,
+  } as any)
+const LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute =
+  LocaleAppAccountSettingsProfilesProfileIdEditRouteRouteImport.update({
     id: '/profiles/$profileId/edit',
     path: '/profiles/$profileId/edit',
-    getParentRoute: () => AppAccountSettingsRouteRoute,
+    getParentRoute: () => LocaleAppAccountSettingsRouteRoute,
   } as any)
-const AppAdminUsersUserIdProfileProfileIdIndexRoute =
-  AppAdminUsersUserIdProfileProfileIdIndexRouteImport.update({
+const LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute =
+  LocaleAppAdminUsersUserIdProfileProfileIdIndexRouteImport.update({
     id: '/profile/$profileId/',
     path: '/profile/$profileId/',
-    getParentRoute: () => AppAdminUsersUserIdRouteRoute,
+    getParentRoute: () => LocaleAppAdminUsersUserIdRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
-  '/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
-  '/admin': typeof AppAdminRouteRouteWithChildren
-  '/create-post': typeof AppCreatePostRouteRoute
-  '/messages': typeof AppMessagesRouteRouteWithChildren
-  '/my-postings': typeof AppMyPostingsRouteRoute
-  '/banned': typeof AuthBannedRouteRoute
-  '/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
-  '/forgot-password': typeof AuthForgotPasswordRouteRoute
-  '/login': typeof AuthLoginRouteRoute
-  '/register': typeof AuthRegisterRouteRoute
-  '/reset-password': typeof AuthResetPasswordRouteRoute
-  '/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
-  '/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
-  '/admin/categories': typeof AppAdminCategoriesRouteRoute
-  '/admin/reports': typeof AppAdminReportsRouteRoute
-  '/admin/roles': typeof AppAdminRolesRouteRoute
-  '/admin/users': typeof AppAdminUsersRouteRouteWithChildren
-  '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
-  '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
-  '/posts/$postId': typeof AppPostsPostIdRouteRoute
-  '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
-  '/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
-  '/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
-  '/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
-  '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
-  '/account-settings/': typeof AppAccountSettingsIndexRoute
-  '/admin/': typeof AppAdminIndexRoute
-  '/messages/': typeof AppMessagesIndexRoute
-  '/posts/': typeof AppPostsIndexRoute
-  '/verify-2fa/': typeof AuthVerify2faIndexRoute
-  '/verify-email/': typeof AuthVerifyEmailIndexRoute
-  '/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
-  '/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
-  '/account-settings/profiles/': typeof AppAccountSettingsProfilesIndexRoute
-  '/admin/analytics/': typeof AppAdminAnalyticsIndexRoute
-  '/admin/users/': typeof AppAdminUsersIndexRoute
-  '/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
-  '/admin/users/$userId/': typeof AppAdminUsersUserIdIndexRoute
-  '/admin/users/$userId/profile/$profileId/': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
+  '/': typeof IndexRoute
+  '/$locale': typeof LocaleRouteRouteWithChildren
+  '/$locale/account-settings': typeof LocaleAppAccountSettingsRouteRouteWithChildren
+  '/$locale/admin': typeof LocaleAppAdminRouteRouteWithChildren
+  '/$locale/create-post': typeof LocaleAppCreatePostRouteRoute
+  '/$locale/messages': typeof LocaleAppMessagesRouteRouteWithChildren
+  '/$locale/my-postings': typeof LocaleAppMyPostingsRouteRoute
+  '/$locale/banned': typeof LocaleAuthBannedRouteRoute
+  '/$locale/change-email-pending': typeof LocaleAuthChangeEmailPendingRouteRoute
+  '/$locale/forgot-password': typeof LocaleAuthForgotPasswordRouteRoute
+  '/$locale/login': typeof LocaleAuthLoginRouteRoute
+  '/$locale/register': typeof LocaleAuthRegisterRouteRoute
+  '/$locale/reset-password': typeof LocaleAuthResetPasswordRouteRoute
+  '/$locale/verify-2fa': typeof LocaleAuthVerify2faRouteRouteWithChildren
+  '/$locale/verify-email': typeof LocaleAuthVerifyEmailRouteRouteWithChildren
+  '/$locale/': typeof LocaleAppIndexRoute
+  '/$locale/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
+  '/$locale/admin/reports': typeof LocaleAppAdminReportsRouteRoute
+  '/$locale/admin/roles': typeof LocaleAppAdminRolesRouteRoute
+  '/$locale/admin/users': typeof LocaleAppAdminUsersRouteRouteWithChildren
+  '/$locale/edit-post/$postId': typeof LocaleAppEditPostPostIdRouteRoute
+  '/$locale/messages/$threadId': typeof LocaleAppMessagesThreadIdRouteRoute
+  '/$locale/posts/$postId': typeof LocaleAppPostsPostIdRouteRoute
+  '/$locale/profiles/$profileId': typeof LocaleAppProfilesProfileIdRouteRoute
+  '/$locale/verify-2fa/backup': typeof LocaleAuthVerify2faBackupRouteRoute
+  '/$locale/verify-2fa/email': typeof LocaleAuthVerify2faEmailRouteRoute
+  '/$locale/verify-2fa/totp': typeof LocaleAuthVerify2faTotpRouteRoute
+  '/$locale/verify-email/callback': typeof LocaleAuthVerifyEmailCallbackRouteRoute
+  '/$locale/account-settings/': typeof LocaleAppAccountSettingsIndexRoute
+  '/$locale/admin/': typeof LocaleAppAdminIndexRoute
+  '/$locale/messages/': typeof LocaleAppMessagesIndexRoute
+  '/$locale/posts/': typeof LocaleAppPostsIndexRoute
+  '/$locale/verify-2fa/': typeof LocaleAuthVerify2faIndexRoute
+  '/$locale/verify-email/': typeof LocaleAuthVerifyEmailIndexRoute
+  '/$locale/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
+  '/$locale/admin/users/$userId': typeof LocaleAppAdminUsersUserIdRouteRouteWithChildren
+  '/$locale/account-settings/profiles/': typeof LocaleAppAccountSettingsProfilesIndexRoute
+  '/$locale/admin/analytics/': typeof LocaleAppAdminAnalyticsIndexRoute
+  '/$locale/admin/users/': typeof LocaleAppAdminUsersIndexRoute
+  '/$locale/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/$locale/admin/users/$userId/': typeof LocaleAppAdminUsersUserIdIndexRoute
+  '/$locale/admin/users/$userId/profile/$profileId/': typeof LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AppIndexRoute
-  '/create-post': typeof AppCreatePostRouteRoute
-  '/my-postings': typeof AppMyPostingsRouteRoute
-  '/banned': typeof AuthBannedRouteRoute
-  '/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
-  '/forgot-password': typeof AuthForgotPasswordRouteRoute
-  '/login': typeof AuthLoginRouteRoute
-  '/register': typeof AuthRegisterRouteRoute
-  '/reset-password': typeof AuthResetPasswordRouteRoute
-  '/admin/categories': typeof AppAdminCategoriesRouteRoute
-  '/admin/reports': typeof AppAdminReportsRouteRoute
-  '/admin/roles': typeof AppAdminRolesRouteRoute
-  '/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
-  '/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
-  '/posts/$postId': typeof AppPostsPostIdRouteRoute
-  '/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
-  '/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
-  '/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
-  '/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
-  '/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
-  '/account-settings': typeof AppAccountSettingsIndexRoute
-  '/admin': typeof AppAdminIndexRoute
-  '/messages': typeof AppMessagesIndexRoute
-  '/posts': typeof AppPostsIndexRoute
-  '/verify-2fa': typeof AuthVerify2faIndexRoute
-  '/verify-email': typeof AuthVerifyEmailIndexRoute
-  '/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
-  '/account-settings/profiles': typeof AppAccountSettingsProfilesIndexRoute
-  '/admin/analytics': typeof AppAdminAnalyticsIndexRoute
-  '/admin/users': typeof AppAdminUsersIndexRoute
-  '/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
-  '/admin/users/$userId': typeof AppAdminUsersUserIdIndexRoute
-  '/admin/users/$userId/profile/$profileId': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
+  '/': typeof IndexRoute
+  '/$locale': typeof LocaleAppIndexRoute
+  '/$locale/create-post': typeof LocaleAppCreatePostRouteRoute
+  '/$locale/my-postings': typeof LocaleAppMyPostingsRouteRoute
+  '/$locale/banned': typeof LocaleAuthBannedRouteRoute
+  '/$locale/change-email-pending': typeof LocaleAuthChangeEmailPendingRouteRoute
+  '/$locale/forgot-password': typeof LocaleAuthForgotPasswordRouteRoute
+  '/$locale/login': typeof LocaleAuthLoginRouteRoute
+  '/$locale/register': typeof LocaleAuthRegisterRouteRoute
+  '/$locale/reset-password': typeof LocaleAuthResetPasswordRouteRoute
+  '/$locale/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
+  '/$locale/admin/reports': typeof LocaleAppAdminReportsRouteRoute
+  '/$locale/admin/roles': typeof LocaleAppAdminRolesRouteRoute
+  '/$locale/edit-post/$postId': typeof LocaleAppEditPostPostIdRouteRoute
+  '/$locale/messages/$threadId': typeof LocaleAppMessagesThreadIdRouteRoute
+  '/$locale/posts/$postId': typeof LocaleAppPostsPostIdRouteRoute
+  '/$locale/profiles/$profileId': typeof LocaleAppProfilesProfileIdRouteRoute
+  '/$locale/verify-2fa/backup': typeof LocaleAuthVerify2faBackupRouteRoute
+  '/$locale/verify-2fa/email': typeof LocaleAuthVerify2faEmailRouteRoute
+  '/$locale/verify-2fa/totp': typeof LocaleAuthVerify2faTotpRouteRoute
+  '/$locale/verify-email/callback': typeof LocaleAuthVerifyEmailCallbackRouteRoute
+  '/$locale/account-settings': typeof LocaleAppAccountSettingsIndexRoute
+  '/$locale/admin': typeof LocaleAppAdminIndexRoute
+  '/$locale/messages': typeof LocaleAppMessagesIndexRoute
+  '/$locale/posts': typeof LocaleAppPostsIndexRoute
+  '/$locale/verify-2fa': typeof LocaleAuthVerify2faIndexRoute
+  '/$locale/verify-email': typeof LocaleAuthVerifyEmailIndexRoute
+  '/$locale/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
+  '/$locale/account-settings/profiles': typeof LocaleAppAccountSettingsProfilesIndexRoute
+  '/$locale/admin/analytics': typeof LocaleAppAdminAnalyticsIndexRoute
+  '/$locale/admin/users': typeof LocaleAppAdminUsersIndexRoute
+  '/$locale/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/$locale/admin/users/$userId': typeof LocaleAppAdminUsersUserIdIndexRoute
+  '/$locale/admin/users/$userId/profile/$profileId': typeof LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_app': typeof AppRouteRouteWithChildren
-  '/_auth': typeof AuthRouteRouteWithChildren
-  '/_app/account-settings': typeof AppAccountSettingsRouteRouteWithChildren
-  '/_app/admin': typeof AppAdminRouteRouteWithChildren
-  '/_app/create-post': typeof AppCreatePostRouteRoute
-  '/_app/messages': typeof AppMessagesRouteRouteWithChildren
-  '/_app/my-postings': typeof AppMyPostingsRouteRoute
-  '/_auth/banned': typeof AuthBannedRouteRoute
-  '/_auth/change-email-pending': typeof AuthChangeEmailPendingRouteRoute
-  '/_auth/forgot-password': typeof AuthForgotPasswordRouteRoute
-  '/_auth/login': typeof AuthLoginRouteRoute
-  '/_auth/register': typeof AuthRegisterRouteRoute
-  '/_auth/reset-password': typeof AuthResetPasswordRouteRoute
-  '/_auth/verify-2fa': typeof AuthVerify2faRouteRouteWithChildren
-  '/_auth/verify-email': typeof AuthVerifyEmailRouteRouteWithChildren
-  '/_app/': typeof AppIndexRoute
-  '/_app/admin/categories': typeof AppAdminCategoriesRouteRoute
-  '/_app/admin/reports': typeof AppAdminReportsRouteRoute
-  '/_app/admin/roles': typeof AppAdminRolesRouteRoute
-  '/_app/admin/users': typeof AppAdminUsersRouteRouteWithChildren
-  '/_app/edit-post/$postId': typeof AppEditPostPostIdRouteRoute
-  '/_app/messages/$threadId': typeof AppMessagesThreadIdRouteRoute
-  '/_app/posts/$postId': typeof AppPostsPostIdRouteRoute
-  '/_app/profiles/$profileId': typeof AppProfilesProfileIdRouteRoute
-  '/_auth/verify-2fa/backup': typeof AuthVerify2faBackupRouteRoute
-  '/_auth/verify-2fa/email': typeof AuthVerify2faEmailRouteRoute
-  '/_auth/verify-2fa/totp': typeof AuthVerify2faTotpRouteRoute
-  '/_auth/verify-email/callback': typeof AuthVerifyEmailCallbackRouteRoute
-  '/_app/account-settings/': typeof AppAccountSettingsIndexRoute
-  '/_app/admin/': typeof AppAdminIndexRoute
-  '/_app/messages/': typeof AppMessagesIndexRoute
-  '/_app/posts/': typeof AppPostsIndexRoute
-  '/_auth/verify-2fa/': typeof AuthVerify2faIndexRoute
-  '/_auth/verify-email/': typeof AuthVerifyEmailIndexRoute
-  '/_app/account-settings/profiles/create': typeof AppAccountSettingsProfilesCreateRouteRoute
-  '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRouteRouteWithChildren
-  '/_app/account-settings/profiles/': typeof AppAccountSettingsProfilesIndexRoute
-  '/_app/admin/analytics/': typeof AppAdminAnalyticsIndexRoute
-  '/_app/admin/users/': typeof AppAdminUsersIndexRoute
-  '/_app/account-settings/profiles/$profileId/edit': typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
-  '/_app/admin/users/$userId/': typeof AppAdminUsersUserIdIndexRoute
-  '/_app/admin/users/$userId/profile/$profileId/': typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
+  '/': typeof IndexRoute
+  '/$locale': typeof LocaleRouteRouteWithChildren
+  '/$locale/_app': typeof LocaleAppRouteRouteWithChildren
+  '/$locale/_auth': typeof LocaleAuthRouteRouteWithChildren
+  '/$locale/_app/account-settings': typeof LocaleAppAccountSettingsRouteRouteWithChildren
+  '/$locale/_app/admin': typeof LocaleAppAdminRouteRouteWithChildren
+  '/$locale/_app/create-post': typeof LocaleAppCreatePostRouteRoute
+  '/$locale/_app/messages': typeof LocaleAppMessagesRouteRouteWithChildren
+  '/$locale/_app/my-postings': typeof LocaleAppMyPostingsRouteRoute
+  '/$locale/_auth/banned': typeof LocaleAuthBannedRouteRoute
+  '/$locale/_auth/change-email-pending': typeof LocaleAuthChangeEmailPendingRouteRoute
+  '/$locale/_auth/forgot-password': typeof LocaleAuthForgotPasswordRouteRoute
+  '/$locale/_auth/login': typeof LocaleAuthLoginRouteRoute
+  '/$locale/_auth/register': typeof LocaleAuthRegisterRouteRoute
+  '/$locale/_auth/reset-password': typeof LocaleAuthResetPasswordRouteRoute
+  '/$locale/_auth/verify-2fa': typeof LocaleAuthVerify2faRouteRouteWithChildren
+  '/$locale/_auth/verify-email': typeof LocaleAuthVerifyEmailRouteRouteWithChildren
+  '/$locale/_app/': typeof LocaleAppIndexRoute
+  '/$locale/_app/admin/categories': typeof LocaleAppAdminCategoriesRouteRoute
+  '/$locale/_app/admin/reports': typeof LocaleAppAdminReportsRouteRoute
+  '/$locale/_app/admin/roles': typeof LocaleAppAdminRolesRouteRoute
+  '/$locale/_app/admin/users': typeof LocaleAppAdminUsersRouteRouteWithChildren
+  '/$locale/_app/edit-post/$postId': typeof LocaleAppEditPostPostIdRouteRoute
+  '/$locale/_app/messages/$threadId': typeof LocaleAppMessagesThreadIdRouteRoute
+  '/$locale/_app/posts/$postId': typeof LocaleAppPostsPostIdRouteRoute
+  '/$locale/_app/profiles/$profileId': typeof LocaleAppProfilesProfileIdRouteRoute
+  '/$locale/_auth/verify-2fa/backup': typeof LocaleAuthVerify2faBackupRouteRoute
+  '/$locale/_auth/verify-2fa/email': typeof LocaleAuthVerify2faEmailRouteRoute
+  '/$locale/_auth/verify-2fa/totp': typeof LocaleAuthVerify2faTotpRouteRoute
+  '/$locale/_auth/verify-email/callback': typeof LocaleAuthVerifyEmailCallbackRouteRoute
+  '/$locale/_app/account-settings/': typeof LocaleAppAccountSettingsIndexRoute
+  '/$locale/_app/admin/': typeof LocaleAppAdminIndexRoute
+  '/$locale/_app/messages/': typeof LocaleAppMessagesIndexRoute
+  '/$locale/_app/posts/': typeof LocaleAppPostsIndexRoute
+  '/$locale/_auth/verify-2fa/': typeof LocaleAuthVerify2faIndexRoute
+  '/$locale/_auth/verify-email/': typeof LocaleAuthVerifyEmailIndexRoute
+  '/$locale/_app/account-settings/profiles/create': typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
+  '/$locale/_app/admin/users/$userId': typeof LocaleAppAdminUsersUserIdRouteRouteWithChildren
+  '/$locale/_app/account-settings/profiles/': typeof LocaleAppAccountSettingsProfilesIndexRoute
+  '/$locale/_app/admin/analytics/': typeof LocaleAppAdminAnalyticsIndexRoute
+  '/$locale/_app/admin/users/': typeof LocaleAppAdminUsersIndexRoute
+  '/$locale/_app/account-settings/profiles/$profileId/edit': typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
+  '/$locale/_app/admin/users/$userId/': typeof LocaleAppAdminUsersUserIdIndexRoute
+  '/$locale/_app/admin/users/$userId/profile/$profileId/': typeof LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/account-settings'
-    | '/admin'
-    | '/create-post'
-    | '/messages'
-    | '/my-postings'
-    | '/banned'
-    | '/change-email-pending'
-    | '/forgot-password'
-    | '/login'
-    | '/register'
-    | '/reset-password'
-    | '/verify-2fa'
-    | '/verify-email'
-    | '/admin/categories'
-    | '/admin/reports'
-    | '/admin/roles'
-    | '/admin/users'
-    | '/edit-post/$postId'
-    | '/messages/$threadId'
-    | '/posts/$postId'
-    | '/profiles/$profileId'
-    | '/verify-2fa/backup'
-    | '/verify-2fa/email'
-    | '/verify-2fa/totp'
-    | '/verify-email/callback'
-    | '/account-settings/'
-    | '/admin/'
-    | '/messages/'
-    | '/posts/'
-    | '/verify-2fa/'
-    | '/verify-email/'
-    | '/account-settings/profiles/create'
-    | '/admin/users/$userId'
-    | '/account-settings/profiles/'
-    | '/admin/analytics/'
-    | '/admin/users/'
-    | '/account-settings/profiles/$profileId/edit'
-    | '/admin/users/$userId/'
-    | '/admin/users/$userId/profile/$profileId/'
+    | '/$locale'
+    | '/$locale/account-settings'
+    | '/$locale/admin'
+    | '/$locale/create-post'
+    | '/$locale/messages'
+    | '/$locale/my-postings'
+    | '/$locale/banned'
+    | '/$locale/change-email-pending'
+    | '/$locale/forgot-password'
+    | '/$locale/login'
+    | '/$locale/register'
+    | '/$locale/reset-password'
+    | '/$locale/verify-2fa'
+    | '/$locale/verify-email'
+    | '/$locale/'
+    | '/$locale/admin/categories'
+    | '/$locale/admin/reports'
+    | '/$locale/admin/roles'
+    | '/$locale/admin/users'
+    | '/$locale/edit-post/$postId'
+    | '/$locale/messages/$threadId'
+    | '/$locale/posts/$postId'
+    | '/$locale/profiles/$profileId'
+    | '/$locale/verify-2fa/backup'
+    | '/$locale/verify-2fa/email'
+    | '/$locale/verify-2fa/totp'
+    | '/$locale/verify-email/callback'
+    | '/$locale/account-settings/'
+    | '/$locale/admin/'
+    | '/$locale/messages/'
+    | '/$locale/posts/'
+    | '/$locale/verify-2fa/'
+    | '/$locale/verify-email/'
+    | '/$locale/account-settings/profiles/create'
+    | '/$locale/admin/users/$userId'
+    | '/$locale/account-settings/profiles/'
+    | '/$locale/admin/analytics/'
+    | '/$locale/admin/users/'
+    | '/$locale/account-settings/profiles/$profileId/edit'
+    | '/$locale/admin/users/$userId/'
+    | '/$locale/admin/users/$userId/profile/$profileId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/create-post'
-    | '/my-postings'
-    | '/banned'
-    | '/change-email-pending'
-    | '/forgot-password'
-    | '/login'
-    | '/register'
-    | '/reset-password'
-    | '/admin/categories'
-    | '/admin/reports'
-    | '/admin/roles'
-    | '/edit-post/$postId'
-    | '/messages/$threadId'
-    | '/posts/$postId'
-    | '/profiles/$profileId'
-    | '/verify-2fa/backup'
-    | '/verify-2fa/email'
-    | '/verify-2fa/totp'
-    | '/verify-email/callback'
-    | '/account-settings'
-    | '/admin'
-    | '/messages'
-    | '/posts'
-    | '/verify-2fa'
-    | '/verify-email'
-    | '/account-settings/profiles/create'
-    | '/account-settings/profiles'
-    | '/admin/analytics'
-    | '/admin/users'
-    | '/account-settings/profiles/$profileId/edit'
-    | '/admin/users/$userId'
-    | '/admin/users/$userId/profile/$profileId'
+    | '/$locale'
+    | '/$locale/create-post'
+    | '/$locale/my-postings'
+    | '/$locale/banned'
+    | '/$locale/change-email-pending'
+    | '/$locale/forgot-password'
+    | '/$locale/login'
+    | '/$locale/register'
+    | '/$locale/reset-password'
+    | '/$locale/admin/categories'
+    | '/$locale/admin/reports'
+    | '/$locale/admin/roles'
+    | '/$locale/edit-post/$postId'
+    | '/$locale/messages/$threadId'
+    | '/$locale/posts/$postId'
+    | '/$locale/profiles/$profileId'
+    | '/$locale/verify-2fa/backup'
+    | '/$locale/verify-2fa/email'
+    | '/$locale/verify-2fa/totp'
+    | '/$locale/verify-email/callback'
+    | '/$locale/account-settings'
+    | '/$locale/admin'
+    | '/$locale/messages'
+    | '/$locale/posts'
+    | '/$locale/verify-2fa'
+    | '/$locale/verify-email'
+    | '/$locale/account-settings/profiles/create'
+    | '/$locale/account-settings/profiles'
+    | '/$locale/admin/analytics'
+    | '/$locale/admin/users'
+    | '/$locale/account-settings/profiles/$profileId/edit'
+    | '/$locale/admin/users/$userId'
+    | '/$locale/admin/users/$userId/profile/$profileId'
   id:
     | '__root__'
-    | '/_app'
-    | '/_auth'
-    | '/_app/account-settings'
-    | '/_app/admin'
-    | '/_app/create-post'
-    | '/_app/messages'
-    | '/_app/my-postings'
-    | '/_auth/banned'
-    | '/_auth/change-email-pending'
-    | '/_auth/forgot-password'
-    | '/_auth/login'
-    | '/_auth/register'
-    | '/_auth/reset-password'
-    | '/_auth/verify-2fa'
-    | '/_auth/verify-email'
-    | '/_app/'
-    | '/_app/admin/categories'
-    | '/_app/admin/reports'
-    | '/_app/admin/roles'
-    | '/_app/admin/users'
-    | '/_app/edit-post/$postId'
-    | '/_app/messages/$threadId'
-    | '/_app/posts/$postId'
-    | '/_app/profiles/$profileId'
-    | '/_auth/verify-2fa/backup'
-    | '/_auth/verify-2fa/email'
-    | '/_auth/verify-2fa/totp'
-    | '/_auth/verify-email/callback'
-    | '/_app/account-settings/'
-    | '/_app/admin/'
-    | '/_app/messages/'
-    | '/_app/posts/'
-    | '/_auth/verify-2fa/'
-    | '/_auth/verify-email/'
-    | '/_app/account-settings/profiles/create'
-    | '/_app/admin/users/$userId'
-    | '/_app/account-settings/profiles/'
-    | '/_app/admin/analytics/'
-    | '/_app/admin/users/'
-    | '/_app/account-settings/profiles/$profileId/edit'
-    | '/_app/admin/users/$userId/'
-    | '/_app/admin/users/$userId/profile/$profileId/'
+    | '/'
+    | '/$locale'
+    | '/$locale/_app'
+    | '/$locale/_auth'
+    | '/$locale/_app/account-settings'
+    | '/$locale/_app/admin'
+    | '/$locale/_app/create-post'
+    | '/$locale/_app/messages'
+    | '/$locale/_app/my-postings'
+    | '/$locale/_auth/banned'
+    | '/$locale/_auth/change-email-pending'
+    | '/$locale/_auth/forgot-password'
+    | '/$locale/_auth/login'
+    | '/$locale/_auth/register'
+    | '/$locale/_auth/reset-password'
+    | '/$locale/_auth/verify-2fa'
+    | '/$locale/_auth/verify-email'
+    | '/$locale/_app/'
+    | '/$locale/_app/admin/categories'
+    | '/$locale/_app/admin/reports'
+    | '/$locale/_app/admin/roles'
+    | '/$locale/_app/admin/users'
+    | '/$locale/_app/edit-post/$postId'
+    | '/$locale/_app/messages/$threadId'
+    | '/$locale/_app/posts/$postId'
+    | '/$locale/_app/profiles/$profileId'
+    | '/$locale/_auth/verify-2fa/backup'
+    | '/$locale/_auth/verify-2fa/email'
+    | '/$locale/_auth/verify-2fa/totp'
+    | '/$locale/_auth/verify-email/callback'
+    | '/$locale/_app/account-settings/'
+    | '/$locale/_app/admin/'
+    | '/$locale/_app/messages/'
+    | '/$locale/_app/posts/'
+    | '/$locale/_auth/verify-2fa/'
+    | '/$locale/_auth/verify-email/'
+    | '/$locale/_app/account-settings/profiles/create'
+    | '/$locale/_app/admin/users/$userId'
+    | '/$locale/_app/account-settings/profiles/'
+    | '/$locale/_app/admin/analytics/'
+    | '/$locale/_app/admin/users/'
+    | '/$locale/_app/account-settings/profiles/$profileId/edit'
+    | '/$locale/_app/admin/users/$userId/'
+    | '/$locale/_app/admin/users/$userId/profile/$profileId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AppRouteRoute: typeof AppRouteRouteWithChildren
-  AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  IndexRoute: typeof IndexRoute
+  LocaleRouteRoute: typeof LocaleRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthRouteRouteImport
+    '/$locale': {
+      id: '/$locale'
+      path: '/$locale'
+      fullPath: '/$locale'
+      preLoaderRoute: typeof LocaleRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AppRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_app/': {
-      id: '/_app/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRouteRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_auth/verify-email': {
-      id: '/_auth/verify-email'
+    '/$locale/_auth': {
+      id: '/$locale/_auth'
+      path: ''
+      fullPath: '/$locale'
+      preLoaderRoute: typeof LocaleAuthRouteRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/_app': {
+      id: '/$locale/_app'
+      path: ''
+      fullPath: '/$locale'
+      preLoaderRoute: typeof LocaleAppRouteRouteImport
+      parentRoute: typeof LocaleRouteRoute
+    }
+    '/$locale/_app/': {
+      id: '/$locale/_app/'
+      path: '/'
+      fullPath: '/$locale/'
+      preLoaderRoute: typeof LocaleAppIndexRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
+    }
+    '/$locale/_auth/verify-email': {
+      id: '/$locale/_auth/verify-email'
       path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof AuthVerifyEmailRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/verify-email'
+      preLoaderRoute: typeof LocaleAuthVerifyEmailRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/verify-2fa': {
-      id: '/_auth/verify-2fa'
+    '/$locale/_auth/verify-2fa': {
+      id: '/$locale/_auth/verify-2fa'
       path: '/verify-2fa'
-      fullPath: '/verify-2fa'
-      preLoaderRoute: typeof AuthVerify2faRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/verify-2fa'
+      preLoaderRoute: typeof LocaleAuthVerify2faRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/reset-password': {
-      id: '/_auth/reset-password'
+    '/$locale/_auth/reset-password': {
+      id: '/$locale/_auth/reset-password'
       path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof AuthResetPasswordRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/reset-password'
+      preLoaderRoute: typeof LocaleAuthResetPasswordRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/register': {
-      id: '/_auth/register'
+    '/$locale/_auth/register': {
+      id: '/$locale/_auth/register'
       path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof AuthRegisterRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/register'
+      preLoaderRoute: typeof LocaleAuthRegisterRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/login': {
-      id: '/_auth/login'
+    '/$locale/_auth/login': {
+      id: '/$locale/_auth/login'
       path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/login'
+      preLoaderRoute: typeof LocaleAuthLoginRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/forgot-password': {
-      id: '/_auth/forgot-password'
+    '/$locale/_auth/forgot-password': {
+      id: '/$locale/_auth/forgot-password'
       path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/forgot-password'
+      preLoaderRoute: typeof LocaleAuthForgotPasswordRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/change-email-pending': {
-      id: '/_auth/change-email-pending'
+    '/$locale/_auth/change-email-pending': {
+      id: '/$locale/_auth/change-email-pending'
       path: '/change-email-pending'
-      fullPath: '/change-email-pending'
-      preLoaderRoute: typeof AuthChangeEmailPendingRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/change-email-pending'
+      preLoaderRoute: typeof LocaleAuthChangeEmailPendingRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_auth/banned': {
-      id: '/_auth/banned'
+    '/$locale/_auth/banned': {
+      id: '/$locale/_auth/banned'
       path: '/banned'
-      fullPath: '/banned'
-      preLoaderRoute: typeof AuthBannedRouteRouteImport
-      parentRoute: typeof AuthRouteRoute
+      fullPath: '/$locale/banned'
+      preLoaderRoute: typeof LocaleAuthBannedRouteRouteImport
+      parentRoute: typeof LocaleAuthRouteRoute
     }
-    '/_app/my-postings': {
-      id: '/_app/my-postings'
+    '/$locale/_app/my-postings': {
+      id: '/$locale/_app/my-postings'
       path: '/my-postings'
-      fullPath: '/my-postings'
-      preLoaderRoute: typeof AppMyPostingsRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/my-postings'
+      preLoaderRoute: typeof LocaleAppMyPostingsRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/messages': {
-      id: '/_app/messages'
+    '/$locale/_app/messages': {
+      id: '/$locale/_app/messages'
       path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof AppMessagesRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/messages'
+      preLoaderRoute: typeof LocaleAppMessagesRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/create-post': {
-      id: '/_app/create-post'
+    '/$locale/_app/create-post': {
+      id: '/$locale/_app/create-post'
       path: '/create-post'
-      fullPath: '/create-post'
-      preLoaderRoute: typeof AppCreatePostRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/create-post'
+      preLoaderRoute: typeof LocaleAppCreatePostRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/admin': {
-      id: '/_app/admin'
+    '/$locale/_app/admin': {
+      id: '/$locale/_app/admin'
       path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AppAdminRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/admin'
+      preLoaderRoute: typeof LocaleAppAdminRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/account-settings': {
-      id: '/_app/account-settings'
+    '/$locale/_app/account-settings': {
+      id: '/$locale/_app/account-settings'
       path: '/account-settings'
-      fullPath: '/account-settings'
-      preLoaderRoute: typeof AppAccountSettingsRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/account-settings'
+      preLoaderRoute: typeof LocaleAppAccountSettingsRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_auth/verify-email/': {
-      id: '/_auth/verify-email/'
+    '/$locale/_auth/verify-email/': {
+      id: '/$locale/_auth/verify-email/'
       path: '/'
-      fullPath: '/verify-email/'
-      preLoaderRoute: typeof AuthVerifyEmailIndexRouteImport
-      parentRoute: typeof AuthVerifyEmailRouteRoute
+      fullPath: '/$locale/verify-email/'
+      preLoaderRoute: typeof LocaleAuthVerifyEmailIndexRouteImport
+      parentRoute: typeof LocaleAuthVerifyEmailRouteRoute
     }
-    '/_auth/verify-2fa/': {
-      id: '/_auth/verify-2fa/'
+    '/$locale/_auth/verify-2fa/': {
+      id: '/$locale/_auth/verify-2fa/'
       path: '/'
-      fullPath: '/verify-2fa/'
-      preLoaderRoute: typeof AuthVerify2faIndexRouteImport
-      parentRoute: typeof AuthVerify2faRouteRoute
+      fullPath: '/$locale/verify-2fa/'
+      preLoaderRoute: typeof LocaleAuthVerify2faIndexRouteImport
+      parentRoute: typeof LocaleAuthVerify2faRouteRoute
     }
-    '/_app/posts/': {
-      id: '/_app/posts/'
+    '/$locale/_app/posts/': {
+      id: '/$locale/_app/posts/'
       path: '/posts'
-      fullPath: '/posts/'
-      preLoaderRoute: typeof AppPostsIndexRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/posts/'
+      preLoaderRoute: typeof LocaleAppPostsIndexRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/messages/': {
-      id: '/_app/messages/'
+    '/$locale/_app/messages/': {
+      id: '/$locale/_app/messages/'
       path: '/'
-      fullPath: '/messages/'
-      preLoaderRoute: typeof AppMessagesIndexRouteImport
-      parentRoute: typeof AppMessagesRouteRoute
+      fullPath: '/$locale/messages/'
+      preLoaderRoute: typeof LocaleAppMessagesIndexRouteImport
+      parentRoute: typeof LocaleAppMessagesRouteRoute
     }
-    '/_app/admin/': {
-      id: '/_app/admin/'
+    '/$locale/_app/admin/': {
+      id: '/$locale/_app/admin/'
       path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/'
+      preLoaderRoute: typeof LocaleAppAdminIndexRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/account-settings/': {
-      id: '/_app/account-settings/'
+    '/$locale/_app/account-settings/': {
+      id: '/$locale/_app/account-settings/'
       path: '/'
-      fullPath: '/account-settings/'
-      preLoaderRoute: typeof AppAccountSettingsIndexRouteImport
-      parentRoute: typeof AppAccountSettingsRouteRoute
+      fullPath: '/$locale/account-settings/'
+      preLoaderRoute: typeof LocaleAppAccountSettingsIndexRouteImport
+      parentRoute: typeof LocaleAppAccountSettingsRouteRoute
     }
-    '/_auth/verify-email/callback': {
-      id: '/_auth/verify-email/callback'
+    '/$locale/_auth/verify-email/callback': {
+      id: '/$locale/_auth/verify-email/callback'
       path: '/callback'
-      fullPath: '/verify-email/callback'
-      preLoaderRoute: typeof AuthVerifyEmailCallbackRouteRouteImport
-      parentRoute: typeof AuthVerifyEmailRouteRoute
+      fullPath: '/$locale/verify-email/callback'
+      preLoaderRoute: typeof LocaleAuthVerifyEmailCallbackRouteRouteImport
+      parentRoute: typeof LocaleAuthVerifyEmailRouteRoute
     }
-    '/_auth/verify-2fa/totp': {
-      id: '/_auth/verify-2fa/totp'
+    '/$locale/_auth/verify-2fa/totp': {
+      id: '/$locale/_auth/verify-2fa/totp'
       path: '/totp'
-      fullPath: '/verify-2fa/totp'
-      preLoaderRoute: typeof AuthVerify2faTotpRouteRouteImport
-      parentRoute: typeof AuthVerify2faRouteRoute
+      fullPath: '/$locale/verify-2fa/totp'
+      preLoaderRoute: typeof LocaleAuthVerify2faTotpRouteRouteImport
+      parentRoute: typeof LocaleAuthVerify2faRouteRoute
     }
-    '/_auth/verify-2fa/email': {
-      id: '/_auth/verify-2fa/email'
+    '/$locale/_auth/verify-2fa/email': {
+      id: '/$locale/_auth/verify-2fa/email'
       path: '/email'
-      fullPath: '/verify-2fa/email'
-      preLoaderRoute: typeof AuthVerify2faEmailRouteRouteImport
-      parentRoute: typeof AuthVerify2faRouteRoute
+      fullPath: '/$locale/verify-2fa/email'
+      preLoaderRoute: typeof LocaleAuthVerify2faEmailRouteRouteImport
+      parentRoute: typeof LocaleAuthVerify2faRouteRoute
     }
-    '/_auth/verify-2fa/backup': {
-      id: '/_auth/verify-2fa/backup'
+    '/$locale/_auth/verify-2fa/backup': {
+      id: '/$locale/_auth/verify-2fa/backup'
       path: '/backup'
-      fullPath: '/verify-2fa/backup'
-      preLoaderRoute: typeof AuthVerify2faBackupRouteRouteImport
-      parentRoute: typeof AuthVerify2faRouteRoute
+      fullPath: '/$locale/verify-2fa/backup'
+      preLoaderRoute: typeof LocaleAuthVerify2faBackupRouteRouteImport
+      parentRoute: typeof LocaleAuthVerify2faRouteRoute
     }
-    '/_app/profiles/$profileId': {
-      id: '/_app/profiles/$profileId'
+    '/$locale/_app/profiles/$profileId': {
+      id: '/$locale/_app/profiles/$profileId'
       path: '/profiles/$profileId'
-      fullPath: '/profiles/$profileId'
-      preLoaderRoute: typeof AppProfilesProfileIdRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/profiles/$profileId'
+      preLoaderRoute: typeof LocaleAppProfilesProfileIdRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/posts/$postId': {
-      id: '/_app/posts/$postId'
+    '/$locale/_app/posts/$postId': {
+      id: '/$locale/_app/posts/$postId'
       path: '/posts/$postId'
-      fullPath: '/posts/$postId'
-      preLoaderRoute: typeof AppPostsPostIdRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/posts/$postId'
+      preLoaderRoute: typeof LocaleAppPostsPostIdRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/messages/$threadId': {
-      id: '/_app/messages/$threadId'
+    '/$locale/_app/messages/$threadId': {
+      id: '/$locale/_app/messages/$threadId'
       path: '/$threadId'
-      fullPath: '/messages/$threadId'
-      preLoaderRoute: typeof AppMessagesThreadIdRouteRouteImport
-      parentRoute: typeof AppMessagesRouteRoute
+      fullPath: '/$locale/messages/$threadId'
+      preLoaderRoute: typeof LocaleAppMessagesThreadIdRouteRouteImport
+      parentRoute: typeof LocaleAppMessagesRouteRoute
     }
-    '/_app/edit-post/$postId': {
-      id: '/_app/edit-post/$postId'
+    '/$locale/_app/edit-post/$postId': {
+      id: '/$locale/_app/edit-post/$postId'
       path: '/edit-post/$postId'
-      fullPath: '/edit-post/$postId'
-      preLoaderRoute: typeof AppEditPostPostIdRouteRouteImport
-      parentRoute: typeof AppRouteRoute
+      fullPath: '/$locale/edit-post/$postId'
+      preLoaderRoute: typeof LocaleAppEditPostPostIdRouteRouteImport
+      parentRoute: typeof LocaleAppRouteRoute
     }
-    '/_app/admin/users': {
-      id: '/_app/admin/users'
+    '/$locale/_app/admin/users': {
+      id: '/$locale/_app/admin/users'
       path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AppAdminUsersRouteRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/users'
+      preLoaderRoute: typeof LocaleAppAdminUsersRouteRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/admin/roles': {
-      id: '/_app/admin/roles'
+    '/$locale/_app/admin/roles': {
+      id: '/$locale/_app/admin/roles'
       path: '/roles'
-      fullPath: '/admin/roles'
-      preLoaderRoute: typeof AppAdminRolesRouteRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/roles'
+      preLoaderRoute: typeof LocaleAppAdminRolesRouteRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/admin/reports': {
-      id: '/_app/admin/reports'
+    '/$locale/_app/admin/reports': {
+      id: '/$locale/_app/admin/reports'
       path: '/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AppAdminReportsRouteRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/reports'
+      preLoaderRoute: typeof LocaleAppAdminReportsRouteRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/admin/categories': {
-      id: '/_app/admin/categories'
+    '/$locale/_app/admin/categories': {
+      id: '/$locale/_app/admin/categories'
       path: '/categories'
-      fullPath: '/admin/categories'
-      preLoaderRoute: typeof AppAdminCategoriesRouteRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/categories'
+      preLoaderRoute: typeof LocaleAppAdminCategoriesRouteRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/admin/users/': {
-      id: '/_app/admin/users/'
+    '/$locale/_app/admin/users/': {
+      id: '/$locale/_app/admin/users/'
       path: '/'
-      fullPath: '/admin/users/'
-      preLoaderRoute: typeof AppAdminUsersIndexRouteImport
-      parentRoute: typeof AppAdminUsersRouteRoute
+      fullPath: '/$locale/admin/users/'
+      preLoaderRoute: typeof LocaleAppAdminUsersIndexRouteImport
+      parentRoute: typeof LocaleAppAdminUsersRouteRoute
     }
-    '/_app/admin/analytics/': {
-      id: '/_app/admin/analytics/'
+    '/$locale/_app/admin/analytics/': {
+      id: '/$locale/_app/admin/analytics/'
       path: '/analytics'
-      fullPath: '/admin/analytics/'
-      preLoaderRoute: typeof AppAdminAnalyticsIndexRouteImport
-      parentRoute: typeof AppAdminRouteRoute
+      fullPath: '/$locale/admin/analytics/'
+      preLoaderRoute: typeof LocaleAppAdminAnalyticsIndexRouteImport
+      parentRoute: typeof LocaleAppAdminRouteRoute
     }
-    '/_app/account-settings/profiles/': {
-      id: '/_app/account-settings/profiles/'
+    '/$locale/_app/account-settings/profiles/': {
+      id: '/$locale/_app/account-settings/profiles/'
       path: '/profiles'
-      fullPath: '/account-settings/profiles/'
-      preLoaderRoute: typeof AppAccountSettingsProfilesIndexRouteImport
-      parentRoute: typeof AppAccountSettingsRouteRoute
+      fullPath: '/$locale/account-settings/profiles/'
+      preLoaderRoute: typeof LocaleAppAccountSettingsProfilesIndexRouteImport
+      parentRoute: typeof LocaleAppAccountSettingsRouteRoute
     }
-    '/_app/admin/users/$userId': {
-      id: '/_app/admin/users/$userId'
+    '/$locale/_app/admin/users/$userId': {
+      id: '/$locale/_app/admin/users/$userId'
       path: '/$userId'
-      fullPath: '/admin/users/$userId'
-      preLoaderRoute: typeof AppAdminUsersUserIdRouteRouteImport
-      parentRoute: typeof AppAdminUsersRouteRoute
+      fullPath: '/$locale/admin/users/$userId'
+      preLoaderRoute: typeof LocaleAppAdminUsersUserIdRouteRouteImport
+      parentRoute: typeof LocaleAppAdminUsersRouteRoute
     }
-    '/_app/account-settings/profiles/create': {
-      id: '/_app/account-settings/profiles/create'
+    '/$locale/_app/account-settings/profiles/create': {
+      id: '/$locale/_app/account-settings/profiles/create'
       path: '/profiles/create'
-      fullPath: '/account-settings/profiles/create'
-      preLoaderRoute: typeof AppAccountSettingsProfilesCreateRouteRouteImport
-      parentRoute: typeof AppAccountSettingsRouteRoute
+      fullPath: '/$locale/account-settings/profiles/create'
+      preLoaderRoute: typeof LocaleAppAccountSettingsProfilesCreateRouteRouteImport
+      parentRoute: typeof LocaleAppAccountSettingsRouteRoute
     }
-    '/_app/admin/users/$userId/': {
-      id: '/_app/admin/users/$userId/'
+    '/$locale/_app/admin/users/$userId/': {
+      id: '/$locale/_app/admin/users/$userId/'
       path: '/'
-      fullPath: '/admin/users/$userId/'
-      preLoaderRoute: typeof AppAdminUsersUserIdIndexRouteImport
-      parentRoute: typeof AppAdminUsersUserIdRouteRoute
+      fullPath: '/$locale/admin/users/$userId/'
+      preLoaderRoute: typeof LocaleAppAdminUsersUserIdIndexRouteImport
+      parentRoute: typeof LocaleAppAdminUsersUserIdRouteRoute
     }
-    '/_app/account-settings/profiles/$profileId/edit': {
-      id: '/_app/account-settings/profiles/$profileId/edit'
+    '/$locale/_app/account-settings/profiles/$profileId/edit': {
+      id: '/$locale/_app/account-settings/profiles/$profileId/edit'
       path: '/profiles/$profileId/edit'
-      fullPath: '/account-settings/profiles/$profileId/edit'
-      preLoaderRoute: typeof AppAccountSettingsProfilesProfileIdEditRouteRouteImport
-      parentRoute: typeof AppAccountSettingsRouteRoute
+      fullPath: '/$locale/account-settings/profiles/$profileId/edit'
+      preLoaderRoute: typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRouteImport
+      parentRoute: typeof LocaleAppAccountSettingsRouteRoute
     }
-    '/_app/admin/users/$userId/profile/$profileId/': {
-      id: '/_app/admin/users/$userId/profile/$profileId/'
+    '/$locale/_app/admin/users/$userId/profile/$profileId/': {
+      id: '/$locale/_app/admin/users/$userId/profile/$profileId/'
       path: '/profile/$profileId'
-      fullPath: '/admin/users/$userId/profile/$profileId/'
-      preLoaderRoute: typeof AppAdminUsersUserIdProfileProfileIdIndexRouteImport
-      parentRoute: typeof AppAdminUsersUserIdRouteRoute
+      fullPath: '/$locale/admin/users/$userId/profile/$profileId/'
+      preLoaderRoute: typeof LocaleAppAdminUsersUserIdProfileProfileIdIndexRouteImport
+      parentRoute: typeof LocaleAppAdminUsersUserIdRouteRoute
     }
   }
 }
 
-interface AppAccountSettingsRouteRouteChildren {
-  AppAccountSettingsIndexRoute: typeof AppAccountSettingsIndexRoute
-  AppAccountSettingsProfilesCreateRouteRoute: typeof AppAccountSettingsProfilesCreateRouteRoute
-  AppAccountSettingsProfilesIndexRoute: typeof AppAccountSettingsProfilesIndexRoute
-  AppAccountSettingsProfilesProfileIdEditRouteRoute: typeof AppAccountSettingsProfilesProfileIdEditRouteRoute
+interface LocaleAppAccountSettingsRouteRouteChildren {
+  LocaleAppAccountSettingsIndexRoute: typeof LocaleAppAccountSettingsIndexRoute
+  LocaleAppAccountSettingsProfilesCreateRouteRoute: typeof LocaleAppAccountSettingsProfilesCreateRouteRoute
+  LocaleAppAccountSettingsProfilesIndexRoute: typeof LocaleAppAccountSettingsProfilesIndexRoute
+  LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute: typeof LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute
 }
 
-const AppAccountSettingsRouteRouteChildren: AppAccountSettingsRouteRouteChildren =
+const LocaleAppAccountSettingsRouteRouteChildren: LocaleAppAccountSettingsRouteRouteChildren =
   {
-    AppAccountSettingsIndexRoute: AppAccountSettingsIndexRoute,
-    AppAccountSettingsProfilesCreateRouteRoute:
-      AppAccountSettingsProfilesCreateRouteRoute,
-    AppAccountSettingsProfilesIndexRoute: AppAccountSettingsProfilesIndexRoute,
-    AppAccountSettingsProfilesProfileIdEditRouteRoute:
-      AppAccountSettingsProfilesProfileIdEditRouteRoute,
+    LocaleAppAccountSettingsIndexRoute: LocaleAppAccountSettingsIndexRoute,
+    LocaleAppAccountSettingsProfilesCreateRouteRoute:
+      LocaleAppAccountSettingsProfilesCreateRouteRoute,
+    LocaleAppAccountSettingsProfilesIndexRoute:
+      LocaleAppAccountSettingsProfilesIndexRoute,
+    LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute:
+      LocaleAppAccountSettingsProfilesProfileIdEditRouteRoute,
   }
 
-const AppAccountSettingsRouteRouteWithChildren =
-  AppAccountSettingsRouteRoute._addFileChildren(
-    AppAccountSettingsRouteRouteChildren,
+const LocaleAppAccountSettingsRouteRouteWithChildren =
+  LocaleAppAccountSettingsRouteRoute._addFileChildren(
+    LocaleAppAccountSettingsRouteRouteChildren,
   )
 
-interface AppAdminUsersUserIdRouteRouteChildren {
-  AppAdminUsersUserIdIndexRoute: typeof AppAdminUsersUserIdIndexRoute
-  AppAdminUsersUserIdProfileProfileIdIndexRoute: typeof AppAdminUsersUserIdProfileProfileIdIndexRoute
+interface LocaleAppAdminUsersUserIdRouteRouteChildren {
+  LocaleAppAdminUsersUserIdIndexRoute: typeof LocaleAppAdminUsersUserIdIndexRoute
+  LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute: typeof LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute
 }
 
-const AppAdminUsersUserIdRouteRouteChildren: AppAdminUsersUserIdRouteRouteChildren =
+const LocaleAppAdminUsersUserIdRouteRouteChildren: LocaleAppAdminUsersUserIdRouteRouteChildren =
   {
-    AppAdminUsersUserIdIndexRoute: AppAdminUsersUserIdIndexRoute,
-    AppAdminUsersUserIdProfileProfileIdIndexRoute:
-      AppAdminUsersUserIdProfileProfileIdIndexRoute,
+    LocaleAppAdminUsersUserIdIndexRoute: LocaleAppAdminUsersUserIdIndexRoute,
+    LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute:
+      LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute,
   }
 
-const AppAdminUsersUserIdRouteRouteWithChildren =
-  AppAdminUsersUserIdRouteRoute._addFileChildren(
-    AppAdminUsersUserIdRouteRouteChildren,
+const LocaleAppAdminUsersUserIdRouteRouteWithChildren =
+  LocaleAppAdminUsersUserIdRouteRoute._addFileChildren(
+    LocaleAppAdminUsersUserIdRouteRouteChildren,
   )
 
-interface AppAdminUsersRouteRouteChildren {
-  AppAdminUsersUserIdRouteRoute: typeof AppAdminUsersUserIdRouteRouteWithChildren
-  AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
+interface LocaleAppAdminUsersRouteRouteChildren {
+  LocaleAppAdminUsersUserIdRouteRoute: typeof LocaleAppAdminUsersUserIdRouteRouteWithChildren
+  LocaleAppAdminUsersIndexRoute: typeof LocaleAppAdminUsersIndexRoute
 }
 
-const AppAdminUsersRouteRouteChildren: AppAdminUsersRouteRouteChildren = {
-  AppAdminUsersUserIdRouteRoute: AppAdminUsersUserIdRouteRouteWithChildren,
-  AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,
+const LocaleAppAdminUsersRouteRouteChildren: LocaleAppAdminUsersRouteRouteChildren =
+  {
+    LocaleAppAdminUsersUserIdRouteRoute:
+      LocaleAppAdminUsersUserIdRouteRouteWithChildren,
+    LocaleAppAdminUsersIndexRoute: LocaleAppAdminUsersIndexRoute,
+  }
+
+const LocaleAppAdminUsersRouteRouteWithChildren =
+  LocaleAppAdminUsersRouteRoute._addFileChildren(
+    LocaleAppAdminUsersRouteRouteChildren,
+  )
+
+interface LocaleAppAdminRouteRouteChildren {
+  LocaleAppAdminCategoriesRouteRoute: typeof LocaleAppAdminCategoriesRouteRoute
+  LocaleAppAdminReportsRouteRoute: typeof LocaleAppAdminReportsRouteRoute
+  LocaleAppAdminRolesRouteRoute: typeof LocaleAppAdminRolesRouteRoute
+  LocaleAppAdminUsersRouteRoute: typeof LocaleAppAdminUsersRouteRouteWithChildren
+  LocaleAppAdminIndexRoute: typeof LocaleAppAdminIndexRoute
+  LocaleAppAdminAnalyticsIndexRoute: typeof LocaleAppAdminAnalyticsIndexRoute
 }
 
-const AppAdminUsersRouteRouteWithChildren =
-  AppAdminUsersRouteRoute._addFileChildren(AppAdminUsersRouteRouteChildren)
-
-interface AppAdminRouteRouteChildren {
-  AppAdminCategoriesRouteRoute: typeof AppAdminCategoriesRouteRoute
-  AppAdminReportsRouteRoute: typeof AppAdminReportsRouteRoute
-  AppAdminRolesRouteRoute: typeof AppAdminRolesRouteRoute
-  AppAdminUsersRouteRoute: typeof AppAdminUsersRouteRouteWithChildren
-  AppAdminIndexRoute: typeof AppAdminIndexRoute
-  AppAdminAnalyticsIndexRoute: typeof AppAdminAnalyticsIndexRoute
+const LocaleAppAdminRouteRouteChildren: LocaleAppAdminRouteRouteChildren = {
+  LocaleAppAdminCategoriesRouteRoute: LocaleAppAdminCategoriesRouteRoute,
+  LocaleAppAdminReportsRouteRoute: LocaleAppAdminReportsRouteRoute,
+  LocaleAppAdminRolesRouteRoute: LocaleAppAdminRolesRouteRoute,
+  LocaleAppAdminUsersRouteRoute: LocaleAppAdminUsersRouteRouteWithChildren,
+  LocaleAppAdminIndexRoute: LocaleAppAdminIndexRoute,
+  LocaleAppAdminAnalyticsIndexRoute: LocaleAppAdminAnalyticsIndexRoute,
 }
 
-const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
-  AppAdminCategoriesRouteRoute: AppAdminCategoriesRouteRoute,
-  AppAdminReportsRouteRoute: AppAdminReportsRouteRoute,
-  AppAdminRolesRouteRoute: AppAdminRolesRouteRoute,
-  AppAdminUsersRouteRoute: AppAdminUsersRouteRouteWithChildren,
-  AppAdminIndexRoute: AppAdminIndexRoute,
-  AppAdminAnalyticsIndexRoute: AppAdminAnalyticsIndexRoute,
+const LocaleAppAdminRouteRouteWithChildren =
+  LocaleAppAdminRouteRoute._addFileChildren(LocaleAppAdminRouteRouteChildren)
+
+interface LocaleAppMessagesRouteRouteChildren {
+  LocaleAppMessagesThreadIdRouteRoute: typeof LocaleAppMessagesThreadIdRouteRoute
+  LocaleAppMessagesIndexRoute: typeof LocaleAppMessagesIndexRoute
 }
 
-const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
-  AppAdminRouteRouteChildren,
+const LocaleAppMessagesRouteRouteChildren: LocaleAppMessagesRouteRouteChildren =
+  {
+    LocaleAppMessagesThreadIdRouteRoute: LocaleAppMessagesThreadIdRouteRoute,
+    LocaleAppMessagesIndexRoute: LocaleAppMessagesIndexRoute,
+  }
+
+const LocaleAppMessagesRouteRouteWithChildren =
+  LocaleAppMessagesRouteRoute._addFileChildren(
+    LocaleAppMessagesRouteRouteChildren,
+  )
+
+interface LocaleAppRouteRouteChildren {
+  LocaleAppAccountSettingsRouteRoute: typeof LocaleAppAccountSettingsRouteRouteWithChildren
+  LocaleAppAdminRouteRoute: typeof LocaleAppAdminRouteRouteWithChildren
+  LocaleAppCreatePostRouteRoute: typeof LocaleAppCreatePostRouteRoute
+  LocaleAppMessagesRouteRoute: typeof LocaleAppMessagesRouteRouteWithChildren
+  LocaleAppMyPostingsRouteRoute: typeof LocaleAppMyPostingsRouteRoute
+  LocaleAppIndexRoute: typeof LocaleAppIndexRoute
+  LocaleAppEditPostPostIdRouteRoute: typeof LocaleAppEditPostPostIdRouteRoute
+  LocaleAppPostsPostIdRouteRoute: typeof LocaleAppPostsPostIdRouteRoute
+  LocaleAppProfilesProfileIdRouteRoute: typeof LocaleAppProfilesProfileIdRouteRoute
+  LocaleAppPostsIndexRoute: typeof LocaleAppPostsIndexRoute
+}
+
+const LocaleAppRouteRouteChildren: LocaleAppRouteRouteChildren = {
+  LocaleAppAccountSettingsRouteRoute:
+    LocaleAppAccountSettingsRouteRouteWithChildren,
+  LocaleAppAdminRouteRoute: LocaleAppAdminRouteRouteWithChildren,
+  LocaleAppCreatePostRouteRoute: LocaleAppCreatePostRouteRoute,
+  LocaleAppMessagesRouteRoute: LocaleAppMessagesRouteRouteWithChildren,
+  LocaleAppMyPostingsRouteRoute: LocaleAppMyPostingsRouteRoute,
+  LocaleAppIndexRoute: LocaleAppIndexRoute,
+  LocaleAppEditPostPostIdRouteRoute: LocaleAppEditPostPostIdRouteRoute,
+  LocaleAppPostsPostIdRouteRoute: LocaleAppPostsPostIdRouteRoute,
+  LocaleAppProfilesProfileIdRouteRoute: LocaleAppProfilesProfileIdRouteRoute,
+  LocaleAppPostsIndexRoute: LocaleAppPostsIndexRoute,
+}
+
+const LocaleAppRouteRouteWithChildren = LocaleAppRouteRoute._addFileChildren(
+  LocaleAppRouteRouteChildren,
 )
 
-interface AppMessagesRouteRouteChildren {
-  AppMessagesThreadIdRouteRoute: typeof AppMessagesThreadIdRouteRoute
-  AppMessagesIndexRoute: typeof AppMessagesIndexRoute
+interface LocaleAuthVerify2faRouteRouteChildren {
+  LocaleAuthVerify2faBackupRouteRoute: typeof LocaleAuthVerify2faBackupRouteRoute
+  LocaleAuthVerify2faEmailRouteRoute: typeof LocaleAuthVerify2faEmailRouteRoute
+  LocaleAuthVerify2faTotpRouteRoute: typeof LocaleAuthVerify2faTotpRouteRoute
+  LocaleAuthVerify2faIndexRoute: typeof LocaleAuthVerify2faIndexRoute
 }
 
-const AppMessagesRouteRouteChildren: AppMessagesRouteRouteChildren = {
-  AppMessagesThreadIdRouteRoute: AppMessagesThreadIdRouteRoute,
-  AppMessagesIndexRoute: AppMessagesIndexRoute,
+const LocaleAuthVerify2faRouteRouteChildren: LocaleAuthVerify2faRouteRouteChildren =
+  {
+    LocaleAuthVerify2faBackupRouteRoute: LocaleAuthVerify2faBackupRouteRoute,
+    LocaleAuthVerify2faEmailRouteRoute: LocaleAuthVerify2faEmailRouteRoute,
+    LocaleAuthVerify2faTotpRouteRoute: LocaleAuthVerify2faTotpRouteRoute,
+    LocaleAuthVerify2faIndexRoute: LocaleAuthVerify2faIndexRoute,
+  }
+
+const LocaleAuthVerify2faRouteRouteWithChildren =
+  LocaleAuthVerify2faRouteRoute._addFileChildren(
+    LocaleAuthVerify2faRouteRouteChildren,
+  )
+
+interface LocaleAuthVerifyEmailRouteRouteChildren {
+  LocaleAuthVerifyEmailCallbackRouteRoute: typeof LocaleAuthVerifyEmailCallbackRouteRoute
+  LocaleAuthVerifyEmailIndexRoute: typeof LocaleAuthVerifyEmailIndexRoute
 }
 
-const AppMessagesRouteRouteWithChildren =
-  AppMessagesRouteRoute._addFileChildren(AppMessagesRouteRouteChildren)
+const LocaleAuthVerifyEmailRouteRouteChildren: LocaleAuthVerifyEmailRouteRouteChildren =
+  {
+    LocaleAuthVerifyEmailCallbackRouteRoute:
+      LocaleAuthVerifyEmailCallbackRouteRoute,
+    LocaleAuthVerifyEmailIndexRoute: LocaleAuthVerifyEmailIndexRoute,
+  }
 
-interface AppRouteRouteChildren {
-  AppAccountSettingsRouteRoute: typeof AppAccountSettingsRouteRouteWithChildren
-  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
-  AppCreatePostRouteRoute: typeof AppCreatePostRouteRoute
-  AppMessagesRouteRoute: typeof AppMessagesRouteRouteWithChildren
-  AppMyPostingsRouteRoute: typeof AppMyPostingsRouteRoute
-  AppIndexRoute: typeof AppIndexRoute
-  AppEditPostPostIdRouteRoute: typeof AppEditPostPostIdRouteRoute
-  AppPostsPostIdRouteRoute: typeof AppPostsPostIdRouteRoute
-  AppProfilesProfileIdRouteRoute: typeof AppProfilesProfileIdRouteRoute
-  AppPostsIndexRoute: typeof AppPostsIndexRoute
+const LocaleAuthVerifyEmailRouteRouteWithChildren =
+  LocaleAuthVerifyEmailRouteRoute._addFileChildren(
+    LocaleAuthVerifyEmailRouteRouteChildren,
+  )
+
+interface LocaleAuthRouteRouteChildren {
+  LocaleAuthBannedRouteRoute: typeof LocaleAuthBannedRouteRoute
+  LocaleAuthChangeEmailPendingRouteRoute: typeof LocaleAuthChangeEmailPendingRouteRoute
+  LocaleAuthForgotPasswordRouteRoute: typeof LocaleAuthForgotPasswordRouteRoute
+  LocaleAuthLoginRouteRoute: typeof LocaleAuthLoginRouteRoute
+  LocaleAuthRegisterRouteRoute: typeof LocaleAuthRegisterRouteRoute
+  LocaleAuthResetPasswordRouteRoute: typeof LocaleAuthResetPasswordRouteRoute
+  LocaleAuthVerify2faRouteRoute: typeof LocaleAuthVerify2faRouteRouteWithChildren
+  LocaleAuthVerifyEmailRouteRoute: typeof LocaleAuthVerifyEmailRouteRouteWithChildren
 }
 
-const AppRouteRouteChildren: AppRouteRouteChildren = {
-  AppAccountSettingsRouteRoute: AppAccountSettingsRouteRouteWithChildren,
-  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
-  AppCreatePostRouteRoute: AppCreatePostRouteRoute,
-  AppMessagesRouteRoute: AppMessagesRouteRouteWithChildren,
-  AppMyPostingsRouteRoute: AppMyPostingsRouteRoute,
-  AppIndexRoute: AppIndexRoute,
-  AppEditPostPostIdRouteRoute: AppEditPostPostIdRouteRoute,
-  AppPostsPostIdRouteRoute: AppPostsPostIdRouteRoute,
-  AppProfilesProfileIdRouteRoute: AppProfilesProfileIdRouteRoute,
-  AppPostsIndexRoute: AppPostsIndexRoute,
+const LocaleAuthRouteRouteChildren: LocaleAuthRouteRouteChildren = {
+  LocaleAuthBannedRouteRoute: LocaleAuthBannedRouteRoute,
+  LocaleAuthChangeEmailPendingRouteRoute:
+    LocaleAuthChangeEmailPendingRouteRoute,
+  LocaleAuthForgotPasswordRouteRoute: LocaleAuthForgotPasswordRouteRoute,
+  LocaleAuthLoginRouteRoute: LocaleAuthLoginRouteRoute,
+  LocaleAuthRegisterRouteRoute: LocaleAuthRegisterRouteRoute,
+  LocaleAuthResetPasswordRouteRoute: LocaleAuthResetPasswordRouteRoute,
+  LocaleAuthVerify2faRouteRoute: LocaleAuthVerify2faRouteRouteWithChildren,
+  LocaleAuthVerifyEmailRouteRoute: LocaleAuthVerifyEmailRouteRouteWithChildren,
 }
 
-const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
-  AppRouteRouteChildren,
+const LocaleAuthRouteRouteWithChildren = LocaleAuthRouteRoute._addFileChildren(
+  LocaleAuthRouteRouteChildren,
 )
 
-interface AuthVerify2faRouteRouteChildren {
-  AuthVerify2faBackupRouteRoute: typeof AuthVerify2faBackupRouteRoute
-  AuthVerify2faEmailRouteRoute: typeof AuthVerify2faEmailRouteRoute
-  AuthVerify2faTotpRouteRoute: typeof AuthVerify2faTotpRouteRoute
-  AuthVerify2faIndexRoute: typeof AuthVerify2faIndexRoute
+interface LocaleRouteRouteChildren {
+  LocaleAppRouteRoute: typeof LocaleAppRouteRouteWithChildren
+  LocaleAuthRouteRoute: typeof LocaleAuthRouteRouteWithChildren
 }
 
-const AuthVerify2faRouteRouteChildren: AuthVerify2faRouteRouteChildren = {
-  AuthVerify2faBackupRouteRoute: AuthVerify2faBackupRouteRoute,
-  AuthVerify2faEmailRouteRoute: AuthVerify2faEmailRouteRoute,
-  AuthVerify2faTotpRouteRoute: AuthVerify2faTotpRouteRoute,
-  AuthVerify2faIndexRoute: AuthVerify2faIndexRoute,
+const LocaleRouteRouteChildren: LocaleRouteRouteChildren = {
+  LocaleAppRouteRoute: LocaleAppRouteRouteWithChildren,
+  LocaleAuthRouteRoute: LocaleAuthRouteRouteWithChildren,
 }
 
-const AuthVerify2faRouteRouteWithChildren =
-  AuthVerify2faRouteRoute._addFileChildren(AuthVerify2faRouteRouteChildren)
-
-interface AuthVerifyEmailRouteRouteChildren {
-  AuthVerifyEmailCallbackRouteRoute: typeof AuthVerifyEmailCallbackRouteRoute
-  AuthVerifyEmailIndexRoute: typeof AuthVerifyEmailIndexRoute
-}
-
-const AuthVerifyEmailRouteRouteChildren: AuthVerifyEmailRouteRouteChildren = {
-  AuthVerifyEmailCallbackRouteRoute: AuthVerifyEmailCallbackRouteRoute,
-  AuthVerifyEmailIndexRoute: AuthVerifyEmailIndexRoute,
-}
-
-const AuthVerifyEmailRouteRouteWithChildren =
-  AuthVerifyEmailRouteRoute._addFileChildren(AuthVerifyEmailRouteRouteChildren)
-
-interface AuthRouteRouteChildren {
-  AuthBannedRouteRoute: typeof AuthBannedRouteRoute
-  AuthChangeEmailPendingRouteRoute: typeof AuthChangeEmailPendingRouteRoute
-  AuthForgotPasswordRouteRoute: typeof AuthForgotPasswordRouteRoute
-  AuthLoginRouteRoute: typeof AuthLoginRouteRoute
-  AuthRegisterRouteRoute: typeof AuthRegisterRouteRoute
-  AuthResetPasswordRouteRoute: typeof AuthResetPasswordRouteRoute
-  AuthVerify2faRouteRoute: typeof AuthVerify2faRouteRouteWithChildren
-  AuthVerifyEmailRouteRoute: typeof AuthVerifyEmailRouteRouteWithChildren
-}
-
-const AuthRouteRouteChildren: AuthRouteRouteChildren = {
-  AuthBannedRouteRoute: AuthBannedRouteRoute,
-  AuthChangeEmailPendingRouteRoute: AuthChangeEmailPendingRouteRoute,
-  AuthForgotPasswordRouteRoute: AuthForgotPasswordRouteRoute,
-  AuthLoginRouteRoute: AuthLoginRouteRoute,
-  AuthRegisterRouteRoute: AuthRegisterRouteRoute,
-  AuthResetPasswordRouteRoute: AuthResetPasswordRouteRoute,
-  AuthVerify2faRouteRoute: AuthVerify2faRouteRouteWithChildren,
-  AuthVerifyEmailRouteRoute: AuthVerifyEmailRouteRouteWithChildren,
-}
-
-const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
-  AuthRouteRouteChildren,
+const LocaleRouteRouteWithChildren = LocaleRouteRoute._addFileChildren(
+  LocaleRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  AppRouteRoute: AppRouteRouteWithChildren,
-  AuthRouteRoute: AuthRouteRouteWithChildren,
+  IndexRoute: IndexRoute,
+  LocaleRouteRoute: LocaleRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

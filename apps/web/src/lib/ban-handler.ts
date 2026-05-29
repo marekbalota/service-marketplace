@@ -1,4 +1,5 @@
 import { queryClient, routerRef } from '#/router'
+import i18n from '#/lib/i18n'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 import { parseAuthErrorBody } from '#/lib/api-error'
 import { ErrorCodes } from '@marketplace/shared'
@@ -24,10 +25,11 @@ export function handleBanError(error: unknown): boolean {
     queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
     localStorage.removeItem(STORAGE_KEY)
     if (routerRef) {
+      const locale = i18n.language as 'en' | 'sk' | 'cs'
       void routerRef.invalidate()
-      void routerRef.navigate({ to: '/banned' })
+      void routerRef.navigate({ to: '/$locale/banned', params: { locale } })
     } else {
-      window.location.href = '/banned'
+      window.location.href = `/${i18n.language}/banned`
     }
     return true
   }
