@@ -7,7 +7,7 @@ set -e
 cd /app/apps/api
 
 echo "[entrypoint] applying database migrations"
-bunx drizzle-kit migrate
+bun run src/db/migrate.ts
 
 if [ "${SEED_ON_START}" = "true" ]; then
   echo "[entrypoint] seeding database (upsert)"
