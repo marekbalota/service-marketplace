@@ -16,9 +16,31 @@ vi.mock('../route', () => ({
 const { mockData, mockInvalidateQueries } = vi.hoisted(() => {
   const mockData = {
     items: [
-      { categoryId: 'cat-1', name: 'Cleaning', activePosts: 3, archivedPosts: 1 },
-      { categoryId: 'cat-2', name: 'Plumbing', activePosts: 0, archivedPosts: 0 },
-      { categoryId: 'cat-3', name: 'Tutoring', activePosts: 5, archivedPosts: 2 },
+      {
+        categoryId: 'cat-1',
+        translations: [
+          { locale: 'en', name: 'Cleaning' },
+          { locale: 'sk', name: 'Čistenie' },
+        ],
+        activePosts: 3,
+        archivedPosts: 1,
+      },
+      {
+        categoryId: 'cat-2',
+        translations: [{ locale: 'en', name: 'Plumbing' }],
+        activePosts: 0,
+        archivedPosts: 0,
+      },
+      {
+        categoryId: 'cat-3',
+        translations: [
+          { locale: 'en', name: 'Tutoring' },
+          { locale: 'sk', name: 'Doučovanie' },
+          { locale: 'cs', name: 'Doučování' },
+        ],
+        activePosts: 5,
+        archivedPosts: 2,
+      },
     ],
     total: 3,
     totalPages: 1,
@@ -53,7 +75,7 @@ vi.mock('#/api', () => ({
           post: vi
             .fn()
             .mockResolvedValue({
-              data: { categoryId: 'new-1', name: 'New', description: null },
+              data: { categoryId: 'new-1', translations: [{ locale: 'en', name: 'New' }] },
               error: null,
             }),
           get: vi.fn().mockResolvedValue({ data: mockData, error: null }),
@@ -97,11 +119,11 @@ describe('CategoriesContent', () => {
     expect(screen.getByText(/Delete Category/i)).toBeInTheDocument()
   })
 
-  it('opens rename dialog when Rename button is clicked', () => {
+  it('opens edit dialog when Edit button is clicked', () => {
     render(<CategoriesContent />)
-    const renameButtons = screen.getAllByRole('button', { name: /rename/i })
-    fireEvent.click(renameButtons[0]!)
-    expect(screen.getByText('Rename Category')).toBeInTheDocument()
+    const editButtons = screen.getAllByRole('button', { name: /edit/i })
+    fireEvent.click(editButtons[0]!)
+    expect(screen.getByText('Edit Category')).toBeInTheDocument()
   })
 
   it('opens create dialog when New Category is clicked', () => {

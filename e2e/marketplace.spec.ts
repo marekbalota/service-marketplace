@@ -711,3 +711,75 @@ test.describe('2FA challenge routes', () => {
     await expect(page.getByText(/try another way/i)).toBeVisible()
   })
 })
+
+test.describe('Category localisation — admin', () => {
+  test.use({ storageState: 'e2e/.auth/admin.json' })
+
+  test('creates category with all three translations — row shows 3/3', async ({ page }) => {
+    await page.goto('/en/admin/categories')
+    await page.getByRole('button', { name: /new category/i }).click()
+
+    await page.getByRole('tab', { name: /EN/i }).click()
+    await page.getByRole('textbox').fill('E2E Gardening EN')
+
+    await page.getByRole('tab', { name: /SK/i }).click()
+    await page.getByRole('textbox').fill('E2E Gardening SK')
+
+    await page.getByRole('tab', { name: /CS/i }).click()
+    await page.getByRole('textbox').fill('E2E Gardening CS')
+
+    await page.getByRole('button', { name: /create/i }).click()
+
+    await expect(page.getByText('E2E Gardening EN')).toBeVisible()
+    await expect(page.getByText('3/3')).toBeVisible()
+
+    // cleanup
+    const row = page.getByText('E2E Gardening EN').locator('../..')
+    await row.getByRole('button', { name: /delete/i }).click()
+    await page.getByRole('button', { name: /^delete$/i }).click()
+  })
+
+  test('creates category with EN only — row shows 1/3', async ({ page }) => {
+    await page.goto('/en/admin/categories')
+    await page.getByRole('button', { name: /new category/i }).click()
+
+    await page.getByRole('tab', { name: /EN/i }).click()
+    await page.getByRole('textbox').fill('E2E ENonly')
+
+    await page.getByRole('button', { name: /create/i }).click()
+
+    await expect(page.getByText('E2E ENonly')).toBeVisible()
+    await expect(page.getByText('1/3')).toBeVisible()
+
+    // cleanup
+    const row = page.getByText('E2E ENonly').locator('../..')
+    await row.getByRole('button', { name: /delete/i }).click()
+    await page.getByRole('button', { name: /^delete$/i }).click()
+  })
+
+  test('duplicate EN name shows conflict error', async ({ page }) => {
+    await page.goto('/en/admin/categories')
+    await page.getByRole('button', { name: /new category/i }).click()
+
+    await page.getByRole('tab', { name: /EN/i }).click()
+    await page.getByRole('textbox').fill('Tutoring')
+
+    await page.getByRole('button', { name: /create/i }).click()
+
+    await expect(page.getByText(/category with this name/i)).toBeVisible()
+  })
+})
+
+test.describe('Category localisation — public', () => {
+  test('EN locale shows English category names', async ({ page }) => {
+    await page.goto('/en')
+    // The public post list/filter shows category names
+    await expect(page.getByText('Tutoring')).toBeVisible()
+  })
+
+  test('SK locale shows category names (EN fallback since no SK translations seeded)', async ({ page }) => {
+    await page.goto('/sk')
+    // Seeded categories only have EN translations — should show EN names as fallback
+    await expect(page.getByText('Tutoring')).toBeVisible()
+  })
+})

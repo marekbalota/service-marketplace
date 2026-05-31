@@ -47,6 +47,11 @@
   "language": {
     "label": "Jazyk"
   },
+  "locales": {
+    "en": "Angličtina",
+    "sk": "Slovenština",
+    "cs": "Čeština"
+  },
   "auth": {
     "login": {
       "title": "Vítejte zpět",
@@ -648,9 +653,9 @@
       "searchPlaceholder": "Hledat kategorie...",
       "newCategory": "Nová kategorie",
       "createTitle": "Vytvořit kategorii",
-      "createDesc": "Přidejte novou kategorii služeb na platformu",
-      "editTitle": "Přejmenovat kategorii",
-      "editDesc": "Zadejte nový název pro tuto kategorii",
+      "editTitle": "Upravit kategorii",
+      "editDesc": "Upravte překlady této kategorie",
+      "createDesc": "Přidejte překlady pro novou kategorii",
       "categoryName": "Název kategorie",
       "categoryNamePlaceholder": "např. Zahradní služby",
       "nameConflict": "Kategorie s tímto názvem již existuje",
@@ -661,7 +666,10 @@
       "cardDescription": "Organizujte a spravujte kategorie služeb",
       "activePosts": "{{count}} aktivních",
       "archivedPosts": "{{count}} archivovaných",
-      "totalPosts": "{{count}} celkem"
+      "totalPosts": "{{count}} celkem",
+      "translationRequired": "povinné",
+      "translationOptional": "volitelné",
+      "translationsFraction": "{{filled}}/{{total}} jazyků"
     }
   },
   "report": {

@@ -47,6 +47,11 @@
   "language": {
     "label": "Jazyk"
   },
+  "locales": {
+    "en": "Angličtina",
+    "sk": "Slovenčina",
+    "cs": "Čeština"
+  },
   "auth": {
     "login": {
       "title": "Vitajte späť",
@@ -648,9 +653,9 @@
       "searchPlaceholder": "Hľadať kategórie...",
       "newCategory": "Nová kategória",
       "createTitle": "Vytvoriť kategóriu",
-      "createDesc": "Pridajte novú kategóriu služieb na platformu",
-      "editTitle": "Premenovať kategóriu",
-      "editDesc": "Zadajte nový názov pre túto kategóriu",
+      "editTitle": "Upraviť kategóriu",
+      "editDesc": "Upravte preklady tejto kategórie",
+      "createDesc": "Pridajte preklady pre novú kategóriu",
       "categoryName": "Názov kategórie",
       "categoryNamePlaceholder": "napr. Záhradné služby",
       "nameConflict": "Kategória s týmto názvom už existuje",
@@ -661,7 +666,10 @@
       "cardDescription": "Organizujte a spravujte kategórie služieb",
       "activePosts": "{{count}} aktívnych",
       "archivedPosts": "{{count}} archivovaných",
-      "totalPosts": "{{count}} celkovo"
+      "totalPosts": "{{count}} celkovo",
+      "translationRequired": "povinné",
+      "translationOptional": "voliteľné",
+      "translationsFraction": "{{filled}}/{{total}} jazykov"
     }
   },
   "report": {

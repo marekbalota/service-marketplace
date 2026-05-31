@@ -47,6 +47,11 @@
   "language": {
     "label": "Language"
   },
+  "locales": {
+    "en": "English",
+    "sk": "Slovak",
+    "cs": "Czech"
+  },
   "auth": {
     "login": {
       "title": "Welcome Back",
@@ -652,9 +657,9 @@
       "searchPlaceholder": "Search categories...",
       "newCategory": "New Category",
       "createTitle": "Create Category",
-      "createDesc": "Add a new service category to the platform",
-      "editTitle": "Rename Category",
-      "editDesc": "Enter a new name for this category",
+      "editTitle": "Edit Category",
+      "editDesc": "Edit the translations for this category",
+      "createDesc": "Add translations for the new category",
       "categoryName": "Category Name",
       "categoryNamePlaceholder": "e.g. Gardening Services",
       "nameConflict": "A category with this name already exists",
@@ -665,7 +670,10 @@
       "cardDescription": "Organize and manage service categories",
       "activePosts": "{{count}} active",
       "archivedPosts": "{{count}} archived",
-      "totalPosts": "{{count}} total"
+      "totalPosts": "{{count}} total",
+      "translationRequired": "required",
+      "translationOptional": "optional",
+      "translationsFraction": "{{filled}}/{{total}} languages"
     }
   },
   "report": {

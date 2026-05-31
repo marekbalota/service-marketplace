@@ -11,6 +11,7 @@ import { adminCategoriesQueryOptions } from '#/lib/queries/admin'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 import { Route } from '../route'
+import { useLocale } from '#/lib/useLocale'
 import { CategoryDialog, type CategoryValues } from './CategoryDialog'
 import { CategoryRow, type Category } from './CategoryRow'
 
@@ -18,6 +19,7 @@ const PAGE_SIZE = 10
 
 export function CategoriesContent() {
   const { t } = useTranslation()
+  const locale = useLocale()
   const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
   const { q = '', page = 1 } = Route.useSearch()
@@ -117,7 +119,7 @@ export function CategoriesContent() {
                   <CategoryRow
                     key={category.categoryId}
                     category={category}
-                    onRename={setEditTarget}
+                    onEdit={setEditTarget}
                     onDelete={setDeleteTarget}
                   />
                 ))}
@@ -156,7 +158,7 @@ export function CategoriesContent() {
           title={t('admin.categories.editTitle')}
           description={t('admin.categories.editDesc')}
           submitLabel={t('common.save')}
-          defaultValues={{ name: editTarget.name }}
+          defaultValues={editTarget}
           onSubmit={(values) => editMutation.mutateAsync({ id: editTarget.categoryId, values })}
         />
       )}
@@ -164,7 +166,11 @@ export function CategoriesContent() {
       <ConfirmDialog
         open={deleteTarget !== null}
         title={t('admin.categories.deleteTitle')}
-        description={t('admin.categories.deleteDesc', { name: deleteTarget?.name ?? '' })}
+        description={t('admin.categories.deleteDesc', {
+          name: deleteTarget?.translations.find((tr) => tr.locale === locale)?.name
+            ?? deleteTarget?.translations.find((tr) => tr.locale === 'en')?.name
+            ?? '',
+        })}
         confirmLabel={t('common.delete')}
         destructive
         isPending={deleteMutation.isPending}

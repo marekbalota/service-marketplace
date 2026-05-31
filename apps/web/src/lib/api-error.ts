@@ -23,12 +23,14 @@ export function parseAuthErrorCode(error: unknown): string | undefined {
 export class ApiError extends Error {
   readonly code: string | undefined
   readonly status: number | undefined
+  readonly locale: string | undefined
 
-  constructor(message: string, code?: string, status?: number) {
+  constructor(message: string, code?: string, status?: number, locale?: string) {
     super(message)
     this.name = 'ApiError'
     this.code = code
     this.status = status
+    this.locale = locale
   }
 }
 
@@ -39,6 +41,6 @@ export function wrapEdenError(
   error: { value: unknown; status?: number },
   fallback: string,
 ): ApiError {
-  const v = error.value as { message?: string; code?: string } | null
-  return new ApiError(v?.message ?? fallback, v?.code, error.status)
+  const v = error.value as { message?: string; code?: string; locale?: string } | null
+  return new ApiError(v?.message ?? fallback, v?.code, error.status, v?.locale)
 }
