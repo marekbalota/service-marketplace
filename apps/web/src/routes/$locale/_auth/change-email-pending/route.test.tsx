@@ -54,6 +54,6 @@ describe('ChangeEmailPendingPage', () => {
     await renderPage()
     const link = screen.getByRole('link', { name: /back to account settings/i })
     expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/account-settings')
+    expect(link).toHaveAttribute('href', '/en/account-settings')
   })
 })

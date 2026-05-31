@@ -56,7 +56,7 @@ describe('handleBanError', () => {
     expect(mockQueryClient.removeQueries).toHaveBeenCalledWith({ queryKey: ['users', 'me'] })
     expect(localStorage.getItem('activeProfileId')).toBeNull()
     expect(mockRouterRef.invalidate).toHaveBeenCalled()
-    expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/banned' })
+    expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/$locale/banned', params: { locale: 'en' } })
   })
 
   it('stores ban reason and expiresAt in sessionStorage', () => {
@@ -83,7 +83,7 @@ describe('handleBanError', () => {
     const result = handleBanError(error)
 
     expect(result).toBe(true)
-    expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/banned' })
+    expect(mockRouterRef.navigate).toHaveBeenCalledWith({ to: '/$locale/banned', params: { locale: 'en' } })
     expect(localStorage.getItem('activeProfileId')).toBeNull()
   })
 })

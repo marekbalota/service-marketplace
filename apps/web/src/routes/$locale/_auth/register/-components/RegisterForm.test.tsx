@@ -189,7 +189,8 @@ describe('RegisterForm', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: '/verify-email',
+        to: '/$locale/verify-email',
+        params: { locale: 'en' },
         search: { email: 'alice@example.com' },
       })
     })

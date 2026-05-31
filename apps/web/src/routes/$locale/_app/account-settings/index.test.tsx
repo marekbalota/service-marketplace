@@ -92,7 +92,7 @@ describe('AccountSettingsHubPage', () => {
     await renderPage()
     const link = screen.getByRole('link', { name: /manage profiles/i })
     expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/account-settings/profiles')
+    expect(link).toHaveAttribute('href', '/en/account-settings/profiles')
   })
 
   it('renders the bulk logout button as disabled', async () => {

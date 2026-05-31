@@ -34,7 +34,7 @@ export function FavouriteButton({
 
   const isFavourite =
     initialIsFavourite ??
-    favouritesList?.items.some((f: { postId: string }) => f.postId === postId) ??
+    favouritesList?.items?.some((f: { postId: string }) => f.postId === postId) ??
     false
 
   const addMutation = useMutation({

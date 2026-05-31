@@ -352,7 +352,8 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: '/verify-email',
+        to: '/$locale/verify-email',
+        params: { locale: 'en' },
         search: { email: 'unverified@example.com' },
       })
     })
@@ -388,13 +389,13 @@ describe('LoginForm', () => {
       target: { value: 'user@example.com' },
     })
     const link = screen.getByRole('link', { name: /forgot your password/i })
-    expect(link).toHaveAttribute('href', '/forgot-password?email=user%40example.com')
+    expect(link).toHaveAttribute('href', '/$locale/forgot-password?email=user%40example.com')
   })
 
   it('forgot-password link has no email param when email field is empty', () => {
     render(<LoginForm />)
     const link = screen.getByRole('link', { name: /forgot your password/i })
-    expect(link).toHaveAttribute('href', '/forgot-password')
+    expect(link).toHaveAttribute('href', '/$locale/forgot-password')
   })
 
   it('forgot-password link has no email param when email is not yet a valid format', () => {
@@ -403,6 +404,6 @@ describe('LoginForm', () => {
       target: { value: 'notanemail' },
     })
     const link = screen.getByRole('link', { name: /forgot your password/i })
-    expect(link).toHaveAttribute('href', '/forgot-password')
+    expect(link).toHaveAttribute('href', '/$locale/forgot-password')
   })
 })

@@ -152,6 +152,6 @@ describe('VerifyEmailPage', () => {
   it('renders a sign-in link pointing to /login', async () => {
     await renderPage()
     const link = screen.getByRole('link', { name: /already have an account/i })
-    expect(link).toHaveAttribute('href', '/login')
+    expect(link).toHaveAttribute('href', '/en/login')
   })
 })

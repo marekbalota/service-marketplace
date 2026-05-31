@@ -7,6 +7,9 @@ const mockNavigate = vi.fn()
 const mockUseSearch = vi.fn()
 
 vi.mock('../route', () => ({
+  SORT_BY_VALUES: ['name', 'activePosts', 'archivedPosts', 'totalPosts'],
+  SORT_ORDER_VALUES: ['asc', 'desc'],
+  TRANSLATION_FILTER_VALUES: ['complete', 'incomplete', 'sk', 'cs'],
   Route: {
     useNavigate: () => mockNavigate,
     useSearch: () => mockUseSearch(),

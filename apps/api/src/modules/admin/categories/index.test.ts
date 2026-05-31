@@ -166,7 +166,7 @@ describe('GET /admin/categories — sort and filter', () => {
 describe('POST /admin/categories', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client.admin.categories.post({
-      translations: [{ locale: 'en', name: 'TestCat' }],
+      translations: { en: 'TestCat' },
     })
     expect(error?.status).toBe(401)
   })
@@ -238,14 +238,14 @@ describe('PATCH /admin/categories/:id', () => {
   it('returns 403 for a user without permission', async () => {
     const { error } = await client.admin
       .categories({ id: 'some-id' })
-      .patch({ translations: [{ locale: 'en', name: 'X' }] }, { headers: { Cookie: userCookie } })
+      .patch({ translations: { en: 'X' } }, { headers: { Cookie: userCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 for a non-existent id', async () => {
     const { error } = await client.admin
       .categories({ id: '00000000-0000-0000-0000-000000000000' })
-      .patch({ translations: [{ locale: 'en', name: 'X' }] }, { headers: { Cookie: adminCookie } })
+      .patch({ translations: { en: 'X' } }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(404)
   })
 
