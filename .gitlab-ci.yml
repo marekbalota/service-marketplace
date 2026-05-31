@@ -202,7 +202,11 @@ deploy:
     - apk add --no-cache curl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x kubectl && mv kubectl /usr/local/bin/
-    - mkdir -p ~/.kube && cp "$KUBECONFIG" ~/.kube/config
+    # KUBECONFIG may be a File-type variable (a path) or a normal variable
+    # (the kubeconfig content). Handle both, then point KUBECONFIG at the result.
+    - mkdir -p ~/.kube
+    - if [ -f "$KUBECONFIG" ]; then cp "$KUBECONFIG" ~/.kube/config; else printf '%s' "$KUBECONFIG" > ~/.kube/config; fi
+    - export KUBECONFIG=~/.kube/config
   script:
     - helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH}
       --namespace ${K8S_NAMESPACE}
