@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
-import { Search, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
-import { Input } from '#/components/ui/input'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { PaginationBar } from '#/components/PaginationBar'
+import { SearchFilterBar } from '#/components/SearchFilterBar'
 import { adminCategoriesQueryOptions } from '#/lib/queries/admin'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
@@ -14,6 +14,8 @@ import { Route } from '../route'
 import { useLocale } from '#/lib/useLocale'
 import { CategoryDialog, type CategoryValues } from './CategoryDialog'
 import { CategoryRow, type Category } from './CategoryRow'
+import { CategorySortSelect } from './CategorySortSelect'
+import { TranslationFilterSelect } from './TranslationFilterSelect'
 
 const PAGE_SIZE = 10
 
@@ -22,26 +24,22 @@ export function CategoriesContent() {
   const locale = useLocale()
   const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
-  const { q = '', page = 1 } = Route.useSearch()
+  const { q = '', page = 1, sortBy, sortOrder, translationFilter } = Route.useSearch()
 
-  const [searchInput, setSearchInput] = useState(q)
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Category | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
 
-  useEffect(() => {
-    if (searchInput === q) return
-    const timer = setTimeout(() => {
-      void navigate({
-        search: (prev) => ({ ...prev, q: searchInput || undefined, page: undefined }),
-        replace: true,
-      })
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchInput, q, navigate])
-
   const { data } = useSuspenseQuery(
-    adminCategoriesQueryOptions({ search: q, offset: (page - 1) * PAGE_SIZE, size: PAGE_SIZE, locale }),
+    adminCategoriesQueryOptions({
+      search: q,
+      offset: (page - 1) * PAGE_SIZE,
+      size: PAGE_SIZE,
+      locale,
+      sortBy,
+      sortOrder,
+      translationFilter,
+    }),
   )
   const { items, total, totalPages } = data
 
@@ -85,32 +83,47 @@ export function CategoriesContent() {
 
   return (
     <>
+      <Card className="mb-6">
+        <CardContent>
+          <SearchFilterBar
+            searchPlaceholder={t('admin.categories.searchPlaceholder')}
+            searchValue={q}
+            onSearchChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }), replace: true })
+            }
+            sheetTitle={t('admin.categories.sortFilterLabel')}
+            action={
+              <Button className="gap-2 shrink-0" onClick={() => setCreateOpen(true)}>
+                <Plus className="size-4" />
+                <span className="hidden sm:inline">{t('admin.categories.newCategory')}</span>
+              </Button>
+            }
+            filters={[
+              {
+                label: t('admin.categories.sortFilterLabel'),
+                control: <CategorySortSelect />,
+                desktopWidth: 'w-[240px]',
+              },
+              {
+                label: t('admin.categories.translationFilterLabel'),
+                control: <TranslationFilterSelect />,
+                desktopWidth: 'w-[200px]',
+              },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <CardTitle>{t('admin.categories.count', { count: total })}</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder={t('admin.categories.searchPlaceholder')}
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Button className="gap-2" onClick={() => setCreateOpen(true)}>
-                <Plus className="size-4" />
-                {t('admin.categories.newCategory')}
-              </Button>
-            </div>
-          </div>
+          <CardTitle>{t('admin.categories.count', { count: total })}</CardTitle>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              {q ? t('admin.categories.noCategoriesFound') : t('admin.categories.noCategories')}
+              {q || translationFilter
+                ? t('admin.categories.noCategoriesFound')
+                : t('admin.categories.noCategories')}
             </div>
           ) : (
             <>

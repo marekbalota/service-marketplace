@@ -4,13 +4,17 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { CategoriesContent } from './CategoriesContent'
 
 const mockNavigate = vi.fn()
-const mockUseSearch = vi.fn(() => ({ q: '', page: undefined }))
+const mockUseSearch = vi.fn()
 
 vi.mock('../route', () => ({
   Route: {
     useNavigate: () => mockNavigate,
     useSearch: () => mockUseSearch(),
   },
+}))
+
+vi.mock('#/lib/useLocale', () => ({
+  useLocale: () => 'en',
 }))
 
 const { mockData, mockInvalidateQueries } = vi.hoisted(() => {
@@ -65,12 +69,10 @@ vi.mock('#/api', () => ({
           delete: vi.fn().mockResolvedValue({ error: null }),
         })),
         {
-          post: vi
-            .fn()
-            .mockResolvedValue({
-              data: { categoryId: 'new-1', translations: { en: 'New' } },
-              error: null,
-            }),
+          post: vi.fn().mockResolvedValue({
+            data: { categoryId: 'new-1', translations: { en: 'New' } },
+            error: null,
+          }),
           get: vi.fn().mockResolvedValue({ data: mockData, error: null }),
         },
       ),
@@ -81,7 +83,13 @@ vi.mock('#/api', () => ({
 describe('CategoriesContent', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseSearch.mockReturnValue({ q: '', page: undefined })
+    mockUseSearch.mockReturnValue({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
   })
 
   it('shows category count from server total', () => {
@@ -96,12 +104,32 @@ describe('CategoriesContent', () => {
     expect(screen.getAllByText(/4 total/).length).toBeGreaterThan(0)
   })
 
-  it('shows empty state when server returns no items', () => {
+  it('shows empty state when server returns no items and no active filter', () => {
     vi.mocked(useSuspenseQuery).mockReturnValueOnce({
       data: { items: [], total: 0, totalPages: 0 },
     } as ReturnType<typeof useSuspenseQuery>)
     render(<CategoriesContent />)
-    expect(screen.getByText(/No categories/i)).toBeInTheDocument()
+    expect(screen.getByText(/No categories yet/i)).toBeInTheDocument()
+  })
+
+  it('shows "no match" empty state when filter is active and items are empty', () => {
+    mockUseSearch.mockReturnValue({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: 'complete',
+    })
+    vi.mocked(useSuspenseQuery).mockReturnValueOnce({
+      data: { items: [], total: 0, totalPages: 0 },
+    } as ReturnType<typeof useSuspenseQuery>)
+    render(<CategoriesContent />)
+    expect(screen.getByText(/No categories match/i)).toBeInTheDocument()
+  })
+
+  it('renders the sort filter control', () => {
+    render(<CategoriesContent />)
+    expect(screen.getByRole('button', { name: /Name/i })).toBeInTheDocument()
   })
 
   it('opens delete alert dialog when Delete button is clicked', () => {
