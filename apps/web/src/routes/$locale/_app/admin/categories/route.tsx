@@ -6,7 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { BackButton } from '#/components/BackButton'
 import { PageHeader } from '#/components/PageHeader'
-import { Permissions, hasPermissions, SUPPORTED_LOCALES } from '@marketplace/shared'
+import { Permissions, hasPermissions, TRANSLATABLE_LOCALES } from '@marketplace/shared'
 import { adminCategoriesQueryOptions } from '#/lib/queries/admin'
 import { CategoriesContent } from './-components/CategoriesContent'
 import { useLocale } from '#/lib/useLocale'
@@ -15,7 +15,11 @@ const PAGE_SIZE = 10
 
 export const SORT_BY_VALUES = ['name', 'activePosts', 'archivedPosts', 'totalPosts'] as const
 export const SORT_ORDER_VALUES = ['asc', 'desc'] as const
-export const TRANSLATION_FILTER_VALUES = ['complete', 'incomplete', ...SUPPORTED_LOCALES] as const
+export const TRANSLATION_FILTER_VALUES = [
+  'complete',
+  'incomplete',
+  ...TRANSLATABLE_LOCALES,
+] as const
 
 export type SortBy = typeof SORT_BY_VALUES[number]
 export type SortOrder = typeof SORT_ORDER_VALUES[number]

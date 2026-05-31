@@ -11,7 +11,7 @@ vi.mock('../route', () => ({
     useNavigate: () => mockNavigate,
     useSearch: () => mockUseSearch(),
   },
-  TRANSLATION_FILTER_VALUES: ['complete', 'incomplete', 'en', 'sk', 'cs'],
+  TRANSLATION_FILTER_VALUES: ['complete', 'incomplete', 'sk', 'cs'],
 }))
 
 describe('TranslationFilterSelect', () => {
@@ -42,7 +42,6 @@ describe('TranslationFilterSelect', () => {
     await user.click(screen.getByRole('combobox'))
     expect(await screen.findByText(/^Complete$/i)).toBeInTheDocument()
     expect(screen.getByText(/^Incomplete$/i)).toBeInTheDocument()
-    expect(screen.getByText(/Missing EN/i)).toBeInTheDocument()
     expect(screen.getByText(/Missing SK/i)).toBeInTheDocument()
     expect(screen.getByText(/Missing CS/i)).toBeInTheDocument()
   })

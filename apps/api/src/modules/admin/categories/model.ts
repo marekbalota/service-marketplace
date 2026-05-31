@@ -1,5 +1,5 @@
 import { t, type UnwrapSchema } from 'elysia'
-import { SUPPORTED_LOCALES } from '@marketplace/shared'
+import { TRANSLATABLE_LOCALES } from '@marketplace/shared'
 
 const translations = t.Record(t.String(), t.String())
 
@@ -33,7 +33,7 @@ export const AdminCategoriesModel = {
       t.Union([
         t.Literal('complete'),
         t.Literal('incomplete'),
-        t.TemplateLiteral([t.Union(SUPPORTED_LOCALES.map((l) => t.Literal(l)))]),
+        t.TemplateLiteral([t.Union(TRANSLATABLE_LOCALES.map((l) => t.Literal(l)))]),
       ]),
     ),
   }),
