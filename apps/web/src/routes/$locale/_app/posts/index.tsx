@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Suspense, useState, useEffect } from 'react'
-import { useDebouncer } from '@tanstack/react-pacer'
+import { Suspense, useEffect } from 'react'
 import { z } from 'zod'
 import { Plus, Heart } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -131,17 +130,6 @@ function HomePage() {
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
 
-  const [inputValue, setInputValue] = useState(q)
-  useEffect(() => {
-    setInputValue(q)
-  }, [q])
-
-  const searchDebouncer = useDebouncer(
-    (value: string) =>
-      navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) }),
-    { wait: 400 },
-  )
-
   const toggleFavourites = () => {
     navigate({
       search: (prev) => ({ ...prev, favourites: !favourites || undefined, page: undefined }),
@@ -205,11 +193,10 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-4">
           <SearchFilterBar
             searchPlaceholder={t('posts.searchPlaceholder')}
-            searchValue={inputValue}
-            onSearchChange={(value) => {
-              setInputValue(value)
-              searchDebouncer.maybeExecute(value)
-            }}
+            searchValue={q}
+            onSearchChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
+            }
             filters={filters}
             sheetTitle={t('posts.filters')}
             sheetDescription={t('posts.filtersSubtitle')}
