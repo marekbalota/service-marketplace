@@ -99,6 +99,70 @@ describe('GET /admin/categories', () => {
   })
 })
 
+describe('GET /admin/categories — sort and filter', () => {
+  it('sorts by activePosts descending', async () => {
+    const { data, error } = await client.admin.categories.get({
+      query: { sortBy: 'activePosts', sortOrder: 'desc' },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    const counts = data!.items.map((c) => c.activePosts)
+    for (let i = 1; i < counts.length; i++) {
+      expect(counts[i]!).toBeLessThanOrEqual(counts[i - 1]!)
+    }
+  })
+
+  it('sorts by name descending', async () => {
+    const { data, error } = await client.admin.categories.get({
+      query: { sortBy: 'name', sortOrder: 'desc' },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    const names = data!.items.map((c) => (c.translations['en'] ?? '').toLowerCase())
+    for (let i = 1; i < names.length; i++) {
+      expect(names[i]!.localeCompare(names[i - 1]!)).toBeLessThanOrEqual(0)
+    }
+  })
+
+  it('returns only complete categories when translationFilter=complete', async () => {
+    const { data, error } = await client.admin.categories.get({
+      query: { translationFilter: 'complete', size: 50 },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    const supported = ['en', 'sk', 'cs']
+    data!.items.forEach((c) => {
+      supported.forEach((locale) => {
+        expect(locale in c.translations).toBe(true)
+      })
+    })
+  })
+
+  it('returns only incomplete categories when translationFilter=incomplete', async () => {
+    const { data, error } = await client.admin.categories.get({
+      query: { translationFilter: 'incomplete', size: 50 },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    const supported = ['en', 'sk', 'cs']
+    data!.items.forEach((c) => {
+      const hasAll = supported.every((locale) => locale in c.translations)
+      expect(hasAll).toBe(false)
+    })
+  })
+
+  it('returns only categories missing SK when translationFilter=sk', async () => {
+    const { data, error } = await client.admin.categories.get({
+      query: { translationFilter: 'sk', size: 50 },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    data!.items.forEach((c) => {
+      expect('sk' in c.translations).toBe(false)
+    })
+  })
+})
+
 describe('POST /admin/categories', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client.admin.categories.post({

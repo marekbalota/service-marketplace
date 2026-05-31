@@ -1,6 +1,6 @@
 import { db } from '../../../db'
 import { categories, categoryTranslations, postCategories, posts } from '../../../db/schema'
-import { eq, asc, count, sql, and } from 'drizzle-orm'
+import { eq, asc, desc, count, sql, and } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { SUPPORTED_LOCALES } from '@marketplace/shared'
 import type { AdminCategoriesModel } from './model'
@@ -15,18 +15,56 @@ function parseConflictLocale(e: unknown): string | undefined {
 
 export abstract class AdminCategoriesService {
   static async findAll(query: AdminCategoriesModel['listQuery'], locale: string) {
-    const { search, offset = 0, size = 10 } = query
+    const { search, offset = 0, size = 10, sortBy, sortOrder, translationFilter } = query
 
     const localeTranslation = alias(categoryTranslations, 'locale_translation')
     const enTranslation = alias(categoryTranslations, 'en_translation')
 
-    const whereClause = search
+    const searchClause = search
       ? sql`EXISTS (
           SELECT 1 FROM ${categoryTranslations}
           WHERE ${categoryTranslations.categoryId} = ${categories.categoryId}
           AND ${categoryTranslations.name} ILIKE ${`%${search}%`}
         )`
       : undefined
+
+    const translationFilterClause = (() => {
+      if (!translationFilter) return undefined
+      const totalLocales = SUPPORTED_LOCALES.length
+      if (translationFilter === 'complete') {
+        return sql`(
+          SELECT COUNT(*) FROM ${categoryTranslations}
+          WHERE ${categoryTranslations.categoryId} = ${categories.categoryId}
+        ) = ${totalLocales}`
+      }
+      if (translationFilter === 'incomplete') {
+        return sql`(
+          SELECT COUNT(*) FROM ${categoryTranslations}
+          WHERE ${categoryTranslations.categoryId} = ${categories.categoryId}
+        ) < ${totalLocales}`
+      }
+      return sql`NOT EXISTS (
+        SELECT 1 FROM ${categoryTranslations}
+        WHERE ${categoryTranslations.categoryId} = ${categories.categoryId}
+        AND ${categoryTranslations.locale} = ${translationFilter}
+      )`
+    })()
+
+    const whereClause = and(searchClause, translationFilterClause)
+
+    const dir = sortOrder === 'desc' ? desc : asc
+    const orderExpr = (() => {
+      switch (sortBy) {
+        case 'activePosts':
+          return dir(sql`count(${posts.postId}) filter (where ${posts.deletedAt} is null)`)
+        case 'archivedPosts':
+          return dir(sql`count(${posts.postId}) filter (where ${posts.deletedAt} is not null)`)
+        case 'totalPosts':
+          return dir(sql`count(${posts.postId})`)
+        default:
+          return dir(sql`COALESCE(${localeTranslation.name}, ${enTranslation.name})`)
+      }
+    })()
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
@@ -69,7 +107,7 @@ export abstract class AdminCategoriesService {
         .leftJoin(posts, eq(posts.postId, postCategories.postId))
         .where(whereClause)
         .groupBy(categories.categoryId, localeTranslation.name, enTranslation.name)
-        .orderBy(asc(sql`COALESCE(${localeTranslation.name}, ${enTranslation.name})`))
+        .orderBy(orderExpr)
         .limit(size)
         .offset(offset)
 
