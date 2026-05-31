@@ -1,12 +1,9 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSuspenseQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
-import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { PaginationBar } from '#/components/PaginationBar'
-import { SearchFilterBar } from '#/components/SearchFilterBar'
 import { adminCategoriesQueryOptions } from '#/lib/queries/admin'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
@@ -14,8 +11,6 @@ import { Route } from '../route'
 import { useLocale } from '#/lib/useLocale'
 import { CategoryDialog, type CategoryValues } from './CategoryDialog'
 import { CategoryRow, type Category } from './CategoryRow'
-import { CategorySortSelect } from './CategorySortSelect'
-import { TranslationFilterSelect } from './TranslationFilterSelect'
 
 const PAGE_SIZE = 10
 
@@ -26,7 +21,6 @@ export function CategoriesContent() {
   const navigate = Route.useNavigate()
   const { q = '', page = 1, sortBy, sortOrder, translationFilter } = Route.useSearch()
 
-  const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Category | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
 
@@ -47,17 +41,6 @@ export function CategoriesContent() {
     queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] })
     queryClient.invalidateQueries({ queryKey: ['categories'] })
   }
-
-  const createMutation = useMutation({
-    mutationFn: async (values: CategoryValues) => {
-      const { error } = await api.admin.categories.post(values)
-      if (error) throw wrapEdenError(error, 'Failed to create category.')
-    },
-    onSuccess: () => {
-      setCreateOpen(false)
-      invalidate()
-    },
-  })
 
   const editMutation = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: CategoryValues }) => {
@@ -83,37 +66,6 @@ export function CategoriesContent() {
 
   return (
     <>
-      <Card className="mb-6">
-        <CardContent>
-          <SearchFilterBar
-            searchPlaceholder={t('admin.categories.searchPlaceholder')}
-            searchValue={q}
-            onSearchChange={(value) =>
-              navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }), replace: true })
-            }
-            sheetTitle={t('admin.categories.sortFilterLabel')}
-            action={
-              <Button className="gap-2 shrink-0" onClick={() => setCreateOpen(true)}>
-                <Plus className="size-4" />
-                <span className="hidden sm:inline">{t('admin.categories.newCategory')}</span>
-              </Button>
-            }
-            filters={[
-              {
-                label: t('admin.categories.sortFilterLabel'),
-                control: <CategorySortSelect />,
-                desktopWidth: 'w-[240px]',
-              },
-              {
-                label: t('admin.categories.translationFilterLabel'),
-                control: <TranslationFilterSelect />,
-                desktopWidth: 'w-[200px]',
-              },
-            ]}
-          />
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>{t('admin.categories.count', { count: total })}</CardTitle>
@@ -152,15 +104,6 @@ export function CategoriesContent() {
           )}
         </CardContent>
       </Card>
-
-      <CategoryDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        title={t('admin.categories.createTitle')}
-        description={t('admin.categories.createDesc')}
-        submitLabel={t('common.create')}
-        onSubmit={(values) => createMutation.mutateAsync(values)}
-      />
 
       {editTarget && (
         <CategoryDialog
