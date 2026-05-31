@@ -74,7 +74,7 @@ export function RoleDialog({
     try {
       await onSubmit(values)
     } catch {
-      setError('root', { message: `Failed to ${submitLabel.toLowerCase()}. Please try again.` })
+      setError('root', { message: t('errors.generic') })
     }
   }
 
