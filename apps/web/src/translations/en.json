@@ -673,7 +673,20 @@
       "totalPosts": "{{count}} total",
       "translationRequired": "required",
       "translationOptional": "optional",
-      "translationsFraction": "{{filled}}/{{total}} languages"
+      "translationsFraction": "{{filled}}/{{total}} languages",
+      "sortFilterLabel": "Sort",
+      "sortByName": "Name",
+      "sortByActivePosts": "Active posts",
+      "sortByArchivedPosts": "Archived posts",
+      "sortByTotalPosts": "Total posts",
+      "sortOrderLabel": "Direction",
+      "sortOrderAsc": "Ascending",
+      "sortOrderDesc": "Descending",
+      "translationFilterLabel": "Translation",
+      "translationFilterAll": "All languages",
+      "translationFilterComplete": "Complete",
+      "translationFilterIncomplete": "Incomplete",
+      "translationFilterMissing": "Missing {{locale}}"
     }
   },
   "report": {

@@ -669,7 +669,20 @@
       "totalPosts": "{{count}} celkem",
       "translationRequired": "povinné",
       "translationOptional": "volitelné",
-      "translationsFraction": "{{filled}}/{{total}} jazyků"
+      "translationsFraction": "{{filled}}/{{total}} jazyků",
+      "sortFilterLabel": "Řadit",
+      "sortByName": "Název",
+      "sortByActivePosts": "Aktivní příspěvky",
+      "sortByArchivedPosts": "Archivované příspěvky",
+      "sortByTotalPosts": "Všechny příspěvky",
+      "sortOrderLabel": "Směr",
+      "sortOrderAsc": "Vzestupně",
+      "sortOrderDesc": "Sestupně",
+      "translationFilterLabel": "Překlad",
+      "translationFilterAll": "Všechny jazyky",
+      "translationFilterComplete": "Kompletní",
+      "translationFilterIncomplete": "Neúplné",
+      "translationFilterMissing": "Chybí {{locale}}"
     }
   },
   "report": {
