@@ -152,15 +152,23 @@ async function upsertAdminUser(name: string, email: string, password: string, ro
   console.log(`  Created admin user: ${email} (${roleName})`)
 }
 
-async function upsertCategory(name: string) {
-  const existing = await db.query.categories.findFirst({
-    where: (c, { eq }) => eq(c.name, name),
+async function upsertCategory(enName: string) {
+  const existing = await db.query.categoryTranslations.findFirst({
+    where: (ct, { and, eq }) => and(eq(ct.locale, 'en'), eq(ct.name, enName)),
+    with: { category: true },
   })
   if (existing) {
-    return existing
+    return existing.category
   }
-  const [created] = await db.insert(schema.categories).values({ name }).returning()
-  return created!
+  return db.transaction(async (tx) => {
+    const [category] = await tx.insert(schema.categories).values({}).returning()
+    await tx.insert(schema.categoryTranslations).values({
+      categoryId: category!.categoryId,
+      locale: 'en',
+      name: enName,
+    })
+    return category!
+  })
 }
 
 async function seed() {

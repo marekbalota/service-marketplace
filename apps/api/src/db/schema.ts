@@ -206,9 +206,23 @@ export const reviews = pgTable(
 
 export const categories = pgTable('categories', {
   categoryId: uuid('category_id').primaryKey().defaultRandom(),
-  name: text('name').notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
+
+export const categoryTranslations = pgTable(
+  'category_translations',
+  {
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.categoryId, table.locale] }),
+    unique('category_translations_locale_name_unique').on(table.locale, table.name),
+  ],
+)
 
 export const postCategories = pgTable(
   'post_categories',
@@ -431,6 +445,14 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   postCategories: many(postCategories),
+  translations: many(categoryTranslations),
+}))
+
+export const categoryTranslationsRelations = relations(categoryTranslations, ({ one }) => ({
+  category: one(categories, {
+    fields: [categoryTranslations.categoryId],
+    references: [categories.categoryId],
+  }),
 }))
 
 export const postCategoriesRelations = relations(postCategories, ({ one }) => ({
