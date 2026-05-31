@@ -5,9 +5,11 @@ import {
   userProfiles,
   postCategories,
   categories,
+  categoryTranslations,
   locations,
 } from '../../db/schema'
 import { eq, and, isNull, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import type { FavouritesModel } from './model'
 import {
   NotFoundError,
@@ -19,8 +21,11 @@ import {
 import { ProfilesService } from '../profiles/service'
 
 export abstract class FavouritesService {
-  private static favouriteSelect = (tx: typeof db) =>
-    tx
+  private static favouriteSelect = (tx: typeof db, locale: string = 'en') => {
+    const requested = alias(categoryTranslations, 'cat_requested')
+    const fallback = alias(categoryTranslations, 'cat_fallback')
+
+    return tx
       .select({
         postId: posts.postId,
         postTitle: posts.postTitle,
@@ -34,7 +39,7 @@ export abstract class FavouritesService {
         categories: sql<{ categoryId: string; name: string }[]>`
         coalesce(
           json_agg(
-            json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+            json_build_object('categoryId', ${categories.categoryId}, 'name', COALESCE(${requested.name}, ${fallback.name}))
           ) filter (where ${categories.categoryId} is not null),
           '[]'::json
         )
@@ -50,10 +55,22 @@ export abstract class FavouritesService {
       .leftJoin(locations, eq(posts.locationId, locations.locationId))
       .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
       .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
+      .leftJoin(
+        fallback,
+        and(eq(fallback.categoryId, categories.categoryId), eq(fallback.locale, 'en')),
+      )
+      .leftJoin(
+        requested,
+        and(eq(requested.categoryId, categories.categoryId), eq(requested.locale, locale)),
+      )
       .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId, favourites.createdAt)
+  }
 
-  static async findAllByProfile(profileId: string): Promise<FavouritesModel['findAllResponse']> {
-    const rows = await this.favouriteSelect(db)
+  static async findAllByProfile(
+    profileId: string,
+    locale = 'en',
+  ): Promise<FavouritesModel['findAllResponse']> {
+    const rows = await this.favouriteSelect(db, locale)
       .where(and(eq(favourites.userProfileId, profileId), isNull(posts.deletedAt)))
       .orderBy(sql`${favourites.createdAt} desc`)
 
@@ -121,9 +138,10 @@ export abstract class FavouritesService {
   static async findAllForProfile(
     accountId: string,
     profileId: string,
+    locale = 'en',
   ): Promise<FavouritesModel['findAllResponse']> {
     await this.assertOwnership(profileId, accountId)
-    return this.findAllByProfile(profileId)
+    return this.findAllByProfile(profileId, locale)
   }
 
   static async addFavouriteForProfile(

@@ -1,13 +1,18 @@
 import { t, type UnwrapSchema } from 'elysia'
 
+const translationItem = t.Object({
+  locale: t.String(),
+  name: t.String(),
+})
+
 const categoryItem = t.Object({
   categoryId: t.String(),
-  name: t.String(),
+  translations: t.Array(translationItem),
 })
 
 const categoryItemWithCounts = t.Object({
   categoryId: t.String(),
-  name: t.String(),
+  translations: t.Array(translationItem),
   activePosts: t.Number(),
   archivedPosts: t.Number(),
 })
@@ -24,12 +29,12 @@ export const AdminCategoriesModel = {
     totalPages: t.Number(),
   }),
   createBody: t.Object({
-    name: t.String({ minLength: 1 }),
+    translations: t.Array(translationItem, { minItems: 1 }),
   }),
   createResponse: categoryItem,
   updateParams: t.Object({ id: t.String() }),
   updateBody: t.Object({
-    name: t.Optional(t.String({ minLength: 1 })),
+    translations: t.Array(translationItem),
   }),
   updateResponse: categoryItem,
   deleteParams: t.Object({ id: t.String() }),

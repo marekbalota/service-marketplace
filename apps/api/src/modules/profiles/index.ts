@@ -3,6 +3,7 @@ import { ProfilesModel } from './model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
+import { resolveLocale } from '../../lib/resolveLocale'
 import { LocationsModel, LocationsService } from '../locations'
 import { ImagesModel } from '../images/model'
 import { ImagesService } from '../images/service'
@@ -77,7 +78,7 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       detail: { summary: 'Delete a profile', operationId: 'deleteProfile', tags: ['Profiles'] },
     },
   )
-  .get('/:id/posts', async ({ params, query }) => PostsService.findByProfile(params.id, query), {
+  .get('/:id/posts', async ({ params, query, headers }) => PostsService.findByProfile(params.id, query, resolveLocale(headers['accept-language'])), {
     auth: true,
     params: ProfilesModel.profilePostsParams,
     query: PostsModel.findByProfileQuery,

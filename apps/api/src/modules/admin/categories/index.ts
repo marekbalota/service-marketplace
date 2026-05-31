@@ -8,11 +8,13 @@ import {
   notFoundResponse,
   unauthorizedResponse,
   conflictResponse,
+  unprocessableResponse,
 } from '../../../lib/errors'
+import { resolveLocale } from '../../../lib/resolveLocale'
 
 export const adminCategoriesRoutes = new Elysia({ prefix: '/admin/categories' })
   .use(authRoutes)
-  .get('/', async ({ query }) => await AdminCategoriesService.findAll(query), {
+  .get('/', async ({ query, headers }) => await AdminCategoriesService.findAll(query, resolveLocale(headers['accept-language'])), {
     authWithPermissions: Permissions.AdminCategoriesManage,
     query: AdminCategoriesModel.listQuery,
     response: {
@@ -41,6 +43,7 @@ export const adminCategoriesRoutes = new Elysia({ prefix: '/admin/categories' })
         ...unauthorizedResponse,
         ...forbiddenResponse,
         ...conflictResponse,
+        ...unprocessableResponse,
       },
       detail: {
         summary: 'Create category',
@@ -49,23 +52,28 @@ export const adminCategoriesRoutes = new Elysia({ prefix: '/admin/categories' })
       },
     },
   )
-  .patch('/:id', async ({ params, body }) => await AdminCategoriesService.update(params.id, body), {
-    authWithPermissions: Permissions.AdminCategoriesManage,
-    params: AdminCategoriesModel.updateParams,
-    body: AdminCategoriesModel.updateBody,
-    response: {
-      200: AdminCategoriesModel.updateResponse,
-      ...unauthorizedResponse,
-      ...forbiddenResponse,
-      ...notFoundResponse,
-      ...conflictResponse,
+  .patch(
+    '/:id',
+    async ({ params, body }) => await AdminCategoriesService.update(params.id, body),
+    {
+      authWithPermissions: Permissions.AdminCategoriesManage,
+      params: AdminCategoriesModel.updateParams,
+      body: AdminCategoriesModel.updateBody,
+      response: {
+        200: AdminCategoriesModel.updateResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+        ...conflictResponse,
+        ...unprocessableResponse,
+      },
+      detail: {
+        summary: 'Update category',
+        operationId: 'updateAdminCategory',
+        tags: ['Admin'],
+      },
     },
-    detail: {
-      summary: 'Update category',
-      operationId: 'updateAdminCategory',
-      tags: ['Admin'],
-    },
-  })
+  )
   .delete(
     '/:id',
     async ({ params, set }) => {

@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { FavouritesModel } from './model'
 import { FavouritesService } from './service'
+import { resolveLocale } from '../../lib/resolveLocale'
 import { authRoutes } from '../auth'
 import {
   notFoundResponse,
@@ -13,7 +14,7 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ user, query }) => FavouritesService.findAllForProfile(user.id, query.profileId),
+    async ({ user, query, headers }) => FavouritesService.findAllForProfile(user.id, query.profileId, resolveLocale(headers['accept-language'])),
     {
       auth: true,
       query: FavouritesModel.profileIdQuery,

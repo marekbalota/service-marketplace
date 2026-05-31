@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 
-const errorResponse = t.Object({ message: t.String(), code: t.Optional(t.String()) })
+const errorResponse = t.Object({ message: t.String(), code: t.Optional(t.String()), locale: t.Optional(t.String()) })
 
 export const ErrorMessages = {
   postNotFound: 'Post not found',
@@ -23,6 +23,8 @@ export const ErrorMessages = {
   sessionNotFound: 'Session not found',
   categoryNotFound: 'Category not found',
   categoryNameConflict: 'A category with this name already exists',
+  missingEnglishTranslation: 'English translation is required',
+  unsupportedLocale: 'One or more locales are not supported',
 } as const
 
 export const ImpersonationErrorMessages = {
@@ -66,6 +68,10 @@ export const conflictResponse = {
   409: errorResponse,
 }
 
+export const unprocessableResponse = {
+  422: errorResponse,
+}
+
 export class ForbiddenError extends Error {
   status = 403
   constructor(message: string) {
@@ -84,9 +90,19 @@ export class NotFoundError extends Error {
 
 export class ConflictError extends Error {
   status = 409
-  constructor(message: string) {
+  locale?: string
+  constructor(message: string, locale?: string) {
     super(message)
     this.name = 'ConflictError'
+    this.locale = locale
+  }
+}
+
+export class UnprocessableEntityError extends Error {
+  status = 422
+  constructor(message: string) {
+    super(message)
+    this.name = 'UnprocessableEntityError'
   }
 }
 
@@ -95,6 +111,16 @@ export function getPgCode(e: unknown): string | undefined {
     if ('code' in e) return (e as { code: string }).code
     if ('cause' in e && e.cause && typeof e.cause === 'object' && 'code' in e.cause) {
       return (e.cause as { code: string }).code
+    }
+  }
+  return undefined
+}
+
+export function getPgDetail(e: unknown): string | undefined {
+  if (e && typeof e === 'object') {
+    if ('detail' in e) return (e as { detail: string }).detail
+    if ('cause' in e && e.cause && typeof e.cause === 'object' && 'detail' in e.cause) {
+      return (e.cause as { detail: string }).detail
     }
   }
   return undefined
@@ -109,10 +135,11 @@ export class InternalServerError extends Error {
 }
 
 export const errorsPlugin = new Elysia({ name: 'errors' })
-  .error({ ForbiddenError, NotFoundError, ConflictError, InternalServerError })
+  .error({ ForbiddenError, NotFoundError, ConflictError, UnprocessableEntityError, InternalServerError })
   .onError(({ code, error, status }) => {
     if (code === 'ForbiddenError') return status(403, { message: error.message })
     if (code === 'NotFoundError') return status(404, { message: error.message })
-    if (code === 'ConflictError') return status(409, { message: error.message })
+    if (code === 'ConflictError') return status(409, { message: error.message, locale: error.locale })
+    if (code === 'UnprocessableEntityError') return status(422, { message: error.message })
     if (code === 'InternalServerError') return status(500, { message: error.message })
   })

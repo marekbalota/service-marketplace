@@ -9,9 +9,10 @@ import { errorsPlugin } from '../../../lib/errors'
 const app = new Elysia().use(errorsPlugin).use(authRoutes).use(adminCategoriesRoutes)
 const client = treaty(app)
 
-const uniqueSuffix = Date.now()
-const testCategoryName = `ZZZ Test Category ${uniqueSuffix}`
-const testCategoryRenamed = `ZZZ Test Category Renamed ${uniqueSuffix}`
+const suffix = Date.now()
+const enName = `ZZZ Test EN ${suffix}`
+const enRenamed = `ZZZ Test EN Renamed ${suffix}`
+const skName = `ZZZ Test SK ${suffix}`
 
 let adminCookie: string
 let userCookie: string
@@ -63,7 +64,8 @@ describe('GET /admin/categories', () => {
     expect(data!.items.length).toBeGreaterThan(0)
     const cat = data!.items[0]!
     expect(typeof cat.categoryId).toBe('string')
-    expect(typeof cat.name).toBe('string')
+    expect(Array.isArray(cat.translations)).toBe(true)
+    expect(cat.translations.some((t) => t.locale === 'en')).toBe(true)
     expect(typeof cat.activePosts).toBe('number')
     expect(typeof cat.archivedPosts).toBe('number')
   })
@@ -74,7 +76,11 @@ describe('GET /admin/categories', () => {
       headers: { Cookie: adminCookie },
     })
     expect(error).toBeNull()
-    expect(data!.items.every((c) => c.name.toLowerCase().includes('tutoring'))).toBe(true)
+    expect(
+      data!.items.every((c) =>
+        c.translations.some((t) => t.name.toLowerCase().includes('tutoring')),
+      ),
+    ).toBe(true)
   })
 
   it('respects offset and size pagination', async () => {
@@ -95,70 +101,127 @@ describe('GET /admin/categories', () => {
 
 describe('POST /admin/categories', () => {
   it('returns 401 without a session', async () => {
-    const { error } = await client.admin.categories.post({ name: 'TestCat' })
+    const { error } = await client.admin.categories.post({
+      translations: [{ locale: 'en', name: 'TestCat' }],
+    })
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a user without permission', async () => {
     const { error } = await client.admin.categories.post(
-      { name: 'TestCat' },
+      { translations: [{ locale: 'en', name: 'TestCat' }] },
       { headers: { Cookie: userCookie } },
     )
     expect(error?.status).toBe(403)
   })
 
-  it('creates a category and returns 201', async () => {
+  it('returns 422 when EN translation is missing', async () => {
+    const { error } = await client.admin.categories.post(
+      { translations: [{ locale: 'sk', name: skName }] },
+      { headers: { Cookie: adminCookie } },
+    )
+    expect(error?.status).toBe(422)
+  })
+
+  it('creates a category with EN only and returns 201', async () => {
     const { data, error } = await client.admin.categories.post(
-      { name: testCategoryName },
+      { translations: [{ locale: 'en', name: enName }] },
       { headers: { Cookie: adminCookie } },
     )
     expect(error).toBeNull()
-    expect(data).toBeTruthy()
-    expect(data!.name).toBe(testCategoryName)
+    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enName)
     createdId = data!.categoryId
   })
 
-  it('returns 409 when name already exists', async () => {
+  it('returns 409 when EN name already exists', async () => {
     const { error } = await client.admin.categories.post(
-      { name: 'Tutoring' },
+      { translations: [{ locale: 'en', name: 'Tutoring' }] },
       { headers: { Cookie: adminCookie } },
     )
     expect(error?.status).toBe(409)
+  })
+
+  it('returns 409 when SK name conflicts with another category', async () => {
+    const { data: existing } = await client.admin.categories.post(
+      {
+        translations: [
+          { locale: 'en', name: `${enName} SK Conflict Base` },
+          { locale: 'sk', name: `${skName} Conflict` },
+        ],
+      },
+      { headers: { Cookie: adminCookie } },
+    )
+    const { error } = await client.admin.categories.post(
+      {
+        translations: [
+          { locale: 'en', name: `${enName} SK Conflict Dup` },
+          { locale: 'sk', name: `${skName} Conflict` },
+        ],
+      },
+      { headers: { Cookie: adminCookie } },
+    )
+    expect(error?.status).toBe(409)
+    if (existing?.categoryId) {
+      await client.admin
+        .categories({ id: existing.categoryId })
+        .delete(undefined, { headers: { Cookie: adminCookie } })
+    }
   })
 })
 
 describe('PATCH /admin/categories/:id', () => {
   it('returns 401 without a session', async () => {
-    const { error } = await client.admin.categories({ id: 'some-id' }).patch({ name: 'X' })
+    const { error } = await client.admin
+      .categories({ id: 'some-id' })
+      .patch({ translations: [{ locale: 'en', name: 'X' }] })
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a user without permission', async () => {
     const { error } = await client.admin
       .categories({ id: 'some-id' })
-      .patch({ name: 'X' }, { headers: { Cookie: userCookie } })
+      .patch({ translations: [{ locale: 'en', name: 'X' }] }, { headers: { Cookie: userCookie } })
     expect(error?.status).toBe(403)
   })
 
   it('returns 404 for a non-existent id', async () => {
     const { error } = await client.admin
       .categories({ id: '00000000-0000-0000-0000-000000000000' })
-      .patch({ name: 'X' }, { headers: { Cookie: adminCookie } })
+      .patch({ translations: [{ locale: 'en', name: 'X' }] }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(404)
   })
 
-  it('updates the category name and returns 200', async () => {
-    const { data, error } = await client.admin
-      .categories({ id: createdId })
-      .patch({ name: testCategoryRenamed }, { headers: { Cookie: adminCookie } })
-    expect(error).toBeNull()
-    expect(data!.name).toBe(testCategoryRenamed)
-  })
-
-  it('returns 409 when name conflicts with another category', async () => {
+  it('returns 422 when unsupported locale is provided', async () => {
     const { error } = await client.admin
       .categories({ id: createdId })
-      .patch({ name: 'Plumbing' }, { headers: { Cookie: adminCookie } })
+      .patch(
+        { translations: [{ locale: 'xx', name: 'SomeUnsupportedValue' }] },
+        { headers: { Cookie: adminCookie } },
+      )
+    expect(error?.status).toBe(422)
+  })
+
+  it('updates EN name', async () => {
+    const { data, error } = await client.admin
+      .categories({ id: createdId })
+      .patch({ translations: [{ locale: 'en', name: enRenamed }] }, { headers: { Cookie: adminCookie } })
+    expect(error).toBeNull()
+    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enRenamed)
+  })
+
+  it('adds SK translation without touching EN', async () => {
+    const { data, error } = await client.admin
+      .categories({ id: createdId })
+      .patch({ translations: [{ locale: 'sk', name: skName }] }, { headers: { Cookie: adminCookie } })
+    expect(error).toBeNull()
+    expect(data!.translations.find((t) => t.locale === 'sk')?.name).toBe(skName)
+    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enRenamed)
+  })
+
+  it('returns 409 when EN name conflicts with another category', async () => {
+    const { error } = await client.admin
+      .categories({ id: createdId })
+      .patch({ translations: [{ locale: 'en', name: 'Plumbing' }] }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(409)
   })
 })
