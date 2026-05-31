@@ -152,7 +152,7 @@ async function upsertAdminUser(name: string, email: string, password: string, ro
   console.log(`  Created admin user: ${email} (${roleName})`)
 }
 
-async function upsertCategory(enName: string) {
+async function upsertCategory(enName: string, extra?: Record<string, string>) {
   const existing = await db.query.categoryTranslations.findFirst({
     where: (ct, { and, eq }) => and(eq(ct.locale, 'en'), eq(ct.name, enName)),
     with: { category: true },
@@ -162,11 +162,14 @@ async function upsertCategory(enName: string) {
   }
   return db.transaction(async (tx) => {
     const [category] = await tx.insert(schema.categories).values({}).returning()
-    await tx.insert(schema.categoryTranslations).values({
-      categoryId: category!.categoryId,
-      locale: 'en',
-      name: enName,
-    })
+    await tx.insert(schema.categoryTranslations).values([
+      { categoryId: category!.categoryId, locale: 'en', name: enName },
+      ...Object.entries(extra ?? {}).map(([locale, name]) => ({
+        categoryId: category!.categoryId,
+        locale,
+        name,
+      })),
+    ])
     return category!
   })
 }
@@ -220,23 +223,23 @@ async function seed() {
   console.log(`  Created: Super Admin (admin@example.com) - password: admin123`)
 
   console.log('\n  Creating categories...')
-  const tutoring = await upsertCategory('Tutoring')
-  const plumbing = await upsertCategory('Plumbing')
-  const design = await upsertCategory('Design')
-  const homeRepair = await upsertCategory('Home Repair')
-  const cleaning = await upsertCategory('Cleaning')
-  const techSupport = await upsertCategory('Tech Support')
-  await upsertCategory('Marketing & Business')
-  await upsertCategory('Writing & Translation')
+  const tutoring = await upsertCategory('Tutoring', { sk: 'Doučovanie', cs: 'Doučování' })
+  const plumbing = await upsertCategory('Plumbing', { sk: 'Inštalatérstvo', cs: 'Instalatérství' })
+  const design = await upsertCategory('Design', { sk: 'Dizajn', cs: 'Design' })
+  const homeRepair = await upsertCategory('Home Repair', { sk: 'Opravy domácnosti', cs: 'Opravy domácnosti' })
+  const cleaning = await upsertCategory('Cleaning', { sk: 'Upratovanie', cs: 'Úklid' })
+  const techSupport = await upsertCategory('Tech Support', { sk: 'Technická podpora', cs: 'Technická podpora' })
+  await upsertCategory('Marketing & Business', { sk: 'Marketing a biznis' })
+  await upsertCategory('Writing & Translation', { sk: 'Písanie a preklady', cs: 'Psaní a překlady' })
+  await upsertCategory('Pet Services', { sk: 'Starostlivosť o zvieratá', cs: 'Péče o zvířata' })
+  await upsertCategory('Photography & Video', { cs: 'Fotografie a video' })
+  await upsertCategory('Beauty & Wellness')
   await upsertCategory('Admin & Virtual Assistance')
   await upsertCategory('Transport & Delivery')
   await upsertCategory('Construction & Trades')
   await upsertCategory('Automotive')
   await upsertCategory('Personal Services')
-  await upsertCategory('Beauty & Wellness')
   await upsertCategory('Events & Entertainment')
-  await upsertCategory('Photography & Video')
-  await upsertCategory('Pet Services')
   await upsertCategory('Childcare & Elderly Care')
   await upsertCategory('Legal & Finance')
   await upsertCategory('Others')
