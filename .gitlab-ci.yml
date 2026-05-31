@@ -3,6 +3,8 @@ stages:
   - lint
   - unit & integration tests
   - e2e tests
+  - build
+  - deploy
 
 workflow:
   rules:
@@ -11,6 +13,17 @@ workflow:
 
 variables:
   BUN_INSTALL_CACHE_DIR: /tmp/bun-cache
+
+  # --- Deployment (build + deploy stages) ---
+  HARBOR_URL: cerit.io/v_gibas
+  API_IMAGE: cerit.io/v_gibas/marketplace-api
+  WEB_IMAGE: cerit.io/v_gibas/marketplace-web
+  K8S_NAMESPACE: gibas-ns
+  HELM_RELEASE_NAME: marketplace
+  HELM_CHART_PATH: ./charts/marketplace
+  WEB_HOST: marketplace.dyn.cloud.e-infra.cz
+  API_HOST: marketplace-api.dyn.cloud.e-infra.cz
+  STORAGE_HOST: marketplace-storage.dyn.cloud.e-infra.cz
 
 default:
   image: oven/bun:latest
@@ -126,3 +139,82 @@ e2e-tests:
     expire_in: 60 minutes
   rules:
     - when: manual
+
+# ===========================================================================
+# Deployment — only on `master` or `deployment`.
+# Chained off `install` via `needs` (DAG), so lint / tests / prettier never
+# gate a deploy. Builds two images with Kaniko, then deploys the Helm chart.
+# ===========================================================================
+.deploy-rules: &deploy-rules
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "deployment"'
+
+.kaniko: &kaniko
+  stage: build
+  tags:
+    - shared-fi
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: ['']
+  # Only "rely on install" — not on lint / tests / prettier.
+  needs:
+    - job: install
+      optional: false
+  <<: *deploy-rules
+  before_script:
+    - echo "{\"auths\":{\"${HARBOR_URL}\":{\"auth\":\"$(printf "%s:%s" "${HUB_REGISTRY_USER}" "${HARBOR_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+
+build_api:
+  <<: *kaniko
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/apps/api/Dockerfile"
+      --destination "${API_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      --destination "${API_IMAGE}:latest"
+
+build_web:
+  <<: *kaniko
+  script:
+    # VITE_* are inlined at build time, so the API URL is baked in here.
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/apps/web/Dockerfile"
+      --build-arg "VITE_API_URL=https://${API_HOST}"
+      --build-arg "VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}"
+      --destination "${WEB_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      --destination "${WEB_IMAGE}:latest"
+
+deploy:
+  stage: deploy
+  tags:
+    - shared-fi
+  image:
+    name: alpine/helm:3.16.4
+    entrypoint: ['']
+  needs:
+    - job: build_api
+      optional: false
+    - job: build_web
+      optional: false
+  <<: *deploy-rules
+  before_script:
+    - apk add --no-cache curl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl && mv kubectl /usr/local/bin/
+    - mkdir -p ~/.kube && cp "$KUBECONFIG" ~/.kube/config
+  script:
+    - helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH}
+      --namespace ${K8S_NAMESPACE}
+      --set api.image.repository=${API_IMAGE}
+      --set api.image.tag=${CI_COMMIT_SHORT_SHA}
+      --set web.image.repository=${WEB_IMAGE}
+      --set web.image.tag=${CI_COMMIT_SHORT_SHA}
+      --set ingress.web.host=${WEB_HOST}
+      --set ingress.api.host=${API_HOST}
+      --set ingress.minio.host=${STORAGE_HOST}
+      --wait
+      --timeout 5m
+  environment:
+    name: production
+    url: https://${WEB_HOST}

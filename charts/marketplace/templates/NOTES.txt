@@ -1,0 +1,30 @@
+
+Marketplace for Services deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+URLs (once cert-manager issues TLS, ~1-2 min):
+  Web      https://{{ .Values.ingress.web.host }}
+  API      https://{{ .Values.ingress.api.host }}
+  Storage  https://{{ .Values.ingress.minio.host }}
+
+Prerequisites (NOT created by this chart — do these once per namespace):
+
+  1. The CloudNativePG operator must be installed cluster-wide (it is, on e-INFRA CZ).
+
+  2. Create the app secret "{{ .Values.secretName }}" with all non-DB secrets:
+
+     kubectl -n {{ .Release.Namespace }} create secret generic {{ .Values.secretName }} \
+       --from-literal=BETTER_AUTH_SECRET=$(openssl rand -hex 32) \
+       --from-literal=TURNSTILE_SECRET_KEY=... \
+       --from-literal=MINIO_ROOT_USER=marketplace \
+       --from-literal=MINIO_ROOT_PASSWORD=$(openssl rand -hex 16) \
+       --from-literal=SMTP_HOST=... \
+       --from-literal=SMTP_PORT=587 \
+       --from-literal=SMTP_USER=... \
+       --from-literal=SMTP_PASS=... \
+       --from-literal=EMAIL_FROM=noreply@{{ .Values.ingress.web.host }}
+
+DATABASE_URL is supplied automatically from the CloudNativePG secret
+"{{ include "marketplace.db.fullname" . }}-app".
+
+Check rollout:
+  kubectl -n {{ .Release.Namespace }} get pods,ingress,cluster

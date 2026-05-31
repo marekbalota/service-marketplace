@@ -1,0 +1,39 @@
+# VCS
+.git
+.gitignore
+
+# Dependencies (reinstalled inside the image)
+node_modules
+**/node_modules
+
+# Build artifacts
+.output
+**/.output
+.nitro
+**/.nitro
+.tanstack
+**/.tanstack
+.vinxi
+dist
+**/dist
+build
+**/build
+coverage
+**/coverage
+
+# Local env + secrets (never bake into an image)
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Test / tooling output
+test-results
+playwright-report
+e2e/.auth
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+.superpowers
