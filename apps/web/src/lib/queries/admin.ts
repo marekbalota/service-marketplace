@@ -76,6 +76,7 @@ export const adminCategoriesQueryOptions = (params: {
   search: string
   offset: number
   size: number
+  locale: string
 }) =>
   queryOptions({
     queryKey: ['admin', 'categories', params] as const,

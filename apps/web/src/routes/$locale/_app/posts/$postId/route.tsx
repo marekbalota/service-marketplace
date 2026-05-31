@@ -8,8 +8,9 @@ import { PostSidebarCard } from './-components/PostSidebarCard'
 import { PostReviewsCard } from './-components/PostReviewsCard'
 
 export const Route = createFileRoute('/$locale/_app/posts/$postId')({
-  loader: async ({ context: { queryClient }, params: { postId } }) => {
-    await queryClient.ensureQueryData(postDetailQueryOptions(postId))
+  loader: async ({ context: { queryClient }, params }) => {
+    const { postId, locale } = params as { postId: string; locale: string }
+    await queryClient.ensureQueryData(postDetailQueryOptions(postId, locale))
   },
   pendingComponent: PostDetailSkeleton,
   component: PostDetailPage,

@@ -21,7 +21,7 @@ import { Field, FieldError } from '#/components/ui/field'
 import { Label } from '#/components/ui/label'
 
 export type CategoryValues = {
-  translations: Array<{ locale: string; name: string }>
+  translations: Record<string, string>
 }
 
 type FormValues = z.infer<typeof categorySchema>
@@ -72,10 +72,7 @@ export function CategoryDialog({
     resolver: zodResolver(categorySchema),
     mode: 'onTouched',
     defaultValues: {
-      translations: {
-        ...EMPTY_TRANSLATIONS,
-        ...Object.fromEntries((defaultValues?.translations ?? []).map((t) => [t.locale, t.name])),
-      },
+      translations: { ...EMPTY_TRANSLATIONS, ...(defaultValues?.translations ?? {}) },
     },
   })
 
@@ -88,13 +85,8 @@ export function CategoryDialog({
   }
 
   const submit: SubmitHandler<FormValues> = async (values) => {
-    const payload: CategoryValues = {
-      translations: Object.entries(values.translations)
-        .filter(([, name]) => name.trim().length > 0)
-        .map(([locale, name]) => ({ locale, name: name.trim() })),
-    }
     try {
-      await onSubmit(payload)
+      await onSubmit(values)
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 409) {
         if (e.locale) {

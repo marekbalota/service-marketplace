@@ -27,9 +27,9 @@ export const Route = createFileRoute('/$locale/_app/admin/categories')({
     }
   },
   loaderDeps: ({ search: { q, page } }) => ({ q, page }),
-  loader: ({ context: { queryClient }, deps: { q, page } }) => {
+  loader: ({ context: { queryClient }, deps: { q, page }, params }) => {
     void queryClient.prefetchQuery(
-      adminCategoriesQueryOptions({ search: q ?? '', offset: ((page ?? 1) - 1) * PAGE_SIZE, size: PAGE_SIZE }),
+      adminCategoriesQueryOptions({ search: q ?? '', offset: ((page ?? 1) - 1) * PAGE_SIZE, size: PAGE_SIZE, locale: params.locale as string }),
     )
   },
   component: ManageCategories,

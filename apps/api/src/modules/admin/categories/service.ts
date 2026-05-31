@@ -40,8 +40,8 @@ export abstract class AdminCategoriesService {
       const rows = await tx
         .select({
           categoryId: categories.categoryId,
-          translations: sql<{ locale: string; name: string }[]>`(
-            SELECT COALESCE(json_agg(json_build_object('locale', ct.locale, 'name', ct.name)), '[]'::json)
+          translations: sql<Record<string, string>>`(
+            SELECT COALESCE(json_object_agg(ct.locale, ct.name), '{}'::json)
             FROM category_translations ct
             WHERE ct.category_id = ${categories.categoryId}
           )`,
@@ -87,19 +87,18 @@ export abstract class AdminCategoriesService {
   static async create(body: AdminCategoriesModel['createBody']) {
     const { translations } = body
 
-    const enTr = translations.find((t) => t.locale === 'en')
-    if (!enTr || !enTr.name.trim()) {
+    if (!translations['en']?.trim()) {
       throw new UnprocessableEntityError(ErrorMessages.missingEnglishTranslation)
     }
 
-    const unsupported = translations.filter(
-      (t) => !(SUPPORTED_LOCALES as readonly string[]).includes(t.locale),
+    const unsupported = Object.keys(translations).filter(
+      (locale) => !(SUPPORTED_LOCALES as readonly string[]).includes(locale),
     )
     if (unsupported.length > 0) {
       throw new UnprocessableEntityError(ErrorMessages.unsupportedLocale)
     }
 
-    const valid = translations.filter((t) => t.name.trim().length > 0)
+    const valid = Object.entries(translations).filter(([, name]) => name.trim().length > 0)
 
     return db.transaction(async (tx) => {
       try {
@@ -107,18 +106,21 @@ export abstract class AdminCategoriesService {
           categoryId: categories.categoryId,
         })
 
-        const insertedTranslations = await tx
+        const inserted = await tx
           .insert(categoryTranslations)
           .values(
-            valid.map((t) => ({
+            valid.map(([locale, name]) => ({
               categoryId: category!.categoryId,
-              locale: t.locale,
-              name: t.name.trim(),
+              locale,
+              name: name.trim(),
             })),
           )
           .returning({ locale: categoryTranslations.locale, name: categoryTranslations.name })
 
-        return { categoryId: category!.categoryId, translations: insertedTranslations }
+        return {
+          categoryId: category!.categoryId,
+          translations: Object.fromEntries(inserted.map((r) => [r.locale, r.name])),
+        }
       } catch (e: unknown) {
         if (getPgCode(e) === '23505') {
           throw new ConflictError(ErrorMessages.categoryNameConflict, parseConflictLocale(e))
@@ -138,14 +140,14 @@ export abstract class AdminCategoriesService {
       throw new NotFoundError(ErrorMessages.categoryNotFound)
     }
 
-    const unsupported = translations.filter(
-      (t) => !(SUPPORTED_LOCALES as readonly string[]).includes(t.locale),
+    const unsupported = Object.keys(translations).filter(
+      (locale) => !(SUPPORTED_LOCALES as readonly string[]).includes(locale),
     )
     if (unsupported.length > 0) {
       throw new UnprocessableEntityError(ErrorMessages.unsupportedLocale)
     }
 
-    const valid = translations.filter((t) => t.name.trim().length > 0)
+    const valid = Object.entries(translations).filter(([, name]) => name.trim().length > 0)
     if (valid.length === 0) {
       throw new UnprocessableEntityError(ErrorMessages.missingEnglishTranslation)
     }
@@ -154,18 +156,18 @@ export abstract class AdminCategoriesService {
       try {
         await tx
           .insert(categoryTranslations)
-          .values(valid.map((t) => ({ categoryId: id, locale: t.locale, name: t.name.trim() })))
+          .values(valid.map(([locale, name]) => ({ categoryId: id, locale, name: name.trim() })))
           .onConflictDoUpdate({
             target: [categoryTranslations.categoryId, categoryTranslations.locale],
             set: { name: sql`excluded.name` },
           })
 
-        const updatedTranslations = await tx
+        const rows = await tx
           .select({ locale: categoryTranslations.locale, name: categoryTranslations.name })
           .from(categoryTranslations)
           .where(eq(categoryTranslations.categoryId, id))
 
-        return { categoryId: id, translations: updatedTranslations }
+        return { categoryId: id, translations: Object.fromEntries(rows.map((r) => [r.locale, r.name])) }
       } catch (e: unknown) {
         if (getPgCode(e) === '23505') {
           throw new ConflictError(ErrorMessages.categoryNameConflict, parseConflictLocale(e))

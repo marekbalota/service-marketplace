@@ -47,8 +47,8 @@ export const Route = createFileRoute('/$locale/_app/create-post')({
     const canCreatePosts = hasPermissions(user.role?.permissions ?? [], [Permissions.PostsCreate])
     if (!canCreatePosts) throw redirect({ to: '/$locale/posts', params })
   },
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(categoriesQueryOptions)
+  loader: async ({ context: { queryClient }, params }) => {
+    await queryClient.ensureQueryData(categoriesQueryOptions(params.locale as string))
   },
   pendingComponent: CreatePostSkeleton,
   component: CreatePostPage,
@@ -148,7 +148,7 @@ function CreatePostPage() {
   const { activeProfile } = useActiveProfile()
   const [isManualLocation, setIsManualLocation] = useState(false)
 
-  const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions)
+  const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions(locale))
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

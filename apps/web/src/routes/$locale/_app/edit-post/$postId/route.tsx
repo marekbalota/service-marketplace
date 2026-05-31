@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter, redirect, useBlocker } from '@tanstack/react-router'
+import { useLocale } from '#/lib/useLocale'
 import { wrapEdenError } from '#/lib/api-error'
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
@@ -38,14 +39,15 @@ export const Route = createFileRoute('/$locale/_app/edit-post/$postId')({
     if (!user) throw redirect({ to: '/$locale/login', params, search: { redirect: location.href }, replace: true })
     if (!hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn]))
       throw redirect({ to: '/$locale/posts', params })
-    const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId))
+    const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId, params.locale as string))
     const isOwner = user.profiles.some((p) => p.userProfileId === post.authorId)
     if (!isOwner) throw redirect({ to: '/$locale/posts/$postId', params })
   },
-  loader: async ({ context: { queryClient }, params: { postId } }) => {
+  loader: async ({ context: { queryClient }, params }) => {
+    const { postId, locale } = params as { postId: string; locale: string }
     await Promise.all([
-      queryClient.ensureQueryData(postDetailQueryOptions(postId)),
-      queryClient.ensureQueryData(categoriesQueryOptions),
+      queryClient.ensureQueryData(postDetailQueryOptions(postId, locale)),
+      queryClient.ensureQueryData(categoriesQueryOptions(locale)),
     ])
   },
   pendingComponent: EditPostSkeleton,
@@ -122,11 +124,12 @@ function EditPostSkeleton() {
 function EditPostPage() {
   const { t } = useTranslation()
   const { postId } = Route.useParams()
+  const locale = useLocale()
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId))
-  const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions)
+  const { data: post } = useSuspenseQuery(postDetailQueryOptions(postId, locale))
+  const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions(locale))
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

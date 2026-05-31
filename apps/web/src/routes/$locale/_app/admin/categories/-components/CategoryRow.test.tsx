@@ -2,13 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { CategoryRow } from './CategoryRow'
 
+vi.mock('#/lib/useLocale', () => ({ useLocale: () => 'en' }))
+
 const baseCategory = {
   categoryId: 'cat-1',
-  translations: [
-    { locale: 'en', name: 'Cleaning' },
-    { locale: 'sk', name: 'Čistenie' },
-    { locale: 'cs', name: 'Úklid' },
-  ],
+  translations: { en: 'Cleaning', sk: 'Čistenie', cs: 'Úklid' },
   activePosts: 3,
   archivedPosts: 1,
 }
@@ -24,7 +22,7 @@ function renderRow(overrides?: Partial<typeof baseCategory>) {
 }
 
 describe('CategoryRow', () => {
-  it('displays the EN name as primary name', () => {
+  it('displays the locale name with EN fallback', () => {
     renderRow()
     expect(screen.getByText('Cleaning')).toBeInTheDocument()
   })
@@ -42,7 +40,7 @@ describe('CategoryRow', () => {
   })
 
   it('shows 1/3 fraction when only EN is present', () => {
-    renderRow({ translations: [{ locale: 'en', name: 'Cleaning' }] })
+    renderRow({ translations: { en: 'Cleaning' } })
     expect(screen.getByText('1/3')).toBeInTheDocument()
   })
 
@@ -53,7 +51,7 @@ describe('CategoryRow', () => {
   })
 
   it('applies amber colour class when incomplete', () => {
-    renderRow({ translations: [{ locale: 'en', name: 'Cleaning' }] })
+    renderRow({ translations: { en: 'Cleaning' } })
     const fraction = screen.getByText('1/3').closest('span')
     expect(fraction?.className).toMatch(/amber/)
   })

@@ -9,6 +9,7 @@ import { PaginationBar } from '#/components/PaginationBar'
 import { Route } from '../index'
 import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { postsQueryOptions, type RatingRange } from '../-queries/posts'
+import { useLocale } from '#/lib/useLocale'
 
 export function PostsList({
   type,
@@ -34,6 +35,7 @@ export function PostsList({
   city?: string
 }) {
   const { t } = useTranslation()
+  const locale = useLocale()
   const { data: user } = useCurrentUser()
   const isAuthenticated = user != null
   const { activeProfile } = useActiveProfile()
@@ -41,11 +43,11 @@ export function PostsList({
   const activeProfileId = activeProfile?.userProfileId
   const profileId = favouritesOnly ? activeProfileId : undefined
   const { data } = useSuspenseQuery(
-    postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city }),
+    postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city, locale }),
   )
 
   const { data: favouritesData } = useQuery({
-    ...favouritesQueryOptions(activeProfileId ?? ''),
+    ...favouritesQueryOptions(activeProfileId ?? '', locale),
     enabled: isAuthenticated && !favouritesOnly && !!activeProfileId,
   })
 

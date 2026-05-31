@@ -64,8 +64,8 @@ describe('GET /admin/categories', () => {
     expect(data!.items.length).toBeGreaterThan(0)
     const cat = data!.items[0]!
     expect(typeof cat.categoryId).toBe('string')
-    expect(Array.isArray(cat.translations)).toBe(true)
-    expect(cat.translations.some((t) => t.locale === 'en')).toBe(true)
+    expect(typeof cat.translations).toBe('object')
+    expect('en' in cat.translations).toBe(true)
     expect(typeof cat.activePosts).toBe('number')
     expect(typeof cat.archivedPosts).toBe('number')
   })
@@ -78,7 +78,7 @@ describe('GET /admin/categories', () => {
     expect(error).toBeNull()
     expect(
       data!.items.every((c) =>
-        c.translations.some((t) => t.name.toLowerCase().includes('tutoring')),
+        Object.values(c.translations).some((name) => name.toLowerCase().includes('tutoring')),
       ),
     ).toBe(true)
   })
@@ -109,7 +109,7 @@ describe('POST /admin/categories', () => {
 
   it('returns 403 for a user without permission', async () => {
     const { error } = await client.admin.categories.post(
-      { translations: [{ locale: 'en', name: 'TestCat' }] },
+      { translations: { en: 'TestCat' } },
       { headers: { Cookie: userCookie } },
     )
     expect(error?.status).toBe(403)
@@ -117,7 +117,7 @@ describe('POST /admin/categories', () => {
 
   it('returns 422 when EN translation is missing', async () => {
     const { error } = await client.admin.categories.post(
-      { translations: [{ locale: 'sk', name: skName }] },
+      { translations: { sk: skName } },
       { headers: { Cookie: adminCookie } },
     )
     expect(error?.status).toBe(422)
@@ -125,17 +125,17 @@ describe('POST /admin/categories', () => {
 
   it('creates a category with EN only and returns 201', async () => {
     const { data, error } = await client.admin.categories.post(
-      { translations: [{ locale: 'en', name: enName }] },
+      { translations: { en: enName } },
       { headers: { Cookie: adminCookie } },
     )
     expect(error).toBeNull()
-    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enName)
+    expect(data!.translations['en']).toBe(enName)
     createdId = data!.categoryId
   })
 
   it('returns 409 when EN name already exists', async () => {
     const { error } = await client.admin.categories.post(
-      { translations: [{ locale: 'en', name: 'Tutoring' }] },
+      { translations: { en: 'Tutoring' } },
       { headers: { Cookie: adminCookie } },
     )
     expect(error?.status).toBe(409)
@@ -144,19 +144,13 @@ describe('POST /admin/categories', () => {
   it('returns 409 when SK name conflicts with another category', async () => {
     const { data: existing } = await client.admin.categories.post(
       {
-        translations: [
-          { locale: 'en', name: `${enName} SK Conflict Base` },
-          { locale: 'sk', name: `${skName} Conflict` },
-        ],
+        translations: { en: `${enName} SK Conflict Base`, sk: `${skName} Conflict` },
       },
       { headers: { Cookie: adminCookie } },
     )
     const { error } = await client.admin.categories.post(
       {
-        translations: [
-          { locale: 'en', name: `${enName} SK Conflict Dup` },
-          { locale: 'sk', name: `${skName} Conflict` },
-        ],
+        translations: { en: `${enName} SK Conflict Dup`, sk: `${skName} Conflict` },
       },
       { headers: { Cookie: adminCookie } },
     )
@@ -173,7 +167,7 @@ describe('PATCH /admin/categories/:id', () => {
   it('returns 401 without a session', async () => {
     const { error } = await client.admin
       .categories({ id: 'some-id' })
-      .patch({ translations: [{ locale: 'en', name: 'X' }] })
+      .patch({ translations: { en: 'X' } })
     expect(error?.status).toBe(401)
   })
 
@@ -195,7 +189,7 @@ describe('PATCH /admin/categories/:id', () => {
     const { error } = await client.admin
       .categories({ id: createdId })
       .patch(
-        { translations: [{ locale: 'xx', name: 'SomeUnsupportedValue' }] },
+        { translations: { xx: 'SomeUnsupportedValue' } },
         { headers: { Cookie: adminCookie } },
       )
     expect(error?.status).toBe(422)
@@ -204,24 +198,24 @@ describe('PATCH /admin/categories/:id', () => {
   it('updates EN name', async () => {
     const { data, error } = await client.admin
       .categories({ id: createdId })
-      .patch({ translations: [{ locale: 'en', name: enRenamed }] }, { headers: { Cookie: adminCookie } })
+      .patch({ translations: { en: enRenamed } }, { headers: { Cookie: adminCookie } })
     expect(error).toBeNull()
-    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enRenamed)
+    expect(data!.translations['en']).toBe(enRenamed)
   })
 
   it('adds SK translation without touching EN', async () => {
     const { data, error } = await client.admin
       .categories({ id: createdId })
-      .patch({ translations: [{ locale: 'sk', name: skName }] }, { headers: { Cookie: adminCookie } })
+      .patch({ translations: { sk: skName } }, { headers: { Cookie: adminCookie } })
     expect(error).toBeNull()
-    expect(data!.translations.find((t) => t.locale === 'sk')?.name).toBe(skName)
-    expect(data!.translations.find((t) => t.locale === 'en')?.name).toBe(enRenamed)
+    expect(data!.translations['sk']).toBe(skName)
+    expect(data!.translations['en']).toBe(enRenamed)
   })
 
   it('returns 409 when EN name conflicts with another category', async () => {
     const { error } = await client.admin
       .categories({ id: createdId })
-      .patch({ translations: [{ locale: 'en', name: 'Plumbing' }] }, { headers: { Cookie: adminCookie } })
+      .patch({ translations: { en: 'Plumbing' } }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(409)
   })
 })

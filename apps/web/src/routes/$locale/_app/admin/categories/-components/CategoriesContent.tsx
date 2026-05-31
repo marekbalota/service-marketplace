@@ -41,7 +41,7 @@ export function CategoriesContent() {
   }, [searchInput, q, navigate])
 
   const { data } = useSuspenseQuery(
-    adminCategoriesQueryOptions({ search: q, offset: (page - 1) * PAGE_SIZE, size: PAGE_SIZE }),
+    adminCategoriesQueryOptions({ search: q, offset: (page - 1) * PAGE_SIZE, size: PAGE_SIZE, locale }),
   )
   const { items, total, totalPages } = data
 
@@ -167,9 +167,7 @@ export function CategoriesContent() {
         open={deleteTarget !== null}
         title={t('admin.categories.deleteTitle')}
         description={t('admin.categories.deleteDesc', {
-          name: deleteTarget?.translations.find((tr) => tr.locale === locale)?.name
-            ?? deleteTarget?.translations.find((tr) => tr.locale === 'en')?.name
-            ?? '',
+          name: deleteTarget?.translations[locale] ?? deleteTarget?.translations['en'] ?? '',
         })}
         confirmLabel={t('common.delete')}
         destructive

@@ -43,6 +43,7 @@ export function postsQueryOptions(deps: {
   country?: string
   region?: string
   city?: string
+  locale: string
 }) {
   const ratingRanges = normalizeRating(deps.rating)
   const ratingMin =

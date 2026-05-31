@@ -14,7 +14,7 @@ import { useLocale } from '#/lib/useLocale'
 export function PostSidebarCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
   const locale = useLocale()
-  const { data: post } = useQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId, locale))
   const { activeProfile } = useActiveProfile()
 
   if (!post) return null

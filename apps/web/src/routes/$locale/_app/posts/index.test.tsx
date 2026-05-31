@@ -46,9 +46,9 @@ vi.mock('#/api', () => ({
 }))
 
 vi.mock('#/lib/queries/posts', () => ({
-  categoriesQueryOptions: { queryKey: ['categories'], queryFn: async () => [] },
-  favouritesQueryOptions: () => ({
-    queryKey: ['favourites'],
+  categoriesQueryOptions: (locale: string) => ({ queryKey: ['categories', locale], queryFn: async () => [] }),
+  favouritesQueryOptions: (profileId: string, locale: string) => ({
+    queryKey: ['favourites', profileId, locale],
     queryFn: async () => ({ items: [] }),
   }),
 }))

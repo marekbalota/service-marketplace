@@ -16,10 +16,12 @@ import { postDetailQueryOptions } from '#/lib/queries/posts'
 import { hasReportedReviewQueryOptions } from '../-queries/posts'
 import { ReviewCard, type ReviewType } from './ReviewCard'
 import { ReviewForm } from './ReviewForm'
+import { useLocale } from '#/lib/useLocale'
 
 export function PostReviewsCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data: post } = useQuery(postDetailQueryOptions(postId))
+  const locale = useLocale()
+  const { data: post } = useQuery(postDetailQueryOptions(postId, locale))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()

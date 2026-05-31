@@ -4,12 +4,14 @@ import { MultiSelect } from '#/components/ui/multi-select'
 import { categoriesQueryOptions } from '#/lib/queries/posts'
 import { Route } from '../index'
 import { normalizeCategory } from '../-queries/posts'
+import { useLocale } from '#/lib/useLocale'
 
 export function CategorySelect() {
   const { t } = useTranslation()
+  const locale = useLocale()
   const { category } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { data: categories = [] } = useQuery(categoriesQueryOptions)
+  const { data: categories = [] } = useQuery(categoriesQueryOptions(locale))
   const selected = normalizeCategory(category)
 
   return (

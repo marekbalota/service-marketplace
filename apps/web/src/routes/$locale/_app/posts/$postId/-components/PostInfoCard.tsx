@@ -22,7 +22,7 @@ import { useLocale } from '#/lib/useLocale'
 export function PostInfoCard({ postId }: { postId: string }) {
   const { t } = useTranslation()
   const locale = useLocale()
-  const { data: post } = useQuery(postDetailQueryOptions(postId))
+  const { data: post } = useQuery(postDetailQueryOptions(postId, locale))
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const queryClient = useQueryClient()

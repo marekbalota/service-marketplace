@@ -18,26 +18,19 @@ const { mockData, mockInvalidateQueries } = vi.hoisted(() => {
     items: [
       {
         categoryId: 'cat-1',
-        translations: [
-          { locale: 'en', name: 'Cleaning' },
-          { locale: 'sk', name: 'Čistenie' },
-        ],
+        translations: { en: 'Cleaning', sk: 'Čistenie' },
         activePosts: 3,
         archivedPosts: 1,
       },
       {
         categoryId: 'cat-2',
-        translations: [{ locale: 'en', name: 'Plumbing' }],
+        translations: { en: 'Plumbing' },
         activePosts: 0,
         archivedPosts: 0,
       },
       {
         categoryId: 'cat-3',
-        translations: [
-          { locale: 'en', name: 'Tutoring' },
-          { locale: 'sk', name: 'Doučovanie' },
-          { locale: 'cs', name: 'Doučování' },
-        ],
+        translations: { en: 'Tutoring', sk: 'Doučovanie', cs: 'Doučování' },
         activePosts: 5,
         archivedPosts: 2,
       },
@@ -75,7 +68,7 @@ vi.mock('#/api', () => ({
           post: vi
             .fn()
             .mockResolvedValue({
-              data: { categoryId: 'new-1', translations: [{ locale: 'en', name: 'New' }] },
+              data: { categoryId: 'new-1', translations: { en: 'New' } },
               error: null,
             }),
           get: vi.fn().mockResolvedValue({ data: mockData, error: null }),

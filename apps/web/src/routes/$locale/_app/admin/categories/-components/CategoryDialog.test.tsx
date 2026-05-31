@@ -61,7 +61,7 @@ describe('CategoryDialog', () => {
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('Inštalatérstvo')
   })
 
-  it('calls onSubmit with translations array (omitting empty)', async () => {
+  it('calls onSubmit with translations record', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
     renderDialog({ onSubmit })
 
@@ -69,9 +69,9 @@ describe('CategoryDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
 
     await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith({
-        translations: [{ locale: 'en', name: 'Gardening' }],
-      })
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ translations: expect.objectContaining({ en: 'Gardening' }) }),
+      )
     })
   })
 

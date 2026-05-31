@@ -66,11 +66,13 @@ export const Route = createFileRoute('/$locale/_app/posts/')({
   loader: async ({
     context: { queryClient },
     deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city },
+    params,
   }) => {
+    const locale = params.locale as string
     await Promise.all([
-      queryClient.ensureQueryData(categoriesQueryOptions),
+      queryClient.ensureQueryData(categoriesQueryOptions(locale)),
       queryClient.ensureQueryData(
-        postsQueryOptions({ q, type, category, sort, page, rating, country, region, city }),
+        postsQueryOptions({ q, type, category, sort, page, rating, country, region, city, locale }),
       ),
     ])
   },

@@ -4,10 +4,11 @@ import { SUPPORTED_LOCALES } from '@marketplace/shared'
 import { cn } from '#/lib/utils'
 import { Button } from '#/components/ui/button'
 import { Badge } from '#/components/ui/badge'
+import { useLocale } from '#/lib/useLocale'
 
 export type Category = {
   categoryId: string
-  translations: Array<{ locale: string; name: string }>
+  translations: Record<string, string>
   activePosts: number
   archivedPosts: number
 }
@@ -38,8 +39,10 @@ function PostCounts({ activePosts, archivedPosts }: { activePosts: number; archi
   )
 }
 
+const MAX_CHIPS = 5
+
 function TranslationIndicator({ translations }: { translations: Category['translations'] }) {
-  const filledCount = translations.length
+  const filledCount = SUPPORTED_LOCALES.filter((locale) => locale in translations).length
   const totalCount = SUPPORTED_LOCALES.length
   const isComplete = filledCount === totalCount
 
@@ -59,22 +62,26 @@ function TranslationIndicator({ translations }: { translations: Category['transl
 
   return (
     <>
-      {/* Desktop: per-locale chips */}
+      {/* Desktop: chips when few locales, fraction when many */}
       <div className="hidden md:flex items-center gap-1 shrink-0">
-        {SUPPORTED_LOCALES.map((locale) => {
-          const has = translations.some((t) => t.locale === locale)
-          return (
-            <Badge
-              key={locale}
-              variant={has ? 'secondary' : 'outline'}
-              className={cn('text-xs px-1.5 py-0', !has && 'opacity-40')}
-            >
-              {locale.toUpperCase()}
-            </Badge>
-          )
-        })}
+        {totalCount <= MAX_CHIPS ? (
+          SUPPORTED_LOCALES.map((locale) => {
+            const has = locale in translations
+            return (
+              <Badge
+                key={locale}
+                variant={has ? 'secondary' : 'outline'}
+                className={cn('text-xs px-1.5 py-0', !has && 'opacity-40')}
+              >
+                {locale.toUpperCase()}
+              </Badge>
+            )
+          })
+        ) : (
+          fraction
+        )}
       </div>
-      {/* Mobile: X/Y fraction */}
+      {/* Mobile: always fraction */}
       <span className="md:hidden">{fraction}</span>
     </>
   )
@@ -82,7 +89,8 @@ function TranslationIndicator({ translations }: { translations: Category['transl
 
 export function CategoryRow({ category, onEdit, onDelete }: CategoryRowProps) {
   const { t } = useTranslation()
-  const enName = category.translations.find((tr) => tr.locale === 'en')?.name ?? ''
+  const locale = useLocale()
+  const name = category.translations[locale] ?? category.translations['en'] ?? ''
 
   return (
     <div className="p-4 rounded-lg border transition-colors">
@@ -90,12 +98,12 @@ export function CategoryRow({ category, onEdit, onDelete }: CategoryRowProps) {
         <div className="flex items-center gap-3 min-w-0">
           <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <span className="text-sm font-semibold text-primary">
-              {enName.charAt(0).toUpperCase()}
+              {name.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-medium truncate">{enName}</p>
+              <p className="font-medium truncate">{name}</p>
               <TranslationIndicator translations={category.translations} />
             </div>
             {/* desktop: stats inline below name */}

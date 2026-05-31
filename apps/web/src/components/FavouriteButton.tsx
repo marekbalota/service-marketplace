@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '#/lib/queries/users'
 import { favouritesQueryOptions } from '#/lib/queries/posts'
 import { useActiveProfile } from '#/context/activeProfile'
+import { useLocale } from '#/lib/useLocale'
 import { api } from '#/api'
 import { wrapEdenError } from '#/lib/api-error'
 
@@ -20,13 +21,14 @@ export function FavouriteButton({
   disabled?: boolean
 }) {
   const queryClient = useQueryClient()
+  const locale = useLocale()
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const isAuthenticated = user != null
   const profileId = activeProfile?.userProfileId
 
   const { data: favouritesList } = useQuery({
-    ...favouritesQueryOptions(profileId ?? ''),
+    ...favouritesQueryOptions(profileId ?? '', locale),
     enabled: isAuthenticated && !!profileId && initialIsFavourite === undefined,
   })
 
@@ -42,7 +44,7 @@ export function FavouriteButton({
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
+      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey })
       onToggle?.()
     },
   })
@@ -53,7 +55,7 @@ export function FavouriteButton({
       if (error) throw wrapEdenError(error, 'Failed to remove favourite.')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '').queryKey })
+      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey })
       onToggle?.()
     },
   })
