@@ -36,8 +36,11 @@ api:
     repository: cerit.io/v_gibas/marketplace-api
     tag: latest
     pullPolicy: IfNotPresent
-  # Run drizzle-kit seed (idempotent upsert) on container start.
-  seedOnStart: true
+  # Run the seed on container start. Off by default: roles/users/categories are
+  # idempotent, but posts/reviews/reports are plain inserts, so re-running on
+  # every restart would duplicate the demo content. Seed once manually instead
+  # (kubectl exec ... bun run src/db/seed.ts).
+  seedOnStart: false
   service:
     type: ClusterIP
     port: 3001

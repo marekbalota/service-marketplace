@@ -83,6 +83,23 @@ interface UpsertUserResult {
   profile: { userProfileId: string }
 }
 
+/**
+ * The user profile is created asynchronously by the Better Auth
+ * `user.create.after` hook. Immediately after signUpEmail returns, that insert
+ * may not be visible yet — the gap is negligible locally but real against a
+ * remote DB (this raced and returned undefined in production). Poll briefly.
+ */
+async function waitForProfile(accountId: string) {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const profile = await db.query.userProfiles.findFirst({
+      where: (p, { eq }) => eq(p.accountId, accountId),
+    })
+    if (profile) return profile
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  throw new Error(`User profile for account ${accountId} was not created within 5s`)
+}
+
 async function upsertUser(name: string, email: string): Promise<UpsertUserResult> {
   const existing = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.email, email),
@@ -94,10 +111,8 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
         .set({ emailVerified: true })
         .where(eq(schema.users.id, existing.id))
     }
-    const profile = await db.query.userProfiles.findFirst({
-      where: (p, { eq }) => eq(p.accountId, existing.id),
-    })
-    return { user: { id: existing.id, email: existing.email }, profile: profile! }
+    const profile = await waitForProfile(existing.id)
+    return { user: { id: existing.id, email: existing.email }, profile }
   }
 
   const result = await auth.api.signUpEmail({
@@ -108,10 +123,8 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
   // Mark email as verified so the user can sign in without going through the verification flow
   await db.update(users).set({ emailVerified: true }).where(eq(users.id, result.user.id))
 
-  const profile = await db.query.userProfiles.findFirst({
-    where: (p, { eq }) => eq(p.accountId, result.user.id),
-  })
-  return { user: result.user, profile: profile! }
+  const profile = await waitForProfile(result.user.id)
+  return { user: result.user, profile }
 }
 
 async function upsertAdminUser(name: string, email: string, password: string, roleName: string) {
