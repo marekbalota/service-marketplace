@@ -32,6 +32,7 @@ export function LanguageSwitcher() {
             size="sm"
             className="gap-1.5 px-2"
             aria-label={t('language.label')}
+            data-testid="language-switcher"
           />
         }
       >

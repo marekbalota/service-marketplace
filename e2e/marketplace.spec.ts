@@ -4,7 +4,7 @@ test.describe('My Postings', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/my-postings')
+    await page.goto('/en/my-postings')
     // Wait for the _app layout to render (beforeLoad must complete)
     // Use extended timeout — cold React Query cache can make the first API call slow
     await expect(page.getByRole('banner')).toBeVisible({ timeout: 15000 })
@@ -27,8 +27,8 @@ test.describe('My Postings', () => {
 test.describe('Marketplace index', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    // Wait for the redirect to /posts and _app layout to finish loading
-    await page.waitForURL('/posts')
+    // Wait for the redirect to /en/posts and _app layout to finish loading
+    await page.waitForURL('/en/posts')
     await expect(page.getByRole('banner')).toBeVisible()
   })
 
@@ -86,7 +86,7 @@ test.describe('Marketplace index', () => {
     await expect(page.locator('main .grid > a').first()).toBeVisible()
     // Click first post card
     await page.locator('main .grid > a').first().click()
-    // Should navigate to /posts/:id
+    // Should navigate to /en/posts/:id
     await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/)
     // Back button should be visible
     await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
@@ -122,7 +122,7 @@ test.describe('Account Settings — Profile CRUD', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/account-settings/profiles')
+    await page.goto('/en/account-settings/profiles')
   })
 
   test('shows the Manage Profiles heading', async ({ page }) => {
@@ -135,20 +135,20 @@ test.describe('Account Settings — Profile CRUD', () => {
 
   test('create — navigates to create page and back', async ({ page }) => {
     await page.getByRole('link', { name: /add profile/i }).click()
-    await expect(page).toHaveURL('/account-settings/profiles/create')
+    await expect(page).toHaveURL('/en/account-settings/profiles/create')
     await expect(page.getByText(/create a new profile on your account/i)).toBeVisible()
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page).toHaveURL('/account-settings/profiles')
+    await expect(page).toHaveURL('/en/account-settings/profiles')
   })
 
   test('create — fills form and submits, new profile appears in list', async ({ page }) => {
     const uniqueEmail = `e2e-profile-${Date.now()}@example.com`
     await page.getByRole('link', { name: /add profile/i }).click()
-    await expect(page).toHaveURL('/account-settings/profiles/create')
+    await expect(page).toHaveURL('/en/account-settings/profiles/create')
     await page.getByPlaceholder('e.g., John Smith').fill('E2E Test Profile')
     await page.getByPlaceholder('email@example.com').fill(uniqueEmail)
     await page.getByRole('button', { name: /create profile/i }).click()
-    await page.waitForURL('/account-settings/profiles')
+    await page.waitForURL('/en/account-settings/profiles')
     await expect(page.getByRole('heading', { name: 'E2E Test Profile' }).first()).toBeVisible()
   })
 
@@ -158,7 +158,7 @@ test.describe('Account Settings — Profile CRUD', () => {
     await expect(page).toHaveURL(/\/account-settings\/profiles\/[^/]+\/edit/)
     await expect(page.getByText(/update your profile information/i)).toBeVisible()
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page).toHaveURL('/account-settings/profiles')
+    await expect(page).toHaveURL('/en/account-settings/profiles')
   })
 
   test('view — navigates to public profile view page', async ({ page }) => {
@@ -185,7 +185,7 @@ test.describe('Account Settings — 2FA section', () => {
   test.use({ storageState: 'e2e/.auth/alice.json' })
 
   test('shows the Two-Factor Authentication card with available methods', async ({ page }) => {
-    await page.goto('/account-settings')
+    await page.goto('/en/account-settings')
     const twoFactorCard = page.locator('#two-factor-auth')
     await expect(twoFactorCard).toBeVisible({ timeout: 10000 })
     // Alice has no 2FA enabled — both TOTP and Email show as available to enable
@@ -198,12 +198,12 @@ test.describe('Account Settings — 2FA section', () => {
 
 test.describe('Create Post', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-    await page.goto('/create-post')
+    await page.waitForURL('/en/posts')
+    await page.goto('/en/create-post')
   })
 
   test('shows the create new posting form', async ({ page }) => {
@@ -217,30 +217,30 @@ test.describe('Create Post', () => {
       .getByPlaceholder(/Describe your service offering or request in detail/i)
       .fill('This is an e2e test post with enough text to pass the 10 character minimum.')
     await page.getByRole('button', { name: /create posting/i }).click()
-    await page.waitForURL('/my-postings')
+    await page.waitForURL('/en/my-postings')
     await expect(page.getByText(uniqueTitle)).toBeVisible()
   })
 })
 
 test.describe('Messages', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
     // Wait for user data to load so activeProfile is set in localStorage before navigating elsewhere
     await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
   })
 
   test('shows the messages page heading', async ({ page }) => {
-    await page.goto('/messages')
+    await page.goto('/en/messages')
     await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible()
   })
 
   test('sends a message from a post and lands on the thread page', async ({ page }) => {
     // Navigate to posts page first
-    await page.goto('/posts')
+    await page.goto('/en/posts')
 
     // Search for Carol's posts by name to get a non-alice post
     await page.getByPlaceholder('Search services, providers, or keywords…').fill('Carol White')
@@ -286,36 +286,36 @@ test.describe('Admin', () => {
   test.use({ storageState: 'e2e/.auth/admin.json' })
 
   test('shows the admin dashboard', async ({ page }) => {
-    await page.goto('/admin')
+    await page.goto('/en/admin')
     await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible()
   })
 
   test('shows the manage accounts page', async ({ page }) => {
-    await page.goto('/admin/users')
+    await page.goto('/en/admin/users')
     await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
   })
 
   test('shows the roles management page', async ({ page }) => {
-    await page.goto('/admin/roles')
+    await page.goto('/en/admin/roles')
     await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
   })
 
   test('Manage Accounts card navigates to /admin/users', async ({ page }) => {
-    await page.goto('/admin')
+    await page.goto('/en/admin')
     await page.getByRole('link', { name: /manage accounts/i }).click()
-    await expect(page).toHaveURL('/admin/users')
+    await expect(page).toHaveURL('/en/admin/users')
     await expect(page.getByRole('heading', { name: /manage accounts/i })).toBeVisible()
   })
 
   test('Manage Roles card navigates to /admin/roles', async ({ page }) => {
-    await page.goto('/admin')
+    await page.goto('/en/admin')
     await page.getByRole('link', { name: /manage roles/i }).click()
-    await expect(page).toHaveURL('/admin/roles')
+    await expect(page).toHaveURL('/en/admin/roles')
     await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible()
   })
 
   test('View button navigates to user detail page', async ({ page }) => {
-    await page.goto('/admin/users')
+    await page.goto('/en/admin/users')
     await page
       .getByRole('link', { name: /^view$/i })
       .first()
@@ -326,7 +326,7 @@ test.describe('Admin', () => {
 
   test('creates a new role via RoleDialog', async ({ page }) => {
     const roleName = `E2E Role ${Date.now()}`
-    await page.goto('/admin/roles')
+    await page.goto('/en/admin/roles')
     await page.getByRole('button', { name: /^create role$/i }).click()
     await page.getByLabel(/role name/i).fill(roleName)
     await page.getByLabel(/description/i).fill('Created by e2e test')
@@ -338,14 +338,14 @@ test.describe('Admin', () => {
   })
 
   test('admin dashboard shows live stat cards', async ({ page }) => {
-    await page.goto('/admin')
+    await page.goto('/en/admin')
     await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible()
     // StatOverviewCard renders once data loads — wait for any numeric stat to appear
     await expect(page.getByText(/total users/i)).toBeVisible({ timeout: 15000 })
   })
 
   test('analytics page loads with metric tabs and chart', async ({ page }) => {
-    await page.goto('/admin/analytics?metric=users&range=30d')
+    await page.goto('/en/admin/analytics?metric=users&range=30d')
     await expect(page.getByRole('heading', { name: /user analytics/i })).toBeVisible({
       timeout: 15000,
     })
@@ -355,7 +355,7 @@ test.describe('Admin', () => {
   })
 
   test('analytics page switches metric via tab', async ({ page }) => {
-    await page.goto('/admin/analytics?metric=users&range=30d')
+    await page.goto('/en/admin/analytics?metric=users&range=30d')
     await expect(page.getByRole('tab', { name: /users/i })).toBeVisible({ timeout: 15000 })
     await page.getByRole('tab', { name: /posts/i }).click()
     await expect(page).toHaveURL(/metric=posts/)
@@ -363,16 +363,16 @@ test.describe('Admin', () => {
   })
 
   test('analytics back button navigates to admin dashboard', async ({ page }) => {
-    await page.goto('/admin/analytics?metric=users&range=30d')
+    await page.goto('/en/admin/analytics?metric=users&range=30d')
     await expect(page.getByRole('button', { name: /back to admin/i })).toBeVisible({
       timeout: 15000,
     })
     await page.getByRole('button', { name: /back to admin/i }).click()
-    await expect(page).toHaveURL('/admin')
+    await expect(page).toHaveURL('/en/admin')
   })
 
   test('bans and unbans a user', async ({ page }) => {
-    await page.goto('/admin/users')
+    await page.goto('/en/admin/users')
     // Target the first user with a Ban button (exclude SuperAdmin - no Ban button for higher/equal priority roles)
     const firstBanBtn = page.getByRole('button', { name: /^ban$/i }).first()
     await expect(firstBanBtn).toBeVisible()
@@ -404,21 +404,21 @@ test.describe('Banned page', () => {
     await page.evaluate(() => {
       sessionStorage.setItem('banInfo', JSON.stringify({ reason: 'E2E test ban', expiresAt: null }))
     })
-    await page.goto('/banned')
+    await page.goto('/en/banned')
 
     await expect(page.getByText(/account suspended/i)).toBeVisible()
     await expect(page.getByText(/E2E test ban/)).toBeVisible()
     await expect(page.getByText(/permanent/i)).toBeVisible()
 
     await page.getByRole('button', { name: /i understand/i }).click()
-    await expect(page).toHaveURL('/posts')
+    await expect(page).toHaveURL('/en/posts')
   })
 })
 
 test.describe('Language switching', () => {
   test.beforeEach(async ({ page }) => {
     // Start from a clean language state so other tests are not affected
-    await page.goto('/posts')
+    await page.goto('/en/posts')
     await page.evaluate(() => localStorage.removeItem('language'))
     await page.reload()
     await expect(page.getByRole('banner')).toBeVisible()
@@ -431,15 +431,15 @@ test.describe('Language switching', () => {
 
   test('switches UI to Slovak and persists across reload', async ({ page }) => {
     // Switch to SK via the language switcher in the header
-    await page.getByRole('banner').getByRole('combobox').click()
-    await page.getByRole('option', { name: 'SK' }).click()
+    await page.getByTestId('language-switcher').click()
+    await page.getByRole('menuitem', { name: 'Slovenčina' }).click()
 
     // Search placeholder should now be in Slovak
     await expect(
       page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
     ).toBeVisible()
 
-    // Reload — language should be read from localStorage and stay in Slovak
+    // Reload — language should stay in Slovak (locale is in the URL)
     await page.reload()
     await expect(
       page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
@@ -447,8 +447,8 @@ test.describe('Language switching', () => {
   })
 
   test('switches UI to Czech', async ({ page }) => {
-    await page.getByRole('banner').getByRole('combobox').click()
-    await page.getByRole('option', { name: 'CS' }).click()
+    await page.getByTestId('language-switcher').click()
+    await page.getByRole('menuitem', { name: 'Čeština' }).click()
 
     await expect(
       page.getByPlaceholder('Hledejte služby, poskytovatele nebo klíčová slova…'),
@@ -457,15 +457,15 @@ test.describe('Language switching', () => {
 
   test('switching back to English restores English UI', async ({ page }) => {
     // First switch to SK
-    await page.getByRole('banner').getByRole('combobox').click()
-    await page.getByRole('option', { name: 'SK' }).click()
+    await page.getByTestId('language-switcher').click()
+    await page.getByRole('menuitem', { name: 'Slovenčina' }).click()
     await expect(
       page.getByPlaceholder('Hľadajte služby, poskytovateľov alebo kľúčové slová…'),
     ).toBeVisible()
 
     // Switch back to EN
-    await page.getByRole('banner').getByRole('combobox').click()
-    await page.getByRole('option', { name: 'EN' }).click()
+    await page.getByTestId('language-switcher').click()
+    await page.getByRole('menuitem', { name: 'English' }).click()
     await expect(page.getByPlaceholder('Search services, providers, or keywords…')).toBeVisible()
   })
 })
@@ -476,7 +476,7 @@ test.describe('Authentication', () => {
   const testName = 'E2E Test User'
 
   test('register — fills form, submits, lands on verify-email page', async ({ page }) => {
-    await page.goto('/register')
+    await page.goto('/en/register')
     await page.getByLabel(/name/i).fill(testName)
     await page.getByRole('textbox', { name: /email/i }).fill(testEmail)
     await page.locator('input[type="password"]').fill(testPassword)
@@ -489,28 +489,28 @@ test.describe('Authentication', () => {
   })
 
   test('login — fills form, submits, lands on home page logged in', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
     await expect(page.getByTestId('profile-menu-trigger')).toBeVisible()
   })
 
   test('my-postings — redirects to /login when not authenticated', async ({ page }) => {
-    await page.goto('/my-postings')
+    await page.goto('/en/my-postings')
     await page.waitForURL(/\/login/)
     // CardTitle renders as a <div>, not a heading — use text matcher
     await expect(page.getByText('Welcome Back')).toBeVisible()
   })
 
   test('logout — clears session, shows login link in header', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('alice@example.com')
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
 
     await page.getByTestId('profile-menu-trigger').click()
     await page.getByRole('button', { name: /log out/i }).click()
@@ -522,37 +522,37 @@ test.describe('Email verification', () => {
   test('register redirects to /verify-email with email shown', async ({ page }) => {
     const uniqueEmail = `e2e-verify-${Date.now()}@example.com`
 
-    await page.goto('/register')
+    await page.goto('/en/register')
     await page.getByLabel(/full name/i).fill('E2E Verify User')
     await page.getByRole('textbox', { name: /email/i }).fill(uniqueEmail)
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /register/i }).click()
 
-    await page.waitForURL('/verify-email**')
+    await page.waitForURL('/en/verify-email**')
     await expect(page.getByText(new RegExp(uniqueEmail, 'i')).first()).toBeVisible()
     await expect(page.getByText(/check your email/i)).toBeVisible()
   })
 
   test('invalid verification link shows error state on callback page', async ({ page }) => {
-    await page.goto('/verify-email/callback?error=invalid_token')
+    await page.goto('/en/verify-email/callback?error=invalid_token')
     await expect(page.getByRole('heading', { name: /link expired or invalid/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /go to sign in/i })).toBeVisible()
   })
 
   test('valid callback page shows success state and redirects to home', async ({ page }) => {
-    await page.goto('/verify-email/callback')
+    await page.goto('/en/verify-email/callback')
     await expect(page.getByRole('heading', { name: /email verified!/i })).toBeVisible()
     await expect(page.getByText(/signing you in/i)).toBeVisible()
-    await page.waitForURL('/', { timeout: 5000 })
+    await page.waitForURL('/en/posts', { timeout: 8000 })
   })
 
   test('login with unverified account redirects to /verify-email', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('unverified@example.com')
     await page.locator('input[type="password"]').fill('password123')
     await page.getByRole('button', { name: /log in/i }).click()
 
-    await page.waitForURL('/verify-email**')
+    await page.waitForURL('/en/verify-email**')
     await expect(page.getByText(/check your email/i)).toBeVisible()
     await expect(page.getByText(/unverified@example\.com/i).first()).toBeVisible()
   })
@@ -564,17 +564,17 @@ test.describe('User Impersonation', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext()
     const page = await context.newPage()
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
 
-    await page.goto('/admin/users')
+    await page.goto('/en/admin/users')
     // Search for Alice then click her View link
-    const searchResponse = page.waitForResponse((r) => r.url().includes('/admin/users'))
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
-    await searchResponse
+    // Wait for Alice's entry to appear in the filtered results before clicking View
+    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
     await page.getByRole('link', { name: /view/i }).first().click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
     aliceUserId = page.url().split('/').pop()!
@@ -583,29 +583,29 @@ test.describe('User Impersonation', () => {
 
   test('full impersonation flow', async ({ page }) => {
     // Step 1: Admin logs in and navigates to Alice's detail page
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-    await page.goto(`/admin/users/${aliceUserId}`)
+    await page.waitForURL('/en/posts')
+    await page.goto(`/en/admin/users/${aliceUserId}`)
 
-    // Step 2: Click Impersonate User → lands on /posts with banner visible
+    // Step 2: Click Impersonate User → lands on /en/posts with banner visible
     await expect(page.getByRole('button', { name: /impersonate user/i })).toBeEnabled()
     await page.getByRole('button', { name: /impersonate user/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
     await expect(page.getByText(/impersonating alice/i)).toBeVisible()
 
     // Step 3: Banner has Exit Impersonation button
     await expect(page.getByRole('button', { name: /exit impersonation/i })).toBeVisible()
 
-    // Step 4: Navigate to /messages → placeholder shown
-    await page.goto('/messages')
+    // Step 4: Navigate to /en/messages → placeholder shown
+    await page.goto('/en/messages')
     await expect(page.getByText(/messages are not accessible during impersonation/i)).toBeVisible()
 
     // Step 5: Click Exit Impersonation → back to admin user detail page, banner gone
     await page.getByRole('button', { name: /exit impersonation/i }).click()
-    await page.waitForURL(`/admin/users/${aliceUserId}`)
+    await page.waitForURL(`/en/admin/users/${aliceUserId}`)
     await expect(page.getByText(/impersonating/i)).not.toBeVisible()
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
@@ -613,15 +613,15 @@ test.describe('User Impersonation', () => {
   test('logout while impersonating stops impersonation and navigates to admin user page', async ({
     page,
   }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-    await page.goto(`/admin/users/${aliceUserId}`)
+    await page.waitForURL('/en/posts')
+    await page.goto(`/en/admin/users/${aliceUserId}`)
 
     await page.getByRole('button', { name: /impersonate user/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
     await expect(page.getByText(/impersonating alice/i)).toBeVisible()
 
     // Open the profile panel and click Log out
@@ -629,7 +629,7 @@ test.describe('User Impersonation', () => {
     await page.getByRole('button', { name: /log out/i }).click()
 
     // Should navigate to Alice's admin user detail page, not sign out
-    await page.waitForURL(`/admin/users/${aliceUserId}`)
+    await page.waitForURL(`/en/admin/users/${aliceUserId}`)
     await expect(page.getByText(/impersonating/i)).not.toBeVisible()
     await expect(page.getByRole('heading', { name: /user details/i })).toBeVisible()
   })
@@ -641,15 +641,15 @@ test.describe('2FA section impersonation gating', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext()
     const page = await context.newPage()
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-    await page.goto('/admin/users')
-    const searchResponse = page.waitForResponse((r) => r.url().includes('/admin/users'))
+    await page.waitForURL('/en/posts')
+    await page.goto('/en/admin/users')
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
-    await searchResponse
+    // Wait for Alice's entry to appear in the filtered results before clicking View
+    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
     await page.getByRole('link', { name: /view/i }).first().click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+$/)
     aliceUserId = page.url().split('/').pop()!
@@ -657,17 +657,17 @@ test.describe('2FA section impersonation gating', () => {
   })
 
   test('2FA buttons are disabled during impersonation', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/en/login')
     await page.getByRole('textbox', { name: /email/i }).fill('admin@example.com')
     await page.locator('input[type="password"]').fill('admin123')
     await page.getByRole('button', { name: /log in/i }).click()
-    await page.waitForURL('/posts')
-    await page.goto(`/admin/users/${aliceUserId}`)
+    await page.waitForURL('/en/posts')
+    await page.goto(`/en/admin/users/${aliceUserId}`)
     await page.getByRole('button', { name: /impersonate user/i }).click()
-    await page.waitForURL('/posts')
+    await page.waitForURL('/en/posts')
     await expect(page.getByText(/impersonating alice/i)).toBeVisible()
 
-    await page.goto('/account-settings')
+    await page.goto('/en/account-settings')
     const twoFactorCard = page.locator('#two-factor-auth')
     await expect(twoFactorCard).toBeVisible({ timeout: 10000 })
     // All buttons in the 2FA card are disabled during impersonation
@@ -683,7 +683,7 @@ test.describe('2FA challenge routes', () => {
   test('verify-2fa selection page renders when navigated to directly', async ({ page }) => {
     // Navigate directly to the challenge page (without a pending 2FA session)
     // The page renders — no redirect happens because there's no fully-authenticated user
-    await page.goto('/verify-2fa')
+    await page.goto('/en/verify-2fa')
     await expect(page.getByText('2-Step Verification')).toBeVisible()
     await expect(page.getByText('Authenticator App', { exact: true })).toBeVisible()
     await expect(page.getByText('Email', { exact: true })).toBeVisible()
@@ -691,21 +691,21 @@ test.describe('2FA challenge routes', () => {
   })
 
   test('verify-2fa/totp renders TOTP challenge', async ({ page }) => {
-    await page.goto('/verify-2fa/totp')
+    await page.goto('/en/verify-2fa/totp')
     await expect(page.getByText('Check your authentication app')).toBeVisible()
     await expect(page.getByRole('button', { name: /verify/i })).toBeVisible()
     await expect(page.getByText(/try another way/i)).toBeVisible()
   })
 
   test('verify-2fa/email renders email OTP challenge', async ({ page }) => {
-    await page.goto('/verify-2fa/email')
+    await page.goto('/en/verify-2fa/email')
     await expect(page.getByText('Check your email')).toBeVisible()
     await expect(page.getByRole('button', { name: /send code/i })).toBeVisible()
     await expect(page.getByText(/try another way/i)).toBeVisible()
   })
 
   test('verify-2fa/backup renders backup code challenge', async ({ page }) => {
-    await page.goto('/verify-2fa/backup')
+    await page.goto('/en/verify-2fa/backup')
     await expect(page.getByText('Use a backup code')).toBeVisible()
     await expect(page.getByRole('button', { name: /verify/i })).toBeVisible()
     await expect(page.getByText(/try another way/i)).toBeVisible()
@@ -716,44 +716,58 @@ test.describe('Category localisation — admin', () => {
   test.use({ storageState: 'e2e/.auth/admin.json' })
 
   test('creates category with all three translations — row shows 3/3', async ({ page }) => {
+    // Use mobile viewport — the x/3 fraction is md:hidden on desktop, only visible on mobile
+    await page.setViewportSize({ width: 700, height: 800 })
+    const name = `E2E-Cat3-${Date.now()}`
     await page.goto('/en/admin/categories')
     await page.getByRole('button', { name: /new category/i }).click()
 
     await page.getByRole('tab', { name: /EN/i }).click()
-    await page.getByRole('textbox').fill('E2E Gardening EN')
+    await page.getByRole('textbox').fill(`${name} EN`)
 
     await page.getByRole('tab', { name: /SK/i }).click()
-    await page.getByRole('textbox').fill('E2E Gardening SK')
+    await page.getByRole('textbox').fill(`${name} SK`)
 
     await page.getByRole('tab', { name: /CS/i }).click()
-    await page.getByRole('textbox').fill('E2E Gardening CS')
+    await page.getByRole('textbox').fill(`${name} CS`)
 
     await page.getByRole('button', { name: /create/i }).click()
+    // Wait for dialog to close before searching
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 })
 
-    await expect(page.getByText('E2E Gardening EN')).toBeVisible()
+    // Filter list to isolate the newly created category, wait for count to confirm filter applied
+    await page.getByPlaceholder(/search categories/i).fill(name)
+    await expect(page.getByText(/categories \(1\)/i)).toBeVisible({ timeout: 5000 })
+    // Fraction is visible at <768px viewport (md:hidden span)
     await expect(page.getByText('3/3')).toBeVisible()
 
-    // cleanup
-    const row = page.getByText('E2E Gardening EN').locator('../..')
-    await row.getByRole('button', { name: /delete/i }).click()
+    // cleanup — only one row matches the search so this Delete button is unambiguous
+    await page.getByRole('button', { name: /delete/i }).first().click()
     await page.getByRole('button', { name: /^delete$/i }).click()
   })
 
   test('creates category with EN only — row shows 1/3', async ({ page }) => {
+    // Use mobile viewport — the x/3 fraction is md:hidden on desktop, only visible on mobile
+    await page.setViewportSize({ width: 700, height: 800 })
+    const name = `E2E-Cat1-${Date.now()}`
     await page.goto('/en/admin/categories')
     await page.getByRole('button', { name: /new category/i }).click()
 
     await page.getByRole('tab', { name: /EN/i }).click()
-    await page.getByRole('textbox').fill('E2E ENonly')
+    await page.getByRole('textbox').fill(name)
 
     await page.getByRole('button', { name: /create/i }).click()
+    // Wait for dialog to close before searching
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 })
 
-    await expect(page.getByText('E2E ENonly')).toBeVisible()
+    // Filter list to isolate the newly created category, wait for count to confirm filter applied
+    await page.getByPlaceholder(/search categories/i).fill(name)
+    await expect(page.getByText(/categories \(1\)/i)).toBeVisible({ timeout: 5000 })
+    // Fraction is visible at <768px viewport (md:hidden span)
     await expect(page.getByText('1/3')).toBeVisible()
 
-    // cleanup
-    const row = page.getByText('E2E ENonly').locator('../..')
-    await row.getByRole('button', { name: /delete/i }).click()
+    // cleanup — only one row matches the search so this Delete button is unambiguous
+    await page.getByRole('button', { name: /delete/i }).first().click()
     await page.getByRole('button', { name: /^delete$/i }).click()
   })
 
@@ -772,14 +786,16 @@ test.describe('Category localisation — admin', () => {
 
 test.describe('Category localisation — public', () => {
   test('EN locale shows English category names', async ({ page }) => {
-    await page.goto('/en')
-    // The public post list/filter shows category names
-    await expect(page.getByText('Tutoring')).toBeVisible()
+    await page.goto('/en/posts')
+    // Open the Category filter dropdown — all seeded category names appear as options
+    await page.getByRole('combobox').filter({ hasText: 'Category' }).click()
+    await expect(page.getByRole('option', { name: 'Tutoring' })).toBeVisible({ timeout: 5000 })
   })
 
-  test('SK locale shows category names (EN fallback since no SK translations seeded)', async ({ page }) => {
-    await page.goto('/sk')
-    // Seeded categories only have EN translations — should show EN names as fallback
-    await expect(page.getByText('Tutoring')).toBeVisible()
+  test('SK locale shows Slovak category names', async ({ page }) => {
+    await page.goto('/sk/posts')
+    // Open the Category filter dropdown — seeded Tutoring category has SK translation "Doučovanie"
+    await page.getByRole('combobox').filter({ hasText: 'Kategória' }).click()
+    await expect(page.getByRole('option', { name: 'Doučovanie' })).toBeVisible({ timeout: 5000 })
   })
 })
