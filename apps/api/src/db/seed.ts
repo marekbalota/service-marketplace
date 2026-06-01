@@ -1340,6 +1340,14 @@ async function seed() {
   await client.end()
 }
 
+// Signup fires fire-and-forget verification emails. With no SMTP relay
+// configured (e.g. in production), the connection is refused and rejects
+// detached from the seed's promise chain. Mirror the server's guard in
+// index.ts so these expected failures don't crash the seed.
+process.on('unhandledRejection', (reason) => {
+  console.warn('[seed] ignoring unhandled rejection (likely email send):', reason)
+})
+
 seed().catch((err) => {
   console.error('❌ Seed failed:', err)
   process.exit(1)
