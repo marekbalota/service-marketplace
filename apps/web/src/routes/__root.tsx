@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
-import appCss from '../styles.css?url'
+import '../styles.css'
 import { DefaultCatchBoundary } from '#/components/DefaultCatchBoundary'
 import { NotFound } from '#/components/NotFound'
 import { ActiveProfileProvider } from '#/context/activeProfile'
@@ -31,7 +31,6 @@ export const Route = createRootRouteWithContext<{
         title: 'Marketplace for Services',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   notFoundComponent: NotFound,
   errorComponent: DefaultCatchBoundary,
