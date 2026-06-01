@@ -26,6 +26,22 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   value: vi.fn(),
 })
 
+// Base UI ScrollAreaViewport calls element.getAnimations() (Web Animations API) in a
+// timeout callback — jsdom doesn't implement it, causing unhandled TypeErrors.
+Object.defineProperty(Element.prototype, 'getAnimations', {
+  writable: true,
+  value: vi.fn(() => []),
+})
+
+// Base UI's useAnimationsFinished checks this flag to skip requestAnimationFrame-based
+// animation waiting and call the completion callback synchronously instead.
+// Without this, closing dialogs/popovers hangs in jsdom (no RAF loop) and tests fail.
+// See: @base-ui/react/esm/internals/useAnimationsFinished.js
+Object.defineProperty(globalThis, 'BASE_UI_ANIMATIONS_DISABLED', {
+  writable: true,
+  value: true,
+})
+
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),

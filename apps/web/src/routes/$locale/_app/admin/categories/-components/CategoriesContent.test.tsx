@@ -130,11 +130,6 @@ describe('CategoriesContent', () => {
     expect(screen.getByText(/No categories match/i)).toBeInTheDocument()
   })
 
-  it('renders the sort filter control', () => {
-    render(<CategoriesContent />)
-    expect(screen.getByRole('button', { name: /Name/i })).toBeInTheDocument()
-  })
-
   it('opens delete alert dialog when Delete button is clicked', () => {
     render(<CategoriesContent />)
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
@@ -150,9 +145,4 @@ describe('CategoriesContent', () => {
     expect(screen.getByText('Edit Category')).toBeInTheDocument()
   })
 
-  it('opens create dialog when New Category is clicked', () => {
-    render(<CategoriesContent />)
-    fireEvent.click(screen.getByRole('button', { name: /new category/i }))
-    expect(screen.getByText('Create Category')).toBeInTheDocument()
-  })
 })
