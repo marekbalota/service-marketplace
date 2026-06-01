@@ -6,8 +6,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { Permissions } from '@marketplace/shared'
 import { Route } from './route'
-import { useCurrentUser } from '#/lib/queries/users'
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>()
@@ -29,10 +29,6 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
     })),
   }
 })
-
-vi.mock('#/lib/queries/users', () => ({
-  useCurrentUser: vi.fn(),
-}))
 
 vi.mock('#/api', () => ({
   api: {
@@ -68,9 +64,6 @@ async function renderPage() {
 describe('ManageCategories', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useCurrentUser).mockReturnValue({
-      data: { userId: 'u1', role: { priority: 100, permissions: [] } },
-    } as unknown as ReturnType<typeof useCurrentUser>)
   })
 
   it('renders Manage Categories heading', async () => {
@@ -87,5 +80,30 @@ describe('ManageCategories', () => {
     await renderPage()
     fireEvent.click(screen.getByRole('button', { name: /new category/i }))
     expect(screen.getByText('Create Category')).toBeInTheDocument()
+  })
+})
+
+describe('Route.beforeLoad — authorization', () => {
+  const callBeforeLoad = (permissions: string[]) =>
+    Route.options.beforeLoad!({
+      context: { user: { role: { permissions } } },
+      params: { locale: 'en' },
+    } as Parameters<NonNullable<typeof Route.options.beforeLoad>>[0])
+
+  it('throws redirect when user lacks AdminCategoriesManage permission', () => {
+    expect(() => callBeforeLoad([])).toThrow()
+  })
+
+  it('throws redirect when user is unauthenticated', () => {
+    expect(() =>
+      Route.options.beforeLoad!({
+        context: { user: null },
+        params: { locale: 'en' },
+      } as Parameters<NonNullable<typeof Route.options.beforeLoad>>[0])
+    ).toThrow()
+  })
+
+  it('does not throw when user has AdminCategoriesManage permission', () => {
+    expect(() => callBeforeLoad([Permissions.AdminCategoriesManage])).not.toThrow()
   })
 })

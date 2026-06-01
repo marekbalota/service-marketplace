@@ -259,6 +259,16 @@ describe('PATCH /admin/categories/:id', () => {
     expect(error?.status).toBe(422)
   })
 
+  it('returns 422 when all translations are empty strings', async () => {
+    const { error } = await client.admin
+      .categories({ id: createdId })
+      .patch(
+        { translations: { en: '', sk: '' } },
+        { headers: { Cookie: adminCookie } },
+      )
+    expect(error?.status).toBe(422)
+  })
+
   it('updates EN name', async () => {
     const { data, error } = await client.admin
       .categories({ id: createdId })
