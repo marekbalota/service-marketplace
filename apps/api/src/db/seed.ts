@@ -84,20 +84,34 @@ interface UpsertUserResult {
 }
 
 /**
- * The user profile is created asynchronously by the Better Auth
- * `user.create.after` hook. Immediately after signUpEmail returns, that insert
- * may not be visible yet — the gap is negligible locally but real against a
- * remote DB (this raced and returned undefined in production). Poll briefly.
+ * The user profile is normally created by the Better Auth `user.create.after`
+ * hook. That hook fires reliably for HTTP signups but has proven flaky when
+ * signUpEmail is driven from this seed against the production DB, so don't
+ * depend on it: wait briefly for the hook, and if the profile still isn't
+ * there, create it ourselves (and assign the default role the hook would set).
+ * Idempotent — returns the existing profile if one is already present.
  */
-async function waitForProfile(accountId: string) {
-  for (let attempt = 0; attempt < 50; attempt++) {
+async function ensureProfile(accountId: string, name: string, email: string) {
+  for (let attempt = 0; attempt < 20; attempt++) {
     const profile = await db.query.userProfiles.findFirst({
       where: (p, { eq }) => eq(p.accountId, accountId),
     })
     if (profile) return profile
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
-  throw new Error(`User profile for account ${accountId} was not created within 5s`)
+
+  // Hook did not create it — replicate its effects directly.
+  const defaultRole = await db.query.roles.findFirst({ where: eq(schema.roles.isDefault, true) })
+  if (defaultRole) {
+    await db.update(users).set({ roleId: defaultRole.roleId }).where(eq(users.id, accountId))
+  }
+  await db.insert(schema.userProfiles).values({ accountId, name, email })
+
+  const profile = await db.query.userProfiles.findFirst({
+    where: (p, { eq }) => eq(p.accountId, accountId),
+  })
+  if (!profile) throw new Error(`Failed to create user profile for account ${accountId}`)
+  return profile
 }
 
 async function upsertUser(name: string, email: string): Promise<UpsertUserResult> {
@@ -111,7 +125,7 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
         .set({ emailVerified: true })
         .where(eq(schema.users.id, existing.id))
     }
-    const profile = await waitForProfile(existing.id)
+    const profile = await ensureProfile(existing.id, name, email)
     return { user: { id: existing.id, email: existing.email }, profile }
   }
 
@@ -123,7 +137,7 @@ async function upsertUser(name: string, email: string): Promise<UpsertUserResult
   // Mark email as verified so the user can sign in without going through the verification flow
   await db.update(users).set({ emailVerified: true }).where(eq(users.id, result.user.id))
 
-  const profile = await waitForProfile(result.user.id)
+  const profile = await ensureProfile(result.user.id, name, email)
   return { user: result.user, profile }
 }
 
