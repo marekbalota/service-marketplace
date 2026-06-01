@@ -1,0 +1,96 @@
+import { render, screen, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Route } from './route'
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    useNavigate: vi.fn(() => vi.fn()),
+  }
+})
+
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return { ...actual, useQuery: vi.fn() }
+})
+
+const mockData = {
+  total: 150,
+  items: [
+    { bucket: new Date('2026-05-01T00:00:00Z'), count: 5 },
+    { bucket: new Date('2026-05-02T00:00:00Z'), count: 8 },
+    { bucket: new Date('2026-05-03T00:00:00Z'), count: 12 },
+    { bucket: new Date('2026-05-04T00:00:00Z'), count: 3 },
+    { bucket: new Date('2026-05-05T00:00:00Z'), count: 7 },
+    { bucket: new Date('2026-05-06T00:00:00Z'), count: 9 },
+    { bucket: new Date('2026-05-07T00:00:00Z'), count: 6 },
+  ],
+}
+
+async function renderPage() {
+  vi.mocked(useQuery).mockReturnValue({
+    data: mockData,
+    isPending: false,
+  } as ReturnType<typeof useQuery>)
+  vi.spyOn(Route, 'useSearch').mockReturnValue({
+    metric: 'users',
+    range: '30d',
+    granularity: undefined,
+  } as any)
+  const rootRoute = createRootRoute({ component: Route.options.component! })
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: ['/admin/analytics?metric=users&range=30d'] }),
+  })
+  await act(async () => {
+    render(<RouterProvider router={router} />)
+  })
+}
+
+describe('Analytics page', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('renders Users / Posts / Messages tabs', async () => {
+    await renderPage()
+    expect(screen.getByText('Users')).toBeInTheDocument()
+    expect(screen.getByText('Posts')).toBeInTheDocument()
+    expect(screen.getByText('Messages')).toBeInTheDocument()
+  })
+
+  it('shows correct Period Total derived from items', async () => {
+    await renderPage()
+    const periodTotal = mockData.items.reduce((s, r) => s + r.count, 0) // 50
+    const matches = screen.getAllByText(periodTotal.toString())
+    expect(matches.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('shows correct all-time Total', async () => {
+    await renderPage()
+    expect(screen.getByText('150')).toBeInTheDocument()
+  })
+
+  it('shows Top Performing Days heading', async () => {
+    await renderPage()
+    expect(screen.getByText(/top performing days/i)).toBeInTheDocument()
+  })
+
+  it('shows Period Comparison card', async () => {
+    await renderPage()
+    expect(screen.getByText(/period comparison/i)).toBeInTheDocument()
+  })
+
+  it('shows granularity toggle for 30d range', async () => {
+    await renderPage()
+    // 30d range offers Day and Week options
+    expect(screen.getByText('Day')).toBeInTheDocument()
+    expect(screen.getByText('Week')).toBeInTheDocument()
+  })
+})

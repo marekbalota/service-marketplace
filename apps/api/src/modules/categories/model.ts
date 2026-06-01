@@ -5,7 +5,6 @@ export const CategoriesModel = {
     t.Object({
       categoryId: t.String(),
       name: t.String(),
-      description: t.Nullable(t.String()),
     }),
   ),
 } as const

@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import type React from 'react'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { cn } from '#/lib/utils'
@@ -29,6 +30,8 @@ interface SearchFilterBarProps {
   action?: React.ReactNode
 }
 
+const DEBOUNCE_MS = 300
+
 export function SearchFilterBar({
   searchPlaceholder = 'Search...',
   searchValue,
@@ -38,6 +41,19 @@ export function SearchFilterBar({
   sheetDescription,
   action,
 }: SearchFilterBarProps) {
+  const [inputValue, setInputValue] = useState(searchValue)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    setInputValue(searchValue)
+  }, [searchValue])
+
+  const handleChange = (value: string) => {
+    setInputValue(value)
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => onSearchChange(value), DEBOUNCE_MS)
+  }
+
   return (
     <div className="space-y-0">
       {/* Row 1: search + optional action + mobile sheet trigger */}
@@ -46,8 +62,8 @@ export function SearchFilterBar({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleChange(e.target.value)}
             className="pl-10"
           />
         </div>

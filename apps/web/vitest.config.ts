@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '#/lib/useLocale': fileURLToPath(new URL('./src/__mocks__/useLocale.ts', import.meta.url)),
       '#': fileURLToPath(new URL('./src', import.meta.url)),
       'react-i18next': fileURLToPath(new URL('./src/__mocks__/react-i18next.tsx', import.meta.url)),
     },

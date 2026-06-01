@@ -206,11 +206,23 @@ export const reviews = pgTable(
 
 export const categories = pgTable('categories', {
   categoryId: uuid('category_id').primaryKey().defaultRandom(),
-  name: text('name').notNull().unique(),
-  description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'),
 })
+
+export const categoryTranslations = pgTable(
+  'category_translations',
+  {
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.categoryId, table.locale] }),
+    unique('category_translations_locale_name_unique').on(table.locale, table.name),
+  ],
+)
 
 export const postCategories = pgTable(
   'post_categories',
@@ -220,7 +232,7 @@ export const postCategories = pgTable(
       .references(() => posts.postId),
     categoryId: uuid('category_id')
       .notNull()
-      .references(() => categories.categoryId),
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
   },
   (table) => [primaryKey({ columns: [table.postId, table.categoryId] })],
 )
@@ -433,6 +445,14 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   postCategories: many(postCategories),
+  translations: many(categoryTranslations),
+}))
+
+export const categoryTranslationsRelations = relations(categoryTranslations, ({ one }) => ({
+  category: one(categories, {
+    fields: [categoryTranslations.categoryId],
+    references: [categories.categoryId],
+  }),
 }))
 
 export const postCategoriesRelations = relations(postCategories, ({ one }) => ({

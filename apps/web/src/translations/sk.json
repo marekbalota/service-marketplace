@@ -16,6 +16,7 @@
     "clearSelection": "Zrušiť výber",
     "dismiss": "Zavrieť",
     "preview": "Náhľad",
+    "rename": "Premenovať",
     "image": "Obrázok",
     "previousImage": "Predchádzajúci obrázok",
     "nextImage": "Nasledujúci obrázok",
@@ -45,6 +46,11 @@
   },
   "language": {
     "label": "Jazyk"
+  },
+  "locales": {
+    "en": "Angličtina",
+    "sk": "Slovenčina",
+    "cs": "Čeština"
   },
   "auth": {
     "login": {
@@ -639,6 +645,44 @@
       "messageContext": "Kontext správy",
       "messageContextError": "Nepodarilo sa načítať kontext správy.",
       "reportedMessage": "Nahlásená správa"
+    },
+    "categories": {
+      "title": "Správa kategórií",
+      "subtitle": "Vytvárajte, upravujte a organizujte kategórie služieb",
+      "count": "Kategórie ({{count}})",
+      "searchPlaceholder": "Hľadať kategórie...",
+      "newCategory": "Nová kategória",
+      "createTitle": "Vytvoriť kategóriu",
+      "editTitle": "Upraviť kategóriu",
+      "editDesc": "Upravte preklady tejto kategórie",
+      "createDesc": "Pridajte preklady pre novú kategóriu",
+      "categoryName": "Názov kategórie",
+      "categoryNamePlaceholder": "napr. Záhradné služby",
+      "nameConflict": "Kategória s týmto názvom už existuje",
+      "deleteTitle": "Zmazať kategóriu",
+      "deleteDesc": "Naozaj chcete zmazať \"{{name}}\"? Príspevky v tejto kategórii stratia tento štítok. Táto akcia je nevratná.",
+      "noCategories": "Zatiaľ žiadne kategórie",
+      "noCategoriesFound": "Žiadne kategórie nezodpovedajú vášmu hľadaniu",
+      "cardDescription": "Organizujte a spravujte kategórie služieb",
+      "activePosts": "{{count}} aktívnych",
+      "archivedPosts": "{{count}} archivovaných",
+      "totalPosts": "{{count}} celkovo",
+      "translationRequired": "povinné",
+      "translationOptional": "voliteľné",
+      "translationsFraction": "{{filled}}/{{total}} jazykov",
+      "sortFilterLabel": "Zoradiť",
+      "sortByName": "Názov",
+      "sortByActivePosts": "Aktívne príspevky",
+      "sortByArchivedPosts": "Archivované príspevky",
+      "sortByTotalPosts": "Všetky príspevky",
+      "sortOrderLabel": "Smer",
+      "sortOrderAsc": "Vzostupne",
+      "sortOrderDesc": "Zostupne",
+      "translationFilterLabel": "Preklad",
+      "translationFilterAll": "Všetky jazyky",
+      "translationFilterComplete": "Kompletné",
+      "translationFilterIncomplete": "Neúplné",
+      "translationFilterMissing": "Chýba {{locale}}"
     }
   },
   "report": {

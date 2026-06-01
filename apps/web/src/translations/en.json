@@ -16,6 +16,7 @@
     "clearSelection": "Clear selection",
     "dismiss": "Dismiss",
     "preview": "Preview",
+    "rename": "Rename",
     "image": "Image",
     "previousImage": "Previous image",
     "nextImage": "Next image",
@@ -45,6 +46,11 @@
   },
   "language": {
     "label": "Language"
+  },
+  "locales": {
+    "en": "English",
+    "sk": "Slovak",
+    "cs": "Czech"
   },
   "auth": {
     "login": {
@@ -643,6 +649,44 @@
       "messageContext": "Message Context",
       "messageContextError": "Failed to load message context.",
       "reportedMessage": "Reported message"
+    },
+    "categories": {
+      "title": "Manage Categories",
+      "subtitle": "Create, edit, and organize service categories",
+      "count": "Categories ({{count}})",
+      "searchPlaceholder": "Search categories...",
+      "newCategory": "New Category",
+      "createTitle": "Create Category",
+      "editTitle": "Edit Category",
+      "editDesc": "Edit the translations for this category",
+      "createDesc": "Add translations for the new category",
+      "categoryName": "Category Name",
+      "categoryNamePlaceholder": "e.g. Gardening Services",
+      "nameConflict": "A category with this name already exists",
+      "deleteTitle": "Delete Category",
+      "deleteDesc": "Are you sure you want to delete \"{{name}}\"? Posts in this category will lose this tag. This cannot be undone.",
+      "noCategories": "No categories yet",
+      "noCategoriesFound": "No categories match your search",
+      "cardDescription": "Organize and manage service categories",
+      "activePosts": "{{count}} active",
+      "archivedPosts": "{{count}} archived",
+      "totalPosts": "{{count}} total",
+      "translationRequired": "required",
+      "translationOptional": "optional",
+      "translationsFraction": "{{filled}}/{{total}} languages",
+      "sortFilterLabel": "Sort",
+      "sortByName": "Name",
+      "sortByActivePosts": "Active posts",
+      "sortByArchivedPosts": "Archived posts",
+      "sortByTotalPosts": "Total posts",
+      "sortOrderLabel": "Direction",
+      "sortOrderAsc": "Ascending",
+      "sortOrderDesc": "Descending",
+      "translationFilterLabel": "Translation",
+      "translationFilterAll": "All languages",
+      "translationFilterComplete": "Complete",
+      "translationFilterIncomplete": "Incomplete",
+      "translationFilterMissing": "Missing {{locale}}"
     }
   },
   "report": {

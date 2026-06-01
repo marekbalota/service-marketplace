@@ -16,6 +16,7 @@
     "clearSelection": "Zrušit výběr",
     "dismiss": "Zavřít",
     "preview": "Náhled",
+    "rename": "Přejmenovat",
     "image": "Obrázek",
     "previousImage": "Předchozí obrázek",
     "nextImage": "Následující obrázek",
@@ -45,6 +46,11 @@
   },
   "language": {
     "label": "Jazyk"
+  },
+  "locales": {
+    "en": "Angličtina",
+    "sk": "Slovenština",
+    "cs": "Čeština"
   },
   "auth": {
     "login": {
@@ -639,6 +645,44 @@
       "messageContext": "Kontext zprávy",
       "messageContextError": "Nepodařilo se načíst kontext zprávy.",
       "reportedMessage": "Nahlášená zpráva"
+    },
+    "categories": {
+      "title": "Správa kategorií",
+      "subtitle": "Vytvářejte, upravujte a organizujte kategorie služeb",
+      "count": "Kategorie ({{count}})",
+      "searchPlaceholder": "Hledat kategorie...",
+      "newCategory": "Nová kategorie",
+      "createTitle": "Vytvořit kategorii",
+      "editTitle": "Upravit kategorii",
+      "editDesc": "Upravte překlady této kategorie",
+      "createDesc": "Přidejte překlady pro novou kategorii",
+      "categoryName": "Název kategorie",
+      "categoryNamePlaceholder": "např. Zahradní služby",
+      "nameConflict": "Kategorie s tímto názvem již existuje",
+      "deleteTitle": "Smazat kategorii",
+      "deleteDesc": "Opravdu chcete smazat \"{{name}}\"? Příspěvky v této kategorii ztratí tento štítek. Tuto akci nelze vrátit zpět.",
+      "noCategories": "Zatím žádné kategorie",
+      "noCategoriesFound": "Žádné kategorie neodpovídají vašemu hledání",
+      "cardDescription": "Organizujte a spravujte kategorie služeb",
+      "activePosts": "{{count}} aktivních",
+      "archivedPosts": "{{count}} archivovaných",
+      "totalPosts": "{{count}} celkem",
+      "translationRequired": "povinné",
+      "translationOptional": "volitelné",
+      "translationsFraction": "{{filled}}/{{total}} jazyků",
+      "sortFilterLabel": "Řadit",
+      "sortByName": "Název",
+      "sortByActivePosts": "Aktivní příspěvky",
+      "sortByArchivedPosts": "Archivované příspěvky",
+      "sortByTotalPosts": "Všechny příspěvky",
+      "sortOrderLabel": "Směr",
+      "sortOrderAsc": "Vzestupně",
+      "sortOrderDesc": "Sestupně",
+      "translationFilterLabel": "Překlad",
+      "translationFilterAll": "Všechny jazyky",
+      "translationFilterComplete": "Kompletní",
+      "translationFilterIncomplete": "Neúplné",
+      "translationFilterMissing": "Chybí {{locale}}"
     }
   },
   "report": {

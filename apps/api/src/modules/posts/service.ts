@@ -4,6 +4,7 @@ import {
   userProfiles,
   postCategories,
   categories,
+  categoryTranslations,
   locations,
   favourites,
   profileLocations,
@@ -24,14 +25,18 @@ import {
   lte,
   inArray,
 } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
-const postSelect = (tx: DbOrTx) =>
-  tx
+const postSelect = (tx: DbOrTx, locale: string = 'en') => {
+  const requested = alias(categoryTranslations, 'cat_requested')
+  const fallback = alias(categoryTranslations, 'cat_fallback')
+
+  return tx
     .select({
       postId: posts.postId,
       postTitle: posts.postTitle,
@@ -45,7 +50,7 @@ const postSelect = (tx: DbOrTx) =>
       categories: sql<{ categoryId: string; name: string }[]>`
       coalesce(
         json_agg(
-          json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+          json_build_object('categoryId', ${categories.categoryId}, 'name', COALESCE(${requested.name}, ${fallback.name}))
         ) filter (where ${categories.categoryId} is not null),
         '[]'::json
       )
@@ -59,10 +64,19 @@ const postSelect = (tx: DbOrTx) =>
     .leftJoin(locations, eq(posts.locationId, locations.locationId))
     .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
     .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
+    .leftJoin(
+      fallback,
+      and(eq(fallback.categoryId, categories.categoryId), eq(fallback.locale, 'en')),
+    )
+    .leftJoin(
+      requested,
+      and(eq(requested.categoryId, categories.categoryId), eq(requested.locale, locale)),
+    )
     .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId)
+}
 
 export abstract class PostsService {
-  static async findAll(query: PostsModel['findAllQuery'], accountId?: string) {
+  static async findAll(query: PostsModel['findAllQuery'], accountId?: string, locale = 'en') {
     const {
       search,
       type,
@@ -162,7 +176,7 @@ export abstract class PostsService {
         .where(conditions)
       const total = countRow?.total ?? 0
 
-      const q = postSelect(tx).where(conditions).orderBy(orderBy).offset(offset)
+      const q = postSelect(tx, locale).where(conditions).orderBy(orderBy).offset(offset)
 
       const rows = await (size !== undefined ? q.limit(size) : q)
 
@@ -193,7 +207,11 @@ export abstract class PostsService {
     return { active: activeRow?.total ?? 0, archived: archivedRow?.total ?? 0 }
   }
 
-  static async findByProfile(profileId: string, query: PostsModel['findByProfileQuery']) {
+  static async findByProfile(
+    profileId: string,
+    query: PostsModel['findByProfileQuery'],
+    locale = 'en',
+  ) {
     const { offset = 0, size, archived = false } = query
 
     const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
@@ -206,7 +224,7 @@ export abstract class PostsService {
 
       const total = countRow?.total ?? 0
 
-      const q = postSelect(tx)
+      const q = postSelect(tx, locale)
         .where(and(eq(posts.authorId, profileId), deletedCondition))
         .orderBy(desc(posts.createdAt))
         .offset(offset)
@@ -226,7 +244,10 @@ export abstract class PostsService {
     })
   }
 
-  static async findById(id: string) {
+  static async findById(id: string, locale = 'en') {
+    const requested = alias(categoryTranslations, 'cat_requested')
+    const fallback = alias(categoryTranslations, 'cat_fallback')
+
     const [row] = await db
       .select({
         postId: posts.postId,
@@ -247,7 +268,7 @@ export abstract class PostsService {
         categories: sql<{ categoryId: string; name: string }[]>`
           coalesce(
             json_agg(
-              json_build_object('categoryId', ${categories.categoryId}, 'name', ${categories.name})
+              json_build_object('categoryId', ${categories.categoryId}, 'name', COALESCE(${requested.name}, ${fallback.name}))
             ) filter (where ${categories.categoryId} is not null),
             '[]'::json
           )
@@ -299,6 +320,14 @@ export abstract class PostsService {
       .leftJoin(locations, eq(posts.locationId, locations.locationId))
       .leftJoin(postCategories, eq(posts.postId, postCategories.postId))
       .leftJoin(categories, eq(postCategories.categoryId, categories.categoryId))
+      .leftJoin(
+        fallback,
+        and(eq(fallback.categoryId, categories.categoryId), eq(fallback.locale, 'en')),
+      )
+      .leftJoin(
+        requested,
+        and(eq(requested.categoryId, categories.categoryId), eq(requested.locale, locale)),
+      )
       .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
       .groupBy(posts.postId, userProfiles.userProfileId, locations.locationId)
       .limit(1)

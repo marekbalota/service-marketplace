@@ -473,3 +473,47 @@ describe('GET /posts — location filter', () => {
     expect(noAccent!.total).toBe(accent!.total)
   })
 })
+
+describe('GET /posts — locale-aware category names', () => {
+  it('returns Slovak category name when Accept-Language is sk', async () => {
+    const { data: en } = await client.posts.get({ query: { size: 50 } })
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
+    if (!postWithTutoring) return // seeded post not found — skip
+
+    const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId
+    const { data: sk } = await client.posts.get({
+      query: { size: 50 },
+      headers: { 'accept-language': 'sk' },
+    })
+    const skPost = sk!.items.find((p) => p.postId === postWithTutoring.postId)
+    expect(skPost?.categories.find((c) => c.categoryId === tutoringId)?.name).toBe('Doučovanie')
+  })
+
+  it('falls back to EN category name for unsupported locale', async () => {
+    const { data: en } = await client.posts.get({ query: { size: 50 } })
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
+    if (!postWithTutoring) return // seeded post not found — skip
+
+    const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId
+    const { data: de } = await client.posts.get({
+      query: { size: 50 },
+      headers: { 'accept-language': 'de' },
+    })
+    const dePost = de!.items.find((p) => p.postId === postWithTutoring.postId)
+    expect(dePost?.categories.find((c) => c.categoryId === tutoringId)?.name).toBe('Tutoring')
+  })
+})
+
+describe('GET /posts/:id — locale-aware category names', () => {
+  it('returns Slovak category name when Accept-Language is sk', async () => {
+    const { data: en } = await client.posts.get({ query: { size: 50 } })
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
+    if (!postWithTutoring) return // seeded post not found — skip
+
+    const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId
+    const { data } = await client.posts({ id: postWithTutoring.postId }).get({
+      headers: { 'accept-language': 'sk' },
+    })
+    expect(data!.categories.find((c) => c.categoryId === tutoringId)?.name).toBe('Doučovanie')
+  })
+})

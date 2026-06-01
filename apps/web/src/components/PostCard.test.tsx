@@ -118,7 +118,7 @@ describe('PostCard', () => {
 
   it('wraps card in a link to the post detail page', async () => {
     await renderWithRouter(<PostCard post={basePost} />)
-    const link = document.querySelector('a[href="/posts/post-1"]')
+    const link = document.querySelector('a[href="/en/posts/post-1"]')
     expect(link).toBeInTheDocument()
   })
 

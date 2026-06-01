@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { PostsModel } from './model'
 import { PostsService } from './service'
+import { resolveLocale } from '../../lib/resolveLocale'
 import { authRoutes } from '../auth'
 import { auth } from '../auth/service'
 import { Permissions } from '@marketplace/shared'
@@ -18,13 +19,17 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ query, request: { headers }, status }) => {
+    async ({ query, headers, status }) => {
       if (query.profileId) {
         const session = await auth.api.getSession({ headers })
         if (!session) return status(401, { message: AuthErrorMessages.unauthorized })
-        return PostsService.findAll(query, session.user.id)
+        return PostsService.findAll(
+          query,
+          session.user.id,
+          resolveLocale(headers['accept-language']),
+        )
       }
-      return PostsService.findAll(query)
+      return PostsService.findAll(query, undefined, resolveLocale(headers['accept-language']))
     },
     {
       query: PostsModel.findAllQuery,
@@ -36,14 +41,19 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
       detail: { summary: 'List posts', operationId: 'listPosts', tags: ['Posts'] },
     },
   )
-  .get('/:id', async ({ params }) => await PostsService.findById(params.id), {
-    params: PostsModel.findByIdParams,
-    response: {
-      200: PostsModel.findByIdResponse,
-      ...notFoundResponse,
+  .get(
+    '/:id',
+    async ({ params, headers }) =>
+      await PostsService.findById(params.id, resolveLocale(headers['accept-language'])),
+    {
+      params: PostsModel.findByIdParams,
+      response: {
+        200: PostsModel.findByIdResponse,
+        ...notFoundResponse,
+      },
+      detail: { summary: 'Get post by ID', operationId: 'getPost', tags: ['Posts'] },
     },
-    detail: { summary: 'Get post by ID', operationId: 'getPost', tags: ['Posts'] },
-  })
+  )
   .post(
     '/',
     async ({ body, user, set }) => {
