@@ -95,7 +95,9 @@ function CreateProfilePage() {
   if (uploadWarning) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <BackButton onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })} />
+        <BackButton
+          onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })}
+        />
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="rounded-lg border bg-muted p-4 text-sm">
@@ -103,7 +105,8 @@ function CreateProfilePage() {
               <p className="mt-1 text-muted-foreground">{uploadWarning}</p>
             </div>
             <Link
-              to="/$locale/account-settings/profiles" params={{ locale }}
+              to="/$locale/account-settings/profiles"
+              params={{ locale }}
               className={buttonVariants({ variant: 'default' })}
             >
               {t('profiles.goToManage')}
@@ -116,7 +119,9 @@ function CreateProfilePage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })} />
+      <BackButton
+        onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })}
+      />
 
       <div className="mb-6">
         <h2 className="mb-2">{t('profiles.createTitle')}</h2>
@@ -155,7 +160,9 @@ function CreateProfilePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })}
+            onClick={() =>
+              navigate({ to: '/$locale/account-settings/profiles', params: { locale } })
+            }
           >
             {t('common.cancel')}
           </Button>

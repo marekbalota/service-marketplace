@@ -25,9 +25,11 @@ export const queryClient = new QueryClient({
         queryClient.clear()
         if (routerRef) {
           const locale = i18n.language as 'en' | 'sk' | 'cs'
-          void routerRef.navigate({ to: '/$locale/login', params: { locale }, replace: true }).then(() => {
-            redirecting401 = false
-          })
+          void routerRef
+            .navigate({ to: '/$locale/login', params: { locale }, replace: true })
+            .then(() => {
+              redirecting401 = false
+            })
         } else {
           redirecting401 = false
         }

@@ -99,7 +99,11 @@ function VerifyEmailPage() {
         )}
         {resendError && <p className="text-center text-sm text-destructive">{resendError}</p>}
         <div className="text-center">
-          <Link to="/$locale/login" params={{ locale }} className="text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/$locale/login"
+            params={{ locale }}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
             {t('auth.verifyEmail.hasAccount')}
           </Link>
         </div>

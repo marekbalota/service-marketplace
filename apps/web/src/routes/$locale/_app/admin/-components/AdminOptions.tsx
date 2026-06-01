@@ -78,7 +78,12 @@ export function AdminOptions() {
       {visibleOptions.map((option) => {
         const Icon = option.icon
         return (
-          <Link key={option.id} to={option.path} params={{ locale }} className="block group hover:no-underline">
+          <Link
+            key={option.id}
+            to={option.path}
+            params={{ locale }}
+            className="block group hover:no-underline"
+          >
             <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
               <CardHeader className="flex-1">
                 <div className="flex items-start justify-between">

@@ -261,7 +261,8 @@ export abstract class MessagesService {
         return { threadId: thread!.threadId }
       })
     } catch (err: unknown) {
-      if (getPgCode(err) === '23505') throw new ConflictError('A thread for this post already exists')
+      if (getPgCode(err) === '23505')
+        throw new ConflictError('A thread for this post already exists')
       throw err
     }
 

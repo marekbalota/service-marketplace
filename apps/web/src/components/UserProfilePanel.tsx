@@ -141,7 +141,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                 render={
                   <Link
                     to="/$locale/admin"
-                  params={{ locale }}
+                    params={{ locale }}
                     onClick={onClose}
                     className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
                   />
@@ -165,7 +165,7 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             render={
               <Link
                 to="/$locale/account-settings"
-                  params={{ locale }}
+                params={{ locale }}
                 onClick={onClose}
                 className="flex h-auto w-full items-center justify-start gap-3 rounded-lg px-2 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-accent"
               />

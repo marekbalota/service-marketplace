@@ -28,17 +28,19 @@ type FormValues = z.infer<typeof categorySchema>
 
 const EMPTY_TRANSLATIONS = Object.fromEntries(SUPPORTED_LOCALES.map((l: string) => [l, '']))
 
-const categorySchema = z.object({
-  translations: z.record(z.string(), z.string()),
-}).superRefine((data, ctx) => {
-  if (!(data.translations['en'] ?? '').trim()) {
-    ctx.addIssue({
-      code: 'custom' as const,
-      message: 'English translation is required',
-      path: ['translations', 'en'],
-    })
-  }
-})
+const categorySchema = z
+  .object({
+    translations: z.record(z.string(), z.string()),
+  })
+  .superRefine((data, ctx) => {
+    if (!(data.translations['en'] ?? '').trim()) {
+      ctx.addIssue({
+        code: 'custom' as const,
+        message: 'English translation is required',
+        path: ['translations', 'en'],
+      })
+    }
+  })
 
 interface CategoryDialogProps {
   open: boolean
@@ -125,7 +127,10 @@ export function CategoryDialog({
                   })}
                 </TabsList>
               </ScrollAreaPrimitive.Viewport>
-              <ScrollBar orientation="horizontal" className="opacity-0 transition-opacity group-hover:opacity-100" />
+              <ScrollBar
+                orientation="horizontal"
+                className="opacity-0 transition-opacity group-hover:opacity-100"
+              />
             </ScrollAreaPrimitive.Root>
 
             {SUPPORTED_LOCALES.map((locale) => {
@@ -140,9 +145,11 @@ export function CategoryDialog({
                         <Label htmlFor={`translation-${locale}`}>
                           {t(`locales.${locale}`)}{' '}
                           <span className="text-muted-foreground text-xs">
-                            ({isRequired
+                            (
+                            {isRequired
                               ? t('admin.categories.translationRequired')
-                              : t('admin.categories.translationOptional')})
+                              : t('admin.categories.translationOptional')}
+                            )
                           </span>
                         </Label>
                         <Input

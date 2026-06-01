@@ -2,7 +2,13 @@ import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '#/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 import { Route, SORT_BY_VALUES, SORT_ORDER_VALUES, type SortBy, type SortOrder } from '../route'
 
@@ -29,10 +35,11 @@ export function CategorySortSelect() {
           'focus-visible:ring-3 focus-visible:ring-ring/50',
         )}
       >
-        {sortOrder === 'desc'
-          ? <ArrowDown className="size-3.5 shrink-0" />
-          : <ArrowUp className="size-3.5 shrink-0" />
-        }
+        {sortOrder === 'desc' ? (
+          <ArrowDown className="size-3.5 shrink-0" />
+        ) : (
+          <ArrowUp className="size-3.5 shrink-0" />
+        )}
         <span className="truncate">{triggerLabel}</span>
         <ChevronDown className="ml-auto size-3.5 shrink-0 text-muted-foreground" />
       </PopoverTrigger>

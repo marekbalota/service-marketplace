@@ -227,7 +227,10 @@ function UserDetailPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/$locale/admin/users', params: { locale } })} label={t('admin.backToUsers')} />
+      <BackButton
+        onClick={() => navigate({ to: '/$locale/admin/users', params: { locale } })}
+        label={t('admin.backToUsers')}
+      />
       <PageHeader
         title={t('admin.users.detail.title')}
         description={t('admin.users.detail.subtitle')}

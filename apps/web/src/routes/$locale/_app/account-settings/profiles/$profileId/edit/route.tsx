@@ -302,7 +302,9 @@ function EditProfilePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate({ to: '/$locale/account-settings/profiles', params: { locale } })}
+            onClick={() =>
+              navigate({ to: '/$locale/account-settings/profiles', params: { locale } })
+            }
           >
             {t('common.cancel')}
           </Button>

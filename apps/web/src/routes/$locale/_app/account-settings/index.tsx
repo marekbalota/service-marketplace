@@ -442,7 +442,8 @@ function AccountSettingsHubPage() {
                 </div>
               </div>
               <Link
-                to="/$locale/account-settings/profiles" params={{ locale }}
+                to="/$locale/account-settings/profiles"
+                params={{ locale }}
                 className={buttonVariants({ variant: 'outline', className: 'w-full' })}
               >
                 {t('accountSettings.manageProfiles')}

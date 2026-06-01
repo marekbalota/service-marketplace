@@ -4,7 +4,14 @@ import { eq, asc, desc, count, sql, and } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { SUPPORTED_LOCALES } from '@marketplace/shared'
 import type { AdminCategoriesModel } from './model'
-import { NotFoundError, ConflictError, UnprocessableEntityError, ErrorMessages, getPgCode, getPgDetail } from '../../../lib/errors'
+import {
+  NotFoundError,
+  ConflictError,
+  UnprocessableEntityError,
+  ErrorMessages,
+  getPgCode,
+  getPgDetail,
+} from '../../../lib/errors'
 
 function parseConflictLocale(e: unknown): string | undefined {
   const detail = getPgDetail(e)
@@ -67,10 +74,7 @@ export abstract class AdminCategoriesService {
     })()
 
     return db.transaction(async (tx) => {
-      const [countRow] = await tx
-        .select({ total: count() })
-        .from(categories)
-        .where(whereClause)
+      const [countRow] = await tx.select({ total: count() }).from(categories).where(whereClause)
 
       const total = countRow?.total ?? 0
       const totalPages = Math.ceil(total / size)
@@ -84,9 +88,13 @@ export abstract class AdminCategoriesService {
             WHERE ct.category_id = ${categories.categoryId}
           )`,
           activePosts:
-            sql<number>`count(${posts.postId}) filter (where ${posts.deletedAt} is null)`.mapWith(Number),
+            sql<number>`count(${posts.postId}) filter (where ${posts.deletedAt} is null)`.mapWith(
+              Number,
+            ),
           archivedPosts:
-            sql<number>`count(${posts.postId}) filter (where ${posts.deletedAt} is not null)`.mapWith(Number),
+            sql<number>`count(${posts.postId}) filter (where ${posts.deletedAt} is not null)`.mapWith(
+              Number,
+            ),
         })
         .from(categories)
         .leftJoin(
@@ -98,10 +106,7 @@ export abstract class AdminCategoriesService {
         )
         .innerJoin(
           enTranslation,
-          and(
-            eq(enTranslation.categoryId, categories.categoryId),
-            eq(enTranslation.locale, 'en'),
-          ),
+          and(eq(enTranslation.categoryId, categories.categoryId), eq(enTranslation.locale, 'en')),
         )
         .leftJoin(postCategories, eq(postCategories.categoryId, categories.categoryId))
         .leftJoin(posts, eq(posts.postId, postCategories.postId))
@@ -205,7 +210,10 @@ export abstract class AdminCategoriesService {
           .from(categoryTranslations)
           .where(eq(categoryTranslations.categoryId, id))
 
-        return { categoryId: id, translations: Object.fromEntries(rows.map((r) => [r.locale, r.name])) }
+        return {
+          categoryId: id,
+          translations: Object.fromEntries(rows.map((r) => [r.locale, r.name])),
+        }
       } catch (e: unknown) {
         if (getPgCode(e) === '23505') {
           throw new ConflictError(ErrorMessages.categoryNameConflict, parseConflictLocale(e))

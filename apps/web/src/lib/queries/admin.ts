@@ -1,6 +1,10 @@
 import { queryOptions } from '@tanstack/react-query'
 import { api } from '#/api'
-import type { SortBy, SortOrder, TranslationFilter } from '#/routes/$locale/_app/admin/categories/route'
+import type {
+  SortBy,
+  SortOrder,
+  TranslationFilter,
+} from '#/routes/$locale/_app/admin/categories/route'
 
 export const rolesQueryOptions = queryOptions({
   queryKey: ['admin', 'roles'],

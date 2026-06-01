@@ -1,6 +1,10 @@
 import { Elysia, t } from 'elysia'
 
-const errorResponse = t.Object({ message: t.String(), code: t.Optional(t.String()), locale: t.Optional(t.String()) })
+const errorResponse = t.Object({
+  message: t.String(),
+  code: t.Optional(t.String()),
+  locale: t.Optional(t.String()),
+})
 
 export const ErrorMessages = {
   postNotFound: 'Post not found',
@@ -135,11 +139,18 @@ export class InternalServerError extends Error {
 }
 
 export const errorsPlugin = new Elysia({ name: 'errors' })
-  .error({ ForbiddenError, NotFoundError, ConflictError, UnprocessableEntityError, InternalServerError })
+  .error({
+    ForbiddenError,
+    NotFoundError,
+    ConflictError,
+    UnprocessableEntityError,
+    InternalServerError,
+  })
   .onError(({ code, error, status }) => {
     if (code === 'ForbiddenError') return status(403, { message: error.message })
     if (code === 'NotFoundError') return status(404, { message: error.message })
-    if (code === 'ConflictError') return status(409, { message: error.message, locale: error.locale })
+    if (code === 'ConflictError')
+      return status(409, { message: error.message, locale: error.locale })
     if (code === 'UnprocessableEntityError') return status(422, { message: error.message })
     if (code === 'InternalServerError') return status(500, { message: error.message })
   })

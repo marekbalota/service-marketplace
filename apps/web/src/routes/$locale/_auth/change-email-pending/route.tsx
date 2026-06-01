@@ -34,7 +34,8 @@ function ChangeEmailPendingPage() {
           {t('auth.changeEmailPending.instruction')}
         </p>
         <Link
-          to="/$locale/account-settings" params={{ locale }}
+          to="/$locale/account-settings"
+          params={{ locale }}
           className={buttonVariants({ variant: 'outline', className: 'w-full' })}
         >
           {t('auth.changeEmailPending.backButton')}

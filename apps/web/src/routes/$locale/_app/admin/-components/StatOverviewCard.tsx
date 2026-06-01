@@ -74,7 +74,8 @@ export function StatOverviewCard({ canViewAnalytics, className }: StatOverviewCa
             ) : (
               <Link
                 key={metric}
-                to="/$locale/admin/analytics" params={{ locale }}
+                to="/$locale/admin/analytics"
+                params={{ locale }}
                 search={{ metric, range: '30d' }}
                 disabled={!canViewAnalytics}
                 className={`block ${canViewAnalytics ? '' : 'pointer-events-none'}`}

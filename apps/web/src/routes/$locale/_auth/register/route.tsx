@@ -29,7 +29,11 @@ function RegisterPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             {t('auth.register.hasAccount')}{' '}
-            <Link to="/$locale/login" params={{ locale }} className="font-medium hover:text-foreground">
+            <Link
+              to="/$locale/login"
+              params={{ locale }}
+              className="font-medium hover:text-foreground"
+            >
               {t('auth.register.signIn')}
             </Link>
           </p>

@@ -79,7 +79,11 @@ export function Header() {
                 >
                   {t('nav.login')}
                 </Link>
-                <Link to="/$locale/register" params={{ locale }} className={cn(buttonVariants(), 'hidden sm:inline-flex')}>
+                <Link
+                  to="/$locale/register"
+                  params={{ locale }}
+                  className={cn(buttonVariants(), 'hidden sm:inline-flex')}
+                >
                   {t('nav.register')}
                 </Link>
               </>

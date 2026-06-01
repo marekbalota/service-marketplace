@@ -99,7 +99,7 @@ describe('Route.beforeLoad — authorization', () => {
       Route.options.beforeLoad!({
         context: { user: null },
         params: { locale: 'en' },
-      } as Parameters<NonNullable<typeof Route.options.beforeLoad>>[0])
+      } as Parameters<NonNullable<typeof Route.options.beforeLoad>>[0]),
     ).toThrow()
   })
 

@@ -252,20 +252,14 @@ describe('PATCH /admin/categories/:id', () => {
   it('returns 422 when unsupported locale is provided', async () => {
     const { error } = await client.admin
       .categories({ id: createdId })
-      .patch(
-        { translations: { xx: 'SomeUnsupportedValue' } },
-        { headers: { Cookie: adminCookie } },
-      )
+      .patch({ translations: { xx: 'SomeUnsupportedValue' } }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(422)
   })
 
   it('returns 422 when all translations are empty strings', async () => {
     const { error } = await client.admin
       .categories({ id: createdId })
-      .patch(
-        { translations: { en: '', sk: '' } },
-        { headers: { Cookie: adminCookie } },
-      )
+      .patch({ translations: { en: '', sk: '' } }, { headers: { Cookie: adminCookie } })
     expect(error?.status).toBe(422)
   })
 

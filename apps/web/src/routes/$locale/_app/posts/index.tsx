@@ -203,7 +203,8 @@ function HomePage() {
             action={
               isAuthenticated ? (
                 <Link
-                  to="/$locale/create-post" params={{ locale }}
+                  to="/$locale/create-post"
+                  params={{ locale }}
                   className={cn(buttonVariants({ variant: 'default' }), 'shrink-0 gap-2')}
                 >
                   <Plus className="size-4" />

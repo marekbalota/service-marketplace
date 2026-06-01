@@ -76,11 +76,7 @@ const postSelect = (tx: DbOrTx, locale: string = 'en') => {
 }
 
 export abstract class PostsService {
-  static async findAll(
-    query: PostsModel['findAllQuery'],
-    accountId?: string,
-    locale = 'en',
-  ) {
+  static async findAll(query: PostsModel['findAllQuery'], accountId?: string, locale = 'en') {
     const {
       search,
       type,

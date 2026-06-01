@@ -30,9 +30,9 @@ export const TRANSLATION_FILTER_VALUES = [
   ...TRANSLATABLE_LOCALES,
 ] as const
 
-export type SortBy = typeof SORT_BY_VALUES[number]
-export type SortOrder = typeof SORT_ORDER_VALUES[number]
-export type TranslationFilter = typeof TRANSLATION_FILTER_VALUES[number]
+export type SortBy = (typeof SORT_BY_VALUES)[number]
+export type SortOrder = (typeof SORT_ORDER_VALUES)[number]
+export type TranslationFilter = (typeof TRANSLATION_FILTER_VALUES)[number]
 
 const searchSchema = z.object({
   q: z.string().optional().catch(undefined),
@@ -57,7 +57,11 @@ export const Route = createFileRoute('/$locale/_app/admin/categories')({
     sortOrder,
     translationFilter,
   }),
-  loader: ({ context: { queryClient }, deps: { q, page, sortBy, sortOrder, translationFilter }, params }) => {
+  loader: ({
+    context: { queryClient },
+    deps: { q, page, sortBy, sortOrder, translationFilter },
+    params,
+  }) => {
     void queryClient.prefetchQuery(
       adminCategoriesQueryOptions({
         search: q,
@@ -95,7 +99,10 @@ function ManageCategories() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/$locale/admin', params: { locale } })} label={t('admin.backToAdmin')} />
+      <BackButton
+        onClick={() => navigate({ to: '/$locale/admin', params: { locale } })}
+        label={t('admin.backToAdmin')}
+      />
       <PageHeader
         title={t('admin.categories.title')}
         description={t('admin.categories.subtitle')}
@@ -106,7 +113,10 @@ function ManageCategories() {
             searchPlaceholder={t('admin.categories.searchPlaceholder')}
             searchValue={q}
             onSearchChange={(value) =>
-              navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }), replace: true })
+              navigate({
+                search: (prev) => ({ ...prev, q: value || undefined, page: undefined }),
+                replace: true,
+              })
             }
             sheetTitle={t('admin.categories.sortFilterLabel')}
             action={

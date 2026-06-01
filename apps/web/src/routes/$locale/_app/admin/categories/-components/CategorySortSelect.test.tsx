@@ -50,8 +50,18 @@ describe('CategorySortSelect', () => {
     fireEvent.click(screen.getAllByRole('button')[0]!)
     await user.click(screen.getByRole('combobox'))
     await user.click(await screen.findByText(/Active posts/i))
-    const updater = (mockNavigate.mock.calls[0] as [{ search: (p: Record<string, unknown>) => Record<string, unknown> }])[0].search
-    const result = updater({ q: '', page: undefined, sortBy: undefined, sortOrder: undefined, translationFilter: undefined })
+    const updater = (
+      mockNavigate.mock.calls[0] as [
+        { search: (p: Record<string, unknown>) => Record<string, unknown> },
+      ]
+    )[0].search
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
     expect(result.sortBy).toBe('activePosts')
     expect(result.page).toBeUndefined()
   })
@@ -69,8 +79,18 @@ describe('CategorySortSelect', () => {
     fireEvent.click(screen.getAllByRole('button')[0]!)
     await user.click(screen.getByRole('combobox'))
     await user.click(await screen.findByText(/^Name$/i))
-    const updater = (mockNavigate.mock.calls[0] as [{ search: (p: Record<string, unknown>) => Record<string, unknown> }])[0].search
-    const result = updater({ q: '', page: undefined, sortBy: 'activePosts', sortOrder: undefined, translationFilter: undefined })
+    const updater = (
+      mockNavigate.mock.calls[0] as [
+        { search: (p: Record<string, unknown>) => Record<string, unknown> },
+      ]
+    )[0].search
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: 'activePosts',
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
     expect(result.sortBy).toBeUndefined()
     expect(result.page).toBeUndefined()
   })
@@ -79,8 +99,18 @@ describe('CategorySortSelect', () => {
     render(<CategorySortSelect />)
     fireEvent.click(screen.getAllByRole('button')[0]!)
     fireEvent.click(screen.getByText(/Descending/i))
-    const updater = (mockNavigate.mock.calls[0] as [{ search: (p: Record<string, unknown>) => Record<string, unknown> }])[0].search
-    const result = updater({ q: '', page: undefined, sortBy: undefined, sortOrder: undefined, translationFilter: undefined })
+    const updater = (
+      mockNavigate.mock.calls[0] as [
+        { search: (p: Record<string, unknown>) => Record<string, unknown> },
+      ]
+    )[0].search
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
     expect(result.sortOrder).toBe('desc')
     expect(result.page).toBeUndefined()
   })

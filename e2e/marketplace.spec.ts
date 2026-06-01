@@ -742,7 +742,10 @@ test.describe('Category localisation — admin', () => {
     await expect(page.getByText('3/3')).toBeVisible()
 
     // cleanup — only one row matches the search so this Delete button is unambiguous
-    await page.getByRole('button', { name: /delete/i }).first().click()
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /^delete$/i }).click()
   })
 
@@ -767,7 +770,10 @@ test.describe('Category localisation — admin', () => {
     await expect(page.getByText('1/3')).toBeVisible()
 
     // cleanup — only one row matches the search so this Delete button is unambiguous
-    await page.getByRole('button', { name: /delete/i }).first().click()
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /^delete$/i }).click()
   })
 

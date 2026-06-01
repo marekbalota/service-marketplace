@@ -70,7 +70,8 @@ function BackupChallengePage() {
         </Button>
         <div className="text-center">
           <Link
-            to="/$locale/verify-2fa" params={{ locale }}
+            to="/$locale/verify-2fa"
+            params={{ locale }}
             search={{ redirect, email, twoFactorMethods }}
             replace
             className="font-medium hover:text-foreground text-muted-foreground"

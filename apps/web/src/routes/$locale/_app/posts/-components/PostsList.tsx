@@ -43,7 +43,19 @@ export function PostsList({
   const activeProfileId = activeProfile?.userProfileId
   const profileId = favouritesOnly ? activeProfileId : undefined
   const { data } = useSuspenseQuery(
-    postsQueryOptions({ type, category, q, sort, page, rating, profileId, country, region, city, locale }),
+    postsQueryOptions({
+      type,
+      category,
+      q,
+      sort,
+      page,
+      rating,
+      profileId,
+      country,
+      region,
+      city,
+      locale,
+    }),
   )
 
   const { data: favouritesData } = useQuery({

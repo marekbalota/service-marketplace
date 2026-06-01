@@ -477,9 +477,7 @@ describe('GET /posts — location filter', () => {
 describe('GET /posts — locale-aware category names', () => {
   it('returns Slovak category name when Accept-Language is sk', async () => {
     const { data: en } = await client.posts.get({ query: { size: 50 } })
-    const postWithTutoring = en!.items.find((p) =>
-      p.categories.some((c) => c.name === 'Tutoring'),
-    )
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
     if (!postWithTutoring) return // seeded post not found — skip
 
     const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId
@@ -493,9 +491,7 @@ describe('GET /posts — locale-aware category names', () => {
 
   it('falls back to EN category name for unsupported locale', async () => {
     const { data: en } = await client.posts.get({ query: { size: 50 } })
-    const postWithTutoring = en!.items.find((p) =>
-      p.categories.some((c) => c.name === 'Tutoring'),
-    )
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
     if (!postWithTutoring) return // seeded post not found — skip
 
     const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId
@@ -511,9 +507,7 @@ describe('GET /posts — locale-aware category names', () => {
 describe('GET /posts/:id — locale-aware category names', () => {
   it('returns Slovak category name when Accept-Language is sk', async () => {
     const { data: en } = await client.posts.get({ query: { size: 50 } })
-    const postWithTutoring = en!.items.find((p) =>
-      p.categories.some((c) => c.name === 'Tutoring'),
-    )
+    const postWithTutoring = en!.items.find((p) => p.categories.some((c) => c.name === 'Tutoring'))
     if (!postWithTutoring) return // seeded post not found — skip
 
     const tutoringId = postWithTutoring.categories.find((c) => c.name === 'Tutoring')!.categoryId

@@ -219,7 +219,10 @@ function ManageReports() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/$locale/admin', params: { locale } })} label={t('admin.backToAdmin')} />
+      <BackButton
+        onClick={() => navigate({ to: '/$locale/admin', params: { locale } })}
+        label={t('admin.backToAdmin')}
+      />
 
       <PageHeader title={t('admin.reports.title')} description={t('admin.reports.subtitle')} />
 

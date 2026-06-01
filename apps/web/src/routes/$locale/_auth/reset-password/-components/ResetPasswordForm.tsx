@@ -72,7 +72,11 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             {t('auth.resetPassword.invalidMessage')}
           </p>
-          <Link to="/$locale/forgot-password" params={{ locale }} className={buttonVariants({ className: 'w-full' })}>
+          <Link
+            to="/$locale/forgot-password"
+            params={{ locale }}
+            className={buttonVariants({ className: 'w-full' })}
+          >
             {t('auth.resetPassword.requestNew')}
           </Link>
         </CardContent>
@@ -95,7 +99,11 @@ export function ResetPasswordForm({ token, urlError }: ResetPasswordFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             {t('auth.resetPassword.successMessage')}
           </p>
-          <Link to="/$locale/login" params={{ locale }} className={buttonVariants({ className: 'w-full' })}>
+          <Link
+            to="/$locale/login"
+            params={{ locale }}
+            className={buttonVariants({ className: 'w-full' })}
+          >
             {t('auth.resetPassword.signIn')}
           </Link>
         </CardContent>

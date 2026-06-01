@@ -55,7 +55,13 @@ describe('TranslationFilterSelect', () => {
       expect.objectContaining({ search: expect.any(Function) }),
     )
     const updater = mockNavigate.mock.calls[0]![0].search
-    const result = updater({ q: '', page: undefined, sortBy: undefined, sortOrder: undefined, translationFilter: undefined })
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
     expect(result.translationFilter).toBe('complete')
     expect(result.page).toBeUndefined()
   })
@@ -66,7 +72,13 @@ describe('TranslationFilterSelect', () => {
     await user.click(screen.getByRole('combobox'))
     await user.click(await screen.findByText(/Missing SK/i))
     const updater = mockNavigate.mock.calls[0]![0].search
-    const result = updater({ q: '', page: undefined, sortBy: undefined, sortOrder: undefined, translationFilter: undefined })
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: undefined,
+    })
     expect(result.translationFilter).toBe('sk')
   })
 
@@ -83,7 +95,13 @@ describe('TranslationFilterSelect', () => {
     await user.click(screen.getByRole('combobox'))
     await user.click(await screen.findByText(/All languages/i))
     const updater = mockNavigate.mock.calls[0]![0].search
-    const result = updater({ q: '', page: undefined, sortBy: undefined, sortOrder: undefined, translationFilter: 'complete' })
+    const result = updater({
+      q: '',
+      page: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
+      translationFilter: 'complete',
+    })
     expect(result.translationFilter).toBeUndefined()
   })
 })

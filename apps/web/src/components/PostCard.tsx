@@ -47,7 +47,11 @@ export function PostCard({
   const rateLabel = post.rateType ? RATE_LABELS[post.rateType] : null
 
   return (
-    <Link to="/$locale/posts/$postId" params={{ locale, postId: post.postId }} className="block h-full">
+    <Link
+      to="/$locale/posts/$postId"
+      params={{ locale, postId: post.postId }}
+      className="block h-full"
+    >
       <Card className="flex h-full cursor-pointer flex-col gap-3 transition-shadow hover:shadow-lg">
         <CardHeader className="pb-3">
           <div className="relative pr-10">

@@ -44,7 +44,9 @@ export function FavouriteButton({
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey })
+      queryClient.invalidateQueries({
+        queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey,
+      })
       onToggle?.()
     },
   })
@@ -55,7 +57,9 @@ export function FavouriteButton({
       if (error) throw wrapEdenError(error, 'Failed to remove favourite.')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey })
+      queryClient.invalidateQueries({
+        queryKey: favouritesQueryOptions(profileId ?? '', locale).queryKey,
+      })
       onToggle?.()
     },
   })

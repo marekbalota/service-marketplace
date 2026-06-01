@@ -226,11 +226,20 @@ async function seed() {
   const tutoring = await upsertCategory('Tutoring', { sk: 'Doučovanie', cs: 'Doučování' })
   const plumbing = await upsertCategory('Plumbing', { sk: 'Inštalatérstvo', cs: 'Instalatérství' })
   const design = await upsertCategory('Design', { sk: 'Dizajn', cs: 'Design' })
-  const homeRepair = await upsertCategory('Home Repair', { sk: 'Opravy domácnosti', cs: 'Opravy domácnosti' })
+  const homeRepair = await upsertCategory('Home Repair', {
+    sk: 'Opravy domácnosti',
+    cs: 'Opravy domácnosti',
+  })
   const cleaning = await upsertCategory('Cleaning', { sk: 'Upratovanie', cs: 'Úklid' })
-  const techSupport = await upsertCategory('Tech Support', { sk: 'Technická podpora', cs: 'Technická podpora' })
+  const techSupport = await upsertCategory('Tech Support', {
+    sk: 'Technická podpora',
+    cs: 'Technická podpora',
+  })
   await upsertCategory('Marketing & Business', { sk: 'Marketing a biznis' })
-  await upsertCategory('Writing & Translation', { sk: 'Písanie a preklady', cs: 'Psaní a překlady' })
+  await upsertCategory('Writing & Translation', {
+    sk: 'Písanie a preklady',
+    cs: 'Psaní a překlady',
+  })
   await upsertCategory('Pet Services', { sk: 'Starostlivosť o zvieratá', cs: 'Péče o zvířata' })
   await upsertCategory('Photography & Video', { cs: 'Fotografie a video' })
   await upsertCategory('Beauty & Wellness')

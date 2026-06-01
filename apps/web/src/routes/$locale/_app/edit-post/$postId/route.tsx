@@ -36,10 +36,18 @@ type FormValues = z.infer<typeof schema>
 export const Route = createFileRoute('/$locale/_app/edit-post/$postId')({
   beforeLoad: async ({ context: { user, queryClient }, params, location }) => {
     const { postId } = params
-    if (!user) throw redirect({ to: '/$locale/login', params, search: { redirect: location.href }, replace: true })
+    if (!user)
+      throw redirect({
+        to: '/$locale/login',
+        params,
+        search: { redirect: location.href },
+        replace: true,
+      })
     if (!hasPermissions(user.role?.permissions ?? [], [Permissions.PostsEditOwn]))
       throw redirect({ to: '/$locale/posts', params })
-    const post = await queryClient.ensureQueryData(postDetailQueryOptions(postId, params.locale as string))
+    const post = await queryClient.ensureQueryData(
+      postDetailQueryOptions(postId, params.locale as string),
+    )
     const isOwner = user.profiles.some((p) => p.userProfileId === post.authorId)
     if (!isOwner) throw redirect({ to: '/$locale/posts/$postId', params })
   },

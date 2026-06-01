@@ -37,7 +37,11 @@ function VerifyEmailCallbackPage() {
           <p className="text-center text-sm text-muted-foreground">
             Verification links expire after 1 hour. Request a new one by signing in.
           </p>
-          <Link to="/$locale/login" params={{ locale }} className={buttonVariants({ className: 'w-full' })}>
+          <Link
+            to="/$locale/login"
+            params={{ locale }}
+            className={buttonVariants({ className: 'w-full' })}
+          >
             Go to sign in
           </Link>
         </CardContent>

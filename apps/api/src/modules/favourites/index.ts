@@ -14,7 +14,12 @@ export const favouritesRoutes = new Elysia({ prefix: '/favourites' })
   .use(authRoutes)
   .get(
     '/',
-    async ({ user, query, headers }) => FavouritesService.findAllForProfile(user.id, query.profileId, resolveLocale(headers['accept-language'])),
+    async ({ user, query, headers }) =>
+      FavouritesService.findAllForProfile(
+        user.id,
+        query.profileId,
+        resolveLocale(headers['accept-language']),
+      ),
     {
       auth: true,
       query: FavouritesModel.profileIdQuery,

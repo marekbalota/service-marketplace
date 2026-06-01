@@ -41,7 +41,11 @@ export function RegisterForm() {
       headers: { 'x-captcha-response': captchaToken! },
     })
     if (!error) {
-      void navigate({ to: '/$locale/verify-email', params: { locale }, search: { email: values.email } })
+      void navigate({
+        to: '/$locale/verify-email',
+        params: { locale },
+        search: { email: values.email },
+      })
       return
     }
     if (error.status === 403) {

@@ -19,7 +19,13 @@ interface CategoryRowProps {
   onDelete: (category: Category) => void
 }
 
-function PostCounts({ activePosts, archivedPosts }: { activePosts: number; archivedPosts: number }) {
+function PostCounts({
+  activePosts,
+  archivedPosts,
+}: {
+  activePosts: number
+  archivedPosts: number
+}) {
   const { t } = useTranslation()
   return (
     <>
@@ -50,9 +56,7 @@ function TranslationIndicator({ translations }: { translations: Category['transl
     <span
       className={cn(
         'flex items-center gap-0.5 text-xs font-medium whitespace-nowrap shrink-0',
-        isComplete
-          ? 'text-green-600 dark:text-green-400'
-          : 'text-amber-600 dark:text-amber-500',
+        isComplete ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-500',
       )}
     >
       {filledCount}/{totalCount}
@@ -64,22 +68,20 @@ function TranslationIndicator({ translations }: { translations: Category['transl
     <>
       {/* Desktop: chips when few locales, fraction when many */}
       <div className="hidden md:flex items-center gap-1 shrink-0">
-        {totalCount <= MAX_CHIPS ? (
-          SUPPORTED_LOCALES.map((locale) => {
-            const has = locale in translations
-            return (
-              <Badge
-                key={locale}
-                variant={has ? 'secondary' : 'outline'}
-                className={cn('text-xs px-1.5 py-0', !has && 'opacity-40')}
-              >
-                {locale.toUpperCase()}
-              </Badge>
-            )
-          })
-        ) : (
-          fraction
-        )}
+        {totalCount <= MAX_CHIPS
+          ? SUPPORTED_LOCALES.map((locale) => {
+              const has = locale in translations
+              return (
+                <Badge
+                  key={locale}
+                  variant={has ? 'secondary' : 'outline'}
+                  className={cn('text-xs px-1.5 py-0', !has && 'opacity-40')}
+                >
+                  {locale.toUpperCase()}
+                </Badge>
+              )
+            })
+          : fraction}
       </div>
       {/* Mobile: always fraction */}
       <span className="md:hidden">{fraction}</span>
@@ -108,7 +110,10 @@ export function CategoryRow({ category, onEdit, onDelete }: CategoryRowProps) {
             </div>
             {/* desktop: stats inline below name */}
             <p className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
-              <PostCounts activePosts={category.activePosts} archivedPosts={category.archivedPosts} />
+              <PostCounts
+                activePosts={category.activePosts}
+                archivedPosts={category.archivedPosts}
+              />
             </p>
           </div>
         </div>

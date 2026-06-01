@@ -116,7 +116,8 @@ function AnalyticsPage() {
       })
     } else {
       navigate({
-        to: '/$locale/admin/analytics', params: { locale },
+        to: '/$locale/admin/analytics',
+        params: { locale },
         search: (prev) => ({ ...prev, granularity: g }),
         replace: true,
       })
@@ -125,7 +126,10 @@ function AnalyticsPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
-      <BackButton onClick={() => navigate({ to: '/$locale/admin', params: { locale } })} label={t('admin.backToAdmin')} />
+      <BackButton
+        onClick={() => navigate({ to: '/$locale/admin', params: { locale } })}
+        label={t('admin.backToAdmin')}
+      />
 
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-1">{t(`admin.analytics.${typedMetric}.title`)}</h2>
@@ -136,7 +140,8 @@ function AnalyticsPage() {
         value={typedMetric}
         onValueChange={(v) =>
           navigate({
-            to: '/$locale/admin/analytics', params: { locale },
+            to: '/$locale/admin/analytics',
+            params: { locale },
             search: (prev) => ({ ...prev, metric: v as AnalyticsMetric, granularity: undefined }),
             replace: true,
           })
@@ -183,7 +188,8 @@ function AnalyticsPage() {
         onPopToIndex={(idx) => setDrillStack((prev) => prev.slice(0, idx + 1))}
         onRangeChange={(r) =>
           navigate({
-            to: '/$locale/admin/analytics', params: { locale },
+            to: '/$locale/admin/analytics',
+            params: { locale },
             search: (prev) => ({ ...prev, range: r, granularity: undefined }),
             replace: true,
           })

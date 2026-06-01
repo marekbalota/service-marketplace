@@ -96,7 +96,11 @@ export function LoginForm({ redirect }: { redirect?: string }) {
         form.setError('root', { message: msg })
         return
       }
-      void navigate({ to: '/$locale/verify-email', params: { locale }, search: { email: values.email } })
+      void navigate({
+        to: '/$locale/verify-email',
+        params: { locale },
+        search: { email: values.email },
+      })
       return
     }
     setCaptchaToken(null)

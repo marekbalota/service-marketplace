@@ -29,7 +29,13 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/$locale/_app/my-postings')({
   validateSearch: searchSchema,
   beforeLoad: ({ context: { user }, location, params }) => {
-    if (!user) throw redirect({ to: '/$locale/login', params, search: { redirect: location.href }, replace: true })
+    if (!user)
+      throw redirect({
+        to: '/$locale/login',
+        params,
+        search: { redirect: location.href },
+        replace: true,
+      })
   },
   component: MyPostingsPage,
 })
@@ -76,7 +82,11 @@ function PostsGrid({
       <EmptyState message={t('myPostings.noArchived')} />
     ) : (
       <EmptyState message={t('myPostings.noPostings')}>
-        <Link to="/$locale/create-post" params={{ locale }} className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
+        <Link
+          to="/$locale/create-post"
+          params={{ locale }}
+          className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}
+        >
           <Plus className="size-4" />
           {t('myPostings.createFirst')}
         </Link>
@@ -149,7 +159,11 @@ function MyPostingsPage() {
         title={t('myPostings.title')}
         description={t('myPostings.subtitle')}
         action={
-          <Link to="/$locale/create-post" params={{ locale }} className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}>
+          <Link
+            to="/$locale/create-post"
+            params={{ locale }}
+            className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}
+          >
             <Plus className="size-4" />
             {t('myPostings.createPosting')}
           </Link>

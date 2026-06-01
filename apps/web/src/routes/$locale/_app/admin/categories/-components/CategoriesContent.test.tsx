@@ -144,5 +144,4 @@ describe('CategoriesContent', () => {
     fireEvent.click(editButtons[0]!)
     expect(screen.getByText('Edit Category')).toBeInTheDocument()
   })
-
 })

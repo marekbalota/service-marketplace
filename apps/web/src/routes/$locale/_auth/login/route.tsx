@@ -32,7 +32,11 @@ function LoginPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             {t('auth.login.noAccount')}{' '}
-            <Link to="/$locale/register" params={{ locale }} className="font-medium hover:text-foreground">
+            <Link
+              to="/$locale/register"
+              params={{ locale }}
+              className="font-medium hover:text-foreground"
+            >
               {t('auth.login.createOne')}
             </Link>
           </p>

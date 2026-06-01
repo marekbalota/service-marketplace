@@ -5,8 +5,7 @@ import { resolveLocale } from '../../lib/resolveLocale'
 
 export const categoriesRoutes = new Elysia({ prefix: '/categories' }).get(
   '/',
-  async ({ headers }) =>
-    await CategoriesService.findAll(resolveLocale(headers['accept-language'])),
+  async ({ headers }) => await CategoriesService.findAll(resolveLocale(headers['accept-language'])),
   {
     response: {
       200: CategoriesModel.findAllResponse,

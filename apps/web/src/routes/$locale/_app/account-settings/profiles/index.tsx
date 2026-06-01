@@ -226,7 +226,8 @@ function ManageProfilesPage() {
         description={t('profiles.subtitle')}
         action={
           <Link
-            to="/$locale/account-settings/profiles/create" params={{ locale }}
+            to="/$locale/account-settings/profiles/create"
+            params={{ locale }}
             className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
           >
             <Plus className="size-4" />
