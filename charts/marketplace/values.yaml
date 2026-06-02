@@ -1,0 +1,154 @@
+# Default values for the marketplace chart.
+# Single-environment deployment (no dev/staging/prod split).
+
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+# Pod-level security context applied to api / web / redis / minio pods.
+# Matches what the e-INFRA CZ cluster's Pod Security Standards expect.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Name of the manually-created Secret holding app secrets (see DEPLOYMENT.md).
+# Consumed by the API via envFrom, and by MinIO for its root credentials.
+secretName: marketplace-secrets
+
+# ---------------------------------------------------------------------------
+# API (ElysiaJS on Bun)
+# ---------------------------------------------------------------------------
+api:
+  replicaCount: 1
+  image:
+    repository: cerit.io/v_gibas/marketplace-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  # Run the seed on container start. Off by default: roles/users/categories are
+  # idempotent, but posts/reviews/reports are plain inserts, so re-running on
+  # every restart would duplicate the demo content. Seed once manually instead
+  # (kubectl exec ... bun run src/db/seed.ts).
+  seedOnStart: false
+  service:
+    type: ClusterIP
+    port: 3001
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# Web (static SPA served by nginx)
+# ---------------------------------------------------------------------------
+web:
+  replicaCount: 1
+  image:
+    repository: cerit.io/v_gibas/marketplace-web
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# PostgreSQL 17 via the CloudNativePG operator
+# ---------------------------------------------------------------------------
+database:
+  enabled: true
+  name: marketplace
+  owner: marketplace
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+  storageClass: zfs-csi
+  storageSize: 5Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+# ---------------------------------------------------------------------------
+# Redis (ioredis client; rate-limiting / ephemeral state)
+# ---------------------------------------------------------------------------
+redis:
+  image:
+    repository: redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: zfs-csi
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# MinIO (S3-compatible object storage for uploaded images)
+# ---------------------------------------------------------------------------
+minio:
+  image:
+    repository: minio/minio
+    tag: latest
+    pullPolicy: IfNotPresent
+  bucket: marketplace
+  persistence:
+    enabled: true
+    storageClass: zfs-csi
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# Ingress (nginx + cert-manager). Three single-label hosts under the cluster
+# wildcard domain so each gets its own Let's Encrypt cert.
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: nginx
+  clusterIssuer: letsencrypt-prod
+  proxyBodySize: 128m
+  web:
+    host: marketplace.dyn.cloud.e-infra.cz
+  api:
+    host: marketplace-api.dyn.cloud.e-infra.cz
+  minio:
+    host: marketplace-storage.dyn.cloud.e-infra.cz
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

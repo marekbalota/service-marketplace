@@ -1,0 +1,54 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "marketplace.fullname" . }}
+  labels:
+    {{- include "marketplace.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer | quote }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.ingress.proxyBodySize | quote }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.web.host | quote }}
+        - {{ .Values.ingress.api.host | quote }}
+        - {{ .Values.ingress.minio.host | quote }}
+      secretName: {{ include "marketplace.fullname" . }}-tls
+  rules:
+    # Frontend SPA
+    - host: {{ .Values.ingress.web.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "marketplace.web.fullname" . }}
+                port:
+                  number: {{ .Values.web.service.port }}
+    # API
+    - host: {{ .Values.ingress.api.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "marketplace.api.fullname" . }}
+                port:
+                  number: {{ .Values.api.service.port }}
+    # MinIO S3 endpoint (serves public-read uploaded images)
+    - host: {{ .Values.ingress.minio.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "marketplace.minio.fullname" . }}
+                port:
+                  number: 9000
+{{- end }}

@@ -1,0 +1,30 @@
+{{- if .Values.database.enabled -}}
+# CloudNativePG cluster. The operator auto-creates a Secret named
+# "<cluster>-app" containing a ready-to-use connection string under the
+# "uri" key, which the API consumes as DATABASE_URL.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "marketplace.db.fullname" . }}
+  labels:
+    {{- include "marketplace.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  instances: {{ .Values.database.instances | default 1 }}
+  imageName: {{ .Values.database.imageName }}
+  primaryUpdateStrategy: unsupervised
+  bootstrap:
+    initdb:
+      database: {{ .Values.database.name }}
+      owner: {{ .Values.database.owner }}
+  {{- if gt (int .Values.database.instances) 1 }}
+  replicationSlots:
+    highAvailability:
+      enabled: true
+  {{- end }}
+  resources:
+    {{- toYaml .Values.database.resources | nindent 4 }}
+  storage:
+    size: {{ .Values.database.storageSize }}
+    storageClass: {{ .Values.database.storageClass }}
+{{- end }}
