@@ -184,6 +184,8 @@ export const posts = pgTable('posts', {
   rateType: rateTypeEnum('rate_type'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
+  bannedAt: timestamp('banned_at'),
+  banReason: text('ban_reason'),
 })
 
 export const reviews = pgTable(
