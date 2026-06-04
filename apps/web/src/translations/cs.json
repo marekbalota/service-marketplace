@@ -629,7 +629,7 @@
     },
     "banPost": {
       "title": "Zakázat inzerát",
-      "description": "Inzerát „{{title}}" bude zablokován a autor bude upozorněn.",
+      "description": "Inzerát \"{{title}}\" bude zablokován a autor bude upozorněn.",
       "reason": "Důvod *",
       "reasonPlaceholder": "Popište důvod zákazu…",
       "submit": "Zakázat inzerát",

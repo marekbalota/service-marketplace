@@ -29,6 +29,8 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
+import { RBACService } from '../../lib/rbac/rbac-helper'
+import { Permissions } from '@marketplace/shared'
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -260,7 +262,7 @@ export abstract class PostsService {
     })
   }
 
-  static async findById(id: string, locale = 'en') {
+  static async findById(id: string, locale = 'en', accountId?: string) {
     const requested = alias(categoryTranslations, 'cat_requested')
     const fallback = alias(categoryTranslations, 'cat_fallback')
 
@@ -352,6 +354,20 @@ export abstract class PostsService {
 
     if (!row) {
       throw new NotFoundError(ErrorMessages.postNotFound)
+    }
+
+    if (row.bannedAt) {
+      if (!accountId) throw new NotFoundError(ErrorMessages.postNotFound)
+
+      const [profileIds, userPermissions] = await Promise.all([
+        ProfilesService.getProfileIdsByAccount(accountId),
+        RBACService.getUserPermissions(accountId),
+      ])
+
+      const isOwner = profileIds.includes(row.authorId)
+      const isAdmin = userPermissions.includes(Permissions.AdminPostsDeleteAny)
+
+      if (!isOwner && !isAdmin) throw new NotFoundError(ErrorMessages.postNotFound)
     }
 
     const location = row.locationId
