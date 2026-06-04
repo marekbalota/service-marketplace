@@ -23,7 +23,7 @@ type Post = { postId: string; postTitle: string }
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
-  tab: z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived', 'banned']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/$locale/_app/my-postings')({
@@ -43,15 +43,15 @@ export const Route = createFileRoute('/$locale/_app/my-postings')({
 function PostsGrid({
   profileId,
   page,
-  archived,
+  status,
 }: {
   profileId: string
   page: number
-  archived: boolean
+  status: 'active' | 'archived' | 'banned'
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived))
+  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, status))
   const navigate = Route.useNavigate()
   const locale = useLocale()
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null)
@@ -78,9 +78,9 @@ function PostsGrid({
   const totalPages = data?.totalPages ?? 1
 
   if (posts.length === 0 && page === 1) {
-    return archived ? (
-      <EmptyState message={t('myPostings.noArchived')} />
-    ) : (
+    if (status === 'banned') return <EmptyState message={t('myPostings.noBanned')} />
+    if (status === 'archived') return <EmptyState message={t('myPostings.noArchived')} />
+    return (
       <EmptyState message={t('myPostings.noPostings')}>
         <Link
           to="/$locale/create-post"
@@ -101,7 +101,8 @@ function PostsGrid({
           <PostCard
             key={post.postId}
             post={post}
-            onDelete={() => setDeleteTarget(post)}
+            isBanned={status === 'banned'}
+            onDelete={status !== 'banned' ? () => setDeleteTarget(post) : undefined}
             deleteDisabled={deleteMutation.isPending}
           />
         ))}
@@ -147,8 +148,13 @@ function MyPostingsPage() {
   })
 
   function handleTabChange(value: string) {
+    const tabMap: Record<string, 'archived' | 'banned' | undefined> = {
+      active: undefined,
+      archived: 'archived',
+      banned: 'banned',
+    }
     navigate({
-      search: () => ({ tab: value === 'archived' ? 'archived' : undefined }),
+      search: () => ({ tab: tabMap[value] }),
       replace: true,
     })
   }
@@ -180,12 +186,16 @@ function MyPostingsPage() {
             {t('myPostings.archived')}
             {postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
+          <TabsTrigger value="banned">
+            {t('myPostings.banned')}
+            {postCounts ? ` (${postCounts.banned})` : ''}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
           {activeProfile ? (
             <Suspense fallback={<PostsGridSkeleton />}>
-              <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={false} />
+              <PostsGrid profileId={activeProfile.userProfileId} page={page} status="active" />
             </Suspense>
           ) : (
             <EmptyState message={t('errors.noProfile')} />
@@ -195,7 +205,17 @@ function MyPostingsPage() {
         <TabsContent value="archived">
           {activeProfile ? (
             <Suspense fallback={<PostsGridSkeleton />}>
-              <PostsGrid profileId={activeProfile.userProfileId} page={page} archived={true} />
+              <PostsGrid profileId={activeProfile.userProfileId} page={page} status="archived" />
+            </Suspense>
+          ) : (
+            <EmptyState message={t('errors.noProfile')} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="banned">
+          {activeProfile ? (
+            <Suspense fallback={<PostsGridSkeleton />}>
+              <PostsGrid profileId={activeProfile.userProfileId} page={page} status="banned" />
             </Suspense>
           ) : (
             <EmptyState message={t('errors.noProfile')} />

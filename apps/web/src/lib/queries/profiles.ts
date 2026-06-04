@@ -40,17 +40,17 @@ export function profilePostsCountQueryOptions(profileId: string) {
 export function profilePostsQueryOptions(
   profileId: string,
   page: number,
-  archived = false,
+  status: 'active' | 'archived' | 'banned' = 'active',
   pageSize = PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['profiles', profileId, 'posts', { page, archived, pageSize }] as const,
+    queryKey: ['profiles', profileId, 'posts', { page, status, pageSize }] as const,
     queryFn: async () => {
       const { data, error } = await api.profiles({ id: profileId }).posts.get({
         query: {
           offset: (page - 1) * pageSize,
           size: pageSize,
-          archived,
+          status,
         },
       })
       if (error) throw error
