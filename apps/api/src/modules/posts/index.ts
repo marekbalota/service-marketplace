@@ -43,8 +43,14 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
   )
   .get(
     '/:id',
-    async ({ params, headers }) =>
-      await PostsService.findById(params.id, resolveLocale(headers['accept-language'])),
+    async ({ params, headers }) => {
+      const session = await auth.api.getSession({ headers })
+      return PostsService.findById(
+        params.id,
+        resolveLocale(headers['accept-language']),
+        session?.user.id,
+      )
+    },
     {
       params: PostsModel.findByIdParams,
       response: {

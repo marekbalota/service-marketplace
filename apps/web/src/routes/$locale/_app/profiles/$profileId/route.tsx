@@ -91,17 +91,17 @@ function ProfileViewSkeleton() {
 function ProfilePostsGrid({
   profileId,
   page,
-  archived,
+  status,
   isOwner,
 }: {
   profileId: string
   page: number
-  archived: boolean
+  status: 'active' | 'archived'
   isOwner: boolean
 }) {
   const { t } = useTranslation()
   const navigate = Route.useNavigate()
-  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived, 6))
+  const { data } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, status, 6))
   const posts = data?.items ?? []
   const totalPages = data?.totalPages ?? 1
 
@@ -111,7 +111,9 @@ function ProfilePostsGrid({
   if (posts.length === 0) {
     return (
       <EmptyState
-        message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')}
+        message={
+          status === 'archived' ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')
+        }
       />
     )
   }
@@ -273,7 +275,7 @@ function ProfileViewPage() {
                       <ProfilePostsGrid
                         profileId={profileId}
                         page={page}
-                        archived={false}
+                        status="active"
                         isOwner={isOwner}
                       />
                     </Suspense>
@@ -283,7 +285,7 @@ function ProfileViewPage() {
                       <ProfilePostsGrid
                         profileId={profileId}
                         page={page}
-                        archived={true}
+                        status="archived"
                         isOwner={isOwner}
                       />
                     </Suspense>

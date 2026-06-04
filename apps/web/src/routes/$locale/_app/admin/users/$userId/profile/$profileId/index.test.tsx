@@ -162,9 +162,11 @@ describe('ProfileDetailPage', () => {
       return { data: baseProfile }
     })
     await renderPage()
-    fireEvent.click(screen.getByRole('button', { name: /delete/i }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /delete/i }))
+    })
     await waitFor(() => {
-      expect(screen.getByText('Delete post?')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Ban Post' })).toBeInTheDocument()
     })
   })
 })

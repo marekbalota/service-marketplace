@@ -199,11 +199,12 @@ describe('GET /profiles/:id/posts/count', () => {
       headers: { Cookie: aliceCookie },
     })
     const { data: archived } = await client.profiles({ id: aliceProfileId }).posts.get({
-      query: { archived: true, size: 1000 },
+      query: { status: 'archived', size: 1000 },
       headers: { Cookie: aliceCookie },
     })
     expect(count!.active).toBe(all!.total)
     expect(count!.archived).toBe(archived!.total)
+    expect(typeof count!.banned).toBe('number')
   })
 })
 

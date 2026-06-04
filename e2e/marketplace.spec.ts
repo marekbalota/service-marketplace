@@ -371,6 +371,51 @@ test.describe('Admin', () => {
     await expect(page).toHaveURL('/en/admin')
   })
 
+  test('bans and unbans a post on a user profile', async ({ page }) => {
+    // Navigate to Alice's profile via admin users — Alice is guaranteed to have posts from seed data
+    await page.goto('/en/admin/users')
+    await page.getByPlaceholder(/search by name or email/i).fill('alice')
+    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
+
+    // Open the first profile's post list
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
+
+    // Wait for the Active tab to show at least one post
+    await expect(page.locator('main .grid > *').first()).toBeVisible({ timeout: 10000 })
+    const firstPostTitle = (await page.locator('main .grid h3').first().textContent()) ?? ''
+
+    // Ban the first post
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
+    await page.getByPlaceholder(/describe the reason…/i).fill('E2E post ban test')
+    await page.getByRole('button', { name: /^ban post$/i }).click()
+
+    // Banned tab should now show the post with the Banned badge
+    await page.getByRole('tab', { name: /banned/i }).click()
+    await expect(page.getByText(firstPostTitle.trim())).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('main').getByText('Banned').first()).toBeVisible()
+
+    // Unban the post and verify it returns to Active
+    await page
+      .getByRole('button', { name: /unban post/i })
+      .first()
+      .click()
+    await page.getByRole('button', { name: /^confirm$/i }).click()
+    await page.getByRole('tab', { name: /active/i }).click()
+    await expect(page.getByText(firstPostTitle.trim())).toBeVisible({ timeout: 10000 })
+  })
+
   test('bans and unbans a user', async ({ page }) => {
     await page.goto('/en/admin/users')
     // Target the first user with a Ban button (exclude SuperAdmin - no Ban button for higher/equal priority roles)
@@ -394,6 +439,92 @@ test.describe('Admin', () => {
     await userCard.getByRole('button', { name: /^unban$/i }).click()
     await page.getByRole('button', { name: /^confirm$/i }).click()
     await expect(userCard.getByText('active')).toBeVisible({ timeout: 15000 })
+  })
+})
+
+test.describe('Banned post access control', () => {
+  let bannedPostPath: string
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
+    const page = await context.newPage()
+
+    await page.goto('/en/admin/users')
+    await page.getByPlaceholder(/search by name or email/i).fill('alice')
+    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
+
+    await expect(page.locator('main .grid > *').first()).toBeVisible({ timeout: 10000 })
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
+    await page.getByPlaceholder(/describe the reason…/i).fill('E2E access control test')
+    await page.getByRole('button', { name: /^ban post$/i }).click()
+
+    await page.getByRole('tab', { name: /banned/i }).click()
+    await expect(page.locator('main .grid > a').first()).toBeVisible({ timeout: 10000 })
+    bannedPostPath = (await page.locator('main .grid > a').first().getAttribute('href')) ?? ''
+
+    await context.close()
+  })
+
+  test.afterAll(async ({ browser }) => {
+    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
+    const page = await context.newPage()
+
+    await page.goto('/en/admin/users')
+    await page.getByPlaceholder(/search by name or email/i).fill('alice')
+    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
+    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
+    await page.getByRole('tab', { name: /banned/i }).click()
+    await expect(page.locator('main .grid > a').first()).toBeVisible({ timeout: 10000 })
+    await page
+      .getByRole('button', { name: /unban post/i })
+      .first()
+      .click()
+    await page.getByRole('button', { name: /^confirm$/i }).click()
+
+    await context.close()
+  })
+
+  test('unauthenticated user cannot view a banned post', async ({ page }) => {
+    await page.goto(bannedPostPath)
+    await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('owner (Alice) can view her own banned post', async ({ browser }) => {
+    const context = await browser.newContext({ storageState: 'e2e/.auth/alice.json' })
+    const page = await context.newPage()
+    await page.goto(bannedPostPath)
+    await expect(page.locator('main h1')).toBeVisible({ timeout: 10000 })
+    await context.close()
+  })
+
+  test('admin can view any banned post', async ({ browser }) => {
+    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
+    const page = await context.newPage()
+    await page.goto(bannedPostPath)
+    await expect(page.locator('main h1')).toBeVisible({ timeout: 10000 })
+    await context.close()
   })
 })
 

@@ -1,4 +1,4 @@
-import { MapPin, User, DollarSign, Trash2 } from 'lucide-react'
+import { MapPin, User, DollarSign, Trash2, ShieldOff, ShieldAlert } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useLocale } from '#/lib/useLocale'
 import { useTranslation } from 'react-i18next'
@@ -24,20 +24,24 @@ type PostCardProps = {
   post: Post
   onDelete?: () => void
   deleteDisabled?: boolean
+  onUnban?: () => void
   isFavourite?: boolean
   onFavouriteToggle?: () => void
   favouriteDisabled?: boolean
   showFavouriteButton?: boolean
+  banReason?: string | null
 }
 
 export function PostCard({
   post,
   onDelete,
   deleteDisabled,
+  onUnban,
   isFavourite,
   onFavouriteToggle,
   favouriteDisabled,
   showFavouriteButton = true,
+  banReason,
 }: PostCardProps) {
   const { t } = useTranslation()
   const locale = useLocale()
@@ -57,7 +61,7 @@ export function PostCard({
           <div className="relative pr-10">
             <h3 className="line-clamp-1">{post.postTitle}</h3>
             <div className="absolute right-0 top-0 flex items-center gap-2">
-              {onDelete ? (
+              {!banReason && onDelete ? (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -72,7 +76,21 @@ export function PostCard({
                 >
                   <Trash2 className="size-5" />
                 </Button>
-              ) : showFavouriteButton && isAuthenticated ? (
+              ) : !!banReason && onUnban ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('admin.unbanPost.title')}
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onUnban()
+                  }}
+                >
+                  <ShieldOff className="size-5" />
+                </Button>
+              ) : !banReason && showFavouriteButton && isAuthenticated ? (
                 <FavouriteButton
                   postId={post.postId}
                   initialIsFavourite={isFavourite}
@@ -82,9 +100,14 @@ export function PostCard({
               ) : null}
             </div>
           </div>
-          {/* Badge row spans full card width — capped at 2 lines */}
           <div className="mt-2 flex max-h-14 flex-wrap items-center gap-2 overflow-hidden">
             <PostTypeBadge postType={post.postType} />
+            {!!banReason && (
+              <Badge variant="destructive" className="gap-1">
+                <ShieldAlert className="size-3" />
+                {t('myPostings.banned')}
+              </Badge>
+            )}
             {post.categories.map((c) => (
               <Badge key={c.name} variant="secondary">
                 {c.name}
@@ -94,7 +117,11 @@ export function PostCard({
         </CardHeader>
         <CardContent className="flex flex-1 flex-col gap-1">
           <p className="line-clamp-4 text-muted-foreground">{post.description}</p>
-          {/* mt-auto pushes footer to bottom, filling any blank space from equal-height rows */}
+          {banReason && (
+            <p className="text-sm text-destructive">
+              <span className="font-medium">{t('myPostings.banReasonLabel')}</span> {banReason}
+            </p>
+          )}
           <div className="mt-auto flex items-center justify-between pt-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">

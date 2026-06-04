@@ -223,7 +223,10 @@
       "offer": "Ponuka",
       "request": "Dopyt"
     },
-    "deletePost": "Zmazať príspevok"
+    "deletePost": "Zmazať príspevok",
+    "postBanned": "Príspevok zakázaný",
+    "bannedReason": "Dôvod zákazu",
+    "bannedOn": "Zakázané dňa {{date}}"
   },
   "createPost": {
     "title": "Vytvoriť nový inzerát",
@@ -263,6 +266,9 @@
     "active": "Aktívne",
     "archived": "Archivované",
     "noArchived": "Žiadne archivované inzeráty.",
+    "banned": "Zakázané",
+    "noBanned": "Žiadne zakázané inzeráty.",
+    "banReasonLabel": "Dôvod zákazu:",
     "noPostings": "Zatiaľ ste nevytvorili žiadne inzeráty.",
     "createFirst": "Vytvoriť prvý inzerát",
     "reviews_one": "{{count}} recenzia",
@@ -418,6 +424,8 @@
     "signInToView": "Prihláste sa, ak chcete zobraziť inzeráty tohto používateľa.",
     "noActivePosts": "Žiadne aktívne inzeráty.",
     "noArchivedPosts": "Žiadne archivované inzeráty.",
+    "bannedTab": "Zakázané",
+    "noBannedPosts": "Žiadne zakázané inzeráty.",
     "name": "Meno",
     "namePlaceholder": "napr. Ján Novák",
     "emailLabel": "E-mail",
@@ -619,6 +627,19 @@
     "unban": {
       "title": "Odblokovať {{userName}}?",
       "description": "Tým sa obnoví plný prístup pre tohto používateľa."
+    },
+    "banPost": {
+      "title": "Zakázať inzerát",
+      "description": "Inzerát \"{{title}}\" bude zablokovaný a autor bude upozornený.",
+      "reason": "Dôvod *",
+      "reasonPlaceholder": "Opíšte dôvod zákazu…",
+      "submit": "Zakázať inzerát",
+      "failed": "Nepodarilo sa zakázať inzerát. Skúste to znova."
+    },
+    "unbanPost": {
+      "title": "Odblokovať inzerát?",
+      "description": "Tým sa inzerát obnoví do predchádzajúceho stavu.",
+      "failed": "Nepodarilo sa odblokovať inzerát. Skúste to znova."
     },
     "reports": {
       "title": "Správa hlásení",

@@ -26,7 +26,7 @@ import {
 
 const searchSchema = z.object({
   page: z.number().int().positive().optional().catch(undefined),
-  tab: z.enum(['active', 'archived']).optional().catch(undefined),
+  tab: z.enum(['active', 'archived', 'banned']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/$locale/_app/admin/users/$userId/profile/$profileId/')({
@@ -89,47 +89,61 @@ function ProfileInfoSkeleton() {
 function ProfilePostsList({
   profileId,
   userId: _userId,
-  canDeletePost,
-  archived,
+  canBanPost,
+  status,
   page,
 }: {
   profileId: string
   userId: string
-  canDeletePost: boolean
-  archived: boolean
+  canBanPost: boolean
+  status: 'active' | 'archived' | 'banned'
   page: number
 }) {
   const navigate = Route.useNavigate()
   const queryClient = useQueryClient()
-  const { data: postsData } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, archived))
+  const { data: postsData } = useSuspenseQuery(profilePostsQueryOptions(profileId, page, status))
 
   const posts = postsData?.items ?? []
   const totalPages = postsData?.totalPages ?? 1
 
-  const [deleteTarget, setDeleteTarget] = useState<Post | null>(null)
+  const { t } = useTranslation()
+  const [banTarget, setBanTarget] = useState<Post | null>(null)
+  const [unbanTarget, setUnbanTarget] = useState<Post | null>(null)
 
   const setPage = (p: number) =>
     navigate({ search: (prev) => ({ ...prev, page: p === 1 ? undefined : p }), replace: true })
 
-  const deleteMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      const { error } = await api.admin.posts({ id: postId }).delete({})
-      if (error) throw wrapEdenError(error, 'Failed to delete post.')
+  const banMutation = useMutation({
+    mutationFn: async ({ postId, banReason }: { postId: string; banReason: string }) => {
+      const { error } = await api.admin.posts({ id: postId }).delete({ banReason })
+      if (error) throw wrapEdenError(error, t('admin.banPost.failed'))
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
-      setDeleteTarget(null)
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      setBanTarget(null)
     },
   })
 
-  const { t } = useTranslation()
+  const unbanMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await api.admin.posts({ id: postId }).unban.patch()
+      if (error) throw wrapEdenError(error, t('admin.unbanPost.failed'))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles', profileId, 'posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      setUnbanTarget(null)
+    },
+  })
 
   if (posts.length === 0) {
-    return (
-      <EmptyState
-        message={archived ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')}
-      />
-    )
+    const messages: Record<typeof status, string> = {
+      banned: t('profiles.noBannedPosts'),
+      archived: t('profiles.noArchivedPosts'),
+      active: t('profiles.noActivePosts'),
+    }
+    return <EmptyState message={messages[status]} />
   }
 
   return (
@@ -140,7 +154,9 @@ function ProfilePostsList({
             key={post.postId}
             post={post}
             showFavouriteButton={false}
-            onDelete={canDeletePost ? () => setDeleteTarget(post) : undefined}
+            banReason={status === 'banned' ? post.banReason : undefined}
+            onDelete={canBanPost && status !== 'banned' ? () => setBanTarget(post) : undefined}
+            onUnban={canBanPost && status === 'banned' ? () => setUnbanTarget(post) : undefined}
           />
         ))}
       </div>
@@ -155,15 +171,30 @@ function ProfilePostsList({
       )}
 
       <ConfirmDialog
-        open={!!deleteTarget}
-        title={t('myPostings.deleteTitle')}
-        description={t('myPostings.deleteMessage', { title: deleteTarget?.postTitle ?? '' })}
-        confirmLabel={t('myPostings.delete')}
+        open={!!banTarget}
+        title={t('admin.banPost.title')}
+        description={t('admin.banPost.description', { title: banTarget?.postTitle ?? '' })}
+        confirmLabel={t('admin.banPost.submit')}
         destructive
-        reasonLabel={t('admin.reports.reason')}
+        isPending={banMutation.isPending}
+        reasonLabel={t('admin.banPost.reason')}
         reasonRequired
-        onConfirm={() => deleteMutation.mutateAsync(deleteTarget!.postId)}
-        onClose={() => setDeleteTarget(null)}
+        onConfirm={async (reason) => {
+          if (banTarget && reason)
+            await banMutation.mutateAsync({ postId: banTarget.postId, banReason: reason })
+        }}
+        onClose={() => setBanTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!unbanTarget}
+        title={t('admin.unbanPost.title')}
+        description={t('admin.unbanPost.description')}
+        isPending={unbanMutation.isPending}
+        onConfirm={async () => {
+          if (unbanTarget) await unbanMutation.mutateAsync(unbanTarget.postId)
+        }}
+        onClose={() => setUnbanTarget(null)}
       />
     </>
   )
@@ -178,17 +209,18 @@ function ProfileDetailPage() {
   const activeTab = tab ?? 'active'
   const { data: user } = useCurrentUser()
   const permissions = user?.role?.permissions ?? []
-  const canDeletePost = hasPermissions(permissions, [Permissions.AdminPostsDeleteAny])
+  const canBanPost = hasPermissions(permissions, [Permissions.AdminPostsDeleteAny])
 
   const { data: postCounts } = useQuery(profilePostsCountQueryOptions(profileId))
 
   function handleTabChange(value: string) {
+    const tabMap: Record<string, 'archived' | 'banned' | undefined> = {
+      active: undefined,
+      archived: 'archived',
+      banned: 'banned',
+    }
     navigate({
-      search: (prev) => ({
-        ...prev,
-        tab: value === 'archived' ? 'archived' : undefined,
-        page: undefined,
-      }),
+      search: (prev) => ({ ...prev, tab: tabMap[value], page: undefined }),
       replace: true,
     })
   }
@@ -214,14 +246,18 @@ function ProfileDetailPage() {
             {t('profiles.archivedTab')}
             {postCounts ? ` (${postCounts.archived})` : ''}
           </TabsTrigger>
+          <TabsTrigger value="banned">
+            {t('profiles.bannedTab')}
+            {postCounts ? ` (${postCounts.banned})` : ''}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="active">
           <Suspense fallback={<PostsGridSkeleton />}>
             <ProfilePostsList
               profileId={profileId}
               userId={userId}
-              canDeletePost={canDeletePost}
-              archived={false}
+              canBanPost={canBanPost}
+              status="active"
               page={page}
             />
           </Suspense>
@@ -231,8 +267,19 @@ function ProfileDetailPage() {
             <ProfilePostsList
               profileId={profileId}
               userId={userId}
-              canDeletePost={canDeletePost}
-              archived={true}
+              canBanPost={canBanPost}
+              status="archived"
+              page={page}
+            />
+          </Suspense>
+        </TabsContent>
+        <TabsContent value="banned">
+          <Suspense fallback={<PostsGridSkeleton />}>
+            <ProfilePostsList
+              profileId={profileId}
+              userId={userId}
+              canBanPost={canBanPost}
+              status="banned"
               page={page}
             />
           </Suspense>

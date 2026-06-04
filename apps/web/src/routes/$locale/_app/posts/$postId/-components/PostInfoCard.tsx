@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { DollarSign, Flag, Pencil } from 'lucide-react'
+import { DollarSign, Flag, Pencil, ShieldAlert } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { api } from '#/api'
@@ -39,6 +39,8 @@ export function PostInfoCard({ postId }: { postId: string }) {
 
   if (!post) return null
 
+  const isBanned = !!post.bannedAt
+
   const RATE_LABELS: Record<string, string> = {
     HOURLY: t('posts.rateType.perHour'),
     DAILY: t('posts.rateType.perDay'),
@@ -55,8 +57,8 @@ export function PostInfoCard({ postId }: { postId: string }) {
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{post.postTitle}</h1>
             <div className="flex items-center gap-2">
-              {isAuthenticated && !isOwner && <FavouriteButton postId={postId} />}
-              {isAuthenticated && !isOwner && !!activeProfile && !hasReported && (
+              {!isBanned && isAuthenticated && !isOwner && <FavouriteButton postId={postId} />}
+              {!isBanned && isAuthenticated && !isOwner && !!activeProfile && !hasReported && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -67,7 +69,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
                   <Flag className="size-4" />
                 </Button>
               )}
-              {isOwner && (
+              {!isBanned && isOwner && (
                 <Link
                   to="/$locale/edit-post/$postId"
                   params={{ locale, postId }}
@@ -83,15 +85,19 @@ export function PostInfoCard({ postId }: { postId: string }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PostTypeBadge postType={post.postType} />
-            <div className="flex flex-wrap gap-2">
-              {post.categories.map((category) => (
-                <Badge key={category.categoryId} variant="secondary">
-                  {category.name}
-                </Badge>
-              ))}
-            </div>
+            {isBanned && (
+              <Badge variant="destructive" className="gap-1">
+                <ShieldAlert className="size-3" />
+                {t('myPostings.banned')}
+              </Badge>
+            )}
+            {post.categories.map((category) => (
+              <Badge key={category.categoryId} variant="secondary">
+                {category.name}
+              </Badge>
+            ))}
           </div>
 
           {price !== null && (
@@ -107,6 +113,21 @@ export function PostInfoCard({ postId }: { postId: string }) {
         <CardContent>
           <h2 className="mb-2 text-lg font-medium">{t('posts.detail.description')}</h2>
           <p className="text-muted-foreground">{post.description}</p>
+
+          {isBanned && (
+            <div className="rounded-md border border-banned-border bg-banned-bg p-3 mt-5 text-sm">
+              <div className="mb-1 flex items-center gap-2 font-semibold text-banned-fg">
+                <ShieldAlert className="size-4 shrink-0" />
+                {t('posts.postBanned')}
+              </div>
+              {post.banReason && <p className="text-banned-fg">{post.banReason}</p>}
+              {post.bannedAt && (
+                <p className="mt-0.5 text-banned-fg">
+                  {t('posts.bannedOn', { date: new Date(post.bannedAt).toLocaleDateString() })}
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

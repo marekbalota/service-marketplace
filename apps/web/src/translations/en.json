@@ -223,7 +223,10 @@
       "offer": "Offering",
       "request": "Requesting"
     },
-    "deletePost": "Delete post"
+    "deletePost": "Delete post",
+    "postBanned": "Post Banned",
+    "bannedReason": "Ban reason",
+    "bannedOn": "Banned on {{date}}"
   },
   "createPost": {
     "title": "Create New Posting",
@@ -263,6 +266,9 @@
     "active": "Active",
     "archived": "Archived",
     "noArchived": "No archived postings.",
+    "banned": "Banned",
+    "noBanned": "No banned postings.",
+    "banReasonLabel": "Ban reason:",
     "noPostings": "You haven't created any postings yet.",
     "createFirst": "Create your first posting",
     "reviews_one": "{{count}} review",
@@ -422,6 +428,8 @@
     "signInToView": "Sign in to view this user's posts.",
     "noActivePosts": "No active posts.",
     "noArchivedPosts": "No archived posts.",
+    "bannedTab": "Banned",
+    "noBannedPosts": "No banned posts.",
     "name": "Name",
     "namePlaceholder": "e.g., John Smith",
     "emailLabel": "Email",
@@ -623,6 +631,19 @@
     "unban": {
       "title": "Unban {{userName}}?",
       "description": "This will restore full access for this user."
+    },
+    "banPost": {
+      "title": "Ban Post",
+      "description": "This will ban \"{{title}}\" and notify the author.",
+      "reason": "Reason *",
+      "reasonPlaceholder": "Describe the reason for this ban…",
+      "submit": "Ban Post",
+      "failed": "Failed to ban post. Please try again."
+    },
+    "unbanPost": {
+      "title": "Unban post?",
+      "description": "This will restore the post to its previous state.",
+      "failed": "Failed to unban post. Please try again."
     },
     "reports": {
       "title": "Manage Reports",

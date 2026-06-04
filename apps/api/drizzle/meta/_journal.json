@@ -148,6 +148,13 @@
       "when": 1780066390508,
       "tag": "0020_wonderful_ink",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1780489024059,
+      "tag": "0021_parched_hulk",
+      "breakpoints": true
     }
   ]
 }

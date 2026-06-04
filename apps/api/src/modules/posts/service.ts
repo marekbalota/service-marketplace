@@ -29,6 +29,8 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
 import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
+import { RBACService } from '../../lib/rbac/rbac-helper'
+import { Permissions } from '@marketplace/shared'
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -47,6 +49,8 @@ const postSelect = (tx: DbOrTx, locale: string = 'en') => {
       createdAt: posts.createdAt,
       authorId: posts.authorId,
       authorName: userProfiles.name,
+      bannedAt: posts.bannedAt,
+      banReason: posts.banReason,
       categories: sql<{ categoryId: string; name: string }[]>`
       coalesce(
         json_agg(
@@ -129,6 +133,7 @@ export abstract class PostsService {
 
       const conditions = and(
         isNull(posts.deletedAt),
+        isNull(posts.bannedAt),
         search
           ? or(
               ilike(posts.postTitle, `%${search}%`),
@@ -194,17 +199,27 @@ export abstract class PostsService {
   }
 
   static async countByProfile(profileId: string) {
-    const [[activeRow], [archivedRow]] = await Promise.all([
+    const [[activeRow], [archivedRow], [bannedRow]] = await Promise.all([
       db
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt))),
+        .where(and(eq(posts.authorId, profileId), isNull(posts.deletedAt), isNull(posts.bannedAt))),
       db
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt))),
+        .where(
+          and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt), isNull(posts.bannedAt)),
+        ),
+      db
+        .select({ total: count() })
+        .from(posts)
+        .where(and(eq(posts.authorId, profileId), isNotNull(posts.bannedAt))),
     ])
-    return { active: activeRow?.total ?? 0, archived: archivedRow?.total ?? 0 }
+    return {
+      active: activeRow?.total ?? 0,
+      archived: archivedRow?.total ?? 0,
+      banned: bannedRow?.total ?? 0,
+    }
   }
 
   static async findByProfile(
@@ -212,20 +227,25 @@ export abstract class PostsService {
     query: PostsModel['findByProfileQuery'],
     locale = 'en',
   ) {
-    const { offset = 0, size, archived = false } = query
+    const { offset = 0, size, status = 'active' } = query
 
-    const deletedCondition = archived ? isNotNull(posts.deletedAt) : isNull(posts.deletedAt)
+    const statusConditions: Record<'active' | 'archived' | 'banned', ReturnType<typeof and>> = {
+      banned: isNotNull(posts.bannedAt),
+      archived: and(isNull(posts.bannedAt), isNotNull(posts.deletedAt)),
+      active: and(isNull(posts.bannedAt), isNull(posts.deletedAt)),
+    }
+    const statusCondition = statusConditions[status]
 
     return db.transaction(async (tx) => {
       const [countRow] = await tx
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), deletedCondition))
+        .where(and(eq(posts.authorId, profileId), statusCondition))
 
       const total = countRow?.total ?? 0
 
       const q = postSelect(tx, locale)
-        .where(and(eq(posts.authorId, profileId), deletedCondition))
+        .where(and(eq(posts.authorId, profileId), statusCondition))
         .orderBy(desc(posts.createdAt))
         .offset(offset)
 
@@ -244,7 +264,7 @@ export abstract class PostsService {
     })
   }
 
-  static async findById(id: string, locale = 'en') {
+  static async findById(id: string, locale = 'en', accountId?: string) {
     const requested = alias(categoryTranslations, 'cat_requested')
     const fallback = alias(categoryTranslations, 'cat_fallback')
 
@@ -259,6 +279,8 @@ export abstract class PostsService {
         createdAt: posts.createdAt,
         authorId: posts.authorId,
         authorName: userProfiles.name,
+        bannedAt: posts.bannedAt,
+        banReason: posts.banReason,
         locationId: locations.locationId,
         locationCountry: locations.country,
         locationRegion: locations.region,
@@ -334,6 +356,20 @@ export abstract class PostsService {
 
     if (!row) {
       throw new NotFoundError(ErrorMessages.postNotFound)
+    }
+
+    if (row.bannedAt) {
+      if (!accountId) throw new NotFoundError(ErrorMessages.postNotFound)
+
+      const [profileIds, userPermissions] = await Promise.all([
+        ProfilesService.getProfileIdsByAccount(accountId),
+        RBACService.getUserPermissions(accountId),
+      ])
+
+      const isOwner = profileIds.includes(row.authorId)
+      const isAdmin = userPermissions.includes(Permissions.AdminPostsDeleteAny)
+
+      if (!isOwner && !isAdmin) throw new NotFoundError(ErrorMessages.postNotFound)
     }
 
     const location = row.locationId
@@ -479,7 +515,7 @@ export abstract class PostsService {
     body: PostsModel['updateBody'],
   ) {
     const post = await db.query.posts.findFirst({
-      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt), isNull(posts.bannedAt)),
       columns: { authorId: true },
     })
 
@@ -499,7 +535,7 @@ export abstract class PostsService {
 
   static async deleteWithPermissionCheck(accountId: string, id: string) {
     const post = await db.query.posts.findFirst({
-      where: and(eq(posts.postId, id), isNull(posts.deletedAt)),
+      where: and(eq(posts.postId, id), isNull(posts.deletedAt), isNull(posts.bannedAt)),
       columns: { authorId: true },
     })
 

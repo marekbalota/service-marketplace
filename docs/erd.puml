@@ -135,6 +135,8 @@ entity Post {
     rate_type : enum('HOURLY', 'DAILY', 'FIXED')
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
+    banned_at : timestamp
+    ban_reason : text
 }
 
 entity Message {

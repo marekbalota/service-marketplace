@@ -8,7 +8,7 @@ describe('profilePostsQueryOptions', () => {
       'profiles',
       'profile-abc',
       'posts',
-      { page: 1, archived: false, pageSize: 12 },
+      { page: 1, status: 'active', pageSize: 12 },
     ])
   })
 
@@ -18,17 +18,27 @@ describe('profilePostsQueryOptions', () => {
       'profiles',
       'profile-abc',
       'posts',
-      { page: 2, archived: false, pageSize: 12 },
+      { page: 2, status: 'active', pageSize: 12 },
     ])
   })
 
-  it('uses custom pageSize in query key', () => {
-    const opts = profilePostsQueryOptions('profile-abc', 1, false, 6)
+  it('uses correct query key for archived status', () => {
+    const opts = profilePostsQueryOptions('profile-abc', 1, 'archived', 6)
     expect(opts.queryKey).toEqual([
       'profiles',
       'profile-abc',
       'posts',
-      { page: 1, archived: false, pageSize: 6 },
+      { page: 1, status: 'archived', pageSize: 6 },
+    ])
+  })
+
+  it('uses correct query key for banned status', () => {
+    const opts = profilePostsQueryOptions('profile-abc', 1, 'banned')
+    expect(opts.queryKey).toEqual([
+      'profiles',
+      'profile-abc',
+      'posts',
+      { page: 1, status: 'banned', pageSize: 12 },
     ])
   })
 })
