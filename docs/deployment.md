@@ -6,13 +6,13 @@ and pushed to the CERIT Harbor registry (`cerit.io/v_gibas`).
 
 ## Topology
 
-| Component | Kind | Image | Public host |
-| --------- | ---- | ----- | ----------- |
-| Web (SPA) | Deployment + nginx | `marketplace-web` | `marketplace.dyn.cloud.e-infra.cz` |
-| API (Bun/Elysia) | Deployment | `marketplace-api` | `marketplace-api.dyn.cloud.e-infra.cz` |
-| PostgreSQL 17 | CloudNativePG `Cluster` | `ghcr.io/cloudnative-pg/postgresql:17` | — (in-cluster) |
-| Redis | StatefulSet | `redis:7-alpine` | — (in-cluster) |
-| MinIO | StatefulSet | `minio/minio` | `marketplace-storage.dyn.cloud.e-infra.cz` |
+| Component        | Kind                    | Image                                  | Public host                                |
+| ---------------- | ----------------------- | -------------------------------------- | ------------------------------------------ |
+| Web (SPA)        | Deployment + nginx      | `marketplace-web`                      | `marketplace.dyn.cloud.e-infra.cz`         |
+| API (Bun/Elysia) | Deployment              | `marketplace-api`                      | `marketplace-api.dyn.cloud.e-infra.cz`     |
+| PostgreSQL 17    | CloudNativePG `Cluster` | `ghcr.io/cloudnative-pg/postgresql:17` | — (in-cluster)                             |
+| Redis            | StatefulSet             | `redis:7-alpine`                       | — (in-cluster)                             |
+| MinIO            | StatefulSet             | `minio/minio`                          | `marketplace-storage.dyn.cloud.e-infra.cz` |
 
 `DATABASE_URL` is wired automatically from the CloudNativePG-generated secret
 `marketplace-db-app` (`uri` key) — nothing to set by hand.
@@ -30,11 +30,11 @@ via `needs` (DAG) so **lint, tests and prettier never block a deploy**.
 
 ### Required CI/CD variables (Settings → CI/CD → Variables)
 
-| Variable | Purpose |
-| -------- | ------- |
-| `HUB_REGISTRY_USER` | Harbor robot/user name |
-| `HARBOR_PASSWORD` | Harbor password / robot token |
-| `KUBECONFIG` | File-type variable: kubeconfig for the namespace |
+| Variable                  | Purpose                                              |
+| ------------------------- | ---------------------------------------------------- |
+| `HUB_REGISTRY_USER`       | Harbor robot/user name                               |
+| `HARBOR_PASSWORD`         | Harbor password / robot token                        |
+| `KUBECONFIG`              | File-type variable: kubeconfig for the namespace     |
 | `VITE_TURNSTILE_SITE_KEY` | Public Turnstile site key (baked into the web build) |
 
 ## One-time namespace setup
