@@ -101,7 +101,7 @@ function PostsGrid({
           <PostCard
             key={post.postId}
             post={post}
-            isBanned={status === 'banned'}
+            banReason={status === 'banned' ? post.banReason : undefined}
             onDelete={status !== 'banned' ? () => setDeleteTarget(post) : undefined}
             deleteDisabled={deleteMutation.isPending}
           />

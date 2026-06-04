@@ -29,7 +29,7 @@ type PostCardProps = {
   onFavouriteToggle?: () => void
   favouriteDisabled?: boolean
   showFavouriteButton?: boolean
-  isBanned?: boolean
+  banReason?: string | null
 }
 
 export function PostCard({
@@ -41,7 +41,7 @@ export function PostCard({
   onFavouriteToggle,
   favouriteDisabled,
   showFavouriteButton = true,
-  isBanned = false,
+  banReason,
 }: PostCardProps) {
   const { t } = useTranslation()
   const locale = useLocale()
@@ -63,7 +63,7 @@ export function PostCard({
               {post.postTitle}
             </h3>
             <div className="absolute right-0 top-0 flex items-center gap-2">
-              {!isBanned && onDelete ? (
+              {!banReason && onDelete ? (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -78,7 +78,7 @@ export function PostCard({
                 >
                   <Trash2 className="size-5" />
                 </Button>
-              ) : isBanned && onUnban ? (
+              ) : !!banReason && onUnban ? (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -92,7 +92,7 @@ export function PostCard({
                 >
                   <ShieldOff className="size-5" />
                 </Button>
-              ) : !isBanned && showFavouriteButton && isAuthenticated ? (
+              ) : !banReason && showFavouriteButton && isAuthenticated ? (
                 <FavouriteButton
                   postId={post.postId}
                   initialIsFavourite={isFavourite}
@@ -104,7 +104,7 @@ export function PostCard({
           </div>
           <div className="mt-2 flex max-h-14 flex-wrap items-center gap-2 overflow-hidden">
             <PostTypeBadge postType={post.postType} />
-            {isBanned && (
+            {!!banReason && (
               <Badge variant="destructive" className="gap-1">
                 <ShieldAlert className="size-3" />
                 {t('myPostings.banned')}
@@ -119,6 +119,12 @@ export function PostCard({
         </CardHeader>
         <CardContent className="flex flex-1 flex-col gap-1">
           <p className="line-clamp-4 text-muted-foreground">{post.description}</p>
+          {banReason && (
+            <p className="text-sm text-destructive">
+              <span className="font-medium">{t('myPostings.banReasonLabel')}</span>{' '}
+              {banReason}
+            </p>
+          )}
           <div className="mt-auto flex items-center justify-between pt-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">

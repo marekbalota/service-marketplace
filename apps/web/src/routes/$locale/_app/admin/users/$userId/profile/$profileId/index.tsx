@@ -154,7 +154,7 @@ function ProfilePostsList({
             key={post.postId}
             post={post}
             showFavouriteButton={false}
-            isBanned={status === 'banned'}
+            banReason={status === 'banned' ? post.banReason : undefined}
             onDelete={canBanPost && status !== 'banned' ? () => setBanTarget(post) : undefined}
             onUnban={canBanPost && status === 'banned' ? () => setUnbanTarget(post) : undefined}
           />
