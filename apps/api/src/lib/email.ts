@@ -186,3 +186,41 @@ export async function sendSecurityAlertEmail(params: {
   )
   await sendEmail(params.email, params.subject, html)
 }
+
+// ---------------------------------------------------------------------------
+// Moderation emails
+// ---------------------------------------------------------------------------
+
+export async function sendPostBannedEmail(params: {
+  recipientEmail: string
+  postTitle: string
+  banReason: string
+}): Promise<void> {
+  const html = baseTemplate(
+    `Your post "${escapeHtml(params.postTitle)}" has been banned`,
+    `<p>Your post <em>${escapeHtml(params.postTitle)}</em> has been removed from the public marketplace.</p>
+     <p><strong>Reason:</strong> ${escapeHtml(params.banReason)}</p>
+     <p style="font-size:13px;color:#6b7280;">You can still view your post in the Banned tab of My Postings. If you believe this was a mistake, please contact support.</p>`,
+  )
+  await sendEmail(
+    params.recipientEmail,
+    `Your post "${params.postTitle}" has been banned`,
+    html,
+  )
+}
+
+export async function sendPostUnbannedEmail(params: {
+  recipientEmail: string
+  postTitle: string
+}): Promise<void> {
+  const html = baseTemplate(
+    `Your post "${escapeHtml(params.postTitle)}" has been reinstated`,
+    `<p>Your post <em>${escapeHtml(params.postTitle)}</em> has been restored and is visible again on the marketplace.</p>
+     <p style="font-size:13px;color:#6b7280;">If it was archived before the ban, it will appear in your Archived tab.</p>`,
+  )
+  await sendEmail(
+    params.recipientEmail,
+    `Your post "${params.postTitle}" has been reinstated`,
+    html,
+  )
+}
