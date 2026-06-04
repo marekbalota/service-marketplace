@@ -59,9 +59,7 @@ export function PostCard({
       <Card className="flex h-full cursor-pointer flex-col gap-3 transition-shadow hover:shadow-lg">
         <CardHeader className="pb-3">
           <div className="relative pr-10">
-            <h3 className="line-clamp-1">
-              {post.postTitle}
-            </h3>
+            <h3 className="line-clamp-1">{post.postTitle}</h3>
             <div className="absolute right-0 top-0 flex items-center gap-2">
               {!banReason && onDelete ? (
                 <Button
@@ -121,8 +119,7 @@ export function PostCard({
           <p className="line-clamp-4 text-muted-foreground">{post.description}</p>
           {banReason && (
             <p className="text-sm text-destructive">
-              <span className="font-medium">{t('myPostings.banReasonLabel')}</span>{' '}
-              {banReason}
+              <span className="font-medium">{t('myPostings.banReasonLabel')}</span> {banReason}
             </p>
           )}
           <div className="mt-auto flex items-center justify-between pt-3 text-sm text-muted-foreground">

@@ -202,11 +202,7 @@ export async function sendPostBannedEmail(params: {
      <p><strong>Reason:</strong> ${escapeHtml(params.banReason)}</p>
      <p style="font-size:13px;color:#6b7280;">You can still view your post in the Banned tab of My Postings. If you believe this was a mistake, please contact support.</p>`,
   )
-  await sendEmail(
-    params.recipientEmail,
-    `Your post "${params.postTitle}" has been banned`,
-    html,
-  )
+  await sendEmail(params.recipientEmail, `Your post "${params.postTitle}" has been banned`, html)
 }
 
 export async function sendPostUnbannedEmail(params: {

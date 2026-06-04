@@ -111,7 +111,9 @@ function ProfilePostsGrid({
   if (posts.length === 0) {
     return (
       <EmptyState
-        message={status === 'archived' ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')}
+        message={
+          status === 'archived' ? t('profiles.noArchivedPosts') : t('profiles.noActivePosts')
+        }
       />
     )
   }

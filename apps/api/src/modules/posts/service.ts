@@ -207,7 +207,9 @@ export abstract class PostsService {
       db
         .select({ total: count() })
         .from(posts)
-        .where(and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt), isNull(posts.bannedAt))),
+        .where(
+          and(eq(posts.authorId, profileId), isNotNull(posts.deletedAt), isNull(posts.bannedAt)),
+        ),
       db
         .select({ total: count() })
         .from(posts)

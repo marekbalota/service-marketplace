@@ -113,7 +113,7 @@ export function PostInfoCard({ postId }: { postId: string }) {
         <CardContent>
           <h2 className="mb-2 text-lg font-medium">{t('posts.detail.description')}</h2>
           <p className="text-muted-foreground">{post.description}</p>
-          
+
           {isBanned && (
             <div className="rounded-md border border-banned-border bg-banned-bg p-3 mt-5 text-sm">
               <div className="mb-1 flex items-center gap-2 font-semibold text-banned-fg">

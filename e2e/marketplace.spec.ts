@@ -376,11 +376,17 @@ test.describe('Admin', () => {
     await page.goto('/en/admin/users')
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
     await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
-    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
 
     // Open the first profile's post list
-    await page.getByRole('link', { name: /view posts/i }).first().click()
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
 
     // Wait for the Active tab to show at least one post
@@ -388,7 +394,10 @@ test.describe('Admin', () => {
     const firstPostTitle = (await page.locator('main .grid h3').first().textContent()) ?? ''
 
     // Ban the first post
-    await page.getByRole('button', { name: /delete/i }).first().click()
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
     await page.getByPlaceholder(/describe the reason…/i).fill('E2E post ban test')
     await page.getByRole('button', { name: /^ban post$/i }).click()
 
@@ -398,7 +407,10 @@ test.describe('Admin', () => {
     await expect(page.locator('main').getByText('Banned').first()).toBeVisible()
 
     // Unban the post and verify it returns to Active
-    await page.getByRole('button', { name: /unban post/i }).first().click()
+    await page
+      .getByRole('button', { name: /unban post/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /^confirm$/i }).click()
     await page.getByRole('tab', { name: /active/i }).click()
     await expect(page.getByText(firstPostTitle.trim())).toBeVisible({ timeout: 10000 })
@@ -440,13 +452,22 @@ test.describe('Banned post access control', () => {
     await page.goto('/en/admin/users')
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
     await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
-    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
-    await page.getByRole('link', { name: /view posts/i }).first().click()
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
 
     await expect(page.locator('main .grid > *').first()).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: /delete/i }).first().click()
+    await page
+      .getByRole('button', { name: /delete/i })
+      .first()
+      .click()
     await page.getByPlaceholder(/describe the reason…/i).fill('E2E access control test')
     await page.getByRole('button', { name: /^ban post$/i }).click()
 
@@ -464,13 +485,22 @@ test.describe('Banned post access control', () => {
     await page.goto('/en/admin/users')
     await page.getByPlaceholder(/search by name or email/i).fill('alice')
     await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
-    await page.getByRole('link', { name: /^view$/i }).first().click()
+    await page
+      .getByRole('link', { name: /^view$/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
-    await page.getByRole('link', { name: /view posts/i }).first().click()
+    await page
+      .getByRole('link', { name: /view posts/i })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
     await page.getByRole('tab', { name: /banned/i }).click()
     await expect(page.locator('main .grid > a').first()).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: /unban post/i }).first().click()
+    await page
+      .getByRole('button', { name: /unban post/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: /^confirm$/i }).click()
 
     await context.close()
