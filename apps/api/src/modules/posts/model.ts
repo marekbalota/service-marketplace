@@ -74,6 +74,34 @@ const paginatedResponse = t.Object({
   totalPages: t.Number(),
 })
 
+const profilePostWithLocation = t.Object({
+  postId: t.String(),
+  postTitle: t.String(),
+  description: t.String(),
+  postType,
+  price: t.Nullable(t.String()),
+  rateType: t.Nullable(rateType),
+  createdAt: t.Date(),
+  authorId: t.String(),
+  authorName: t.String(),
+  categories: t.Array(categoryItem),
+  location: t.Nullable(
+    t.Object({
+      locationId: t.String(),
+      city: t.Nullable(t.String()),
+      country: t.Nullable(t.String()),
+    }),
+  ),
+  bannedAt: t.Nullable(t.Date()),
+  banReason: t.Nullable(t.String()),
+})
+
+const profilePaginatedResponse = t.Object({
+  items: t.Array(profilePostWithLocation),
+  total: t.Number(),
+  totalPages: t.Number(),
+})
+
 export const PostsModel = {
   findAllQuery: t.Object({
     search: t.Optional(t.String()),
@@ -101,6 +129,8 @@ export const PostsModel = {
     createdAt: t.Date(),
     authorId: t.String(),
     authorName: t.String(),
+    bannedAt: t.Nullable(t.Date()),
+    banReason: t.Nullable(t.String()),
     categories: t.Array(categoryItem),
     location: t.Nullable(fullLocation),
     reviews: t.Array(reviewItem),
@@ -150,12 +180,13 @@ export const PostsModel = {
   findByProfileQuery: t.Object({
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
-    archived: t.Optional(t.BooleanString()),
+    status: t.Optional(t.Union([t.Literal('active'), t.Literal('archived'), t.Literal('banned')])),
   }),
-  findByProfileResponse: paginatedResponse,
+  findByProfileResponse: profilePaginatedResponse,
   profilePostsCountResponse: t.Object({
     active: t.Number(),
     archived: t.Number(),
+    banned: t.Number(),
   }),
 } as const
 

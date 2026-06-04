@@ -11,7 +11,10 @@ import {
   unauthorizedResponse,
   conflictResponse,
   AuthErrorMessages,
+  ErrorMessages,
 } from '../../lib/errors'
+import { RBACService } from '../../lib/rbac/rbac-helper'
+import { ProfilesService } from '../profiles/service'
 import { ReportsModel } from '../reports/model'
 import { ReportsService } from '../reports/service'
 
@@ -43,8 +46,26 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
   )
   .get(
     '/:id',
-    async ({ params, headers }) =>
-      await PostsService.findById(params.id, resolveLocale(headers['accept-language'])),
+    async ({ params, headers, status }) => {
+      const post = await PostsService.findById(params.id, resolveLocale(headers['accept-language']))
+
+      if (post.bannedAt) {
+        const session = await auth.api.getSession({ headers })
+        if (!session) return status(404, { message: ErrorMessages.postNotFound })
+
+        const [profileIds, userPermissions] = await Promise.all([
+          ProfilesService.getProfileIdsByAccount(session.user.id),
+          RBACService.getUserPermissions(session.user.id),
+        ])
+
+        const isOwner = profileIds.includes(post.authorId)
+        const isAdmin = userPermissions.includes(Permissions.AdminPostsDeleteAny)
+
+        if (!isOwner && !isAdmin) return status(404, { message: ErrorMessages.postNotFound })
+      }
+
+      return post
+    },
     {
       params: PostsModel.findByIdParams,
       response: {
