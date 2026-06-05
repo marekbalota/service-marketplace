@@ -25,6 +25,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   return {
     ...actual,
     useSuspenseQuery: mockUseSuspenseQuery,
+    useQuery: vi.fn(() => ({ data: [], isFetching: false })),
     useMutation: vi.fn(() => ({
       mutate: vi.fn(),
       isPending: false,
@@ -34,6 +35,25 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
   }
 })
+
+vi.mock('#/lib/queries/profiles', () => ({
+  profileLocationsQueryOptions: vi.fn(() => ({
+    queryKey: ['locations', 'profile', 'profile-author'],
+    queryFn: async () => [],
+    enabled: true,
+  })),
+}))
+
+vi.mock('#/lib/queries/locations', () => ({
+  locationAutocompleteQueryOptions: vi.fn(() => ({
+    queryKey: ['locations-autocomplete'],
+    queryFn: async () => [],
+    enabled: false,
+    staleTime: 0,
+  })),
+}))
+
+vi.mock('#/lib/useLocale', () => ({ useLocale: () => 'en' }))
 
 vi.mock('#/api', () => ({
   api: {

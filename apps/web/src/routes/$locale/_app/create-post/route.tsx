@@ -32,11 +32,7 @@ const schema = z.object({
   price: z.string().optional(),
   rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
   locationId: z.string().optional(),
-  country: z.string().optional(),
-  region: z.string().optional(),
-  city: z.string().optional(),
-  street: z.string().optional(),
-  houseNumber: z.string().optional(),
+  locationExternalId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -152,7 +148,6 @@ function CreatePostPage() {
   const locale = useLocale()
   const queryClient = useQueryClient()
   const { activeProfile } = useActiveProfile()
-  const [isManualLocation, setIsManualLocation] = useState(false)
 
   const { data: categories = [] } = useSuspenseQuery(categoriesQueryOptions(locale))
 
@@ -167,11 +162,7 @@ function CreatePostPage() {
       price: '',
       rateType: undefined,
       locationId: '',
-      country: '',
-      region: '',
-      city: '',
-      street: '',
-      houseNumber: '',
+      locationExternalId: '',
     },
   })
 
@@ -188,9 +179,7 @@ function CreatePostPage() {
     mutationFn: async (values: FormValues) => {
       if (!activeProfile) throw new Error('No active profile')
 
-      const hasManualLocation =
-        isManualLocation &&
-        (values.country || values.region || values.city || values.street || values.houseNumber)
+      const hasNewLocation = !!values.locationExternalId
 
       const body = {
         authorId: activeProfile.userProfileId,
@@ -200,16 +189,8 @@ function CreatePostPage() {
         categoryIds: values.categoryIds.length ? values.categoryIds : undefined,
         price: values.price || undefined,
         rateType: values.rateType,
-        ...(hasManualLocation
-          ? {
-              location: {
-                country: values.country || undefined,
-                region: values.region || undefined,
-                city: values.city || undefined,
-                street: values.street || undefined,
-                houseNumber: values.houseNumber || undefined,
-              },
-            }
+        ...(hasNewLocation
+          ? { location: { externalId: values.locationExternalId! } }
           : { locationId: values.locationId || undefined }),
       }
       const { data, error } = await api.posts.post(body)
@@ -230,17 +211,6 @@ function CreatePostPage() {
   })
 
   const onSubmit: SubmitHandler<FormValues> = (values) => mutation.mutate(values)
-
-  const handleToggleLocation = () => {
-    setIsManualLocation((prev) => !prev)
-    form.setValue('locationId', '')
-    form.setValue('country', '')
-    form.setValue('region', '')
-    form.setValue('city', '')
-    form.setValue('street', '')
-    form.setValue('houseNumber', '')
-    form.clearErrors(['locationId', 'country', 'region', 'city'])
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -284,8 +254,7 @@ function CreatePostPage() {
             <LocationField
               control={form.control}
               profileId={activeProfile?.userProfileId ?? ''}
-              isManualLocation={isManualLocation}
-              onToggle={handleToggleLocation}
+              showSaveHint
             />
 
             <FieldError errors={[form.formState.errors.root]} />
