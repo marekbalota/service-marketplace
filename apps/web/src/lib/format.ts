@@ -1,18 +1,28 @@
 import type { TFunction } from 'i18next'
 
-/**
- * Formats a location object into a human-readable string following the
- * hierarchy: country, region, city, street, houseNumber.
- * Only non-empty fields are included.
- */
-export function formatLocation(loc: {
+export interface LocationFields {
   country?: string | null
   region?: string | null
   city?: string | null
   street?: string | null
-  houseNumber?: string | null
-}): string {
-  return [loc.country, loc.region, loc.city, loc.street, loc.houseNumber].filter(Boolean).join(', ')
+}
+
+export function formatLocation(loc: LocationFields): string {
+  const uniqueRegion = loc.region !== loc.city ? loc.region : null
+  return [loc.street, loc.city, uniqueRegion, loc.country].filter(Boolean).join(', ')
+}
+
+export function formatLocationDetail(
+  loc: Pick<LocationFields, 'country' | 'region' | 'city'>,
+  t: TFunction,
+): string {
+  return [
+    loc.country && `${t('profiles.location.country')}: ${loc.country}`,
+    loc.region && `• ${t('profiles.location.region')}: ${loc.region}`,
+    loc.city && `• ${t('profiles.location.city')}: ${loc.city}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export function getInitials(name: string): string {

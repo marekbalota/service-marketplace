@@ -23,7 +23,8 @@
     "justNow": "práve teraz",
     "minutesAgo": "pred {{count}} min",
     "hoursAgo": "pred {{count}} hod",
-    "daysAgo": "pred {{count}} d"
+    "daysAgo": "pred {{count}} d",
+    "clear": "Vymazať"
   },
   "nav": {
     "login": "Prihlásiť sa",
@@ -246,6 +247,7 @@
     "usePreviousLocation": "Použiť predchádzajúcu polohu",
     "selectPreviousLocation": "Vybrať z predchádzajúcich polôh",
     "noPreviousLocations": "Žiadne predchádzajúce polohy. Kliknite na 'Zadať novú polohu' pre pridanie.",
+    "locationSaveHint": "Táto lokalita bude uložená pre budúce príspevky",
     "titleHint": "Urobte ho jasným a konkrétnym",
     "categoryHint": "Pomôžte ľuďom nájsť váš príspevok",
     "descriptionHint": "Čím viac detailov, tým lepšie"
@@ -410,6 +412,8 @@
     "savedLocations": "Uložené lokality",
     "savedLocationsSubtitle": "Spravujte lokality, ktoré často používate pri inzerátoch",
     "addLocation": "Pridať lokalitu",
+    "addLocationTitle": "Uložiť novú lokalitu",
+    "addLocationDescription": "Vyhľadajte lokalitu na uloženie do profilu. Môžete ju rýchlo vybrať pri vytváraní inzerátov.",
     "noLocations": "Zatiaľ žiadne uložené lokality. Pridajte jednu pre rýchlejší výber pri tvorbe inzerátov.",
     "removeLocation": "Odstrániť lokalitu",
     "removeLocationConfirm": "Naozaj chcete odstrániť túto lokalitu zo svojho profilu?",
@@ -448,9 +452,7 @@
       "city": "Mesto",
       "cityPlaceholder": "napr. Bratislava, Košice",
       "street": "Ulica",
-      "streetPlaceholder": "napr. Hlavná ulica",
-      "houseNumber": "Číslo domu",
-      "houseNumberPlaceholder": "napr. 123"
+      "streetPlaceholder": "napr. Hlavná ulica"
     }
   },
   "admin": {
@@ -714,6 +716,12 @@
     "descriptionPlaceholder": "Uveďte ďalšie podrobnosti…",
     "submit": "Odoslať hlásenie",
     "error": "Niečo sa pokazilo. Skúste to znova."
+  },
+  "location": {
+    "searchPlaceholder": "Vyhľadajte lokalitu…",
+    "noResults": "Žiadne lokality nenájdené.",
+    "expired": "Návrh lokality vypršal. Skúste vyhľadať znova.",
+    "unavailable": "Vyhľadávanie lokalít je momentálne nedostupné."
   },
   "errors": {
     "notFound": "Stránka nenájdená",

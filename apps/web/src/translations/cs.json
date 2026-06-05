@@ -23,7 +23,8 @@
     "justNow": "právě teď",
     "minutesAgo": "před {{count}} min",
     "hoursAgo": "před {{count}} hod",
-    "daysAgo": "před {{count}} d"
+    "daysAgo": "před {{count}} d",
+    "clear": "Vymazat"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -246,6 +247,7 @@
     "usePreviousLocation": "Použít předchozí polohu",
     "selectPreviousLocation": "Vybrat z předchozích poloh",
     "noPreviousLocations": "Žádné předchozí polohy. Klikněte na 'Zadat novou polohu' pro přidání.",
+    "locationSaveHint": "Tato lokalita bude uložena pro budoucí příspěvky",
     "titleHint": "Udělejte ho jasným a konkrétním",
     "categoryHint": "Pomozte lidem najít váš příspěvek",
     "descriptionHint": "Čím více podrobností, tím lépe"
@@ -410,6 +412,8 @@
     "savedLocations": "Uložené lokality",
     "savedLocationsSubtitle": "Spravujte lokality, které často používáte při inzerátech",
     "addLocation": "Přidat lokalitu",
+    "addLocationTitle": "Uložit novou lokalitu",
+    "addLocationDescription": "Vyhledejte lokalitu k uložení do profilu. Můžete ji rychle vybrat při vytváření inzerátů.",
     "noLocations": "Zatím žádné uložené lokality. Přidejte jednu pro rychlejší výběr při tvorbě inzerátů.",
     "removeLocation": "Odstranit lokalitu",
     "removeLocationConfirm": "Opravdu chcete odstranit tuto lokalitu ze svého profilu?",
@@ -448,9 +452,7 @@
       "city": "Město",
       "cityPlaceholder": "např. Praha, Brno",
       "street": "Ulice",
-      "streetPlaceholder": "např. Hlavní ulice",
-      "houseNumber": "Číslo domu",
-      "houseNumberPlaceholder": "např. 123"
+      "streetPlaceholder": "např. Hlavní ulice"
     }
   },
   "admin": {
@@ -714,6 +716,12 @@
     "descriptionPlaceholder": "Uveďte další podrobnosti…",
     "submit": "Odeslat hlášení",
     "error": "Něco se pokazilo. Zkuste to znovu."
+  },
+  "location": {
+    "searchPlaceholder": "Vyhledejte lokalitu…",
+    "noResults": "Žádná místa nenalezena.",
+    "expired": "Návrh lokality vypršel. Zkuste vyhledat znovu.",
+    "unavailable": "Vyhledávání lokalit je momentálně nedostupné."
   },
   "errors": {
     "notFound": "Stránka nenalezena",
