@@ -178,8 +178,15 @@ entity Report {
 entity Category {
     category_id : uuid <<PK>>
     ---
-    name : text <<NOT NULL>> <<UNIQUE>>
     created_at : timestamp <<NOT NULL>>
+}
+
+entity CategoryTranslation {
+    category_id : uuid <<PK>> <<FK>>
+    locale : text <<PK>>
+    ---
+    name : text <<NOT NULL>>
+    UNIQUE(locale, name)
 }
 
 entity PostCategory {
@@ -194,7 +201,6 @@ entity Location {
     region : text
     city : text
     street : text
-    house_number : text
     created_at : timestamp <<NOT NULL>>
     deleted_at : timestamp
 }
@@ -273,6 +279,7 @@ entity MessageThread {
 Post }o--|| UserProfile : creates
 Post ||--o{ PostCategory
 Category ||--o{ PostCategory
+Category ||--o{ CategoryTranslation
 Role ||--o{ RolePermission
 Permission ||--o{ RolePermission
 Review }o--|| UserProfile : reviewer

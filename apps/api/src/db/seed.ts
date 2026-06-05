@@ -294,7 +294,6 @@ async function seed() {
       region?: string
       city?: string
       street?: string
-      houseNumber?: string
     }
   }[] = [
     // ── Tutoring ──

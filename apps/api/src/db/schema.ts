@@ -245,7 +245,6 @@ export const locations = pgTable('locations', {
   region: text('region'),
   city: text('city'),
   street: text('street'),
-  houseNumber: text('house_number'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
 })
