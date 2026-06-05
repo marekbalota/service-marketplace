@@ -26,6 +26,7 @@ export const env = {
   turnstile: {
     secretKey: required('TURNSTILE_SECRET_KEY'),
   },
+  geoapifyApiKey: required('GEOAPIFY_API_KEY'),
   betterAuthSecret: required('BETTER_AUTH_SECRET'),
   smtp: {
     host: process.env.SMTP_HOST ?? 'localhost',

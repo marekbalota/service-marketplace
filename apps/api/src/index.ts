@@ -65,7 +65,7 @@ export const app = new Elysia()
           { name: 'Messages', description: 'Message threads and chat messages' },
           { name: 'Reviews', description: 'Post reviews and ratings' },
           { name: 'Reports', description: 'Post reports' },
-          { name: 'Locations', description: 'Distinct location values for filtering' },
+          { name: 'Locations', description: 'Location autocomplete and profile location management' },
           { name: 'Sessions', description: 'Active session management' },
         ],
       },
