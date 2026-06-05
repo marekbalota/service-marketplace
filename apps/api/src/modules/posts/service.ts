@@ -27,7 +27,8 @@ import {
 } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
-import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { NotFoundError, ForbiddenError, UnprocessableEntityError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import { redis } from '../../lib/redis'
 import { ProfilesService } from '../profiles/service'
 import { RBACService } from '../../lib/rbac/rbac-helper'
 import { Permissions } from '@marketplace/shared'
@@ -286,7 +287,6 @@ export abstract class PostsService {
         locationRegion: locations.region,
         locationCity: locations.city,
         locationStreet: locations.street,
-        locationHouseNumber: locations.houseNumber,
         categories: sql<{ categoryId: string; name: string }[]>`
           coalesce(
             json_agg(
@@ -379,7 +379,6 @@ export abstract class PostsService {
           region: row.locationRegion,
           city: row.locationCity,
           street: row.locationStreet,
-          houseNumber: row.locationHouseNumber,
         }
       : null
 
@@ -389,7 +388,6 @@ export abstract class PostsService {
       locationRegion,
       locationCity,
       locationStreet,
-      locationHouseNumber,
       averageRating,
       ...rest
     } = row
@@ -400,16 +398,23 @@ export abstract class PostsService {
     const { categoryIds, location, locationId, ...postValues } = body
 
     return db.transaction(async (tx) => {
-      // locationId takes precedence; location creates a new row only when it has at least one field
-      let resolvedLocationId: string | undefined = locationId
+      let resolvedLocationId: string | undefined = locationId ?? undefined
 
-      const hasLocationData =
-        location && Object.values(location).some((v) => v !== undefined && v !== null && v !== '')
+      if (location?.externalId) {
+        const cached = await redis.get(`loc:${location.externalId}`)
+        if (!cached) {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+        let parsed: { country: string | null; region: string | null; city: string | null; street: string | null }
+        try {
+          parsed = JSON.parse(cached) as typeof parsed
+        } catch {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
 
-      if (hasLocationData) {
         const [insertedLocation] = await tx
           .insert(locations)
-          .values(location!)
+          .values(parsed)
           .returning({ locationId: locations.locationId })
         resolvedLocationId = insertedLocation!.locationId
 
@@ -438,18 +443,40 @@ export abstract class PostsService {
   }
 
   static async update(id: string, body: PostsModel['updateBody']) {
-    const { categoryIds, ...updateValues } = body
+    const { categoryIds, location, locationId, ...updateValues } = body
 
     return db.transaction(async (tx) => {
+      let resolvedLocationId: string | null | undefined = locationId
+
+      if (location?.externalId) {
+        const cached = await redis.get(`loc:${location.externalId}`)
+        if (!cached) {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+        let parsed: { country: string | null; region: string | null; city: string | null; street: string | null }
+        try {
+          parsed = JSON.parse(cached) as typeof parsed
+        } catch {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+
+        const [insertedLocation] = await tx
+          .insert(locations)
+          .values(parsed)
+          .returning({ locationId: locations.locationId })
+        resolvedLocationId = insertedLocation!.locationId
+      }
+
       const [updated] = await tx
         .update(posts)
-        .set(updateValues)
+        .set({
+          ...updateValues,
+          ...(resolvedLocationId !== undefined ? { locationId: resolvedLocationId } : {}),
+        })
         .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
         .returning()
 
-      if (!updated) {
-        throw new NotFoundError(ErrorMessages.postNotFound)
-      }
+      if (!updated) throw new NotFoundError(ErrorMessages.postNotFound)
 
       let updatedCategories: string[]
 

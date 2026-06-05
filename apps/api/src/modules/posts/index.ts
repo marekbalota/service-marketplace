@@ -10,6 +10,7 @@ import {
   notFoundResponse,
   unauthorizedResponse,
   conflictResponse,
+  unprocessableResponse,
   AuthErrorMessages,
 } from '../../lib/errors'
 import { ReportsModel } from '../reports/model'
@@ -74,6 +75,7 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
         201: PostsModel.createResponse,
         ...unauthorizedResponse,
         ...forbiddenResponse,
+        ...unprocessableResponse,
       },
       detail: { summary: 'Create a post', operationId: 'createPost', tags: ['Posts'] },
     },
@@ -94,6 +96,7 @@ export const postsRoutes = new Elysia({ prefix: '/posts' })
         ...unauthorizedResponse,
         ...forbiddenResponse,
         ...notFoundResponse,
+        ...unprocessableResponse,
       },
       detail: { summary: 'Update a post', operationId: 'updatePost', tags: ['Posts'] },
     },
