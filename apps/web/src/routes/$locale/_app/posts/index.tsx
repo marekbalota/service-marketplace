@@ -16,8 +16,11 @@ import { PostTypeSelect } from './-components/PostTypeSelect'
 import { CategorySelect } from './-components/CategorySelect'
 import { SortSelect } from './-components/SortSelect'
 import { RatingSelect } from './-components/RatingSelect'
-import { LocationSelect } from './-components/LocationSelect'
 import { useLocale } from '#/lib/useLocale'
+import {
+  LocationAutocomplete,
+  type LocationSuggestion,
+} from '#/components/LocationAutocomplete'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum([
@@ -142,6 +145,10 @@ function HomePage() {
     }
   }, [isAuthenticated, favourites, navigate])
 
+  const locationValue: LocationSuggestion | null = country
+    ? { id: '', street: null, city: city ?? null, region: region ?? null, country }
+    : null
+
   const filters: FilterItem[] = [
     ...(isAuthenticated
       ? [
@@ -182,7 +189,23 @@ function HomePage() {
     },
     {
       label: t('posts.locations'),
-      control: <LocationSelect />,
+      control: (
+        <LocationAutocomplete
+          value={locationValue}
+          onChange={(val) =>
+            navigate({
+              search: (prev) => ({
+                ...prev,
+                country: val?.country ?? undefined,
+                region: val?.region ?? undefined,
+                city: val?.city ?? undefined,
+                page: undefined,
+              }),
+            })
+          }
+          placeholder={t('posts.location.all')}
+        />
+      ),
       desktopWidth: isAuthenticated ? 'w-[240px]' : 'flex-1',
     },
   ]
