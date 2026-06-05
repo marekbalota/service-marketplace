@@ -10,6 +10,7 @@ import { authRoutes } from '../auth'
 import { postsRoutes } from '../posts'
 import { auth } from '../auth/service'
 import { errorsPlugin } from '../../lib/errors'
+import { redis } from '../../lib/redis'
 
 const app = new Elysia()
   .use(errorsPlugin)
@@ -348,17 +349,22 @@ describe('DELETE /profiles/:id', () => {
 })
 
 describe('POST /profiles/:id/locations', () => {
+  beforeAll(async () => {
+    await redis.set('loc:R_bratislava', JSON.stringify({ country: 'Slovakia', region: null, city: 'Bratislava', street: null }), 'EX', 14400)
+    await redis.set('loc:R_testcountry', JSON.stringify({ country: 'TestCountry', region: null, city: null, street: null }), 'EX', 14400)
+  })
+
   it('returns 401 without a session cookie', async () => {
     const { error } = await client
       .profiles({ id: aliceProfileId })
-      .locations.post({ country: 'Slovakia' })
+      .locations.post({ externalId: 'R_bratislava' })
     expect(error?.status).toBe(401)
   })
 
   it('returns 403 for a profile not owned by the caller', async () => {
     const { error } = await client
       .profiles({ id: '00000000-0000-0000-0000-000000000000' })
-      .locations.post({ country: 'Slovakia' }, { headers: { Cookie: aliceCookie } })
+      .locations.post({ externalId: 'R_bratislava' }, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 
@@ -366,7 +372,7 @@ describe('POST /profiles/:id/locations', () => {
     const { data, error } = await client
       .profiles({ id: aliceProfileId })
       .locations.post(
-        { country: 'Slovakia', city: 'Bratislava' },
+        { externalId: 'R_bratislava' },
         { headers: { Cookie: aliceCookie } },
       )
     expect(error).toBeNull()
@@ -379,7 +385,7 @@ describe('POST /profiles/:id/locations', () => {
   it('location appears in GET /profiles/:id/locations after adding', async () => {
     const { data: created } = await client
       .profiles({ id: aliceProfileId })
-      .locations.post({ country: 'TestCountry' }, { headers: { Cookie: aliceCookie } })
+      .locations.post({ externalId: 'R_testcountry' }, { headers: { Cookie: aliceCookie } })
     if (!created || 'message' in created) throw new Error('Expected location data')
     const { data: list } = await client.profiles({ id: aliceProfileId }).locations.get({
       headers: { Cookie: aliceCookie },
@@ -392,9 +398,10 @@ describe('DELETE /profiles/:id/locations/:locationId', () => {
   let locationId = ''
 
   beforeAll(async () => {
+    await redis.set('loc:R_deleteme', JSON.stringify({ country: 'DeleteMe', region: null, city: null, street: null }), 'EX', 14400)
     const { data } = await client
       .profiles({ id: aliceProfileId })
-      .locations.post({ country: 'DeleteMe' }, { headers: { Cookie: aliceCookie } })
+      .locations.post({ externalId: 'R_deleteme' }, { headers: { Cookie: aliceCookie } })
     if (!data || 'message' in data) throw new Error('Expected location data')
     locationId = data.locationId
   })
