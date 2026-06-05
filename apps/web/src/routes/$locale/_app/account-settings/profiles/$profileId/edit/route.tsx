@@ -16,8 +16,9 @@ import { ConfirmDialog } from '#/components/ConfirmDialog'
 import { profileSchema, type ProfileFormValues } from '../../../-components/profileSchema'
 import { ProfileFields } from '../../../-components/ProfileFields'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
-import { AddLocationForm, EMPTY_LOCATION, type LocationDraft } from './-components/AddLocationForm'
-import { formatLocationDisplayName, formatLocationDetail } from '#/lib/locationFormat'
+import { AddLocationDialog } from './-components/AddLocationDialog'
+import { type LocationSuggestion } from '#/components/LocationAutocomplete'
+import { formatLocation, formatLocationDetail } from '#/lib/format'
 import { useLocale } from '#/lib/useLocale'
 import {
   imagesQueryOptions,
@@ -83,7 +84,6 @@ function EditProfilePage() {
 
   const [showAddLocation, setShowAddLocation] = useState(false)
   const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null)
-  const [newLocation, setNewLocation] = useState<LocationDraft>(EMPTY_LOCATION)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -136,13 +136,9 @@ function EditProfilePage() {
   })
 
   const addLocationMutation = useMutation({
-    mutationFn: async ({ country, region, city, street, houseNumber }: typeof newLocation) => {
+    mutationFn: async (suggestion: LocationSuggestion) => {
       const { error } = await api.profiles({ id: profileId }).locations.post({
-        country: country || undefined,
-        region: region || undefined,
-        city: city || undefined,
-        street: street || undefined,
-        houseNumber: houseNumber || undefined,
+        externalId: suggestion.id,
       })
       if (error) throw wrapEdenError(error, 'Failed to add location.')
     },
@@ -151,7 +147,6 @@ function EditProfilePage() {
         queryKey: profileLocationsQueryOptions(profileId).queryKey,
       })
       setShowAddLocation(false)
-      setNewLocation({ country: '', region: '', city: '', street: '', houseNumber: '' })
     },
   })
 
@@ -236,7 +231,7 @@ function EditProfilePage() {
                 variant="outline"
                 size="sm"
                 className="gap-2 shrink-0"
-                onClick={() => setShowAddLocation((v) => !v)}
+                onClick={() => setShowAddLocation(true)}
               >
                 <Plus className="size-4" />
                 {t('profiles.addLocation')}
@@ -244,23 +239,17 @@ function EditProfilePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {showAddLocation && (
-              <AddLocationForm
-                value={newLocation}
-                onChange={(patch) => setNewLocation((v) => ({ ...v, ...patch }))}
-                onSave={() => addLocationMutation.mutate(newLocation)}
-                onCancel={() => {
-                  setShowAddLocation(false)
-                  setNewLocation(EMPTY_LOCATION)
-                }}
-                isPending={addLocationMutation.isPending}
-                error={
-                  addLocationMutation.isError
-                    ? (addLocationMutation.error as Error).message
-                    : undefined
-                }
-              />
-            )}
+            <AddLocationDialog
+              open={showAddLocation}
+              onClose={() => setShowAddLocation(false)}
+              onSave={(suggestion) => addLocationMutation.mutate(suggestion)}
+              isPending={addLocationMutation.isPending}
+              error={
+                addLocationMutation.isError
+                  ? (addLocationMutation.error as Error).message
+                  : undefined
+              }
+            />
 
             {locations.length === 0 ? (
               <p className="text-center py-8 text-sm text-muted-foreground">
@@ -271,12 +260,12 @@ function EditProfilePage() {
                 {locations.map((loc) => (
                   <div
                     key={loc.locationId}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card transition-colors"
                   >
                     <div>
-                      <p className="font-medium">{formatLocationDisplayName(loc)}</p>
+                      <p className="font-medium">{formatLocation(loc)}</p>
                       <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                        <span>{formatLocationDetail(loc)}</span>
+                        <span>{formatLocationDetail(loc, t)}</span>
                       </div>
                     </div>
                     <Button
