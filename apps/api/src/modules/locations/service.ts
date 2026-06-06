@@ -5,7 +5,7 @@ import type { LocationsModel } from './model'
 import { BadGatewayError, ForbiddenError, NotFoundError, UnprocessableEntityError, AuthErrorMessages } from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
 import { redis } from '../../lib/redis'
-import { env } from '../../lib/env'
+import { fetchGeoapifyFeatures, resolveParentPlaceId, type GeoProps, type ParentLevel } from '../../lib/geoapify'
 
 export abstract class LocationsService {
   static async findByProfileId(profileId: string, accountId: string) {
@@ -39,16 +39,46 @@ export abstract class LocationsService {
     if (!cached) {
       throw new UnprocessableEntityError('Location suggestion expired, please search again')
     }
-    let parsed: { country: string | null; region: string | null; city: string | null; street: string | null }
+    let parsed: { country: string | null; region: string | null; city: string | null; street: string | null; lang?: string }
     try {
       parsed = JSON.parse(cached) as typeof parsed
     } catch {
       throw new UnprocessableEntityError('Location suggestion expired, please search again')
     }
+
+    const lang = parsed.lang ?? 'en'
+    const allLevels = ['street', 'city', 'region', 'country'] as const
+    const level = allLevels.find((l) => parsed[l] != null) ?? 'country'
+
+    const colContextCountry: Record<ParentLevel, string | null> = {
+      city: parsed.country,
+      region: parsed.country,
+      country: null,
+    }
+
+    const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] = await Promise.all(
+      (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+        if (level === col) return body.externalId
+        if (col === 'street') return null
+        const name = parsed[col]
+        if (!name) return null
+        return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+      }),
+    )
+
     return db.transaction(async (tx) => {
       const [inserted] = await tx
         .insert(locations)
-        .values(parsed)
+        .values({
+          city: parsed.city,
+          region: parsed.region,
+          country: parsed.country,
+          street: parsed.street,
+          streetExternalId,
+          cityExternalId,
+          regionExternalId,
+          countryExternalId,
+        })
         .returning()
 
       await tx
@@ -88,19 +118,9 @@ export abstract class LocationsService {
   static async autocomplete(query: LocationsModel['autocompleteQuery'], lang = 'en') {
     const { q, limit = 5 } = query
 
-    const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete')
-    url.searchParams.set('text', q)
-    url.searchParams.set('lang', lang)
-    url.searchParams.set('limit', String(limit))
-    url.searchParams.set('apiKey', env.geoapifyApiKey)
-
-    let rawData: { features: { properties: Record<string, unknown> }[] }
+    let features: { properties: GeoProps }[]
     try {
-      const response = await fetch(url.toString())
-      if (!response.ok) {
-        throw new BadGatewayError('Location search unavailable')
-      }
-      rawData = (await response.json()) as typeof rawData
+      features = await fetchGeoapifyFeatures(q, lang, limit)
     } catch {
       throw new BadGatewayError('Location search unavailable')
     }
@@ -109,7 +129,7 @@ export abstract class LocationsService {
     const cacheWrites: Promise<unknown>[] = []
     const seen = new Set<string>()
 
-    for (const feature of rawData.features) {
+    for (const feature of features) {
       const p = feature.properties
       const id = p.place_id as string | undefined
       if (!id || !p.country) continue
@@ -119,14 +139,18 @@ export abstract class LocationsService {
       const city = (p.city as string) ?? null
       const street = (p.street as string) ?? null
 
-      // Skip duplicate display entries — Geoapify returns the same place at
-      // multiple administrative granularities (city, municipality, district…)
+      // Deduplicate by localized display string (Geoapify returns the same place at multiple admin levels)
       const dedupeKey = `${street}|${city}|${region}|${country}`
       if (seen.has(dedupeKey)) continue
       seen.add(dedupeKey)
 
       cacheWrites.push(
-        redis.set(`loc:${id}`, JSON.stringify({ country, region, city, street }), 'EX', 4 * 60 * 60),
+        redis.set(
+          `loc:${id}`,
+          JSON.stringify({ country, region, city, street, lang }),
+          'EX',
+          4 * 60 * 60,
+        ),
       )
 
       suggestions.push({ id, street, city, region, country })

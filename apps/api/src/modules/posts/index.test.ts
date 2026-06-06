@@ -33,6 +33,14 @@ beforeAll(async () => {
   await redis.set('loc:R_brno', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian', city: 'Brno', street: null }), 'EX', 14400)
   await redis.set('loc:R_brno_street', JSON.stringify({ country: 'CZ', region: 'South Moravian Region', city: 'Brno', street: 'Botanická' }), 'EX', 14400)
   await redis.set('loc:R_brno2', JSON.stringify({ country: 'CZ', region: 'South Moravian', city: 'Brno', street: null }), 'EX', 14400)
+  // Region-level place_id: city is null so the filter will use regionExternalId matching
+  await redis.set('loc:R_south_moravia', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian Region', city: null, street: null }), 'EX', 14400)
+  // City-level place_id used as parent for the street-level post below
+  await redis.set('loc:R_brno_city', JSON.stringify({ country: 'CZ', region: 'South Moravian Region', city: 'Brno', street: null }), 'EX', 14400)
+  // Parent city caches so resolveParentPlaceId returns the right ID without hitting Geoapify
+  await redis.set('parent:city:Trenčín:Slovakia', 'R_slovakia', 'EX', 86400)
+  await redis.set('parent:city:Brno:Czech Republic', 'R_brno', 'EX', 86400)
+  await redis.set('parent:city:Brno:CZ', 'R_brno_city', 'EX', 86400)
 
   await client.posts.post(
     { authorId, postTitle: 'Location test post Slovakia Trencin', description: 'Test post for location filter with known location data', postType: 'OFFER', location: { externalId: 'R_slovakia' } },
@@ -40,6 +48,20 @@ beforeAll(async () => {
   )
   await client.posts.post(
     { authorId, postTitle: 'Location test post Czech Republic Brno', description: 'Test post for location filter with known location data', postType: 'OFFER', location: { externalId: 'R_brno' } },
+    { headers: { Cookie: sessionCookie } },
+  )
+  // Post whose location row has region_external_id = 'R_south_moravia' — used in region-level filter test.
+  // We set the parent cache entry so resolveParentPlaceId returns 'R_south_moravia' when the Brno
+  // post is created (the english cache for 'R_brno3' stores region='South Moravian Region').
+  await redis.set('parent:region:South Moravian Region:Czech Republic', 'R_south_moravia', 'EX', 86400)
+  await redis.set('loc:R_brno3', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno', street: null }), 'EX', 14400)
+  await client.posts.post(
+    { authorId, postTitle: 'Location test post Brno with region id', description: 'Test post for region-level location filter', postType: 'OFFER', location: { externalId: 'R_brno3' } },
+    { headers: { Cookie: sessionCookie } },
+  )
+  // Post with street-level location — streetExternalId='R_brno_street', cityExternalId='R_brno_city'
+  await client.posts.post(
+    { authorId, postTitle: 'Location test post Brno street level', description: 'Test post for street-level location city filter', postType: 'OFFER', location: { externalId: 'R_brno_street' } },
     { headers: { Cookie: sessionCookie } },
   )
 })
@@ -502,50 +524,52 @@ describe('GET /posts — categoryIds filter', () => {
 })
 
 describe('GET /posts — location filter', () => {
-  it('filters by country — all returned items have a matching location', async () => {
-    const { data, error } = await client.posts.get({ query: { country: 'Slovakia' } })
+  it('filters by externalId — only posts with matching location are returned', async () => {
+    const { data, error } = await client.posts.get({ query: { externalId: 'R_slovakia' } })
     expect(error).toBeNull()
-    // All items must have a location with country = Slovakia
-    // (posts without location are excluded by the SQL WHERE condition)
+    expect(data!.total).toBeGreaterThan(0)
     for (const item of data!.items) {
       expect(item.location).not.toBeNull()
-      expect(item.location!.country).toBe('Slovakia')
     }
   })
 
-  it('case-insensitive: country=slovakia matches country=Slovakia', async () => {
-    const { data: lower } = await client.posts.get({ query: { country: 'slovakia' } })
-    const { data: exact } = await client.posts.get({ query: { country: 'Slovakia' } })
-    expect(lower!.total).toBe(exact!.total)
+  it('different externalIds return different post sets', async () => {
+    const { data: slovakia } = await client.posts.get({ query: { externalId: 'R_slovakia' } })
+    const { data: brno } = await client.posts.get({ query: { externalId: 'R_brno' } })
+    const slovakiaIds = new Set(slovakia!.items.map((p) => p.postId))
+    for (const item of brno!.items) {
+      expect(slovakiaIds.has(item.postId)).toBe(false)
+    }
   })
 
-  it('combined country + city filter narrows results', async () => {
-    const { data: countryOnly } = await client.posts.get({ query: { country: 'Slovakia' } })
-    const { data: withCity } = await client.posts.get({
-      query: { country: 'Slovakia', city: 'Trenčín' },
-    })
-
-    if (countryOnly!.total === 0) return // no seeded Slovak posts — skip
-    expect(withCity!.total).toBeLessThanOrEqual(countryOnly!.total)
-  })
-
-  it('returns empty items for a country that has no posts', async () => {
+  it('returns empty items for an externalId that has no posts', async () => {
     const { data, error } = await client.posts.get({
-      query: { country: 'Nonexistent Country XYZ' },
+      query: { externalId: 'R_nonexistent_xyz' },
     })
     expect(error).toBeNull()
     expect(data!.items).toHaveLength(0)
     expect(data!.total).toBe(0)
   })
 
-  it('diacritic-insensitive: city=Trencin matches city=Trenčín', async () => {
-    const { data: accent } = await client.posts.get({
-      query: { country: 'Slovakia', city: 'Trenčín' },
-    })
-    const { data: noAccent } = await client.posts.get({
-      query: { country: 'Slovakia', city: 'Trencin' },
-    })
-    expect(noAccent!.total).toBe(accent!.total)
+  it('region-level externalId returns all posts whose location has that regionExternalId', async () => {
+    // R_south_moravia has city=null so filter uses eq(locations.regionExternalId, 'R_south_moravia')
+    // The post created with R_brno3 has region_external_id='R_south_moravia' (set via Redis parent cache)
+    const { data, error } = await client.posts.get({ query: { externalId: 'R_south_moravia' } })
+    expect(error).toBeNull()
+    expect(data!.total).toBeGreaterThan(0)
+    for (const item of data!.items) {
+      expect(item.location).not.toBeNull()
+    }
+  })
+
+  it('city-level externalId returns street-level posts in that city via cityExternalId', async () => {
+    // R_brno_city has city='Brno', street=null — filter uses or(externalId, cityExternalId)
+    // The post created with R_brno_street has city_external_id='R_brno_city' (set via Redis parent cache)
+    const { data, error } = await client.posts.get({ query: { externalId: 'R_brno_city' } })
+    expect(error).toBeNull()
+    const streetPost = data!.items.find((p) => p.postTitle === 'Location test post Brno street level')
+    expect(streetPost).toBeDefined()
+    expect(streetPost!.location).not.toBeNull()
   })
 })
 
