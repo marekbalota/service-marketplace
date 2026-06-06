@@ -52,26 +52,23 @@ export abstract class AdminReportsService {
     const listConditions = buildListConditions(query)
 
     return db.transaction(async (tx) => {
-      const countBase = tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .leftJoin(posts, eq(reports.postId, posts.postId))
-        .leftJoin(postAuthorProfile, eq(posts.authorId, postAuthorProfile.userProfileId))
-        .leftJoin(messages, eq(reports.messageId, messages.messageId))
-        .leftJoin(msgSenderProfile, eq(messages.senderId, msgSenderProfile.userProfileId))
-        .leftJoin(reviews, eq(reports.reviewId, reviews.reviewId))
-        .leftJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
-        .$dynamic()
+      const countQuery = (where: Parameters<typeof and>[0]) =>
+        tx
+          .select({ total: count() })
+          .from(reports)
+          .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
+          .leftJoin(posts, eq(reports.postId, posts.postId))
+          .leftJoin(postAuthorProfile, eq(posts.authorId, postAuthorProfile.userProfileId))
+          .leftJoin(messages, eq(reports.messageId, messages.messageId))
+          .leftJoin(msgSenderProfile, eq(messages.senderId, msgSenderProfile.userProfileId))
+          .leftJoin(reviews, eq(reports.reviewId, reviews.reviewId))
+          .leftJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
+          .where(where)
 
-      const [totalRow] = await countBase.where(listConditions)
-      const [pendingRow] = await countBase.where(and(listConditions, eq(reports.status, 'PENDING')))
-      const [resolvedRow] = await countBase.where(
-        and(listConditions, eq(reports.status, 'RESOLVED')),
-      )
-      const [dismissedRow] = await countBase.where(
-        and(listConditions, eq(reports.status, 'DISMISSED')),
-      )
+      const [totalRow] = await countQuery(listConditions)
+      const [pendingRow] = await countQuery(and(listConditions, eq(reports.status, 'PENDING')))
+      const [resolvedRow] = await countQuery(and(listConditions, eq(reports.status, 'RESOLVED')))
+      const [dismissedRow] = await countQuery(and(listConditions, eq(reports.status, 'DISMISSED')))
 
       const total = totalRow?.total ?? 0
       const totalPending = pendingRow?.total ?? 0

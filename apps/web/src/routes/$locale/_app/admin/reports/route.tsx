@@ -242,11 +242,15 @@ function ManageReports() {
                 control: <TypeSelect />,
                 desktopWidth: 'w-[160px]',
               },
-              {
-                label: t('admin.reports.category'),
-                control: <CategorySelect />,
-                desktopWidth: 'w-[200px]',
-              },
+              ...(type !== 'all'
+                ? [
+                    {
+                      label: t('admin.reports.category'),
+                      control: <CategorySelect />,
+                      desktopWidth: 'w-[200px]',
+                    },
+                  ]
+                : []),
               {
                 label: t('admin.reports.status'),
                 control: <StatusSelect />,
