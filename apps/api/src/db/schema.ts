@@ -241,6 +241,7 @@ export const postCategories = pgTable(
 
 export const locations = pgTable('locations', {
   locationId: uuid('location_id').primaryKey().defaultRandom(),
+  externalId: text('external_id'),
   country: text('country'),
   region: text('region'),
   city: text('city'),

@@ -4,6 +4,46 @@ import { auth } from '../modules/auth/service'
 import { Permissions } from '@marketplace/shared'
 import { eq, and } from 'drizzle-orm'
 import { users } from './schema'
+import { redis } from '../lib/redis'
+
+const externalIdCache = new Map<string, string>()
+
+async function resolveLocationExternalId(city: string, country: string): Promise<string | null> {
+  const apiKey = process.env.GEOAPIFY_API_KEY
+  if (!apiKey) return null
+
+  const cacheKey = `${city}::${country}`
+  if (externalIdCache.has(cacheKey)) return externalIdCache.get(cacheKey)!
+
+  try {
+    const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete')
+    url.searchParams.set('text', `${city}, ${country}`)
+    url.searchParams.set('lang', 'en')
+    url.searchParams.set('limit', '1')
+    url.searchParams.set('apiKey', apiKey)
+
+    const res = await fetch(url.toString())
+    if (!res.ok) return null
+
+    const data = await res.json() as {
+      features: { properties: { place_id: string; city?: string; country?: string; state?: string } }[]
+    }
+    const feature = data.features[0]
+    if (!feature) return null
+
+    const placeId = feature.properties.place_id
+    const { city: rCity, country: rCountry, state: rRegion } = feature.properties
+    await redis.set(
+      `loc:${placeId}`,
+      JSON.stringify({ city: rCity ?? city, country: rCountry ?? country, region: rRegion ?? null, street: null }),
+      'EX', 4 * 60 * 60,
+    )
+    externalIdCache.set(cacheKey, placeId)
+    return placeId
+  } catch {
+    return null
+  }
+}
 
 const permissionDefinitions = [
   { name: Permissions.PostsCreate, description: 'Create new posts' },
@@ -306,7 +346,7 @@ async function seed() {
       price: '25.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -317,7 +357,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -348,7 +388,7 @@ async function seed() {
       price: '30.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -359,7 +399,7 @@ async function seed() {
       price: '20.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 6' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 6' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -412,7 +452,7 @@ async function seed() {
       price: '60.00',
       rateType: 'HOURLY',
       categories: [plumbing, homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -433,7 +473,7 @@ async function seed() {
       price: '90.00',
       rateType: 'HOURLY',
       categories: [plumbing],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -454,7 +494,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [plumbing],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: carolProfile.userProfileId,
@@ -465,7 +505,7 @@ async function seed() {
       price: '800.00',
       rateType: 'FIXED',
       categories: [plumbing, homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 2' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 2' },
     },
 
     // ── Design ──
@@ -560,7 +600,7 @@ async function seed() {
       price: '40.00',
       rateType: 'HOURLY',
       categories: [homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -581,7 +621,7 @@ async function seed() {
       price: '30.00',
       rateType: 'HOURLY',
       categories: [homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -674,7 +714,7 @@ async function seed() {
       price: '20.00',
       rateType: 'HOURLY',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 1' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 1' },
     },
     {
       authorId: frankProfile.userProfileId,
@@ -685,7 +725,7 @@ async function seed() {
       price: '300.00',
       rateType: 'FIXED',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -706,7 +746,7 @@ async function seed() {
       price: '120.00',
       rateType: 'FIXED',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -717,7 +757,7 @@ async function seed() {
       price: '18.00',
       rateType: 'HOURLY',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 7' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 7' },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -750,7 +790,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [techSupport],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -791,7 +831,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [techSupport],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: carolProfile.userProfileId,
@@ -896,7 +936,13 @@ async function seed() {
 
     let locationId: string | undefined
     if (locationData) {
-      const [insertedLocation] = await db.insert(schema.locations).values(locationData).returning()
+      const externalId = locationData.city && locationData.country
+        ? await resolveLocationExternalId(locationData.city, locationData.country)
+        : null
+      const [insertedLocation] = await db
+        .insert(schema.locations)
+        .values({ ...locationData, externalId: externalId ?? undefined })
+        .returning()
       locationId = insertedLocation!.locationId
       locationCount++
     }
@@ -1351,6 +1397,7 @@ async function seed() {
   console.log('   18 reports (9 post, 4 message, 5 review) with mixed statuses')
 
   await client.end()
+  await redis.quit()
 }
 
 // Signup fires fire-and-forget verification emails. With no SMTP relay
