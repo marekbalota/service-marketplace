@@ -6,41 +6,49 @@ import { eq, and } from 'drizzle-orm'
 import { users } from './schema'
 import { redis } from '../lib/redis'
 
-const externalIdCache = new Map<string, string>()
+const externalIdCache = new Map<string, string | null>()
 
-async function resolveLocationExternalId(city: string, country: string): Promise<string | null> {
+
+async function resolveParentPlaceId(
+  name: string,
+  type: 'city' | 'region' | 'country',
+  contextCountry?: string,
+): Promise<string | null> {
   const apiKey = process.env.GEOAPIFY_API_KEY
   if (!apiKey) return null
 
-  const cacheKey = `${city}::${country}`
-  if (externalIdCache.has(cacheKey)) return externalIdCache.get(cacheKey)!
+  const cacheKey = `parent:${type}:${name}${contextCountry ? `:${contextCountry}` : ''}`
+  if (externalIdCache.has(cacheKey)) return externalIdCache.get(cacheKey) ?? null
 
+  const query = contextCountry ? `${name} ${contextCountry}` : name
   try {
     const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete')
-    url.searchParams.set('text', `${city}, ${country}`)
+    url.searchParams.set('text', query)
     url.searchParams.set('lang', 'en')
-    url.searchParams.set('limit', '1')
+    url.searchParams.set('limit', '5')
     url.searchParams.set('apiKey', apiKey)
 
     const res = await fetch(url.toString())
-    if (!res.ok) return null
+    if (!res.ok) { externalIdCache.set(cacheKey, null); return null }
 
     const data = await res.json() as {
-      features: { properties: { place_id: string; city?: string; country?: string; state?: string } }[]
+      features: { properties: Record<string, unknown> }[]
     }
-    const feature = data.features[0]
-    if (!feature) return null
-
-    const placeId = feature.properties.place_id
-    const { city: rCity, country: rCountry, state: rRegion } = feature.properties
-    await redis.set(
-      `loc:${placeId}`,
-      JSON.stringify({ city: rCity ?? city, country: rCountry ?? country, region: rRegion ?? null, street: null }),
-      'EX', 4 * 60 * 60,
-    )
+    const match = data.features.find((f) => {
+      const p = f.properties
+      if (type === 'city') return p.street == null && p.city === name
+      if (type === 'region') return p.city == null && p.state === name
+      if (type === 'country') return p.city == null && p.state == null && p.country === name
+      return false
+    })
+    const placeId = (match?.properties.place_id as string | undefined) ?? null
     externalIdCache.set(cacheKey, placeId)
+    if (placeId) {
+      await redis.set(cacheKey, placeId, 'EX', 24 * 60 * 60)
+    }
     return placeId
   } catch {
+    externalIdCache.set(cacheKey, null)
     return null
   }
 }
@@ -936,12 +944,27 @@ async function seed() {
 
     let locationId: string | undefined
     if (locationData) {
-      const externalId = locationData.city && locationData.country
-        ? await resolveLocationExternalId(locationData.city, locationData.country)
+      const streetExternalId = locationData.street && locationData.country
+        ? await resolveParentPlaceId(locationData.street, 'city', locationData.country)
+        : null
+      const cityExternalId = locationData.city
+        ? await resolveParentPlaceId(locationData.city, 'city', locationData.country)
+        : null
+      const regionExternalId = locationData.region
+        ? await resolveParentPlaceId(locationData.region, 'region', locationData.country)
+        : null
+      const countryExternalId = locationData.country
+        ? await resolveParentPlaceId(locationData.country, 'country')
         : null
       const [insertedLocation] = await db
         .insert(schema.locations)
-        .values({ ...locationData, externalId: externalId ?? undefined })
+        .values({
+          ...locationData,
+          streetExternalId: streetExternalId ?? undefined,
+          cityExternalId: cityExternalId ?? undefined,
+          regionExternalId: regionExternalId ?? undefined,
+          countryExternalId: countryExternalId ?? undefined,
+        })
         .returning()
       locationId = insertedLocation!.locationId
       locationCount++

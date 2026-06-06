@@ -197,7 +197,10 @@ entity PostCategory {
 entity Location {
     location_id : uuid <<PK>>
     ---
-    external_id : text
+    street_external_id : text
+    city_external_id : text
+    region_external_id : text
+    country_external_id : text
     country : text
     region : text
     city : text

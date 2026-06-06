@@ -169,6 +169,13 @@
       "when": 1780699627790,
       "tag": "0023_loving_forge",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780738944510,
+      "tag": "0024_polite_ink",
+      "breakpoints": true
     }
   ]
 }
