@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Ban, Eye, ExternalLink } from 'lucide-react'
+import { Ban, Eye } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { BanDialog } from '../../users/-components/BanDialog'
 import { UnbanDialog } from '../../users/-components/UnbanDialog'
 import { MessageContextDialog } from './MessageContextDialog'
+import { useLocale } from '#/lib/useLocale'
 import type { AdminReportsModel } from 'api'
 
 type ReportItem = AdminReportsModel['reportsResponse']['items'][number]
@@ -23,6 +25,7 @@ const STATUS_CLASSES: Record<string, string> = {
 
 export function ReportCard({ report }: { report: ReportItem }) {
   const { t } = useTranslation()
+  const locale = useLocale()
   const queryClient = useQueryClient()
 
   const STATUS_DISPLAY: Record<string, string> = {
@@ -152,14 +155,18 @@ export function ReportCard({ report }: { report: ReportItem }) {
               size="sm"
               className="gap-2 shrink-0"
               render={
-                <a
-                  href={`/posts/${report.targetType === 'REVIEW' ? report.reviewPostId : report.postId}`}
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  to="/$locale/posts/$postId"
+                  params={{
+                    locale,
+                    postId: (report.targetType === 'REVIEW'
+                      ? report.reviewPostId
+                      : report.postId) as string,
+                  }}
                 />
               }
             >
-              <ExternalLink className="size-4" />
+              <Eye className="size-4" />
               {t('common.view')}
             </Button>
           )}
