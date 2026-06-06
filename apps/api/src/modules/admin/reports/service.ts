@@ -8,7 +8,7 @@ import {
   users,
   userProfiles,
 } from '../../../db/schema'
-import { eq, and, isNull, count, desc } from 'drizzle-orm'
+import { eq, and, isNull, count, desc, ilike, or } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../../lib/errors'
@@ -31,6 +31,16 @@ function buildListConditions(query: ReportsQuery) {
     query.targetType ? eq(reportCategories.targetType, query.targetType) : undefined,
     query.categoryId ? eq(reports.categoryId, query.categoryId) : undefined,
     query.status ? eq(reports.status, query.status) : undefined,
+    query.q
+      ? or(
+          ilike(postAuthorProfile.name, `%${query.q}%`),
+          ilike(postAuthorProfile.email, `%${query.q}%`),
+          ilike(msgSenderProfile.name, `%${query.q}%`),
+          ilike(msgSenderProfile.email, `%${query.q}%`),
+          ilike(reviewerProfile.name, `%${query.q}%`),
+          ilike(reviewerProfile.email, `%${query.q}%`),
+        )
+      : undefined,
   )
 }
 
@@ -42,29 +52,26 @@ export abstract class AdminReportsService {
     const listConditions = buildListConditions(query)
 
     return db.transaction(async (tx) => {
-      const [totalRow] = await tx
+      const countBase = tx
         .select({ total: count() })
         .from(reports)
         .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(listConditions)
+        .leftJoin(posts, eq(reports.postId, posts.postId))
+        .leftJoin(postAuthorProfile, eq(posts.authorId, postAuthorProfile.userProfileId))
+        .leftJoin(messages, eq(reports.messageId, messages.messageId))
+        .leftJoin(msgSenderProfile, eq(messages.senderId, msgSenderProfile.userProfileId))
+        .leftJoin(reviews, eq(reports.reviewId, reviews.reviewId))
+        .leftJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
+        .$dynamic()
 
-      const [pendingRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'PENDING')))
-
-      const [resolvedRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'RESOLVED')))
-
-      const [dismissedRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'DISMISSED')))
+      const [totalRow] = await countBase.where(listConditions)
+      const [pendingRow] = await countBase.where(and(listConditions, eq(reports.status, 'PENDING')))
+      const [resolvedRow] = await countBase.where(
+        and(listConditions, eq(reports.status, 'RESOLVED')),
+      )
+      const [dismissedRow] = await countBase.where(
+        and(listConditions, eq(reports.status, 'DISMISSED')),
+      )
 
       const total = totalRow?.total ?? 0
       const totalPending = pendingRow?.total ?? 0

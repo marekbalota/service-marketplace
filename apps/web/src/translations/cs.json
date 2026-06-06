@@ -644,6 +644,12 @@
     "reports": {
       "title": "Správa hlášení",
       "subtitle": "Prozkoumejte a moderujte hlášení od uživatelů",
+      "searchPlaceholder": "Hledat podle jména nebo e-mailu nahlašovaného uživatele…",
+      "filterTitle": "Filtrovat hlášení",
+      "filterSubtitle": "Zužte seznam podle typu, důvodu nebo stavu",
+      "type": "Typ",
+      "category": "Kategorie",
+      "status": "Stav",
       "allTypes": "Všechny typy",
       "posts": "Inzeráty",
       "messages": "Zprávy",

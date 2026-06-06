@@ -30,6 +30,7 @@ const messageContextMessage = t.Object({
 
 export const AdminReportsModel = {
   reportsQuery: t.Object({
+    q: t.Optional(t.String()),
     targetType: t.Optional(reportTargetType),
     categoryId: t.Optional(t.String()),
     status: t.Optional(reportStatus),

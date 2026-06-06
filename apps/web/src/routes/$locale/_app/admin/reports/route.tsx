@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { BackButton } from '#/components/BackButton'
 import { PageHeader } from '#/components/PageHeader'
+import { SearchFilterBar } from '#/components/SearchFilterBar'
 import { Card, CardContent } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import {
@@ -21,6 +22,7 @@ import { ReportsContent } from './-components/ReportsContent'
 import { useLocale } from '#/lib/useLocale'
 
 const searchSchema = z.object({
+  q: z.string().optional().catch(undefined),
   type: z.enum(['all', 'POST', 'MESSAGE', 'REVIEW']).optional().catch(undefined),
   category: z.string().optional().catch(undefined),
   status: z.enum(['all', 'PENDING', 'RESOLVED', 'DISMISSED']).optional().catch(undefined),
@@ -215,7 +217,7 @@ function ManageReports() {
   const { t } = useTranslation()
   const locale = useLocale()
   const navigate = Route.useNavigate()
-  const { type = 'all', category = 'all', status = 'all', page = 1 } = Route.useSearch()
+  const { q = '', type = 'all', category = 'all', status = 'all', page = 1 } = Route.useSearch()
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6">
@@ -228,16 +230,37 @@ function ManageReports() {
 
       <Card className="mb-6">
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <TypeSelect />
-            <CategorySelect />
-            <StatusSelect />
-          </div>
+          <SearchFilterBar
+            searchPlaceholder={t('admin.reports.searchPlaceholder')}
+            searchValue={q}
+            onSearchChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, q: value || undefined, page: undefined }) })
+            }
+            filters={[
+              {
+                label: t('admin.reports.type'),
+                control: <TypeSelect />,
+                desktopWidth: 'w-[160px]',
+              },
+              {
+                label: t('admin.reports.category'),
+                control: <CategorySelect />,
+                desktopWidth: 'w-[200px]',
+              },
+              {
+                label: t('admin.reports.status'),
+                control: <StatusSelect />,
+                desktopWidth: 'w-[160px]',
+              },
+            ]}
+            sheetTitle={t('admin.reports.filterTitle')}
+            sheetDescription={t('admin.reports.filterSubtitle')}
+          />
         </CardContent>
       </Card>
 
       <Suspense fallback={<ReportsSkeleton />}>
-        <ReportsContent targetType={type} categoryId={category} status={status} page={page} />
+        <ReportsContent q={q} targetType={type} categoryId={category} status={status} page={page} />
       </Suspense>
     </main>
   )
