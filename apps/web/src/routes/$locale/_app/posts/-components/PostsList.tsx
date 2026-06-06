@@ -19,9 +19,7 @@ export function PostsList({
   page,
   favouritesOnly,
   rating,
-  country,
-  region,
-  city,
+  externalId,
 }: {
   type: 'all' | 'offer' | 'request'
   category?: string | string[]
@@ -30,9 +28,7 @@ export function PostsList({
   page: number
   favouritesOnly: boolean
   rating?: RatingRange | RatingRange[]
-  country?: string
-  region?: string
-  city?: string
+  externalId?: string
 }) {
   const { t } = useTranslation()
   const locale = useLocale()
@@ -51,9 +47,7 @@ export function PostsList({
       page,
       rating,
       profileId,
-      country,
-      region,
-      city,
+      externalId,
       locale,
     }),
   )

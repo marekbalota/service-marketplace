@@ -40,9 +40,7 @@ export function postsQueryOptions(deps: {
   page: number
   rating?: RatingRange | RatingRange[]
   profileId?: string
-  country?: string
-  region?: string
-  city?: string
+  externalId?: string
   locale: string
 }) {
   const ratingRanges = normalizeRating(deps.rating)
@@ -69,9 +67,7 @@ export function postsQueryOptions(deps: {
           offset: (deps.page - 1) * PAGE_SIZE,
           size: PAGE_SIZE,
           profileId: deps.profileId,
-          country: deps.country,
-          region: deps.region,
-          city: deps.city,
+          externalId: deps.externalId,
         },
       })
       if (error) throw error

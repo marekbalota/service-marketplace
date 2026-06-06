@@ -17,7 +17,6 @@ import { profileSchema, type ProfileFormValues } from '../../../-components/prof
 import { ProfileFields } from '../../../-components/ProfileFields'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 import { AddLocationDialog } from './-components/AddLocationDialog'
-import { type LocationSuggestion } from '#/components/LocationAutocomplete'
 import { formatLocation, formatLocationDetail } from '#/lib/format'
 import { useLocale } from '#/lib/useLocale'
 import {
@@ -136,7 +135,7 @@ function EditProfilePage() {
   })
 
   const addLocationMutation = useMutation({
-    mutationFn: async (suggestion: LocationSuggestion) => {
+    mutationFn: async (suggestion: { id: string }) => {
       const { error } = await api.profiles({ id: profileId }).locations.post({
         externalId: suggestion.id,
       })

@@ -6,7 +6,7 @@ import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { api } from '#/api'
 import { categoriesQueryOptions } from '#/lib/queries/posts'
 import { BackButton } from '#/components/BackButton'

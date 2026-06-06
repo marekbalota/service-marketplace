@@ -47,6 +47,7 @@ const searchSchema = z.object({
     .union([ratingRangeSchema, z.array(ratingRangeSchema)])
     .optional()
     .catch(undefined),
+  externalId: z.string().optional().catch(undefined),
   country: z.string().optional().catch(undefined),
   region: z.string().optional().catch(undefined),
   city: z.string().optional().catch(undefined),
@@ -54,27 +55,25 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/$locale/_app/posts/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search: { q, type, category, sort, page, rating, country, region, city } }) => ({
+  loaderDeps: ({ search: { q, type, category, sort, page, rating, externalId } }) => ({
     q,
     type,
     category,
     sort,
     page,
     rating,
-    country,
-    region,
-    city,
+    externalId,
   }),
   loader: async ({
     context: { queryClient },
-    deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city },
+    deps: { q, type, category, sort = 'newest', page = 1, rating, externalId },
     params,
   }) => {
     const locale = params.locale as string
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions(locale)),
       queryClient.ensureQueryData(
-        postsQueryOptions({ q, type, category, sort, page, rating, country, region, city, locale }),
+        postsQueryOptions({ q, type, category, sort, page, rating, externalId, locale }),
       ),
     ])
   },
@@ -125,6 +124,7 @@ function HomePage() {
     page = 1,
     favourites = false,
     rating,
+    externalId,
     country,
     region,
     city,
@@ -145,8 +145,8 @@ function HomePage() {
     }
   }, [isAuthenticated, favourites, navigate])
 
-  const locationValue: LocationSuggestion | null = country
-    ? { id: '', street: null, city: city ?? null, region: region ?? null, country }
+  const locationValue: LocationSuggestion | null = externalId
+    ? { id: externalId, street: null, city: city ?? null, region: region ?? null, country: country ?? null }
     : null
 
   const filters: FilterItem[] = [
@@ -196,6 +196,7 @@ function HomePage() {
             navigate({
               search: (prev) => ({
                 ...prev,
+                externalId: val?.id ?? undefined,
                 country: val?.country ?? undefined,
                 region: val?.region ?? undefined,
                 city: val?.city ?? undefined,
@@ -248,9 +249,7 @@ function HomePage() {
           page={page}
           favouritesOnly={favourites}
           rating={rating}
-          country={country}
-          region={region}
-          city={city}
+          externalId={externalId}
         />
       </Suspense>
     </>
