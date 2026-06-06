@@ -106,6 +106,9 @@ export function ReportCard({ report }: { report: ReportItem }) {
                     {t('admin.reports.reportedUser')}:
                   </span>{' '}
                   {report.reportedUserName}
+                  {report.reportedUserEmail && (
+                    <span className="text-muted-foreground"> ({report.reportedUserEmail})</span>
+                  )}
                 </p>
               )}
               <p>
@@ -113,6 +116,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   {t('admin.reports.reportedBy')}:
                 </span>{' '}
                 {report.reporterName}
+                <span className="text-muted-foreground"> ({report.reporterEmail})</span>
               </p>
               <p>
                 <span className="font-medium text-foreground">{t('admin.reports.reason')}:</span>{' '}

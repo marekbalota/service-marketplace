@@ -90,17 +90,21 @@ export abstract class AdminReportsService {
           targetType: reportCategories.targetType,
           categoryLabel: reportCategories.label,
           reporterName: reporterProfile.name,
+          reporterEmail: reporterProfile.email,
           postTitle: posts.postTitle,
           postAuthorProfileName: postAuthorProfile.name,
+          postAuthorProfileEmail: postAuthorProfile.email,
           postAuthorUserId: postAuthorUser.id,
           postAuthorUserIsBanned: postAuthorUser.isBanned,
           messageCreatedAt: messages.createdAt,
           msgSenderProfileName: msgSenderProfile.name,
+          msgSenderProfileEmail: msgSenderProfile.email,
           msgSenderUserId: msgSenderUser.id,
           msgSenderUserIsBanned: msgSenderUser.isBanned,
           reviewCreatedAt: reviews.createdAt,
           reviewPostId: reviews.postId,
           reviewerProfileName: reviewerProfile.name,
+          reviewerProfileEmail: reviewerProfile.email,
           reviewerUserId: reviewerUser.id,
           reviewerUserIsBanned: reviewerUser.isBanned,
         })
@@ -125,12 +129,14 @@ export abstract class AdminReportsService {
         let reportedItem: string
         let reportedUserId: string | null = null
         let reportedUserName: string | null = null
+        let reportedUserEmail: string | null = null
         let reportedUserIsBanned: boolean | null = null
 
         if (row.postId) {
           reportedItem = row.postTitle ?? 'Deleted post'
           reportedUserId = row.postAuthorUserId ?? null
           reportedUserName = row.postAuthorProfileName ?? null
+          reportedUserEmail = row.postAuthorProfileEmail ?? null
           reportedUserIsBanned = row.postAuthorUserIsBanned ?? null
         } else if (row.messageId) {
           const date = row.messageCreatedAt
@@ -143,6 +149,7 @@ export abstract class AdminReportsService {
           reportedItem = `Message in thread (${date})`
           reportedUserId = row.msgSenderUserId ?? null
           reportedUserName = row.msgSenderProfileName ?? null
+          reportedUserEmail = row.msgSenderProfileEmail ?? null
           reportedUserIsBanned = row.msgSenderUserIsBanned ?? null
         } else {
           const date = row.reviewCreatedAt
@@ -155,6 +162,7 @@ export abstract class AdminReportsService {
           reportedItem = `Review (${date})`
           reportedUserId = row.reviewerUserId ?? null
           reportedUserName = row.reviewerProfileName ?? null
+          reportedUserEmail = row.reviewerProfileEmail ?? null
           reportedUserIsBanned = row.reviewerUserIsBanned ?? null
         }
 
@@ -163,8 +171,10 @@ export abstract class AdminReportsService {
           targetType: row.targetType,
           reportedItem,
           reporterName: row.reporterName,
+          reporterEmail: row.reporterEmail,
           reportedUserId,
           reportedUserName,
+          reportedUserEmail,
           reportedUserIsBanned,
           categoryLabel: row.categoryLabel,
           description: row.description,
