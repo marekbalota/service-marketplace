@@ -7,6 +7,7 @@ import { Autocomplete } from '@base-ui/react/autocomplete'
 import { cn } from '#/lib/utils'
 import { locationAutocompleteQueryOptions } from '#/lib/queries/locations'
 import { formatLocation } from '#/lib/format'
+import { useLocale } from '#/lib/useLocale'
 
 export interface LocationSuggestion {
   id: string
@@ -28,6 +29,7 @@ export function LocationAutocomplete({
   placeholder,
 }: LocationAutocompleteProps) {
   const { t } = useTranslation()
+  const locale = useLocale()
   const committedText = value ? formatLocation(value) : ''
   const [inputText, setInputText] = React.useState(committedText)
 
@@ -39,7 +41,7 @@ export function LocationAutocomplete({
   const [debouncedText] = useDebouncedValue(inputText, { wait: 300 })
 
   const { data: suggestions = [], isFetching, isFetched } = useQuery({
-    ...locationAutocompleteQueryOptions({ q: debouncedText }),
+    ...locationAutocompleteQueryOptions({ q: debouncedText, locale }),
     enabled: debouncedText.length >= 3 && debouncedText !== committedText,
   })
 
@@ -94,7 +96,7 @@ export function LocationAutocomplete({
         )}
       </Autocomplete.InputGroup>
       <Autocomplete.Portal>
-        <Autocomplete.Positioner side="bottom" sideOffset={4} align="start">
+        <Autocomplete.Positioner className="isolate z-50" side="bottom" sideOffset={4} align="start">
           <Autocomplete.Popup
             className={cn(
               'z-50 w-(--anchor-width) max-h-(--available-height) overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10',

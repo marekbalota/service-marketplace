@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { api } from '#/api'
 
-export function locationAutocompleteQueryOptions(params: { q: string }) {
+export function locationAutocompleteQueryOptions(params: { q: string; locale: string }) {
   return queryOptions({
     queryKey: ['locations-autocomplete', params] as const,
     queryFn: async () => {
