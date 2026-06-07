@@ -25,7 +25,7 @@ export const LocationsModel = {
   addResponse: locationItem,
   removeParams: t.Object({ id: t.String(), locationId: t.String() }),
   autocompleteQuery: t.Object({
-    q: t.String({ minLength: 1 }),
+    q: t.String({ minLength: 3 }),
     limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10 })),
   }),
   autocompleteResponse: t.Object({

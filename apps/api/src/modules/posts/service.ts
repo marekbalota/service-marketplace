@@ -164,8 +164,6 @@ export abstract class PostsService {
               ilike(posts.postTitle, `%${search}%`),
               ilike(posts.description, `%${search}%`),
               ilike(userProfiles.name, `%${search}%`),
-              ilike(locations.city, `%${search}%`),
-              ilike(locations.country, `%${search}%`),
             )
           : undefined,
         type ? eq(posts.postType, type) : undefined,
