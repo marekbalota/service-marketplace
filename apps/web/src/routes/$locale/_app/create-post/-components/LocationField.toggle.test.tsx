@@ -37,7 +37,13 @@ vi.mock('#/components/LocationAutocomplete', () => ({
       <button
         type="button"
         onClick={() =>
-          onChange({ id: 'R1', city: 'TestCity', region: null, country: 'TestCountry', street: null })
+          onChange({
+            id: 'R1',
+            city: 'TestCity',
+            region: null,
+            country: 'TestCountry',
+            street: null,
+          })
         }
       >
         pick-location
@@ -50,12 +56,7 @@ function Wrapper() {
   const { control } = useForm<Record<string, string>>({
     defaultValues: { locationId: '', locationExternalId: '' },
   })
-  return (
-    <LocationField
-      control={control}
-      profileId="profile-1"
-    />
-  )
+  return <LocationField control={control} profileId="profile-1" />
 }
 
 describe('LocationField — toggle resets selection', () => {

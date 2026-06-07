@@ -8,7 +8,6 @@ import { redis } from '../lib/redis'
 
 const externalIdCache = new Map<string, string | null>()
 
-
 async function resolveParentPlaceId(
   name: string,
   type: 'city' | 'region' | 'country',
@@ -29,9 +28,12 @@ async function resolveParentPlaceId(
     url.searchParams.set('apiKey', apiKey)
 
     const res = await fetch(url.toString())
-    if (!res.ok) { externalIdCache.set(cacheKey, null); return null }
+    if (!res.ok) {
+      externalIdCache.set(cacheKey, null)
+      return null
+    }
 
-    const data = await res.json() as {
+    const data = (await res.json()) as {
       features: { properties: Record<string, unknown> }[]
     }
     const match = data.features.find((f) => {
@@ -944,9 +946,10 @@ async function seed() {
 
     let locationId: string | undefined
     if (locationData) {
-      const streetExternalId = locationData.street && locationData.country
-        ? await resolveParentPlaceId(locationData.street, 'city', locationData.country)
-        : null
+      const streetExternalId =
+        locationData.street && locationData.country
+          ? await resolveParentPlaceId(locationData.street, 'city', locationData.country)
+          : null
       const cityExternalId = locationData.city
         ? await resolveParentPlaceId(locationData.city, 'city', locationData.country)
         : null

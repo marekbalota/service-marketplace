@@ -49,7 +49,8 @@ export async function resolveParentPlaceId(
       const p = f.properties
       if (type === 'city') return p.street == null && p.city === name
       if (type === 'region') return p.street == null && p.city == null && p.state === name
-      if (type === 'country') return p.street == null && p.city == null && p.state == null && p.country === name
+      if (type === 'country')
+        return p.street == null && p.city == null && p.state == null && p.country === name
       return false
     })
     if (!match?.properties.place_id) return null

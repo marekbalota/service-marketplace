@@ -28,7 +28,13 @@ import {
 } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
-import { NotFoundError, ForbiddenError, UnprocessableEntityError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import {
+  NotFoundError,
+  ForbiddenError,
+  UnprocessableEntityError,
+  ErrorMessages,
+  AuthErrorMessages,
+} from '../../lib/errors'
 import { redis } from '../../lib/redis'
 import { resolveParentPlaceId, type ParentLevel } from '../../lib/geoapify'
 import { ProfilesService } from '../profiles/service'
@@ -109,7 +115,11 @@ export abstract class PostsService {
     if (externalId) {
       const cached = await redis.get(`loc:${externalId}`)
       if (cached) {
-        const { city: filterCity, region: filterRegion, street: filterStreet } = JSON.parse(cached) as {
+        const {
+          city: filterCity,
+          region: filterRegion,
+          street: filterStreet,
+        } = JSON.parse(cached) as {
           city: string | null
           region: string | null
           street: string | null
@@ -428,7 +438,13 @@ export abstract class PostsService {
         if (!cached) {
           throw new UnprocessableEntityError('Location suggestion expired, please search again')
         }
-        let parsed: { country: string | null; region: string | null; city: string | null; street: string | null; lang?: string }
+        let parsed: {
+          country: string | null
+          region: string | null
+          city: string | null
+          street: string | null
+          lang?: string
+        }
         try {
           parsed = JSON.parse(cached) as typeof parsed
         } catch {
@@ -445,15 +461,16 @@ export abstract class PostsService {
           country: null,
         }
 
-        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] = await Promise.all(
-          (['street', 'city', 'region', 'country'] as const).map(async (col) => {
-            if (level === col) return location.externalId
-            if (col === 'street') return null
-            const name = parsed[col]
-            if (!name) return null
-            return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
-          }),
-        )
+        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] =
+          await Promise.all(
+            (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+              if (level === col) return location.externalId
+              if (col === 'street') return null
+              const name = parsed[col]
+              if (!name) return null
+              return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+            }),
+          )
 
         const [insertedLocation] = await tx
           .insert(locations)
@@ -505,7 +522,13 @@ export abstract class PostsService {
         if (!cached) {
           throw new UnprocessableEntityError('Location suggestion expired, please search again')
         }
-        let parsed: { country: string | null; region: string | null; city: string | null; street: string | null; lang?: string }
+        let parsed: {
+          country: string | null
+          region: string | null
+          city: string | null
+          street: string | null
+          lang?: string
+        }
         try {
           parsed = JSON.parse(cached) as typeof parsed
         } catch {
@@ -522,15 +545,16 @@ export abstract class PostsService {
           country: null,
         }
 
-        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] = await Promise.all(
-          (['street', 'city', 'region', 'country'] as const).map(async (col) => {
-            if (level === col) return location.externalId
-            if (col === 'street') return null
-            const name = parsed[col]
-            if (!name) return null
-            return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
-          }),
-        )
+        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] =
+          await Promise.all(
+            (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+              if (level === col) return location.externalId
+              if (col === 'street') return null
+              const name = parsed[col]
+              if (!name) return null
+              return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+            }),
+          )
 
         const [insertedLocation] = await tx
           .insert(locations)

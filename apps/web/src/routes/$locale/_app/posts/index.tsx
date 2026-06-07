@@ -17,10 +17,7 @@ import { CategorySelect } from './-components/CategorySelect'
 import { SortSelect } from './-components/SortSelect'
 import { RatingSelect } from './-components/RatingSelect'
 import { useLocale } from '#/lib/useLocale'
-import {
-  LocationAutocomplete,
-  type LocationSuggestion,
-} from '#/components/LocationAutocomplete'
+import { LocationAutocomplete, type LocationSuggestion } from '#/components/LocationAutocomplete'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum([
@@ -148,7 +145,13 @@ function HomePage() {
   }, [isAuthenticated, favourites, navigate])
 
   const locationValue: LocationSuggestion | null = externalId
-    ? { id: externalId, street: street ?? null, city: city ?? null, region: region ?? null, country: country ?? null }
+    ? {
+        id: externalId,
+        street: street ?? null,
+        city: city ?? null,
+        region: region ?? null,
+        country: country ?? null,
+      }
     : null
 
   const filters: FilterItem[] = [

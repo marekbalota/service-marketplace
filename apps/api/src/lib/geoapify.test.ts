@@ -21,9 +21,7 @@ describe('fetchGeoapifyFeatures', () => {
   })
 
   it('throws BadGatewayError when response status is not OK', async () => {
-    spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('{}', { status: 429 }),
-    )
+    spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 429 }))
     await expect(fetchGeoapifyFeatures('Brno', 'en', 5)).rejects.toBeInstanceOf(BadGatewayError)
   })
 
@@ -51,7 +49,15 @@ describe('resolveParentPlaceId', () => {
 
   it('fetches from Geoapify, caches the result, and returns the place_id', async () => {
     mockFetch([
-      { properties: { place_id: 'brno_id', city: 'Brno', state: 'South Moravian Region', street: null, country: 'Czech Republic' } },
+      {
+        properties: {
+          place_id: 'brno_id',
+          city: 'Brno',
+          state: 'South Moravian Region',
+          street: null,
+          country: 'Czech Republic',
+        },
+      },
     ])
     const result = await resolveParentPlaceId('Brno', 'city', 'Czech Republic')
     expect(result).toBe('brno_id')
@@ -62,7 +68,15 @@ describe('resolveParentPlaceId', () => {
   it('returns null when no feature matches the given type', async () => {
     // Feature has city set, so it won't match a country-level query
     mockFetch([
-      { properties: { place_id: 'R1', city: 'Brno', state: null, street: null, country: 'Czech Republic' } },
+      {
+        properties: {
+          place_id: 'R1',
+          city: 'Brno',
+          state: null,
+          street: null,
+          country: 'Czech Republic',
+        },
+      },
     ])
     const result = await resolveParentPlaceId('Czech Republic', 'country')
     expect(result).toBeNull()
@@ -82,7 +96,15 @@ describe('resolveParentPlaceId', () => {
 
   it('matches region-level features correctly', async () => {
     mockFetch([
-      { properties: { place_id: 'region_id', city: null, state: 'South Moravian Region', street: null, country: 'Czech Republic' } },
+      {
+        properties: {
+          place_id: 'region_id',
+          city: null,
+          state: 'South Moravian Region',
+          street: null,
+          country: 'Czech Republic',
+        },
+      },
     ])
     const result = await resolveParentPlaceId('South Moravian Region', 'region', 'Czech Republic')
     expect(result).toBe('region_id')

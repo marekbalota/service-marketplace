@@ -63,20 +63,14 @@ describe('GET /locations/autocomplete', () => {
   })
 
   it('skips features missing country', async () => {
-    mockGeoapify([
-      geoapifyFeature('place-1', { country: null }),
-      geoapifyFeature('place-2'),
-    ])
+    mockGeoapify([geoapifyFeature('place-1', { country: null }), geoapifyFeature('place-2')])
     const { data } = await client.locations.autocomplete.get({ query: { q: 'test' } })
     expect(data!.suggestions).toHaveLength(1)
     expect(data!.suggestions[0]!.id).toBe('place-2')
   })
 
   it('skips features missing place_id', async () => {
-    mockGeoapify([
-      geoapifyFeature('place-1', { place_id: undefined }),
-      geoapifyFeature('place-2'),
-    ])
+    mockGeoapify([geoapifyFeature('place-1', { place_id: undefined }), geoapifyFeature('place-2')])
     const { data } = await client.locations.autocomplete.get({ query: { q: 'test' } })
     expect(data!.suggestions).toHaveLength(1)
     expect(data!.suggestions[0]!.id).toBe('place-2')
@@ -141,24 +135,28 @@ describe('POST /profiles/:id/locations', () => {
   it('creates location from valid Redis-cached externalId', async () => {
     await redis.set(
       'loc:R86674',
-      JSON.stringify({ country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno', street: null }),
-      'EX', 14400,
+      JSON.stringify({
+        country: 'Czech Republic',
+        region: 'South Moravian Region',
+        city: 'Brno',
+        street: null,
+      }),
+      'EX',
+      14400,
     )
 
-    const { data, error } = await fullClient.profiles({ id: profileId }).locations.post(
-      { externalId: 'R86674' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { data, error } = await fullClient
+      .profiles({ id: profileId })
+      .locations.post({ externalId: 'R86674' }, { headers: { Cookie: sessionCookie } })
     expect(error).toBeNull()
     expect(data!.city).toBe('Brno')
     expect(data!.country).toBe('Czech Republic')
   })
 
   it('returns 422 when externalId is not in Redis', async () => {
-    const { error } = await fullClient.profiles({ id: profileId }).locations.post(
-      { externalId: 'R99999' },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await fullClient
+      .profiles({ id: profileId })
+      .locations.post({ externalId: 'R99999' }, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(422)
   })
 })

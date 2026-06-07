@@ -34,7 +34,12 @@ export function AddLocationDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) handleClose()
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('profiles.addLocationTitle')}</DialogTitle>

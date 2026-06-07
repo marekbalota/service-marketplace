@@ -51,7 +51,13 @@ export function LocationField<T extends FieldValues>({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">{t('createPost.locationOptional')}</span>
-          <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={handleToggle}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={handleToggle}
+          >
             {isNewLocation ? t('createPost.usePreviousLocation') : t('createPost.enterNewLocation')}
           </Button>
         </div>
@@ -84,9 +90,7 @@ export function LocationField<T extends FieldValues>({
               </SelectContent>
             </Select>
             {previousLocations.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                {t('createPost.noPreviousLocations')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('createPost.noPreviousLocations')}</p>
             )}
           </div>
         ) : (

@@ -23,11 +23,7 @@ interface LocationAutocompleteProps {
   placeholder?: string
 }
 
-export function LocationAutocomplete({
-  value,
-  onChange,
-  placeholder,
-}: LocationAutocompleteProps) {
+export function LocationAutocomplete({ value, onChange, placeholder }: LocationAutocompleteProps) {
   const { t } = useTranslation()
   const locale = useLocale()
   const committedText = value ? formatLocation(value) : ''
@@ -40,13 +36,21 @@ export function LocationAutocomplete({
 
   const [debouncedText] = useDebouncedValue(inputText, { wait: 300 })
 
-  const { data: suggestions = [], isFetching, isFetched } = useQuery({
+  const {
+    data: suggestions = [],
+    isFetching,
+    isFetched,
+  } = useQuery({
     ...locationAutocompleteQueryOptions({ q: debouncedText, locale }),
     enabled: debouncedText.length >= 3 && debouncedText !== committedText,
   })
 
   const showDropdown =
-    debouncedText !== committedText && debouncedText.length >= 3 && debouncedText === inputText && !isFetching && isFetched
+    debouncedText !== committedText &&
+    debouncedText.length >= 3 &&
+    debouncedText === inputText &&
+    !isFetching &&
+    isFetched
 
   function handleValueChange(v: string) {
     setInputText(v)
@@ -66,8 +70,7 @@ export function LocationAutocomplete({
       onValueChange={handleValueChange}
       open={showDropdown}
       onOpenChange={(isOpen, eventDetails) => {
-        if (!isOpen && eventDetails?.reason !== 'item-press')
-          setInputText(committedText)
+        if (!isOpen && eventDetails?.reason !== 'item-press') setInputText(committedText)
       }}
       autoHighlight
     >
@@ -96,7 +99,12 @@ export function LocationAutocomplete({
         )}
       </Autocomplete.InputGroup>
       <Autocomplete.Portal>
-        <Autocomplete.Positioner className="isolate z-50" side="bottom" sideOffset={4} align="start">
+        <Autocomplete.Positioner
+          className="isolate z-50"
+          side="bottom"
+          sideOffset={4}
+          align="start"
+        >
           <Autocomplete.Popup
             className={cn(
               'z-50 w-(--anchor-width) max-h-(--available-height) overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10',

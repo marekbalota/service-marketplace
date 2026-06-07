@@ -37,12 +37,7 @@ function Wrapper() {
       locationExternalId: '',
     },
   })
-  return (
-    <LocationField
-      control={control}
-      profileId="profile-1"
-    />
-  )
+  return <LocationField control={control} profileId="profile-1" />
 }
 
 describe('LocationField', () => {

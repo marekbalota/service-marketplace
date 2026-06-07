@@ -350,8 +350,18 @@ describe('DELETE /profiles/:id', () => {
 
 describe('POST /profiles/:id/locations', () => {
   beforeAll(async () => {
-    await redis.set('loc:R_bratislava', JSON.stringify({ country: 'Slovakia', region: null, city: 'Bratislava', street: null }), 'EX', 14400)
-    await redis.set('loc:R_testcountry', JSON.stringify({ country: 'TestCountry', region: null, city: null, street: null }), 'EX', 14400)
+    await redis.set(
+      'loc:R_bratislava',
+      JSON.stringify({ country: 'Slovakia', region: null, city: 'Bratislava', street: null }),
+      'EX',
+      14400,
+    )
+    await redis.set(
+      'loc:R_testcountry',
+      JSON.stringify({ country: 'TestCountry', region: null, city: null, street: null }),
+      'EX',
+      14400,
+    )
   })
 
   it('returns 401 without a session cookie', async () => {
@@ -371,10 +381,7 @@ describe('POST /profiles/:id/locations', () => {
   it('returns 201 with the created location', async () => {
     const { data, error } = await client
       .profiles({ id: aliceProfileId })
-      .locations.post(
-        { externalId: 'R_bratislava' },
-        { headers: { Cookie: aliceCookie } },
-      )
+      .locations.post({ externalId: 'R_bratislava' }, { headers: { Cookie: aliceCookie } })
     expect(error).toBeNull()
     if (!data || 'message' in data) throw new Error('Expected location data')
     expect(data.country).toBe('Slovakia')
@@ -398,7 +405,12 @@ describe('DELETE /profiles/:id/locations/:locationId', () => {
   let locationId = ''
 
   beforeAll(async () => {
-    await redis.set('loc:R_deleteme', JSON.stringify({ country: 'DeleteMe', region: null, city: null, street: null }), 'EX', 14400)
+    await redis.set(
+      'loc:R_deleteme',
+      JSON.stringify({ country: 'DeleteMe', region: null, city: null, street: null }),
+      'EX',
+      14400,
+    )
     const { data } = await client
       .profiles({ id: aliceProfileId })
       .locations.post({ externalId: 'R_deleteme' }, { headers: { Cookie: aliceCookie } })

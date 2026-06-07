@@ -231,11 +231,7 @@ function EditPostPage() {
             <PostDescriptionField control={form.control} />
 
             {/* Row 5: Location — full width */}
-            <LocationField
-              control={form.control}
-              profileId={post.authorId}
-              showSaveHint
-            />
+            <LocationField control={form.control} profileId={post.authorId} showSaveHint />
 
             <FieldError errors={[form.formState.errors.root]} />
 

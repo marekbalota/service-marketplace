@@ -270,10 +270,14 @@ export function MultiSelect({
                 {showControls && !search && (
                   <CommandGroup className="p-0">
                     {value.length === 0 && (
-                      <CommandItem className="cursor-pointer" onSelect={selectAll}>{t('common.selectAll')}</CommandItem>
+                      <CommandItem className="cursor-pointer" onSelect={selectAll}>
+                        {t('common.selectAll')}
+                      </CommandItem>
                     )}
                     {value.length > 0 && (
-                      <CommandItem className="cursor-pointer" onSelect={clearAll}>{t('common.clearSelection')}</CommandItem>
+                      <CommandItem className="cursor-pointer" onSelect={clearAll}>
+                        {t('common.clearSelection')}
+                      </CommandItem>
                     )}
                   </CommandGroup>
                 )}
@@ -293,7 +297,10 @@ export function MultiSelect({
                 </CommandGroup>
               </CommandList>
             </ScrollAreaPrimitive.Viewport>
-            <ScrollBar orientation="vertical" className="opacity-0 transition-opacity data-[scrolling]:opacity-100 data-[hovering]:opacity-100" />
+            <ScrollBar
+              orientation="vertical"
+              className="opacity-0 transition-opacity data-[scrolling]:opacity-100 data-[hovering]:opacity-100"
+            />
           </ScrollAreaPrimitive.Root>
         </Command>
       </PopoverContent>

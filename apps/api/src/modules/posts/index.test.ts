@@ -29,39 +29,123 @@ beforeAll(async () => {
   const { data: meData } = await client.users.me.get({ headers: { Cookie: sessionCookie } })
   authorId = meData!.profiles[0]?.userProfileId ?? ''
 
-  await redis.set('loc:R_slovakia', JSON.stringify({ country: 'Slovakia', region: 'Trenčín', city: 'Trenčín', street: null }), 'EX', 14400)
-  await redis.set('loc:R_brno', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian', city: 'Brno', street: null }), 'EX', 14400)
-  await redis.set('loc:R_brno_street', JSON.stringify({ country: 'CZ', region: 'South Moravian Region', city: 'Brno', street: 'Botanická' }), 'EX', 14400)
-  await redis.set('loc:R_brno2', JSON.stringify({ country: 'CZ', region: 'South Moravian', city: 'Brno', street: null }), 'EX', 14400)
+  await redis.set(
+    'loc:R_slovakia',
+    JSON.stringify({ country: 'Slovakia', region: 'Trenčín', city: 'Trenčín', street: null }),
+    'EX',
+    14400,
+  )
+  await redis.set(
+    'loc:R_brno',
+    JSON.stringify({
+      country: 'Czech Republic',
+      region: 'South Moravian',
+      city: 'Brno',
+      street: null,
+    }),
+    'EX',
+    14400,
+  )
+  await redis.set(
+    'loc:R_brno_street',
+    JSON.stringify({
+      country: 'CZ',
+      region: 'South Moravian Region',
+      city: 'Brno',
+      street: 'Botanická',
+    }),
+    'EX',
+    14400,
+  )
+  await redis.set(
+    'loc:R_brno2',
+    JSON.stringify({ country: 'CZ', region: 'South Moravian', city: 'Brno', street: null }),
+    'EX',
+    14400,
+  )
   // Region-level place_id: city is null so the filter will use regionExternalId matching
-  await redis.set('loc:R_south_moravia', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian Region', city: null, street: null }), 'EX', 14400)
+  await redis.set(
+    'loc:R_south_moravia',
+    JSON.stringify({
+      country: 'Czech Republic',
+      region: 'South Moravian Region',
+      city: null,
+      street: null,
+    }),
+    'EX',
+    14400,
+  )
   // City-level place_id used as parent for the street-level post below
-  await redis.set('loc:R_brno_city', JSON.stringify({ country: 'CZ', region: 'South Moravian Region', city: 'Brno', street: null }), 'EX', 14400)
+  await redis.set(
+    'loc:R_brno_city',
+    JSON.stringify({ country: 'CZ', region: 'South Moravian Region', city: 'Brno', street: null }),
+    'EX',
+    14400,
+  )
   // Parent city caches so resolveParentPlaceId returns the right ID without hitting Geoapify
   await redis.set('parent:city:Trenčín:Slovakia', 'R_slovakia', 'EX', 86400)
   await redis.set('parent:city:Brno:Czech Republic', 'R_brno', 'EX', 86400)
   await redis.set('parent:city:Brno:CZ', 'R_brno_city', 'EX', 86400)
 
   await client.posts.post(
-    { authorId, postTitle: 'Location test post Slovakia Trencin', description: 'Test post for location filter with known location data', postType: 'OFFER', location: { externalId: 'R_slovakia' } },
+    {
+      authorId,
+      postTitle: 'Location test post Slovakia Trencin',
+      description: 'Test post for location filter with known location data',
+      postType: 'OFFER',
+      location: { externalId: 'R_slovakia' },
+    },
     { headers: { Cookie: sessionCookie } },
   )
   await client.posts.post(
-    { authorId, postTitle: 'Location test post Czech Republic Brno', description: 'Test post for location filter with known location data', postType: 'OFFER', location: { externalId: 'R_brno' } },
+    {
+      authorId,
+      postTitle: 'Location test post Czech Republic Brno',
+      description: 'Test post for location filter with known location data',
+      postType: 'OFFER',
+      location: { externalId: 'R_brno' },
+    },
     { headers: { Cookie: sessionCookie } },
   )
   // Post whose location row has region_external_id = 'R_south_moravia' — used in region-level filter test.
   // We set the parent cache entry so resolveParentPlaceId returns 'R_south_moravia' when the Brno
   // post is created (the english cache for 'R_brno3' stores region='South Moravian Region').
-  await redis.set('parent:region:South Moravian Region:Czech Republic', 'R_south_moravia', 'EX', 86400)
-  await redis.set('loc:R_brno3', JSON.stringify({ country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno', street: null }), 'EX', 14400)
+  await redis.set(
+    'parent:region:South Moravian Region:Czech Republic',
+    'R_south_moravia',
+    'EX',
+    86400,
+  )
+  await redis.set(
+    'loc:R_brno3',
+    JSON.stringify({
+      country: 'Czech Republic',
+      region: 'South Moravian Region',
+      city: 'Brno',
+      street: null,
+    }),
+    'EX',
+    14400,
+  )
   await client.posts.post(
-    { authorId, postTitle: 'Location test post Brno with region id', description: 'Test post for region-level location filter', postType: 'OFFER', location: { externalId: 'R_brno3' } },
+    {
+      authorId,
+      postTitle: 'Location test post Brno with region id',
+      description: 'Test post for region-level location filter',
+      postType: 'OFFER',
+      location: { externalId: 'R_brno3' },
+    },
     { headers: { Cookie: sessionCookie } },
   )
   // Post with street-level location — streetExternalId='R_brno_street', cityExternalId='R_brno_city'
   await client.posts.post(
-    { authorId, postTitle: 'Location test post Brno street level', description: 'Test post for street-level location city filter', postType: 'OFFER', location: { externalId: 'R_brno_street' } },
+    {
+      authorId,
+      postTitle: 'Location test post Brno street level',
+      description: 'Test post for street-level location city filter',
+      postType: 'OFFER',
+      location: { externalId: 'R_brno_street' },
+    },
     { headers: { Cookie: sessionCookie } },
   )
 })
@@ -359,19 +443,28 @@ describe('PATCH /posts/:id', () => {
   })
 
   it('updates post location via externalId', async () => {
-    await redis.set('loc:R_update', JSON.stringify({ country: 'Czech Republic', region: 'Prague', city: 'Prague', street: null }), 'EX', 14400)
+    await redis.set(
+      'loc:R_update',
+      JSON.stringify({ country: 'Czech Republic', region: 'Prague', city: 'Prague', street: null }),
+      'EX',
+      14400,
+    )
 
     // First create a post to update
     const { data: created } = await client.posts.post(
-      { authorId, postTitle: 'Location update test', description: 'Testing location update', postType: 'OFFER' },
+      {
+        authorId,
+        postTitle: 'Location update test',
+        description: 'Testing location update',
+        postType: 'OFFER',
+      },
       { headers: { Cookie: sessionCookie } },
     )
     const postId = getPostId(created)
 
-    const { error } = await client.posts({ id: postId }).patch(
-      { location: { externalId: 'R_update' } },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: postId })
+      .patch({ location: { externalId: 'R_update' } }, { headers: { Cookie: sessionCookie } })
     expect(error).toBeNull()
     // Verify the post now has a location by fetching it
     const { data: fetched } = await client.posts({ id: postId }).get()
@@ -380,45 +473,66 @@ describe('PATCH /posts/:id', () => {
 
   it('returns 422 when update location externalId not in Redis', async () => {
     const { data: created } = await client.posts.post(
-      { authorId, postTitle: 'Location 422 test', description: 'Testing location 422', postType: 'OFFER' },
+      {
+        authorId,
+        postTitle: 'Location 422 test',
+        description: 'Testing location 422',
+        postType: 'OFFER',
+      },
       { headers: { Cookie: sessionCookie } },
     )
     const postId = getPostId(created)
 
-    const { error } = await client.posts({ id: postId }).patch(
-      { location: { externalId: 'R_nonexistent_cache_miss' } },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: postId })
+      .patch(
+        { location: { externalId: 'R_nonexistent_cache_miss' } },
+        { headers: { Cookie: sessionCookie } },
+      )
     expect(error?.status).toBe(422)
   })
 
   it('returns 422 when locationId is an empty string', async () => {
     const { data: created } = await client.posts.post(
-      { authorId, postTitle: 'Empty locationId test', description: 'Testing empty locationId', postType: 'OFFER' },
+      {
+        authorId,
+        postTitle: 'Empty locationId test',
+        description: 'Testing empty locationId',
+        postType: 'OFFER',
+      },
       { headers: { Cookie: sessionCookie } },
     )
     const postId = getPostId(created)
 
-    const { error } = await client.posts({ id: postId }).patch(
-      { locationId: '' as never },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: postId })
+      .patch({ locationId: '' as never }, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(422)
   })
 
   it('clears post location when locationId is null', async () => {
-    await redis.set('loc:R_clear', JSON.stringify({ country: 'Germany', region: 'Bavaria', city: 'Munich', street: null }), 'EX', 14400)
+    await redis.set(
+      'loc:R_clear',
+      JSON.stringify({ country: 'Germany', region: 'Bavaria', city: 'Munich', street: null }),
+      'EX',
+      14400,
+    )
 
     const { data: created } = await client.posts.post(
-      { authorId, postTitle: 'Location clear test', description: 'Testing location clear', postType: 'OFFER', location: { externalId: 'R_clear' } },
+      {
+        authorId,
+        postTitle: 'Location clear test',
+        description: 'Testing location clear',
+        postType: 'OFFER',
+        location: { externalId: 'R_clear' },
+      },
       { headers: { Cookie: sessionCookie } },
     )
     const postId = getPostId(created)
 
-    const { error } = await client.posts({ id: postId }).patch(
-      { locationId: null },
-      { headers: { Cookie: sessionCookie } },
-    )
+    const { error } = await client
+      .posts({ id: postId })
+      .patch({ locationId: null }, { headers: { Cookie: sessionCookie } })
     expect(error).toBeNull()
     const { data: fetched } = await client.posts({ id: postId }).get()
     expect(fetched!.location).toBeNull()
@@ -567,7 +681,9 @@ describe('GET /posts — location filter', () => {
     // The post created with R_brno_street has city_external_id='R_brno_city' (set via Redis parent cache)
     const { data, error } = await client.posts.get({ query: { externalId: 'R_brno_city' } })
     expect(error).toBeNull()
-    const streetPost = data!.items.find((p) => p.postTitle === 'Location test post Brno street level')
+    const streetPost = data!.items.find(
+      (p) => p.postTitle === 'Location test post Brno street level',
+    )
     expect(streetPost).toBeDefined()
     expect(streetPost!.location).not.toBeNull()
   })
