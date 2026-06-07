@@ -51,6 +51,7 @@ const searchSchema = z.object({
   country: z.string().optional().catch(undefined),
   region: z.string().optional().catch(undefined),
   city: z.string().optional().catch(undefined),
+  street: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/$locale/_app/posts/')({
@@ -128,6 +129,7 @@ function HomePage() {
     country,
     region,
     city,
+    street,
   } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
@@ -146,7 +148,7 @@ function HomePage() {
   }, [isAuthenticated, favourites, navigate])
 
   const locationValue: LocationSuggestion | null = externalId
-    ? { id: externalId, street: null, city: city ?? null, region: region ?? null, country: country ?? null }
+    ? { id: externalId, street: street ?? null, city: city ?? null, region: region ?? null, country: country ?? null }
     : null
 
   const filters: FilterItem[] = [
@@ -170,22 +172,22 @@ function HomePage() {
     {
       label: t('posts.postType'),
       control: <PostTypeSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.category'),
       control: <CategorySelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[180px]',
     },
     {
       label: t('posts.ratingLabel'),
       control: <RatingSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.sortBy'),
       control: <SortSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.locations'),
@@ -200,6 +202,7 @@ function HomePage() {
                 country: val?.country ?? undefined,
                 region: val?.region ?? undefined,
                 city: val?.city ?? undefined,
+                street: val?.street ?? undefined,
                 page: undefined,
               }),
             })
@@ -207,7 +210,7 @@ function HomePage() {
           placeholder={t('posts.location.all')}
         />
       ),
-      desktopWidth: isAuthenticated ? 'w-[240px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[200px]',
     },
   ]
 
