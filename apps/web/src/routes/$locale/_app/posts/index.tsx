@@ -16,8 +16,8 @@ import { PostTypeSelect } from './-components/PostTypeSelect'
 import { CategorySelect } from './-components/CategorySelect'
 import { SortSelect } from './-components/SortSelect'
 import { RatingSelect } from './-components/RatingSelect'
-import { LocationSelect } from './-components/LocationSelect'
 import { useLocale } from '#/lib/useLocale'
+import { LocationAutocomplete, type LocationSuggestion } from '#/components/LocationAutocomplete'
 
 const postTypeEnum = z.enum(['all', 'offer', 'request'])
 const sortEnum = z.enum([
@@ -44,34 +44,34 @@ const searchSchema = z.object({
     .union([ratingRangeSchema, z.array(ratingRangeSchema)])
     .optional()
     .catch(undefined),
+  externalId: z.string().optional().catch(undefined),
   country: z.string().optional().catch(undefined),
   region: z.string().optional().catch(undefined),
   city: z.string().optional().catch(undefined),
+  street: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/$locale/_app/posts/')({
   validateSearch: searchSchema,
-  loaderDeps: ({ search: { q, type, category, sort, page, rating, country, region, city } }) => ({
+  loaderDeps: ({ search: { q, type, category, sort, page, rating, externalId } }) => ({
     q,
     type,
     category,
     sort,
     page,
     rating,
-    country,
-    region,
-    city,
+    externalId,
   }),
   loader: async ({
     context: { queryClient },
-    deps: { q, type, category, sort = 'newest', page = 1, rating, country, region, city },
+    deps: { q, type, category, sort = 'newest', page = 1, rating, externalId },
     params,
   }) => {
     const locale = params.locale as string
     await Promise.all([
       queryClient.ensureQueryData(categoriesQueryOptions(locale)),
       queryClient.ensureQueryData(
-        postsQueryOptions({ q, type, category, sort, page, rating, country, region, city, locale }),
+        postsQueryOptions({ q, type, category, sort, page, rating, externalId, locale }),
       ),
     ])
   },
@@ -122,9 +122,11 @@ function HomePage() {
     page = 1,
     favourites = false,
     rating,
+    externalId,
     country,
     region,
     city,
+    street,
   } = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data: user } = useCurrentUser()
@@ -141,6 +143,16 @@ function HomePage() {
       navigate({ search: (prev) => ({ ...prev, favourites: undefined }) })
     }
   }, [isAuthenticated, favourites, navigate])
+
+  const locationValue: LocationSuggestion | null = externalId
+    ? {
+        id: externalId,
+        street: street ?? null,
+        city: city ?? null,
+        region: region ?? null,
+        country: country ?? null,
+      }
+    : null
 
   const filters: FilterItem[] = [
     ...(isAuthenticated
@@ -163,27 +175,45 @@ function HomePage() {
     {
       label: t('posts.postType'),
       control: <PostTypeSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.category'),
       control: <CategorySelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[180px]',
     },
     {
       label: t('posts.ratingLabel'),
       control: <RatingSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.sortBy'),
       control: <SortSelect />,
-      desktopWidth: isAuthenticated ? 'w-[200px]' : 'flex-1',
+      desktopWidth: 'grow shrink basis-[160px]',
     },
     {
       label: t('posts.locations'),
-      control: <LocationSelect />,
-      desktopWidth: isAuthenticated ? 'w-[240px]' : 'flex-1',
+      control: (
+        <LocationAutocomplete
+          value={locationValue}
+          onChange={(val) =>
+            navigate({
+              search: (prev) => ({
+                ...prev,
+                externalId: val?.id ?? undefined,
+                country: val?.country ?? undefined,
+                region: val?.region ?? undefined,
+                city: val?.city ?? undefined,
+                street: val?.street ?? undefined,
+                page: undefined,
+              }),
+            })
+          }
+          placeholder={t('posts.location.all')}
+        />
+      ),
+      desktopWidth: 'grow shrink basis-[200px]',
     },
   ]
 
@@ -225,9 +255,7 @@ function HomePage() {
           page={page}
           favouritesOnly={favourites}
           rating={rating}
-          country={country}
-          region={region}
-          city={city}
+          externalId={externalId}
         />
       </Suspense>
     </>

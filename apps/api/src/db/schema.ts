@@ -241,11 +241,14 @@ export const postCategories = pgTable(
 
 export const locations = pgTable('locations', {
   locationId: uuid('location_id').primaryKey().defaultRandom(),
-  country: text('country'),
-  region: text('region'),
-  city: text('city'),
+  streetExternalId: text('street_external_id'),
+  cityExternalId: text('city_external_id'),
+  regionExternalId: text('region_external_id'),
+  countryExternalId: text('country_external_id'),
   street: text('street'),
-  houseNumber: text('house_number'),
+  city: text('city'),
+  region: text('region'),
+  country: text('country'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
 })

@@ -38,6 +38,19 @@ test.describe('Marketplace index', () => {
     await expect(page.getByRole('combobox').first()).toBeVisible()
   })
 
+  test('shows the location filter input on desktop', async ({ page }) => {
+    // Desktop Chrome viewport shows the inline filter row (hidden below lg: 1024px)
+    await expect(page.getByPlaceholder('All Locations')).toBeVisible()
+  })
+
+  test('location filter with unknown externalId shows empty state', async ({ page }) => {
+    // Navigate directly with an externalId that is not in Redis cache.
+    // The API returns sql`false` for unknown externalIds, so the result set must be empty.
+    await page.goto('/en/posts?externalId=nonexistent-place-xyz')
+    await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
+    await expect(page.getByText('No services found matching your criteria.')).toBeVisible()
+  })
+
   test('displays a list of service posts', async ({ page }) => {
     // Wait for posts to load (suspense resolves)
     await expect(page.locator('main p').first()).toBeVisible()
@@ -170,6 +183,21 @@ test.describe('Account Settings — Profile CRUD', () => {
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
   })
 
+  test('edit — Add Location dialog opens and can be dismissed', async ({ page }) => {
+    const editLinks = page.getByRole('link', { name: /^edit$/i })
+    await editLinks.first().click()
+    await expect(page).toHaveURL(/\/account-settings\/profiles\/[^/]+\/edit/)
+
+    await page.getByRole('button', { name: /add location/i }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByText('Save a New Location')).toBeVisible()
+    // The location autocomplete input should be visible inside the dialog
+    await expect(page.getByPlaceholder(/search for a location/i)).toBeVisible()
+
+    await page.getByRole('button', { name: /cancel/i }).click()
+    await expect(page.getByRole('dialog')).not.toBeVisible()
+  })
+
   test('delete — cannot delete last profile (shows error)', async ({ page }) => {
     // If there is only one profile the Delete button should show an error
     const deleteButtons = page.getByRole('button', { name: /delete/i })
@@ -210,6 +238,17 @@ test.describe('Create Post', () => {
     await expect(page.getByText('Create New Posting')).toBeVisible()
   })
 
+  test('create-post form shows location field with toggle to enter new location', async ({
+    page,
+  }) => {
+    // The location section renders with a label and a toggle button
+    await expect(page.getByText('Location (Optional)')).toBeVisible()
+    // Default mode shows the "Enter New Location" toggle (autocomplete is hidden until toggled)
+    await page.getByRole('button', { name: /enter new location/i }).click()
+    // After toggling, the LocationAutocomplete input appears
+    await expect(page.getByPlaceholder(/search for a location/i)).toBeVisible()
+  })
+
   test('creates a post and redirects to My Postings', async ({ page }) => {
     const uniqueTitle = `E2E Lawn Care ${Date.now()}`
     await page.getByPlaceholder(/Professional Lawn Care Service/i).fill(uniqueTitle)
@@ -219,6 +258,24 @@ test.describe('Create Post', () => {
     await page.getByRole('button', { name: /create posting/i }).click()
     await page.waitForURL('/en/my-postings')
     await expect(page.getByText(uniqueTitle)).toBeVisible()
+  })
+
+  test('edit-post form shows the location field', async ({ page }) => {
+    // The Edit button lives on the post detail page, not My Postings.
+    // From My Postings, click on a post card to navigate to its detail page.
+    await page.goto('/en/my-postings')
+    await expect(page.locator('main .grid > a').first()).toBeVisible({ timeout: 10000 })
+    await page.locator('main .grid > a').first().click()
+    await page.waitForURL(/\/posts\/[0-9a-f-]+$/)
+
+    // The Edit button is rendered in PostInfoCard for the post owner
+    await page.getByRole('link', { name: /^edit$/i }).click()
+    await expect(page).toHaveURL(/\/edit-post\/[0-9a-f-]+$/)
+
+    // Location field must be present on the edit-post form
+    await expect(page.getByText('Location (Optional)')).toBeVisible()
+    await page.getByRole('button', { name: /enter new location/i }).click()
+    await expect(page.getByPlaceholder(/search for a location/i)).toBeVisible()
   })
 })
 

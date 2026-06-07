@@ -1,8 +1,7 @@
 import { render, screen, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
-import { PostReviewsCard } from './PostReviewsCard'
 
 const mockUseQuery = vi.hoisted(() => vi.fn())
 
@@ -24,14 +23,20 @@ vi.mock('#/api', () => ({
     profiles: vi.fn(() => ({ reported: { reviews: vi.fn(() => ({ get: vi.fn() })) } })),
   },
 }))
-vi.mock('./ReviewCard', () => ({
+vi.doMock('./ReviewCard', () => ({
   ReviewCard: ({ review }: { review: { reviewerName: string } }) => (
     <div data-testid="review-card">{review.reviewerName}</div>
   ),
 }))
-vi.mock('./ReviewForm', () => ({
+vi.doMock('./ReviewForm', () => ({
   ReviewForm: () => <div data-testid="review-form" />,
 }))
+
+let PostReviewsCard: typeof import('./PostReviewsCard').PostReviewsCard
+
+beforeAll(async () => {
+  PostReviewsCard = (await import('./PostReviewsCard')).PostReviewsCard
+})
 
 const basePost = {
   postId: 'post-1',

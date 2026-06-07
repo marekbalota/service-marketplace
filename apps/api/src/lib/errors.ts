@@ -138,6 +138,18 @@ export class InternalServerError extends Error {
   }
 }
 
+export class BadGatewayError extends Error {
+  status = 502
+  constructor(message = 'Bad Gateway') {
+    super(message)
+    this.name = 'BadGatewayError'
+  }
+}
+
+export const badGatewayResponse = {
+  502: t.Object({ message: t.String() }),
+} as const
+
 export const errorsPlugin = new Elysia({ name: 'errors' })
   .error({
     ForbiddenError,
@@ -145,6 +157,7 @@ export const errorsPlugin = new Elysia({ name: 'errors' })
     ConflictError,
     UnprocessableEntityError,
     InternalServerError,
+    BadGatewayError,
   })
   .onError(({ code, error, status }) => {
     if (code === 'ForbiddenError') return status(403, { message: error.message })
@@ -153,4 +166,5 @@ export const errorsPlugin = new Elysia({ name: 'errors' })
       return status(409, { message: error.message, locale: error.locale })
     if (code === 'UnprocessableEntityError') return status(422, { message: error.message })
     if (code === 'InternalServerError') return status(500, { message: error.message })
+    if (code === 'BadGatewayError') return status(502, { message: error.message })
   })

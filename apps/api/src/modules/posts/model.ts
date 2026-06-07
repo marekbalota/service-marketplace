@@ -19,15 +19,10 @@ const fullLocation = t.Object({
   region: t.Nullable(t.String()),
   city: t.Nullable(t.String()),
   street: t.Nullable(t.String()),
-  houseNumber: t.Nullable(t.String()),
 })
 
-const partialLocation = t.Object({
-  country: t.Optional(t.String()),
-  region: t.Optional(t.String()),
-  city: t.Optional(t.String()),
-  street: t.Optional(t.String()),
-  houseNumber: t.Optional(t.String()),
+const geocodedLocation = t.Object({
+  externalId: t.String(),
 })
 
 // Shared response schemas
@@ -113,9 +108,7 @@ export const PostsModel = {
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
     profileId: t.Optional(t.String()),
-    country: t.Optional(t.String()),
-    region: t.Optional(t.String()),
-    city: t.Optional(t.String()),
+    externalId: t.Optional(t.String()),
   }),
   findAllResponse: paginatedResponse,
   findByIdParams: t.Object({ id: t.String() }),
@@ -146,7 +139,7 @@ export const PostsModel = {
     rateType: t.Optional(t.Union([rateType, t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
     locationId: t.Optional(t.String()),
-    location: t.Optional(partialLocation),
+    location: t.Optional(geocodedLocation),
   }),
   createResponse: t.Object({
     postId: t.String(),
@@ -166,6 +159,8 @@ export const PostsModel = {
     price: t.Optional(t.Union([t.String(), t.Null()])),
     rateType: t.Optional(t.Union([rateType, t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
+    locationId: t.Optional(t.Union([t.String({ minLength: 1 }), t.Null()])),
+    location: t.Optional(geocodedLocation),
   }),
   updateResponse: t.Object({
     postId: t.String(),

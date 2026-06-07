@@ -7,11 +7,15 @@ const mockUseMutation = vi.hoisted(() => vi.fn())
 const mockUseCurrentUser = vi.hoisted(() => vi.fn())
 const mockInvalidateQueries = vi.hoisted(() => vi.fn())
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: mockUseQuery,
-  useMutation: mockUseMutation,
-  useQueryClient: vi.fn(() => ({ invalidateQueries: mockInvalidateQueries })),
-}))
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return {
+    ...actual,
+    useQuery: mockUseQuery,
+    useMutation: mockUseMutation,
+    useQueryClient: vi.fn(() => ({ invalidateQueries: mockInvalidateQueries })),
+  }
+})
 vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: mockUseCurrentUser,
   currentUserQueryOptions: { queryKey: ['users', 'me'] },

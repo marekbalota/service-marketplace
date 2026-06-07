@@ -1,12 +1,11 @@
 import { render, screen, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import {
   createMemoryHistory,
   createRootRoute,
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { Header } from './Header'
 import type { User } from '#/types/api'
 
 vi.mock('#/lib/queries/users', () => ({
@@ -17,7 +16,7 @@ vi.mock('#/context/activeProfile', () => ({
   useActiveProfile: vi.fn(),
 }))
 
-vi.mock('./ImpersonationBanner', () => ({
+vi.doMock('./ImpersonationBanner', () => ({
   ImpersonationBanner: () => <div data-testid="impersonation-banner">Impersonation Banner</div>,
 }))
 
@@ -31,6 +30,12 @@ vi.mock('#/router', () => ({
 
 import { useCurrentUser } from '#/lib/queries/users'
 import { useActiveProfile } from '#/context/activeProfile'
+
+let Header: typeof import('./Header').Header
+
+beforeAll(async () => {
+  Header = (await import('./Header')).Header
+})
 
 async function renderHeader() {
   const rootRoute = createRootRoute({ component: Header })

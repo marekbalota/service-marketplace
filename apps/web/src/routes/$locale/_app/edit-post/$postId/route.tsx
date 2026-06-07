@@ -21,6 +21,7 @@ import { PostTitleField } from '#/components/PostTitleField'
 import { PostCategoryField } from '#/components/PostCategoryField'
 import { PostDescriptionField } from '#/components/PostDescriptionField'
 import { Permissions, hasPermissions } from '@marketplace/shared'
+import { LocationField } from '../../create-post/-components/LocationField'
 
 const schema = z.object({
   postType: z.enum(['OFFER', 'REQUEST']),
@@ -29,6 +30,8 @@ const schema = z.object({
   categoryIds: z.array(z.string()),
   price: z.string().optional(),
   rateType: z.enum(['HOURLY', 'DAILY', 'FIXED']).optional(),
+  locationId: z.string().nullable().optional(),
+  locationExternalId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -149,6 +152,8 @@ function EditPostPage() {
       categoryIds: post.categories.map((c) => c.categoryId),
       price: post.price ?? '',
       rateType: (post.rateType ?? undefined) as 'HOURLY' | 'DAILY' | 'FIXED' | undefined,
+      locationId: post.location?.locationId ?? '',
+      locationExternalId: '',
     },
   })
 
@@ -168,6 +173,14 @@ function EditPostPage() {
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
+      const hasNewLocation = !!values.locationExternalId
+      let locationPatch: object = {}
+      if (hasNewLocation) {
+        locationPatch = { location: { externalId: values.locationExternalId! } }
+      } else if (values.locationId !== undefined) {
+        locationPatch = { locationId: values.locationId || null }
+      }
+
       const body = {
         postTitle: values.postTitle,
         description: values.description,
@@ -175,6 +188,7 @@ function EditPostPage() {
         categoryIds: values.categoryIds,
         price: values.price || null,
         rateType: values.rateType ?? null,
+        ...locationPatch,
       }
       const { data, error } = await api.posts({ id: postId }).patch(body)
       if (error) throw wrapEdenError(error, 'Failed to update post.')
@@ -215,6 +229,9 @@ function EditPostPage() {
 
             {/* Row 4: Description — full width, stretched */}
             <PostDescriptionField control={form.control} />
+
+            {/* Row 5: Location — full width */}
+            <LocationField control={form.control} profileId={post.authorId} showSaveHint />
 
             <FieldError errors={[form.formState.errors.root]} />
 

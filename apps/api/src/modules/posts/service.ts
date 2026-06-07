@@ -24,10 +24,19 @@ import {
   gte,
   lte,
   inArray,
+  type SQL,
 } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { PostsModel } from './model'
-import { NotFoundError, ForbiddenError, ErrorMessages, AuthErrorMessages } from '../../lib/errors'
+import {
+  NotFoundError,
+  ForbiddenError,
+  UnprocessableEntityError,
+  ErrorMessages,
+  AuthErrorMessages,
+} from '../../lib/errors'
+import { redis } from '../../lib/redis'
+import { resolveParentPlaceId, type ParentLevel } from '../../lib/geoapify'
 import { ProfilesService } from '../profiles/service'
 import { RBACService } from '../../lib/rbac/rbac-helper'
 import { Permissions } from '@marketplace/shared'
@@ -91,14 +100,43 @@ export abstract class PostsService {
       ratingMin,
       ratingMax,
       profileId,
-      country,
-      region,
-      city,
+      externalId,
     } = query
 
     if (profileId && accountId !== undefined) {
       const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
       if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
+    }
+
+    // Resolve location filter from cache — hierarchical filtering via parent place_ids.
+    // Each level column stores the canonical place_id at that level, so filtering at any
+    // level uses a simple eq() on the corresponding column.
+    let locationFilter: SQL | undefined
+    if (externalId) {
+      const cached = await redis.get(`loc:${externalId}`)
+      if (cached) {
+        const {
+          city: filterCity,
+          region: filterRegion,
+          street: filterStreet,
+        } = JSON.parse(cached) as {
+          city: string | null
+          region: string | null
+          street: string | null
+        }
+        if (filterStreet) {
+          locationFilter = eq(locations.streetExternalId, externalId)
+        } else if (filterCity) {
+          locationFilter = eq(locations.cityExternalId, externalId)
+        } else if (filterRegion) {
+          locationFilter = eq(locations.regionExternalId, externalId)
+        } else {
+          locationFilter = eq(locations.countryExternalId, externalId)
+        }
+      } else {
+        // Unknown externalId (not in cache) — return no results rather than unfiltered results
+        locationFilter = sql`false`
+      }
     }
 
     const orderBy =
@@ -139,8 +177,6 @@ export abstract class PostsService {
               ilike(posts.postTitle, `%${search}%`),
               ilike(posts.description, `%${search}%`),
               ilike(userProfiles.name, `%${search}%`),
-              ilike(locations.city, `%${search}%`),
-              ilike(locations.country, `%${search}%`),
             )
           : undefined,
         type ? eq(posts.postType, type) : undefined,
@@ -168,9 +204,7 @@ export abstract class PostsService {
                 ),
             )
           : undefined,
-        country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
-        region ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})` : undefined,
-        city ? sql`unaccent(${locations.city})    ILIKE unaccent(${city})` : undefined,
+        locationFilter,
       )
 
       const [countRow] = await tx
@@ -286,7 +320,6 @@ export abstract class PostsService {
         locationRegion: locations.region,
         locationCity: locations.city,
         locationStreet: locations.street,
-        locationHouseNumber: locations.houseNumber,
         categories: sql<{ categoryId: string; name: string }[]>`
           coalesce(
             json_agg(
@@ -379,7 +412,6 @@ export abstract class PostsService {
           region: row.locationRegion,
           city: row.locationCity,
           street: row.locationStreet,
-          houseNumber: row.locationHouseNumber,
         }
       : null
 
@@ -389,7 +421,6 @@ export abstract class PostsService {
       locationRegion,
       locationCity,
       locationStreet,
-      locationHouseNumber,
       averageRating,
       ...rest
     } = row
@@ -400,16 +431,59 @@ export abstract class PostsService {
     const { categoryIds, location, locationId, ...postValues } = body
 
     return db.transaction(async (tx) => {
-      // locationId takes precedence; location creates a new row only when it has at least one field
-      let resolvedLocationId: string | undefined = locationId
+      let resolvedLocationId: string | undefined = locationId ?? undefined
 
-      const hasLocationData =
-        location && Object.values(location).some((v) => v !== undefined && v !== null && v !== '')
+      if (location?.externalId) {
+        const cached = await redis.get(`loc:${location.externalId}`)
+        if (!cached) {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+        let parsed: {
+          country: string | null
+          region: string | null
+          city: string | null
+          street: string | null
+          lang?: string
+        }
+        try {
+          parsed = JSON.parse(cached) as typeof parsed
+        } catch {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
 
-      if (hasLocationData) {
+        const lang = parsed.lang ?? 'en'
+        const allLevels = ['street', 'city', 'region', 'country'] as const
+        const level = allLevels.find((l) => parsed[l] != null) ?? 'country'
+
+        const colContextCountry: Record<ParentLevel, string | null> = {
+          city: parsed.country,
+          region: parsed.country,
+          country: null,
+        }
+
+        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] =
+          await Promise.all(
+            (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+              if (level === col) return location.externalId
+              if (col === 'street') return null
+              const name = parsed[col]
+              if (!name) return null
+              return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+            }),
+          )
+
         const [insertedLocation] = await tx
           .insert(locations)
-          .values(location!)
+          .values({
+            city: parsed.city,
+            region: parsed.region,
+            country: parsed.country,
+            street: parsed.street,
+            streetExternalId,
+            cityExternalId,
+            regionExternalId,
+            countryExternalId,
+          })
           .returning({ locationId: locations.locationId })
         resolvedLocationId = insertedLocation!.locationId
 
@@ -438,18 +512,76 @@ export abstract class PostsService {
   }
 
   static async update(id: string, body: PostsModel['updateBody']) {
-    const { categoryIds, ...updateValues } = body
+    const { categoryIds, location, locationId, ...updateValues } = body
 
     return db.transaction(async (tx) => {
+      let resolvedLocationId: string | null | undefined = locationId
+
+      if (location?.externalId) {
+        const cached = await redis.get(`loc:${location.externalId}`)
+        if (!cached) {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+        let parsed: {
+          country: string | null
+          region: string | null
+          city: string | null
+          street: string | null
+          lang?: string
+        }
+        try {
+          parsed = JSON.parse(cached) as typeof parsed
+        } catch {
+          throw new UnprocessableEntityError('Location suggestion expired, please search again')
+        }
+
+        const lang = parsed.lang ?? 'en'
+        const allLevels = ['street', 'city', 'region', 'country'] as const
+        const level = allLevels.find((l) => parsed[l] != null) ?? 'country'
+
+        const colContextCountry: Record<ParentLevel, string | null> = {
+          city: parsed.country,
+          region: parsed.country,
+          country: null,
+        }
+
+        const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] =
+          await Promise.all(
+            (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+              if (level === col) return location.externalId
+              if (col === 'street') return null
+              const name = parsed[col]
+              if (!name) return null
+              return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+            }),
+          )
+
+        const [insertedLocation] = await tx
+          .insert(locations)
+          .values({
+            city: parsed.city,
+            region: parsed.region,
+            country: parsed.country,
+            street: parsed.street,
+            streetExternalId,
+            cityExternalId,
+            regionExternalId,
+            countryExternalId,
+          })
+          .returning({ locationId: locations.locationId })
+        resolvedLocationId = insertedLocation!.locationId
+      }
+
       const [updated] = await tx
         .update(posts)
-        .set(updateValues)
+        .set({
+          ...updateValues,
+          ...(resolvedLocationId !== undefined ? { locationId: resolvedLocationId } : {}),
+        })
         .where(and(eq(posts.postId, id), isNull(posts.deletedAt)))
         .returning()
 
-      if (!updated) {
-        throw new NotFoundError(ErrorMessages.postNotFound)
-      }
+      if (!updated) throw new NotFoundError(ErrorMessages.postNotFound)
 
       let updatedCategories: string[]
 

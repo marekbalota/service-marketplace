@@ -1,12 +1,11 @@
 import { render, screen, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import {
   createMemoryHistory,
   createRootRoute,
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { Route } from './index'
 import { useCurrentUser } from '#/lib/queries/users'
 
 vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
@@ -16,11 +15,11 @@ vi.mock('#/lib/queries/users', () => ({
   useCurrentUser: vi.fn(),
 }))
 
-vi.mock('./-components/TwoFactorSection', () => ({
+vi.doMock('./-components/TwoFactorSection', () => ({
   TwoFactorSection: () => <div id="two-factor-auth">Two-Factor Authentication</div>,
 }))
 
-vi.mock('./-components/LoginManagementSection', () => ({
+vi.doMock('./-components/LoginManagementSection', () => ({
   LoginManagementSection: () => (
     <div id="login-management">
       <p>Login Management</p>
@@ -45,6 +44,12 @@ vi.stubGlobal(
     disconnect: vi.fn(),
   })),
 )
+
+let Route: typeof import('./index').Route
+
+beforeAll(async () => {
+  Route = (await import('./index')).Route
+})
 
 async function renderPage() {
   const rootRoute = createRootRoute({ component: Route.options.component! })

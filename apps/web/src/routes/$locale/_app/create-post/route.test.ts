@@ -27,11 +27,7 @@ describe('profileLocationsQueryOptions', () => {
 type LocationFields = {
   isManualLocation?: boolean
   locationId?: string
-  country?: string
-  region?: string
-  city?: string
-  street?: string
-  houseNumber?: string
+  locationExternalId?: string
   price?: string
   rateType?: 'HOURLY' | 'DAILY' | 'FIXED' | undefined
 }
@@ -39,13 +35,7 @@ type LocationFields = {
 type MutationBody = {
   price: string | undefined
   rateType: 'HOURLY' | 'DAILY' | 'FIXED' | undefined
-  location?: {
-    country?: string
-    region?: string
-    city?: string
-    street?: string
-    houseNumber?: string
-  }
+  location?: { externalId: string }
   locationId?: string
 }
 
@@ -53,30 +43,18 @@ function buildMutationBody(fields: LocationFields): MutationBody {
   const {
     isManualLocation = false,
     locationId = '',
-    country = '',
-    region = '',
-    city = '',
-    street = '',
-    houseNumber = '',
+    locationExternalId = '',
     price = '',
     rateType,
   } = fields
 
-  const hasManualLocation = isManualLocation && (country || region || city || street || houseNumber)
+  const hasNewLocation = isManualLocation && !!locationExternalId
 
   return {
     price: price || undefined,
     rateType,
-    ...(hasManualLocation
-      ? {
-          location: {
-            country: country || undefined,
-            region: region || undefined,
-            city: city || undefined,
-            street: street || undefined,
-            houseNumber: houseNumber || undefined,
-          },
-        }
+    ...(hasNewLocation
+      ? { location: { externalId: locationExternalId } }
       : { locationId: locationId || undefined }),
   }
 }
@@ -88,25 +66,17 @@ describe('create post mutation body', () => {
     expect(body.location).toBeUndefined()
   })
 
-  it('sends location object when manual location fields are filled', () => {
+  it('sends location.externalId when new location is chosen via autocomplete', () => {
     const body = buildMutationBody({
       isManualLocation: true,
-      country: 'Czech Republic',
-      region: 'South Moravian',
-      city: 'Brno',
+      locationExternalId: 'R86674',
     })
-    expect(body.location).toEqual({
-      country: 'Czech Republic',
-      region: 'South Moravian',
-      city: 'Brno',
-      street: undefined,
-      houseNumber: undefined,
-    })
+    expect(body.location).toEqual({ externalId: 'R86674' })
     expect(body.locationId).toBeUndefined()
   })
 
-  it('sends no location when manual mode is on but all fields are empty', () => {
-    const body = buildMutationBody({ isManualLocation: true })
+  it('sends no location when new-location mode is on but externalId is empty', () => {
+    const body = buildMutationBody({ isManualLocation: true, locationExternalId: '' })
     expect(body.location).toBeUndefined()
     expect(body.locationId).toBeUndefined()
   })

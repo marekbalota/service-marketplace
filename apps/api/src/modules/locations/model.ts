@@ -6,29 +6,31 @@ const locationItem = t.Object({
   region: t.Nullable(t.String()),
   city: t.Nullable(t.String()),
   street: t.Nullable(t.String()),
-  houseNumber: t.Nullable(t.String()),
+})
+
+const autocompleteItem = t.Object({
+  id: t.String(),
+  street: t.Nullable(t.String()),
+  city: t.Nullable(t.String()),
+  region: t.Nullable(t.String()),
+  country: t.Nullable(t.String()),
 })
 
 export const LocationsModel = {
-  distinctQuery: t.Object({
-    field: t.Union([t.Literal('country'), t.Literal('region'), t.Literal('city')]),
-    country: t.Optional(t.String()),
-    region: t.Optional(t.String()),
-  }),
-  distinctResponse: t.Object({
-    values: t.Array(t.String()),
-  }),
   profileLocationsParams: t.Object({ id: t.String() }),
   profileLocationsResponse: t.Array(locationItem),
   addBody: t.Object({
-    country: t.Optional(t.String()),
-    region: t.Optional(t.String()),
-    city: t.Optional(t.String()),
-    street: t.Optional(t.String()),
-    houseNumber: t.Optional(t.String()),
+    externalId: t.String(),
   }),
   addResponse: locationItem,
   removeParams: t.Object({ id: t.String(), locationId: t.String() }),
+  autocompleteQuery: t.Object({
+    q: t.String({ minLength: 3 }),
+    limit: t.Optional(t.Numeric({ minimum: 1, maximum: 10 })),
+  }),
+  autocompleteResponse: t.Object({
+    suggestions: t.Array(autocompleteItem),
+  }),
 } as const
 
 export type LocationsModel = {

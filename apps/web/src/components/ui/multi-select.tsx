@@ -1,8 +1,10 @@
 import * as React from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { ScrollArea as ScrollAreaPrimitive } from '@base-ui/react/scroll-area'
 import { cn } from '#/lib/utils'
 import { Badge } from '#/components/ui/badge'
+import { ScrollBar } from '#/components/ui/scroll-area'
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import {
   Command,
@@ -261,33 +263,45 @@ export function MultiSelect({
             />
           )}
           {searchable && <div className="mt-1 h-px bg-border" />}
-          <CommandList className="![scrollbar-width:thin] [&::-webkit-scrollbar]:!block [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            {showControls && !search && (
-              <CommandGroup className="p-0">
-                {value.length === 0 && (
-                  <CommandItem onSelect={selectAll}>{t('common.selectAll')}</CommandItem>
+          <ScrollAreaPrimitive.Root>
+            <ScrollAreaPrimitive.Viewport className="max-h-72">
+              <CommandList className="!max-h-none !h-auto !overflow-visible">
+                <CommandEmpty>{emptyText}</CommandEmpty>
+                {showControls && !search && (
+                  <CommandGroup className="p-0">
+                    {value.length === 0 && (
+                      <CommandItem className="cursor-pointer" onSelect={selectAll}>
+                        {t('common.selectAll')}
+                      </CommandItem>
+                    )}
+                    {value.length > 0 && (
+                      <CommandItem className="cursor-pointer" onSelect={clearAll}>
+                        {t('common.clearSelection')}
+                      </CommandItem>
+                    )}
+                  </CommandGroup>
                 )}
-                {value.length > 0 && (
-                  <CommandItem onSelect={clearAll}>{t('common.clearSelection')}</CommandItem>
-                )}
-              </CommandGroup>
-            )}
-            <CommandGroup className="p-0">
-              {filteredOptions.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.label}
-                  disabled={option.disabled}
-                  onSelect={() => toggle(option.value)}
-                  data-checked={value.includes(option.value)}
-                  className="flex justify-between"
-                >
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
+                <CommandGroup className="p-0">
+                  {filteredOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      disabled={option.disabled}
+                      onSelect={() => toggle(option.value)}
+                      data-checked={value.includes(option.value)}
+                      className="flex cursor-pointer justify-between"
+                    >
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </ScrollAreaPrimitive.Viewport>
+            <ScrollBar
+              orientation="vertical"
+              className="opacity-0 transition-opacity data-[scrolling]:opacity-100 data-[hovering]:opacity-100"
+            />
+          </ScrollAreaPrimitive.Root>
         </Command>
       </PopoverContent>
     </Popover>
