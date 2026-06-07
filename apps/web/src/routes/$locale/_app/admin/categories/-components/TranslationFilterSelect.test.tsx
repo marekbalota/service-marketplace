@@ -1,18 +1,23 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TranslationFilterSelect } from './TranslationFilterSelect'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 const mockNavigate = vi.fn()
 const mockUseSearch = vi.fn()
 
-vi.mock('../route', () => ({
+vi.doMock('../route', () => ({
   Route: {
     useNavigate: () => mockNavigate,
     useSearch: () => mockUseSearch(),
   },
   TRANSLATION_FILTER_VALUES: ['complete', 'incomplete', 'sk', 'cs'],
 }))
+
+let TranslationFilterSelect: typeof import('./TranslationFilterSelect').TranslationFilterSelect
+
+beforeAll(async () => {
+  TranslationFilterSelect = (await import('./TranslationFilterSelect')).TranslationFilterSelect
+})
 
 describe('TranslationFilterSelect', () => {
   beforeEach(() => {

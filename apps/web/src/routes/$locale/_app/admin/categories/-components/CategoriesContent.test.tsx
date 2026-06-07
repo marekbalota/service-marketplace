@@ -1,12 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { CategoriesContent } from './CategoriesContent'
 
 const mockNavigate = vi.fn()
 const mockUseSearch = vi.fn()
 
-vi.mock('../route', () => ({
+vi.doMock('../route', () => ({
   SORT_BY_VALUES: ['name', 'activePosts', 'archivedPosts', 'totalPosts'],
   SORT_ORDER_VALUES: ['asc', 'desc'],
   TRANSLATION_FILTER_VALUES: ['complete', 'incomplete', 'sk', 'cs'],
@@ -82,6 +81,12 @@ vi.mock('#/api', () => ({
     },
   },
 }))
+
+let CategoriesContent: typeof import('./CategoriesContent').CategoriesContent
+
+beforeAll(async () => {
+  CategoriesContent = (await import('./CategoriesContent')).CategoriesContent
+})
 
 describe('CategoriesContent', () => {
   beforeEach(() => {

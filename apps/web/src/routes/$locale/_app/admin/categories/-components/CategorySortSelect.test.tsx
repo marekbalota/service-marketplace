@@ -1,12 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { CategorySortSelect } from './CategorySortSelect'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 const mockNavigate = vi.fn()
 const mockUseSearch = vi.fn()
 
-vi.mock('../route', () => ({
+vi.doMock('../route', () => ({
   Route: {
     useNavigate: () => mockNavigate,
     useSearch: () => mockUseSearch(),
@@ -14,6 +13,12 @@ vi.mock('../route', () => ({
   SORT_BY_VALUES: ['name', 'activePosts', 'archivedPosts', 'totalPosts'],
   SORT_ORDER_VALUES: ['asc', 'desc'],
 }))
+
+let CategorySortSelect: typeof import('./CategorySortSelect').CategorySortSelect
+
+beforeAll(async () => {
+  CategorySortSelect = (await import('./CategorySortSelect')).CategorySortSelect
+})
 
 describe('CategorySortSelect', () => {
   beforeEach(() => {

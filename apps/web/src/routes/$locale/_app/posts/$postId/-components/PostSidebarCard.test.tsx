@@ -1,7 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { useActiveProfile } from '#/context/activeProfile'
-import { PostSidebarCard } from './PostSidebarCard'
 
 const mockUseQuery = vi.hoisted(() => vi.fn())
 
@@ -20,9 +19,15 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 })
 
 vi.mock('#/context/activeProfile', () => ({ useActiveProfile: vi.fn() }))
-vi.mock('./SendMessageSection', () => ({
+vi.doMock('./SendMessageSection', () => ({
   SendMessageSection: () => <div data-testid="send-message-section" />,
 }))
+
+let PostSidebarCard: typeof import('./PostSidebarCard').PostSidebarCard
+
+beforeAll(async () => {
+  PostSidebarCard = (await import('./PostSidebarCard')).PostSidebarCard
+})
 
 const basePost = {
   postId: 'post-1',
