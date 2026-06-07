@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useLocale } from '#/lib/useLocale'
 import { toast } from 'sonner'
 import { authClient } from '#/auth'
 import { useCurrentUser, currentUserQueryOptions } from '#/lib/queries/users'
 import { ApiError } from '#/lib/api-error'
 
 export function useStopImpersonating(options?: { onSuccess?: () => void }) {
+  const locale = useLocale()
   const { data: user } = useCurrentUser()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -20,9 +22,9 @@ export function useStopImpersonating(options?: { onSuccess?: () => void }) {
       const userId = user?.userId
       void queryClient.invalidateQueries({ queryKey: currentUserQueryOptions.queryKey })
       if (userId) {
-        await navigate({ to: '/admin/users/$userId', params: { userId } })
+        await navigate({ to: '/$locale/admin/users/$userId', params: { locale, userId } })
       } else {
-        await navigate({ to: '/' })
+        await navigate({ to: '/$locale/posts', params: { locale } })
       }
       router.invalidate()
       options?.onSuccess?.()

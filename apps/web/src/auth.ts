@@ -3,6 +3,7 @@ import { impersonationClient } from './impersonation-client'
 import { customTwoFactorClient } from './lib/two-factor-client'
 import { routerRef } from './router'
 import { env } from './env'
+import i18n from './lib/i18n'
 
 let pendingTwoFactorSearch: { email?: string; redirect?: string } = {}
 
@@ -21,7 +22,8 @@ export const authClient = createAuthClient({
       onTwoFactorRedirect({ twoFactorMethods }) {
         const search = { ...pendingTwoFactorSearch, twoFactorMethods }
         pendingTwoFactorSearch = {}
-        void routerRef?.navigate({ to: '/verify-2fa', search })
+        const locale = i18n.language as 'en' | 'sk' | 'cs'
+        void routerRef?.navigate({ to: '/$locale/verify-2fa', params: { locale }, search })
       },
     }),
   ],

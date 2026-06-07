@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { SearchFilterBar } from './SearchFilterBar'
 
 const mockFilters = [
@@ -8,6 +8,9 @@ const mockFilters = [
 ]
 
 describe('SearchFilterBar', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
   it('renders the search input with the given placeholder', () => {
     render(
       <SearchFilterBar
@@ -20,10 +23,12 @@ describe('SearchFilterBar', () => {
     expect(screen.getByPlaceholderText('Search posts...')).toBeInTheDocument()
   })
 
-  it('calls onSearchChange when the input changes', () => {
+  it('calls onSearchChange after debounce when the input changes', () => {
     const onSearchChange = vi.fn()
     render(<SearchFilterBar searchValue="" onSearchChange={onSearchChange} filters={mockFilters} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'hello' } })
+    expect(onSearchChange).not.toHaveBeenCalled()
+    act(() => vi.runAllTimers())
     expect(onSearchChange).toHaveBeenCalledWith('hello')
   })
 

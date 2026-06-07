@@ -4,6 +4,7 @@ export type { AdminUsersModel } from './modules/admin/users/model'
 export type { AdminReportsModel } from './modules/admin/reports/model'
 export type { AdminStatsModel } from './modules/admin/stats/model'
 export type { AdminAnalyticsModel } from './modules/admin/analytics/model'
+export type { AdminCategoriesModel } from './modules/admin/categories/model'
 
 import { env } from './lib/env'
 import { Elysia } from 'elysia'
@@ -22,6 +23,7 @@ import { adminPostsRoutes } from './modules/admin/posts'
 import { adminReportsRoutes } from './modules/admin/reports'
 import { adminStatsRoutes } from './modules/admin/stats'
 import { adminAnalyticsRoutes } from './modules/admin/analytics'
+import { adminCategoriesRoutes } from './modules/admin/categories'
 import { errorsPlugin } from './lib/errors'
 import { favouritesRoutes } from './modules/favourites'
 import { messagesRoutes } from './modules/messages'
@@ -63,7 +65,10 @@ export const app = new Elysia()
           { name: 'Messages', description: 'Message threads and chat messages' },
           { name: 'Reviews', description: 'Post reviews and ratings' },
           { name: 'Reports', description: 'Post reports' },
-          { name: 'Locations', description: 'Distinct location values for filtering' },
+          {
+            name: 'Locations',
+            description: 'Location autocomplete and profile location management',
+          },
           { name: 'Sessions', description: 'Active session management' },
         ],
       },
@@ -87,6 +92,7 @@ export const app = new Elysia()
   .use(adminReportsRoutes)
   .use(adminStatsRoutes)
   .use(adminAnalyticsRoutes)
+  .use(adminCategoriesRoutes)
   .use(favouritesRoutes)
   .use(messagesRoutes)
   .use(reportCategoriesRoutes)

@@ -16,13 +16,15 @@
     "clearSelection": "Zrušit výběr",
     "dismiss": "Zavřít",
     "preview": "Náhled",
+    "rename": "Přejmenovat",
     "image": "Obrázek",
     "previousImage": "Předchozí obrázek",
     "nextImage": "Následující obrázek",
     "justNow": "právě teď",
     "minutesAgo": "před {{count}} min",
     "hoursAgo": "před {{count}} hod",
-    "daysAgo": "před {{count}} d"
+    "daysAgo": "před {{count}} d",
+    "clear": "Vymazat"
   },
   "nav": {
     "login": "Přihlásit se",
@@ -45,6 +47,11 @@
   },
   "language": {
     "label": "Jazyk"
+  },
+  "locales": {
+    "en": "Angličtina",
+    "sk": "Slovenština",
+    "cs": "Čeština"
   },
   "auth": {
     "login": {
@@ -217,7 +224,10 @@
       "offer": "Nabídka",
       "request": "Poptávka"
     },
-    "deletePost": "Smazat příspěvek"
+    "deletePost": "Smazat příspěvek",
+    "postBanned": "Příspěvek zakázán",
+    "bannedReason": "Důvod zákazu",
+    "bannedOn": "Zakázáno dne {{date}}"
   },
   "createPost": {
     "title": "Vytvořit nový inzerát",
@@ -237,6 +247,7 @@
     "usePreviousLocation": "Použít předchozí polohu",
     "selectPreviousLocation": "Vybrat z předchozích poloh",
     "noPreviousLocations": "Žádné předchozí polohy. Klikněte na 'Zadat novou polohu' pro přidání.",
+    "locationSaveHint": "Tato lokalita bude uložena pro budoucí příspěvky",
     "titleHint": "Udělejte ho jasným a konkrétním",
     "categoryHint": "Pomozte lidem najít váš příspěvek",
     "descriptionHint": "Čím více podrobností, tím lépe"
@@ -257,6 +268,9 @@
     "active": "Aktivní",
     "archived": "Archivované",
     "noArchived": "Žádné archivované inzeráty.",
+    "banned": "Zakázané",
+    "noBanned": "Žádné zakázané inzeráty.",
+    "banReasonLabel": "Důvod zákazu:",
     "noPostings": "Zatím jste nevytvořili žádné inzeráty.",
     "createFirst": "Vytvořit první inzerát",
     "reviews_one": "{{count}} recenze",
@@ -398,6 +412,8 @@
     "savedLocations": "Uložené lokality",
     "savedLocationsSubtitle": "Spravujte lokality, které často používáte při inzerátech",
     "addLocation": "Přidat lokalitu",
+    "addLocationTitle": "Uložit novou lokalitu",
+    "addLocationDescription": "Vyhledejte lokalitu k uložení do profilu. Můžete ji rychle vybrat při vytváření inzerátů.",
     "noLocations": "Zatím žádné uložené lokality. Přidejte jednu pro rychlejší výběr při tvorbě inzerátů.",
     "removeLocation": "Odstranit lokalitu",
     "removeLocationConfirm": "Opravdu chcete odstranit tuto lokalitu ze svého profilu?",
@@ -412,6 +428,8 @@
     "signInToView": "Přihlaste se, chcete-li zobrazit inzeráty tohoto uživatele.",
     "noActivePosts": "Žádné aktivní inzeráty.",
     "noArchivedPosts": "Žádné archivované inzeráty.",
+    "bannedTab": "Zakázané",
+    "noBannedPosts": "Žádné zakázané inzeráty.",
     "name": "Jméno",
     "namePlaceholder": "např. Jan Novák",
     "emailLabel": "E-mail",
@@ -434,9 +452,7 @@
       "city": "Město",
       "cityPlaceholder": "např. Praha, Brno",
       "street": "Ulice",
-      "streetPlaceholder": "např. Hlavní ulice",
-      "houseNumber": "Číslo domu",
-      "houseNumberPlaceholder": "např. 123"
+      "streetPlaceholder": "např. Hlavní ulice"
     }
   },
   "admin": {
@@ -614,6 +630,19 @@
       "title": "Odblokovat {{userName}}?",
       "description": "Tím se obnoví plný přístup pro tohoto uživatele."
     },
+    "banPost": {
+      "title": "Zakázat inzerát",
+      "description": "Inzerát \"{{title}}\" bude zablokován a autor bude upozorněn.",
+      "reason": "Důvod *",
+      "reasonPlaceholder": "Popište důvod zákazu…",
+      "submit": "Zakázat inzerát",
+      "failed": "Nepodařilo se zakázat inzerát. Zkuste to znovu."
+    },
+    "unbanPost": {
+      "title": "Odblokovat inzerát?",
+      "description": "Tím se inzerát obnoví do předchozího stavu.",
+      "failed": "Nepodařilo se odblokovat inzerát. Zkuste to znovu."
+    },
     "reports": {
       "title": "Správa hlášení",
       "subtitle": "Prozkoumejte a moderujte hlášení od uživatelů",
@@ -639,6 +668,44 @@
       "messageContext": "Kontext zprávy",
       "messageContextError": "Nepodařilo se načíst kontext zprávy.",
       "reportedMessage": "Nahlášená zpráva"
+    },
+    "categories": {
+      "title": "Správa kategorií",
+      "subtitle": "Vytvářejte, upravujte a organizujte kategorie služeb",
+      "count": "Kategorie ({{count}})",
+      "searchPlaceholder": "Hledat kategorie...",
+      "newCategory": "Nová kategorie",
+      "createTitle": "Vytvořit kategorii",
+      "editTitle": "Upravit kategorii",
+      "editDesc": "Upravte překlady této kategorie",
+      "createDesc": "Přidejte překlady pro novou kategorii",
+      "categoryName": "Název kategorie",
+      "categoryNamePlaceholder": "např. Zahradní služby",
+      "nameConflict": "Kategorie s tímto názvem již existuje",
+      "deleteTitle": "Smazat kategorii",
+      "deleteDesc": "Opravdu chcete smazat \"{{name}}\"? Příspěvky v této kategorii ztratí tento štítek. Tuto akci nelze vrátit zpět.",
+      "noCategories": "Zatím žádné kategorie",
+      "noCategoriesFound": "Žádné kategorie neodpovídají vašemu hledání",
+      "cardDescription": "Organizujte a spravujte kategorie služeb",
+      "activePosts": "{{count}} aktivních",
+      "archivedPosts": "{{count}} archivovaných",
+      "totalPosts": "{{count}} celkem",
+      "translationRequired": "povinné",
+      "translationOptional": "volitelné",
+      "translationsFraction": "{{filled}}/{{total}} jazyků",
+      "sortFilterLabel": "Řadit",
+      "sortByName": "Název",
+      "sortByActivePosts": "Aktivní příspěvky",
+      "sortByArchivedPosts": "Archivované příspěvky",
+      "sortByTotalPosts": "Všechny příspěvky",
+      "sortOrderLabel": "Směr",
+      "sortOrderAsc": "Vzestupně",
+      "sortOrderDesc": "Sestupně",
+      "translationFilterLabel": "Překlad",
+      "translationFilterAll": "Všechny jazyky",
+      "translationFilterComplete": "Kompletní",
+      "translationFilterIncomplete": "Neúplné",
+      "translationFilterMissing": "Chybí {{locale}}"
     }
   },
   "report": {
@@ -649,6 +716,12 @@
     "descriptionPlaceholder": "Uveďte další podrobnosti…",
     "submit": "Odeslat hlášení",
     "error": "Něco se pokazilo. Zkuste to znovu."
+  },
+  "location": {
+    "searchPlaceholder": "Vyhledejte lokalitu…",
+    "noResults": "Žádná místa nenalezena.",
+    "expired": "Návrh lokality vypršel. Zkuste vyhledat znovu.",
+    "unavailable": "Vyhledávání lokalit je momentálně nedostupné."
   },
   "errors": {
     "notFound": "Stránka nenalezena",

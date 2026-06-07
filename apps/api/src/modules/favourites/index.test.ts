@@ -22,6 +22,7 @@ const client = treaty(app)
 let sessionCookie: string
 let profileId: string
 let postId: string
+let localizedPostId: string
 
 beforeAll(async () => {
   const signInRes = await auth.api.signInEmail({
@@ -48,6 +49,17 @@ beforeAll(async () => {
   )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postId = (post as any)?.postId
+
+  const { data: allPosts } = await client.posts.get({ query: { size: 50 } })
+  const postWithTutoring = allPosts!.items.find((p) =>
+    p.categories.some((c) => c.name === 'Tutoring'),
+  )
+  if (postWithTutoring) {
+    localizedPostId = postWithTutoring.postId
+    await client
+      .favourites({ postId: localizedPostId })
+      .post({ profileId }, { headers: { Cookie: sessionCookie } })
+  }
 })
 
 describe('GET /favourites', () => {
@@ -122,5 +134,31 @@ describe('DELETE /favourites/:postId', () => {
       .favourites({ postId: '00000000-0000-0000-0000-000000000000' })
       .delete({ profileId }, { headers: { Cookie: sessionCookie } })
     expect(error?.status).toBe(404)
+  })
+})
+
+describe('GET /favourites — locale-aware category names', () => {
+  it('returns Slovak category name when Accept-Language is sk', async () => {
+    if (!localizedPostId) return // seeded post with Tutoring not found — skip
+
+    const { data } = await client.favourites.get({
+      headers: { Cookie: sessionCookie, 'accept-language': 'sk' },
+      query: { profileId },
+    })
+    const fav = data!.items.find((f) => f.postId === localizedPostId)
+    expect(fav).toBeDefined()
+    expect(fav!.categories.some((c) => c.name === 'Doučovanie')).toBe(true)
+  })
+
+  it('falls back to EN category name for unsupported locale', async () => {
+    if (!localizedPostId) return // seeded post with Tutoring not found — skip
+
+    const { data } = await client.favourites.get({
+      headers: { Cookie: sessionCookie, 'accept-language': 'de' },
+      query: { profileId },
+    })
+    const fav = data!.items.find((f) => f.postId === localizedPostId)
+    expect(fav).toBeDefined()
+    expect(fav!.categories.some((c) => c.name === 'Tutoring')).toBe(true)
   })
 })

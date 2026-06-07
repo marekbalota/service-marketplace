@@ -3,7 +3,7 @@ name: marketplace
 description: Marketplace for Services — Bun/Elysia API + TanStack SPA, with in-cluster Postgres (CNPG), Redis and MinIO
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
+appVersion: '1.0.0'
 keywords:
   - marketplace
   - elysia

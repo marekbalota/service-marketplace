@@ -1,5 +1,10 @@
 import { queryOptions } from '@tanstack/react-query'
 import { api } from '#/api'
+import type {
+  SortBy,
+  SortOrder,
+  TranslationFilter,
+} from '#/routes/$locale/_app/admin/categories/route'
 
 export const rolesQueryOptions = queryOptions({
   queryKey: ['admin', 'roles'],
@@ -71,3 +76,30 @@ export function adminAnalyticsQueryOptions(
     staleTime: 5 * 60 * 1000,
   })
 }
+
+export const adminCategoriesQueryOptions = (params: {
+  search?: string
+  offset: number
+  size: number
+  locale: string
+  sortBy?: SortBy
+  sortOrder?: SortOrder
+  translationFilter?: TranslationFilter
+}) =>
+  queryOptions({
+    queryKey: ['admin', 'categories', params] as const,
+    queryFn: async () => {
+      const { data, error } = await api.admin.categories.get({
+        query: {
+          search: params.search,
+          offset: params.offset,
+          size: params.size,
+          sortBy: params.sortBy,
+          sortOrder: params.sortOrder,
+          translationFilter: params.translationFilter,
+        },
+      })
+      if (error) throw error
+      return data!
+    },
+  })

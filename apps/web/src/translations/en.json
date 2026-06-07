@@ -16,13 +16,15 @@
     "clearSelection": "Clear selection",
     "dismiss": "Dismiss",
     "preview": "Preview",
+    "rename": "Rename",
     "image": "Image",
     "previousImage": "Previous image",
     "nextImage": "Next image",
     "justNow": "just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
-    "daysAgo": "{{count}}d ago"
+    "daysAgo": "{{count}}d ago",
+    "clear": "Clear"
   },
   "nav": {
     "login": "Log in",
@@ -45,6 +47,11 @@
   },
   "language": {
     "label": "Language"
+  },
+  "locales": {
+    "en": "English",
+    "sk": "Slovak",
+    "cs": "Czech"
   },
   "auth": {
     "login": {
@@ -217,7 +224,10 @@
       "offer": "Offering",
       "request": "Requesting"
     },
-    "deletePost": "Delete post"
+    "deletePost": "Delete post",
+    "postBanned": "Post Banned",
+    "bannedReason": "Ban reason",
+    "bannedOn": "Banned on {{date}}"
   },
   "createPost": {
     "title": "Create New Posting",
@@ -237,6 +247,7 @@
     "usePreviousLocation": "Use Previous Location",
     "selectPreviousLocation": "Select from your previous locations",
     "noPreviousLocations": "No previous locations. Click 'Enter New Location' to add one.",
+    "locationSaveHint": "This location will be saved for future posts",
     "titleHint": "Make it clear and specific",
     "categoryHint": "Help people find your post",
     "descriptionHint": "The more details, the better"
@@ -257,6 +268,9 @@
     "active": "Active",
     "archived": "Archived",
     "noArchived": "No archived postings.",
+    "banned": "Banned",
+    "noBanned": "No banned postings.",
+    "banReasonLabel": "Ban reason:",
     "noPostings": "You haven't created any postings yet.",
     "createFirst": "Create your first posting",
     "reviews_one": "{{count}} review",
@@ -402,6 +416,8 @@
     "savedLocations": "Saved Locations",
     "savedLocationsSubtitle": "Manage locations you frequently use for posts",
     "addLocation": "Add Location",
+    "addLocationTitle": "Save a New Location",
+    "addLocationDescription": "Search for a location to save to your profile. You can quickly select it when creating posts.",
     "noLocations": "No saved locations yet. Add one to quickly select it when creating posts.",
     "removeLocation": "Remove Location",
     "removeLocationConfirm": "Are you sure you want to remove this location from your profile?",
@@ -416,6 +432,8 @@
     "signInToView": "Sign in to view this user's posts.",
     "noActivePosts": "No active posts.",
     "noArchivedPosts": "No archived posts.",
+    "bannedTab": "Banned",
+    "noBannedPosts": "No banned posts.",
     "name": "Name",
     "namePlaceholder": "e.g., John Smith",
     "emailLabel": "Email",
@@ -438,9 +456,7 @@
       "city": "City",
       "cityPlaceholder": "e.g., Austin, Bratislava",
       "street": "Street",
-      "streetPlaceholder": "e.g., Main Street",
-      "houseNumber": "House Number",
-      "houseNumberPlaceholder": "e.g., 123"
+      "streetPlaceholder": "e.g., Main Street"
     }
   },
   "admin": {
@@ -618,6 +634,19 @@
       "title": "Unban {{userName}}?",
       "description": "This will restore full access for this user."
     },
+    "banPost": {
+      "title": "Ban Post",
+      "description": "This will ban \"{{title}}\" and notify the author.",
+      "reason": "Reason *",
+      "reasonPlaceholder": "Describe the reason for this ban…",
+      "submit": "Ban Post",
+      "failed": "Failed to ban post. Please try again."
+    },
+    "unbanPost": {
+      "title": "Unban post?",
+      "description": "This will restore the post to its previous state.",
+      "failed": "Failed to unban post. Please try again."
+    },
     "reports": {
       "title": "Manage Reports",
       "subtitle": "Review and moderate user-reported posts, messages, and reviews",
@@ -643,6 +672,44 @@
       "messageContext": "Message Context",
       "messageContextError": "Failed to load message context.",
       "reportedMessage": "Reported message"
+    },
+    "categories": {
+      "title": "Manage Categories",
+      "subtitle": "Create, edit, and organize service categories",
+      "count": "Categories ({{count}})",
+      "searchPlaceholder": "Search categories...",
+      "newCategory": "New Category",
+      "createTitle": "Create Category",
+      "editTitle": "Edit Category",
+      "editDesc": "Edit the translations for this category",
+      "createDesc": "Add translations for the new category",
+      "categoryName": "Category Name",
+      "categoryNamePlaceholder": "e.g. Gardening Services",
+      "nameConflict": "A category with this name already exists",
+      "deleteTitle": "Delete Category",
+      "deleteDesc": "Are you sure you want to delete \"{{name}}\"? Posts in this category will lose this tag. This cannot be undone.",
+      "noCategories": "No categories yet",
+      "noCategoriesFound": "No categories match your search",
+      "cardDescription": "Organize and manage service categories",
+      "activePosts": "{{count}} active",
+      "archivedPosts": "{{count}} archived",
+      "totalPosts": "{{count}} total",
+      "translationRequired": "required",
+      "translationOptional": "optional",
+      "translationsFraction": "{{filled}}/{{total}} languages",
+      "sortFilterLabel": "Sort",
+      "sortByName": "Name",
+      "sortByActivePosts": "Active posts",
+      "sortByArchivedPosts": "Archived posts",
+      "sortByTotalPosts": "Total posts",
+      "sortOrderLabel": "Direction",
+      "sortOrderAsc": "Ascending",
+      "sortOrderDesc": "Descending",
+      "translationFilterLabel": "Translation",
+      "translationFilterAll": "All languages",
+      "translationFilterComplete": "Complete",
+      "translationFilterIncomplete": "Incomplete",
+      "translationFilterMissing": "Missing {{locale}}"
     }
   },
   "report": {
@@ -653,6 +720,12 @@
     "descriptionPlaceholder": "Provide any additional details…",
     "submit": "Submit Report",
     "error": "Something went wrong. Please try again."
+  },
+  "location": {
+    "searchPlaceholder": "Search for a location…",
+    "noResults": "No locations found.",
+    "expired": "Location suggestion expired. Please search again.",
+    "unavailable": "Location search is currently unavailable."
   },
   "errors": {
     "notFound": "Page not found",

@@ -1,8 +1,8 @@
 # Default values for the marketplace chart.
 # Single-environment deployment (no dev/staging/prod split).
 
-nameOverride: ""
-fullnameOverride: ""
+nameOverride: ''
+fullnameOverride: ''
 
 imagePullSecrets: []
 

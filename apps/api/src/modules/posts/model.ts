@@ -19,15 +19,10 @@ const fullLocation = t.Object({
   region: t.Nullable(t.String()),
   city: t.Nullable(t.String()),
   street: t.Nullable(t.String()),
-  houseNumber: t.Nullable(t.String()),
 })
 
-const partialLocation = t.Object({
-  country: t.Optional(t.String()),
-  region: t.Optional(t.String()),
-  city: t.Optional(t.String()),
-  street: t.Optional(t.String()),
-  houseNumber: t.Optional(t.String()),
+const geocodedLocation = t.Object({
+  externalId: t.String(),
 })
 
 // Shared response schemas
@@ -74,6 +69,34 @@ const paginatedResponse = t.Object({
   totalPages: t.Number(),
 })
 
+const profilePostWithLocation = t.Object({
+  postId: t.String(),
+  postTitle: t.String(),
+  description: t.String(),
+  postType,
+  price: t.Nullable(t.String()),
+  rateType: t.Nullable(rateType),
+  createdAt: t.Date(),
+  authorId: t.String(),
+  authorName: t.String(),
+  categories: t.Array(categoryItem),
+  location: t.Nullable(
+    t.Object({
+      locationId: t.String(),
+      city: t.Nullable(t.String()),
+      country: t.Nullable(t.String()),
+    }),
+  ),
+  bannedAt: t.Nullable(t.Date()),
+  banReason: t.Nullable(t.String()),
+})
+
+const profilePaginatedResponse = t.Object({
+  items: t.Array(profilePostWithLocation),
+  total: t.Number(),
+  totalPages: t.Number(),
+})
+
 export const PostsModel = {
   findAllQuery: t.Object({
     search: t.Optional(t.String()),
@@ -85,9 +108,7 @@ export const PostsModel = {
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
     profileId: t.Optional(t.String()),
-    country: t.Optional(t.String()),
-    region: t.Optional(t.String()),
-    city: t.Optional(t.String()),
+    externalId: t.Optional(t.String()),
   }),
   findAllResponse: paginatedResponse,
   findByIdParams: t.Object({ id: t.String() }),
@@ -101,6 +122,8 @@ export const PostsModel = {
     createdAt: t.Date(),
     authorId: t.String(),
     authorName: t.String(),
+    bannedAt: t.Nullable(t.Date()),
+    banReason: t.Nullable(t.String()),
     categories: t.Array(categoryItem),
     location: t.Nullable(fullLocation),
     reviews: t.Array(reviewItem),
@@ -116,7 +139,7 @@ export const PostsModel = {
     rateType: t.Optional(t.Union([rateType, t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
     locationId: t.Optional(t.String()),
-    location: t.Optional(partialLocation),
+    location: t.Optional(geocodedLocation),
   }),
   createResponse: t.Object({
     postId: t.String(),
@@ -136,6 +159,8 @@ export const PostsModel = {
     price: t.Optional(t.Union([t.String(), t.Null()])),
     rateType: t.Optional(t.Union([rateType, t.Null()])),
     categoryIds: t.Optional(t.Array(t.String())),
+    locationId: t.Optional(t.Union([t.String({ minLength: 1 }), t.Null()])),
+    location: t.Optional(geocodedLocation),
   }),
   updateResponse: t.Object({
     postId: t.String(),
@@ -150,12 +175,13 @@ export const PostsModel = {
   findByProfileQuery: t.Object({
     offset: t.Optional(t.Numeric()),
     size: t.Optional(t.Numeric()),
-    archived: t.Optional(t.BooleanString()),
+    status: t.Optional(t.Union([t.Literal('active'), t.Literal('archived'), t.Literal('banned')])),
   }),
-  findByProfileResponse: paginatedResponse,
+  findByProfileResponse: profilePaginatedResponse,
   profilePostsCountResponse: t.Object({
     active: t.Number(),
     archived: t.Number(),
+    banned: t.Number(),
   }),
 } as const
 

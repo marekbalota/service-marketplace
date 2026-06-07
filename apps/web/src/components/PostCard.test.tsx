@@ -118,7 +118,7 @@ describe('PostCard', () => {
 
   it('wraps card in a link to the post detail page', async () => {
     await renderWithRouter(<PostCard post={basePost} />)
-    const link = document.querySelector('a[href="/posts/post-1"]')
+    const link = document.querySelector('a[href="/en/posts/post-1"]')
     expect(link).toBeInTheDocument()
   })
 
@@ -141,5 +141,34 @@ describe('PostCard', () => {
   it('disables the delete button when deleteDisabled is true', async () => {
     await renderWithRouter(<PostCard post={basePost} onDelete={vi.fn()} deleteDisabled={true} />)
     expect(screen.getByRole('button')).toBeDisabled()
+  })
+
+  // Ban behaviour tests
+  it('does NOT show "Banned" badge when banReason is not set', async () => {
+    await renderWithRouter(<PostCard post={basePost} />)
+    expect(screen.queryByText('Banned')).not.toBeInTheDocument()
+  })
+
+  it('shows "Banned" badge when banReason is provided', async () => {
+    await renderWithRouter(<PostCard post={basePost} banReason="Violates terms of service" />)
+    expect(screen.getByText('Banned')).toBeInTheDocument()
+  })
+
+  it('shows ban reason text when banReason is provided', async () => {
+    await renderWithRouter(<PostCard post={basePost} banReason="Violates terms of service" />)
+    expect(screen.getByText('Ban reason:')).toBeInTheDocument()
+    expect(screen.getByText('Violates terms of service')).toBeInTheDocument()
+  })
+
+  it('hides delete button when banReason is set, even if onDelete is passed', async () => {
+    const onDelete = vi.fn()
+    await renderWithRouter(<PostCard post={basePost} onDelete={onDelete} banReason="Spam" />)
+    expect(screen.queryByLabelText('Delete post')).not.toBeInTheDocument()
+  })
+
+  it('shows delete button when banReason is not set and onDelete is provided', async () => {
+    const onDelete = vi.fn()
+    await renderWithRouter(<PostCard post={basePost} onDelete={onDelete} />)
+    expect(screen.getByLabelText('Delete post')).toBeInTheDocument()
   })
 })

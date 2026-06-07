@@ -3,6 +3,7 @@ import { ProfilesModel } from './model'
 import { ProfilesService } from './service'
 import { PostsModel } from '../posts/model'
 import { PostsService } from '../posts/service'
+import { resolveLocale } from '../../lib/resolveLocale'
 import { LocationsModel, LocationsService } from '../locations'
 import { ImagesModel } from '../images/model'
 import { ImagesService } from '../images/service'
@@ -12,6 +13,7 @@ import {
   forbiddenResponse,
   notFoundResponse,
   conflictResponse,
+  unprocessableResponse,
 } from '../../lib/errors'
 import { ReportsService } from '../reports/service'
 
@@ -77,20 +79,25 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       detail: { summary: 'Delete a profile', operationId: 'deleteProfile', tags: ['Profiles'] },
     },
   )
-  .get('/:id/posts', async ({ params, query }) => PostsService.findByProfile(params.id, query), {
-    auth: true,
-    params: ProfilesModel.profilePostsParams,
-    query: PostsModel.findByProfileQuery,
-    response: {
-      200: PostsModel.findByProfileResponse,
-      ...unauthorizedResponse,
+  .get(
+    '/:id/posts',
+    async ({ params, query, headers }) =>
+      PostsService.findByProfile(params.id, query, resolveLocale(headers['accept-language'])),
+    {
+      auth: true,
+      params: ProfilesModel.profilePostsParams,
+      query: PostsModel.findByProfileQuery,
+      response: {
+        200: PostsModel.findByProfileResponse,
+        ...unauthorizedResponse,
+      },
+      detail: {
+        summary: 'List posts by profile',
+        operationId: 'listProfilePosts',
+        tags: ['Profiles'],
+      },
     },
-    detail: {
-      summary: 'List posts by profile',
-      operationId: 'listProfilePosts',
-      tags: ['Profiles'],
-    },
-  })
+  )
   .get('/:id/posts/count', async ({ params }) => PostsService.countByProfile(params.id), {
     auth: true,
     params: ProfilesModel.profilePostsParams,
@@ -125,11 +132,6 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
   .post(
     '/:id/locations',
     async ({ params, body, user, set }) => {
-      const hasField = Object.values(body).some((v) => typeof v === 'string' && v.trim() !== '')
-      if (!hasField) {
-        set.status = 422
-        return { message: 'At least one location field must be provided' }
-      }
       const location = await LocationsService.addToProfile(params.id, user.id, body)
       set.status = 201
       return location
@@ -140,9 +142,9 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       body: LocationsModel.addBody,
       response: {
         201: LocationsModel.addResponse,
-        422: t.Object({ message: t.String() }),
         ...unauthorizedResponse,
         ...forbiddenResponse,
+        ...unprocessableResponse,
       },
       detail: {
         summary: 'Add a location to profile',

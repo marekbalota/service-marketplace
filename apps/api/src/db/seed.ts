@@ -4,6 +4,56 @@ import { auth } from '../modules/auth/service'
 import { Permissions } from '@marketplace/shared'
 import { eq, and } from 'drizzle-orm'
 import { users } from './schema'
+import { redis } from '../lib/redis'
+
+const externalIdCache = new Map<string, string | null>()
+
+async function resolveParentPlaceId(
+  name: string,
+  type: 'city' | 'region' | 'country',
+  contextCountry?: string,
+): Promise<string | null> {
+  const apiKey = process.env.GEOAPIFY_API_KEY
+  if (!apiKey) return null
+
+  const cacheKey = `parent:${type}:${name}${contextCountry ? `:${contextCountry}` : ''}`
+  if (externalIdCache.has(cacheKey)) return externalIdCache.get(cacheKey) ?? null
+
+  const query = contextCountry ? `${name} ${contextCountry}` : name
+  try {
+    const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete')
+    url.searchParams.set('text', query)
+    url.searchParams.set('lang', 'en')
+    url.searchParams.set('limit', '5')
+    url.searchParams.set('apiKey', apiKey)
+
+    const res = await fetch(url.toString())
+    if (!res.ok) {
+      externalIdCache.set(cacheKey, null)
+      return null
+    }
+
+    const data = (await res.json()) as {
+      features: { properties: Record<string, unknown> }[]
+    }
+    const match = data.features.find((f) => {
+      const p = f.properties
+      if (type === 'city') return p.street == null && p.city === name
+      if (type === 'region') return p.city == null && p.state === name
+      if (type === 'country') return p.city == null && p.state == null && p.country === name
+      return false
+    })
+    const placeId = (match?.properties.place_id as string | undefined) ?? null
+    externalIdCache.set(cacheKey, placeId)
+    if (placeId) {
+      await redis.set(cacheKey, placeId, 'EX', 24 * 60 * 60)
+    }
+    return placeId
+  } catch {
+    externalIdCache.set(cacheKey, null)
+    return null
+  }
+}
 
 const permissionDefinitions = [
   { name: Permissions.PostsCreate, description: 'Create new posts' },
@@ -179,15 +229,26 @@ async function upsertAdminUser(name: string, email: string, password: string, ro
   console.log(`  Created admin user: ${email} (${roleName})`)
 }
 
-async function upsertCategory(name: string, description: string) {
-  const existing = await db.query.categories.findFirst({
-    where: (c, { eq }) => eq(c.name, name),
+async function upsertCategory(enName: string, extra?: Record<string, string>) {
+  const existing = await db.query.categoryTranslations.findFirst({
+    where: (ct, { and, eq }) => and(eq(ct.locale, 'en'), eq(ct.name, enName)),
+    with: { category: true },
   })
   if (existing) {
-    return existing
+    return existing.category
   }
-  const [created] = await db.insert(schema.categories).values({ name, description }).returning()
-  return created!
+  return db.transaction(async (tx) => {
+    const [category] = await tx.insert(schema.categories).values({}).returning()
+    await tx.insert(schema.categoryTranslations).values([
+      { categoryId: category!.categoryId, locale: 'en', name: enName },
+      ...Object.entries(extra ?? {}).map(([locale, name]) => ({
+        categoryId: category!.categoryId,
+        locale,
+        name,
+      })),
+    ])
+    return category!
+  })
 }
 
 async function seed() {
@@ -239,32 +300,35 @@ async function seed() {
   console.log(`  Created: Super Admin (admin@example.com) - password: admin123`)
 
   console.log('\n  Creating categories...')
-  const tutoring = await upsertCategory('Tutoring', 'Academic tutoring and coaching')
-  const plumbing = await upsertCategory('Plumbing', 'Plumbing installation and repairs')
-  const design = await upsertCategory('Design', 'Graphic, web, and UX design')
-  const homeRepair = await upsertCategory('Home Repair', 'General home maintenance and repairs')
-  const cleaning = await upsertCategory('Cleaning', 'Home and office cleaning services')
-  const techSupport = await upsertCategory('Tech Support', 'IT help and computer repairs')
-  await upsertCategory('Marketing & Business', 'Marketing, branding, and business support')
-  await upsertCategory(
-    'Writing & Translation',
-    'Copywriting, content writing, and translation services',
-  )
-  await upsertCategory(
-    'Admin & Virtual Assistance',
-    'Administrative help and virtual assistant services',
-  )
-  await upsertCategory('Transport & Delivery', 'Delivery, moving, and transportation services')
-  await upsertCategory('Construction & Trades', 'Building, carpentry, and skilled trades')
-  await upsertCategory('Automotive', 'Car repair and maintenance services')
-  await upsertCategory('Personal Services', 'Personal assistance and everyday services')
-  await upsertCategory('Beauty & Wellness', 'Hair, makeup, fitness, and wellness services')
-  await upsertCategory('Events & Entertainment', 'Event planning, music, and entertainment')
-  await upsertCategory('Photography & Video', 'Photography, videography, and editing')
-  await upsertCategory('Pet Services', 'Pet care, sitting, and training')
-  await upsertCategory('Childcare & Elderly Care', 'Babysitting and elderly care services')
-  await upsertCategory('Legal & Finance', 'Legal advice, accounting, and financial services')
-  await upsertCategory('Others', 'Services that do not fit into other categories')
+  const tutoring = await upsertCategory('Tutoring', { sk: 'Doučovanie', cs: 'Doučování' })
+  const plumbing = await upsertCategory('Plumbing', { sk: 'Inštalatérstvo', cs: 'Instalatérství' })
+  const design = await upsertCategory('Design', { sk: 'Dizajn', cs: 'Design' })
+  const homeRepair = await upsertCategory('Home Repair', {
+    sk: 'Opravy domácnosti',
+    cs: 'Opravy domácnosti',
+  })
+  const cleaning = await upsertCategory('Cleaning', { sk: 'Upratovanie', cs: 'Úklid' })
+  const techSupport = await upsertCategory('Tech Support', {
+    sk: 'Technická podpora',
+    cs: 'Technická podpora',
+  })
+  await upsertCategory('Marketing & Business', { sk: 'Marketing a biznis' })
+  await upsertCategory('Writing & Translation', {
+    sk: 'Písanie a preklady',
+    cs: 'Psaní a překlady',
+  })
+  await upsertCategory('Pet Services', { sk: 'Starostlivosť o zvieratá', cs: 'Péče o zvířata' })
+  await upsertCategory('Photography & Video', { cs: 'Fotografie a video' })
+  await upsertCategory('Beauty & Wellness')
+  await upsertCategory('Admin & Virtual Assistance')
+  await upsertCategory('Transport & Delivery')
+  await upsertCategory('Construction & Trades')
+  await upsertCategory('Automotive')
+  await upsertCategory('Personal Services')
+  await upsertCategory('Events & Entertainment')
+  await upsertCategory('Childcare & Elderly Care')
+  await upsertCategory('Legal & Finance')
+  await upsertCategory('Others')
   console.log(`  Created 20 categories total`)
 
   const postsData: {
@@ -280,7 +344,6 @@ async function seed() {
       region?: string
       city?: string
       street?: string
-      houseNumber?: string
     }
   }[] = [
     // ── Tutoring ──
@@ -293,7 +356,7 @@ async function seed() {
       price: '25.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -304,7 +367,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -335,7 +398,7 @@ async function seed() {
       price: '30.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -346,7 +409,7 @@ async function seed() {
       price: '20.00',
       rateType: 'HOURLY',
       categories: [tutoring],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 6' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 6' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -399,7 +462,7 @@ async function seed() {
       price: '60.00',
       rateType: 'HOURLY',
       categories: [plumbing, homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -420,7 +483,7 @@ async function seed() {
       price: '90.00',
       rateType: 'HOURLY',
       categories: [plumbing],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -441,7 +504,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [plumbing],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: carolProfile.userProfileId,
@@ -452,7 +515,7 @@ async function seed() {
       price: '800.00',
       rateType: 'FIXED',
       categories: [plumbing, homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 2' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 2' },
     },
 
     // ── Design ──
@@ -547,7 +610,7 @@ async function seed() {
       price: '40.00',
       rateType: 'HOURLY',
       categories: [homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: davidProfile.userProfileId,
@@ -568,7 +631,7 @@ async function seed() {
       price: '30.00',
       rateType: 'HOURLY',
       categories: [homeRepair],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -661,7 +724,7 @@ async function seed() {
       price: '20.00',
       rateType: 'HOURLY',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 1' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 1' },
     },
     {
       authorId: frankProfile.userProfileId,
@@ -672,7 +735,7 @@ async function seed() {
       price: '300.00',
       rateType: 'FIXED',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -693,7 +756,7 @@ async function seed() {
       price: '120.00',
       rateType: 'FIXED',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: aliceProfile.userProfileId,
@@ -704,7 +767,7 @@ async function seed() {
       price: '18.00',
       rateType: 'HOURLY',
       categories: [cleaning],
-      location: { country: 'Czech Republic', region: 'Prague', city: 'Prague', street: 'Praha 7' },
+      location: { country: 'Czechia', region: 'Prague', city: 'Prague', street: 'Praha 7' },
     },
     {
       authorId: bobProfile.userProfileId,
@@ -737,7 +800,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [techSupport],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: elenaProfile.userProfileId,
@@ -778,7 +841,7 @@ async function seed() {
       price: null,
       rateType: null,
       categories: [techSupport],
-      location: { country: 'Czech Republic', region: 'South Moravian Region', city: 'Brno' },
+      location: { country: 'Czechia', region: 'South Moravian Region', city: 'Brno' },
     },
     {
       authorId: carolProfile.userProfileId,
@@ -883,7 +946,29 @@ async function seed() {
 
     let locationId: string | undefined
     if (locationData) {
-      const [insertedLocation] = await db.insert(schema.locations).values(locationData).returning()
+      const streetExternalId =
+        locationData.street && locationData.country
+          ? await resolveParentPlaceId(locationData.street, 'city', locationData.country)
+          : null
+      const cityExternalId = locationData.city
+        ? await resolveParentPlaceId(locationData.city, 'city', locationData.country)
+        : null
+      const regionExternalId = locationData.region
+        ? await resolveParentPlaceId(locationData.region, 'region', locationData.country)
+        : null
+      const countryExternalId = locationData.country
+        ? await resolveParentPlaceId(locationData.country, 'country')
+        : null
+      const [insertedLocation] = await db
+        .insert(schema.locations)
+        .values({
+          ...locationData,
+          streetExternalId: streetExternalId ?? undefined,
+          cityExternalId: cityExternalId ?? undefined,
+          regionExternalId: regionExternalId ?? undefined,
+          countryExternalId: countryExternalId ?? undefined,
+        })
+        .returning()
       locationId = insertedLocation!.locationId
       locationCount++
     }
@@ -1338,6 +1423,7 @@ async function seed() {
   console.log('   18 reports (9 post, 4 message, 5 review) with mixed statuses')
 
   await client.end()
+  await redis.quit()
 }
 
 // Signup fires fire-and-forget verification emails. With no SMTP relay

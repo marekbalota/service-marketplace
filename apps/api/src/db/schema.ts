@@ -184,6 +184,8 @@ export const posts = pgTable('posts', {
   rateType: rateTypeEnum('rate_type'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
+  bannedAt: timestamp('banned_at'),
+  banReason: text('ban_reason'),
 })
 
 export const reviews = pgTable(
@@ -206,11 +208,23 @@ export const reviews = pgTable(
 
 export const categories = pgTable('categories', {
   categoryId: uuid('category_id').primaryKey().defaultRandom(),
-  name: text('name').notNull().unique(),
-  description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'),
 })
+
+export const categoryTranslations = pgTable(
+  'category_translations',
+  {
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.categoryId, table.locale] }),
+    unique('category_translations_locale_name_unique').on(table.locale, table.name),
+  ],
+)
 
 export const postCategories = pgTable(
   'post_categories',
@@ -220,18 +234,21 @@ export const postCategories = pgTable(
       .references(() => posts.postId),
     categoryId: uuid('category_id')
       .notNull()
-      .references(() => categories.categoryId),
+      .references(() => categories.categoryId, { onDelete: 'cascade' }),
   },
   (table) => [primaryKey({ columns: [table.postId, table.categoryId] })],
 )
 
 export const locations = pgTable('locations', {
   locationId: uuid('location_id').primaryKey().defaultRandom(),
-  country: text('country'),
-  region: text('region'),
-  city: text('city'),
+  streetExternalId: text('street_external_id'),
+  cityExternalId: text('city_external_id'),
+  regionExternalId: text('region_external_id'),
+  countryExternalId: text('country_external_id'),
   street: text('street'),
-  houseNumber: text('house_number'),
+  city: text('city'),
+  region: text('region'),
+  country: text('country'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
 })
@@ -433,6 +450,14 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   postCategories: many(postCategories),
+  translations: many(categoryTranslations),
+}))
+
+export const categoryTranslationsRelations = relations(categoryTranslations, ({ one }) => ({
+  category: one(categories, {
+    fields: [categoryTranslations.categoryId],
+    references: [categories.categoryId],
+  }),
 }))
 
 export const postCategoriesRelations = relations(postCategories, ({ one }) => ({

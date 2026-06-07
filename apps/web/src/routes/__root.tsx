@@ -1,11 +1,12 @@
 import '#/lib/i18n'
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { queryClient } from '../router'
-import appCss from '../styles.css?url'
+import '../styles.css'
 import { DefaultCatchBoundary } from '#/components/DefaultCatchBoundary'
 import { NotFound } from '#/components/NotFound'
 import { ActiveProfileProvider } from '#/context/activeProfile'
@@ -30,7 +31,6 @@ export const Route = createRootRouteWithContext<{
         title: 'Marketplace for Services',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   notFoundComponent: NotFound,
   errorComponent: DefaultCatchBoundary,
@@ -46,8 +46,9 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { i18n } = useTranslation()
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={i18n.language} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />

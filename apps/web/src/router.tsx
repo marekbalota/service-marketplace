@@ -4,6 +4,7 @@ import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimen
 import { toast } from 'sonner'
 import { ErrorCodes } from '@marketplace/shared'
 import { ApiError } from '#/lib/api-error'
+import i18n from './lib/i18n'
 import { routeTree } from './routeTree.gen'
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
 import { NotFound } from './components/NotFound'
@@ -23,9 +24,12 @@ export const queryClient = new QueryClient({
         redirecting401 = true
         queryClient.clear()
         if (routerRef) {
-          void routerRef.navigate({ to: '/login', replace: true }).then(() => {
-            redirecting401 = false
-          })
+          const locale = i18n.language as 'en' | 'sk' | 'cs'
+          void routerRef
+            .navigate({ to: '/$locale/login', params: { locale }, replace: true })
+            .then(() => {
+              redirecting401 = false
+            })
         } else {
           redirecting401 = false
         }

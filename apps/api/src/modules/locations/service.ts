@@ -1,9 +1,22 @@
 import { db } from '../../db'
-import { locations, posts, profileLocations } from '../../db/schema'
-import { eq, isNull, and, asc, sql } from 'drizzle-orm'
+import { locations, profileLocations } from '../../db/schema'
+import { eq, isNull, and } from 'drizzle-orm'
 import type { LocationsModel } from './model'
-import { ForbiddenError, NotFoundError, AuthErrorMessages } from '../../lib/errors'
+import {
+  BadGatewayError,
+  ForbiddenError,
+  NotFoundError,
+  UnprocessableEntityError,
+  AuthErrorMessages,
+} from '../../lib/errors'
 import { ProfilesService } from '../profiles/service'
+import { redis } from '../../lib/redis'
+import {
+  fetchGeoapifyFeatures,
+  resolveParentPlaceId,
+  type GeoProps,
+  type ParentLevel,
+} from '../../lib/geoapify'
 
 export abstract class LocationsService {
   static async findByProfileId(profileId: string, accountId: string) {
@@ -17,7 +30,6 @@ export abstract class LocationsService {
         region: locations.region,
         city: locations.city,
         street: locations.street,
-        houseNumber: locations.houseNumber,
       })
       .from(profileLocations)
       .innerJoin(locations, eq(locations.locationId, profileLocations.locationId))
@@ -34,8 +46,58 @@ export abstract class LocationsService {
     const owned = await ProfilesService.isProfileOwnedByAccount(profileId, accountId)
     if (!owned) throw new ForbiddenError(AuthErrorMessages.forbidden)
 
+    const cached = await redis.get(`loc:${body.externalId}`)
+    if (!cached) {
+      throw new UnprocessableEntityError('Location suggestion expired, please search again')
+    }
+    let parsed: {
+      country: string | null
+      region: string | null
+      city: string | null
+      street: string | null
+      lang?: string
+    }
+    try {
+      parsed = JSON.parse(cached) as typeof parsed
+    } catch {
+      throw new UnprocessableEntityError('Location suggestion expired, please search again')
+    }
+
+    const lang = parsed.lang ?? 'en'
+    const allLevels = ['street', 'city', 'region', 'country'] as const
+    const level = allLevels.find((l) => parsed[l] != null) ?? 'country'
+
+    const colContextCountry: Record<ParentLevel, string | null> = {
+      city: parsed.country,
+      region: parsed.country,
+      country: null,
+    }
+
+    const [streetExternalId, cityExternalId, regionExternalId, countryExternalId] =
+      await Promise.all(
+        (['street', 'city', 'region', 'country'] as const).map(async (col) => {
+          if (level === col) return body.externalId
+          if (col === 'street') return null
+          const name = parsed[col]
+          if (!name) return null
+          return resolveParentPlaceId(name, col, colContextCountry[col] ?? undefined, lang)
+        }),
+      )
+
     return db.transaction(async (tx) => {
-      const [inserted] = await tx.insert(locations).values(body).returning()
+      const [inserted] = await tx
+        .insert(locations)
+        .values({
+          city: parsed.city,
+          region: parsed.region,
+          country: parsed.country,
+          street: parsed.street,
+          streetExternalId,
+          cityExternalId,
+          regionExternalId,
+          countryExternalId,
+        })
+        .returning()
 
       await tx
         .insert(profileLocations)
@@ -48,7 +110,6 @@ export abstract class LocationsService {
         region: inserted!.region,
         city: inserted!.city,
         street: inserted!.street,
-        houseNumber: inserted!.houseNumber,
       }
     })
   }
@@ -72,32 +133,48 @@ export abstract class LocationsService {
     if (!row) throw new NotFoundError('Location not found in profile')
   }
 
-  static async findDistinct(query: LocationsModel['distinctQuery']) {
-    const { field, country, region } = query
+  static async autocomplete(query: LocationsModel['autocompleteQuery'], lang = 'en') {
+    const { q, limit = 5 } = query
 
-    const column =
-      field === 'country'
-        ? locations.country
-        : field === 'region'
-          ? locations.region
-          : locations.city
+    let features: { properties: GeoProps }[]
+    try {
+      features = await fetchGeoapifyFeatures(q, lang, limit)
+    } catch {
+      throw new BadGatewayError('Location search unavailable')
+    }
 
-    const rows = await db
-      .selectDistinct({ value: column })
-      .from(locations)
-      .innerJoin(posts, eq(posts.locationId, locations.locationId))
-      .where(
-        and(
-          isNull(posts.deletedAt),
-          isNull(locations.deletedAt),
-          country ? sql`unaccent(${locations.country}) ILIKE unaccent(${country})` : undefined,
-          region ? sql`unaccent(${locations.region})  ILIKE unaccent(${region})` : undefined,
+    const suggestions = []
+    const cacheWrites: Promise<unknown>[] = []
+    const seen = new Set<string>()
+
+    for (const feature of features) {
+      const p = feature.properties
+      const id = p.place_id as string | undefined
+      if (!id || !p.country) continue
+
+      const country = (p.country as string) ?? null
+      const region = (p.state as string) ?? null
+      const city = (p.city as string) ?? null
+      const street = (p.street as string) ?? null
+
+      // Deduplicate by localized display string (Geoapify returns the same place at multiple admin levels)
+      const dedupeKey = `${street}|${city}|${region}|${country}`
+      if (seen.has(dedupeKey)) continue
+      seen.add(dedupeKey)
+
+      cacheWrites.push(
+        redis.set(
+          `loc:${id}`,
+          JSON.stringify({ country, region, city, street, lang }),
+          'EX',
+          4 * 60 * 60,
         ),
       )
-      .orderBy(asc(column))
 
-    return {
-      values: rows.map((r) => r.value).filter((v): v is string => v !== null),
+      suggestions.push({ id, street, city, region, country })
     }
+
+    await Promise.all(cacheWrites)
+    return { suggestions }
   }
 }
