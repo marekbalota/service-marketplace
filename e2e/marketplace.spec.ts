@@ -38,6 +38,11 @@ test.describe('Marketplace index', () => {
     await expect(page.getByRole('combobox').first()).toBeVisible()
   })
 
+  test('shows the location filter input on desktop', async ({ page }) => {
+    // Desktop Chrome viewport shows the inline filter row (hidden below lg: 1024px)
+    await expect(page.getByPlaceholder('All Locations')).toBeVisible()
+  })
+
   test('displays a list of service posts', async ({ page }) => {
     // Wait for posts to load (suspense resolves)
     await expect(page.locator('main p').first()).toBeVisible()

@@ -3,6 +3,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { useForm } from 'react-hook-form'
 import { LocationField } from './LocationField'
 
+vi.mock('@tanstack/react-pacer', () => ({
+  useDebouncedValue: (v: unknown) => [v],
+}))
+
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
@@ -26,7 +30,7 @@ vi.mock('#/lib/queries/locations', () => ({
 
 vi.mock('#/lib/useLocale', () => ({ useLocale: () => 'en' }))
 
-function Wrapper({ isNewLocation = false, onToggle = vi.fn() }) {
+function Wrapper() {
   const { control } = useForm<Record<string, string>>({
     defaultValues: {
       locationId: '',
@@ -37,8 +41,6 @@ function Wrapper({ isNewLocation = false, onToggle = vi.fn() }) {
     <LocationField
       control={control}
       profileId="profile-1"
-      isNewLocation={isNewLocation}
-      onToggle={onToggle}
     />
   )
 }
@@ -54,20 +56,20 @@ describe('LocationField', () => {
     expect(screen.getByRole('button', { name: /enter new location/i })).toBeInTheDocument()
   })
 
-  it('calls onToggle when the toggle button is clicked', () => {
-    const onToggle = vi.fn()
-    render(<Wrapper onToggle={onToggle} />)
+  it('clicking the toggle button switches to new-location mode', () => {
+    render(<Wrapper />)
     fireEvent.click(screen.getByRole('button', { name: /enter new location/i }))
-    expect(onToggle).toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /use previous location/i })).toBeInTheDocument()
   })
 
-  it('renders the LocationAutocomplete combobox when isNewLocation=true', () => {
-    render(<Wrapper isNewLocation={true} />)
+  it('renders the LocationAutocomplete combobox in default mode', () => {
+    render(<Wrapper />)
     expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 
-  it('renders the "Use Previous Location" button when in new-location mode', () => {
-    render(<Wrapper isNewLocation={true} />)
+  it('renders the "Use Previous Location" button after clicking Enter New Location', () => {
+    render(<Wrapper />)
+    fireEvent.click(screen.getByRole('button', { name: /enter new location/i }))
     expect(screen.getByRole('button', { name: /use previous location/i })).toBeInTheDocument()
   })
 })

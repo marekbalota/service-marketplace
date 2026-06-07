@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { LocationAutocomplete } from './LocationAutocomplete'
 import * as apiModule from '#/api'
 
+vi.mock('@tanstack/react-pacer', () => ({
+  useDebouncedValue: (v: unknown) => [v],
+}))
+
 vi.mock('#/api', () => ({
   api: {
     locations: {
@@ -37,11 +41,11 @@ describe('LocationAutocomplete', () => {
     } as never)
   })
 
-  it('shows suggestions when user types 2+ chars', async () => {
+  it('shows suggestions when user types 3+ chars', async () => {
     const onChange = vi.fn()
     render(<LocationAutocomplete value={null} onChange={onChange} />, { wrapper })
 
-    await userEvent.type(screen.getByRole('combobox'), 'Br')
+    await userEvent.type(screen.getByRole('combobox'), 'Brno')
     await waitFor(() =>
       expect(screen.getByText('Brno, South Moravian Region, Czech Republic')).toBeInTheDocument(),
     )
@@ -51,7 +55,7 @@ describe('LocationAutocomplete', () => {
     const onChange = vi.fn()
     render(<LocationAutocomplete value={null} onChange={onChange} />, { wrapper })
 
-    await userEvent.type(screen.getByRole('combobox'), 'Br')
+    await userEvent.type(screen.getByRole('combobox'), 'Brno')
     await waitFor(() => screen.getByText('Brno, South Moravian Region, Czech Republic'))
     await userEvent.click(screen.getByText('Brno, South Moravian Region, Czech Republic'))
 
@@ -60,9 +64,8 @@ describe('LocationAutocomplete', () => {
 
   it('shows selected value display name', () => {
     render(<LocationAutocomplete value={mockSuggestion} onChange={vi.fn()} />, { wrapper })
-    expect(
-      screen.getByDisplayValue('Brno, South Moravian Region, Czech Republic'),
-    ).toBeInTheDocument()
+    // getByRole excludes aria-hidden elements so it finds only the visible combobox input
+    expect(screen.getByRole('combobox')).toHaveValue('Brno, South Moravian Region, Czech Republic')
   })
 
   it('calls onChange(null) when clear button clicked', async () => {
@@ -73,9 +76,9 @@ describe('LocationAutocomplete', () => {
     expect(onChange).toHaveBeenCalledWith(null)
   })
 
-  it('does not fire query for input shorter than 2 chars', async () => {
+  it('does not fire query for input shorter than 3 chars', async () => {
     render(<LocationAutocomplete value={null} onChange={vi.fn()} />, { wrapper })
-    await userEvent.type(screen.getByRole('combobox'), 'B')
+    await userEvent.type(screen.getByRole('combobox'), 'Br')
     expect(apiModule.api.locations.autocomplete.get).not.toHaveBeenCalled()
   })
 })

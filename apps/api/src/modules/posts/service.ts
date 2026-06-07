@@ -123,6 +123,9 @@ export abstract class PostsService {
         } else {
           locationFilter = eq(locations.countryExternalId, externalId)
         }
+      } else {
+        // Unknown externalId (not in cache) — return no results rather than unfiltered results
+        locationFilter = sql`false`
       }
     }
 
