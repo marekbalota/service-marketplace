@@ -71,6 +71,8 @@ export const users = pgTable('user', {
   banReason: text('ban_reason'),
   banExpiration: timestamp('ban_expiration'),
   twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+  notifyMessages: boolean('notify_messages').notNull().default(true),
+  notifyReviews: boolean('notify_reviews').notNull().default(true),
 })
 
 export const sessions = pgTable('session', {
