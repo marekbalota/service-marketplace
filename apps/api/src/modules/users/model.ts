@@ -7,6 +7,8 @@ export const UsersModel = {
     name: t.String(),
     email: t.String(),
     impersonatedBy: t.Nullable(t.String()),
+    notifyMessages: t.Boolean(),
+    notifyReviews: t.Boolean(),
     role: t.Nullable(
       t.Object({
         roleId: t.String(),
@@ -27,6 +29,10 @@ export const UsersModel = {
         updatedAt: t.Nullable(t.Date()),
       }),
     ),
+  }),
+  updateNotificationsBody: t.Object({
+    notifyMessages: t.Optional(t.Boolean()),
+    notifyReviews: t.Optional(t.Boolean()),
   }),
 } as const
 

@@ -71,7 +71,7 @@ export abstract class ReviewsService {
       try {
         const [authorEmailRow, reviewerRow] = await Promise.all([
           db
-            .select({ email: users.email })
+            .select({ email: users.email, notifyReviews: users.notifyReviews })
             .from(userProfiles)
             .innerJoin(users, eq(userProfiles.accountId, users.id))
             .where(eq(userProfiles.userProfileId, capturedAuthorId))
@@ -82,7 +82,7 @@ export abstract class ReviewsService {
             .where(eq(userProfiles.userProfileId, reviewerId))
             .limit(1),
         ])
-        if (authorEmailRow[0] && reviewerRow[0]) {
+        if (authorEmailRow[0] && reviewerRow[0] && authorEmailRow[0].notifyReviews) {
           await sendReviewNotificationEmail({
             recipientEmail: authorEmailRow[0].email,
             reviewerName: reviewerRow[0].name,

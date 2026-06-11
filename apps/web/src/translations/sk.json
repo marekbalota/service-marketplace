@@ -321,8 +321,6 @@
     "changePassword": "Zmeniť heslo",
     "notifications": "Notifikácie",
     "notificationsSubtitle": "Spravujte, ako dostávate notifikácie",
-    "emailNotifications": "E-mailové notifikácie",
-    "emailNotificationsDesc": "Dostávajte e-maily o nových správach a aktivite",
     "messageNotifications": "Notifikácie správ",
     "messageNotificationsDesc": "Dostávajte upozornenia pri nových správach",
     "reviewNotifications": "Notifikácie recenzií",

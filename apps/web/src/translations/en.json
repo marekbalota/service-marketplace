@@ -325,8 +325,6 @@
     "changePassword": "Change Password",
     "notifications": "Notifications",
     "notificationsSubtitle": "Manage how you receive notifications",
-    "emailNotifications": "Email Notifications",
-    "emailNotificationsDesc": "Receive emails about new messages and activity",
     "messageNotifications": "Message Notifications",
     "messageNotificationsDesc": "Get notified when you receive a new message",
     "reviewNotifications": "Review Notifications",

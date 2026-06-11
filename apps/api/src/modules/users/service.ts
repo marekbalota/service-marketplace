@@ -13,6 +13,8 @@ export abstract class UsersService {
         userId: users.id,
         name: users.name,
         email: users.email,
+        notifyMessages: users.notifyMessages,
+        notifyReviews: users.notifyReviews,
         role: sql<{
           roleId: string
           name: string
@@ -75,5 +77,12 @@ export abstract class UsersService {
     }
 
     return row
+  }
+
+  static async updateNotificationPreferences(
+    userId: string,
+    prefs: UsersModel['updateNotificationsBody'],
+  ): Promise<void> {
+    await db.update(users).set(prefs).where(eq(users.id, userId))
   }
 }

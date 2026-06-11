@@ -271,7 +271,7 @@ export abstract class MessagesService {
       try {
         const [authorEmailRow, initiatorRow] = await Promise.all([
           db
-            .select({ email: users.email })
+            .select({ email: users.email, notifyMessages: users.notifyMessages })
             .from(userProfiles)
             .innerJoin(users, eq(userProfiles.accountId, users.id))
             .where(eq(userProfiles.userProfileId, post.authorId))
@@ -282,7 +282,7 @@ export abstract class MessagesService {
             .where(eq(userProfiles.userProfileId, body.profileId))
             .limit(1),
         ])
-        if (authorEmailRow[0] && initiatorRow[0]) {
+        if (authorEmailRow[0] && initiatorRow[0] && authorEmailRow[0].notifyMessages) {
           await sendMessageNotificationEmail({
             recipientEmail: authorEmailRow[0].email,
             senderName: initiatorRow[0].name,
@@ -349,13 +349,13 @@ export abstract class MessagesService {
           roleResult.role === 'initiator' ? threadRow.initiatorName : threadRow.authorName
 
         const [recipientEmailRow] = await db
-          .select({ email: users.email })
+          .select({ email: users.email, notifyMessages: users.notifyMessages })
           .from(userProfiles)
           .innerJoin(users, eq(userProfiles.accountId, users.id))
           .where(eq(userProfiles.userProfileId, recipientProfileId))
           .limit(1)
 
-        if (recipientEmailRow) {
+        if (recipientEmailRow && recipientEmailRow.notifyMessages) {
           await sendMessageNotificationEmail({
             recipientEmail: recipientEmailRow.email,
             senderName,
