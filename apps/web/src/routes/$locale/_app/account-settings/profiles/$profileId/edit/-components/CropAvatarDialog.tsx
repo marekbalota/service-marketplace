@@ -10,12 +10,14 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Button } from '#/components/ui/button'
+import { Slider } from '#/components/ui/slider'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<File> {
   const image = new Image()
   image.src = imageSrc
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     image.onload = () => resolve()
+    image.onerror = () => reject(new Error('Failed to load image'))
   })
 
   const canvas = document.createElement('canvas')
@@ -93,14 +95,13 @@ export function CropAvatarDialog({ imageSrc, open, onConfirm, onCancel }: Props)
 
         <div className="flex items-center gap-4 px-6 py-4">
           <span className="text-xs text-muted-foreground shrink-0">{t('profiles.cropZoom')}</span>
-          <input
-            type="range"
+          <Slider
             min={1}
             max={3}
             step={0.05}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="flex-1 accent-primary"
+            value={[zoom]}
+            onValueChange={(v) => setZoom(Array.isArray(v) ? v[0] : v)}
+            className="flex-1"
           />
         </div>
 

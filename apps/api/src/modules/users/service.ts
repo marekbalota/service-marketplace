@@ -90,6 +90,7 @@ export abstract class UsersService {
     userId: string,
     prefs: UsersModel['updateNotificationsBody'],
   ): Promise<void> {
+    if (prefs.notifyMessages === undefined && prefs.notifyReviews === undefined) return
     await db.update(users).set(prefs).where(eq(users.id, userId))
   }
 }
