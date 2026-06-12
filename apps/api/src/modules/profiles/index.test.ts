@@ -592,10 +592,14 @@ describe('GET /profiles/:id/reported/messages/:messageId', () => {
   })
 })
 
+const fakeJpeg = new File([Buffer.from([0xff, 0xd8, 0xff, 0xe0])], 'avatar.jpg', {
+  type: 'image/jpeg',
+})
+
 describe('PUT /profiles/:id/avatar', () => {
   it('returns 401 without a session cookie', async () => {
     const { error } = await client.profiles({ id: aliceProfileId }).avatar.put({
-      file: new File(['x'], 'test.jpg', { type: 'image/jpeg' }),
+      file: fakeJpeg,
     })
     expect(error?.status).toBe(401)
   })
@@ -604,7 +608,7 @@ describe('PUT /profiles/:id/avatar', () => {
     const { error } = await client
       .profiles({ id: '00000000-0000-0000-0000-000000000000' })
       .avatar.put(
-        { file: new File(['x'], 'test.jpg', { type: 'image/jpeg' }) },
+        { file: fakeJpeg },
         { headers: { Cookie: aliceCookie } },
       )
     expect(error?.status).toBe(403)
