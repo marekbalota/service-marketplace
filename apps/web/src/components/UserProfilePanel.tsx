@@ -20,10 +20,10 @@ import { Label } from './ui/label'
 import { queryClient } from '#/router'
 import { useStopImpersonating } from '#/lib/queries/auth'
 
-function ProfileOption({ name }: { name: string }) {
+function ProfileOption({ name, imageUrl }: { name: string; imageUrl?: string }) {
   return (
     <div className="flex items-center gap-3">
-      <ProfileAvatar name={name} className="size-8 shrink-0" />
+      <ProfileAvatar name={name} imageUrl={imageUrl} className="size-8 shrink-0" />
       <div className="flex flex-col items-start">
         <span className="font-medium">{name}</span>
       </div>
@@ -60,7 +60,12 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
             >
               <SelectTrigger className="!h-auto w-full px-3 py-3 [&_[data-slot=select-value]]:line-clamp-none">
                 <SelectValue>
-                  {activeProfile && <ProfileOption name={activeProfile.name} />}
+                  {activeProfile && (
+                    <ProfileOption
+                      name={activeProfile.name}
+                      imageUrl={activeProfile.profileImageUrl ?? undefined}
+                    />
+                  )}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -70,7 +75,10 @@ export function UserProfilePanel({ onClose }: { onClose: () => void }) {
                     value={profile.userProfileId}
                     className="py-3 pl-3 pr-10"
                   >
-                    <ProfileOption name={profile.name} />
+                    <ProfileOption
+                      name={profile.name}
+                      imageUrl={profile.profileImageUrl ?? undefined}
+                    />
                   </SelectItem>
                 ))}
               </SelectContent>

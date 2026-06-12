@@ -81,4 +81,54 @@ describe('GET /users/me', () => {
       expect(typeof profile!.email).toBe('string')
     }
   })
+
+  it('returns notifyMessages and notifyReviews as booleans', async () => {
+    const { data, error } = await client.users.me.get({
+      headers: { Cookie: userCookie },
+    })
+    expect(error).toBeNull()
+    expect(typeof data!.notifyMessages).toBe('boolean')
+    expect(typeof data!.notifyReviews).toBe('boolean')
+  })
+})
+
+describe('PATCH /users/me/notifications', () => {
+  it('returns 401 without a session', async () => {
+    const { error } = await client.users.me.notifications.patch({ notifyMessages: false })
+    expect(error?.status).toBe(401)
+  })
+
+  it('returns 204 and persists notifyMessages=false', async () => {
+    const { error } = await client.users.me.notifications.patch(
+      { notifyMessages: false },
+      { headers: { Cookie: userCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data } = await client.users.me.get({ headers: { Cookie: userCookie } })
+    expect(data!.notifyMessages).toBe(false)
+  })
+
+  it('returns 204 and persists notifyReviews=false', async () => {
+    const { error } = await client.users.me.notifications.patch(
+      { notifyReviews: false },
+      { headers: { Cookie: userCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data } = await client.users.me.get({ headers: { Cookie: userCookie } })
+    expect(data!.notifyReviews).toBe(false)
+  })
+
+  it('restores both preferences to true', async () => {
+    const { error } = await client.users.me.notifications.patch(
+      { notifyMessages: true, notifyReviews: true },
+      { headers: { Cookie: userCookie } },
+    )
+    expect(error).toBeNull()
+
+    const { data } = await client.users.me.get({ headers: { Cookie: userCookie } })
+    expect(data!.notifyMessages).toBe(true)
+    expect(data!.notifyReviews).toBe(true)
+  })
 })

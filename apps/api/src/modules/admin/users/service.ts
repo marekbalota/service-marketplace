@@ -1,6 +1,6 @@
 import { db } from '../../../db'
 import { users, roles, sessions, userProfiles } from '../../../db/schema'
-import { eq, and, isNull, ilike, or, desc, count } from 'drizzle-orm'
+import { eq, and, isNull, ilike, or, desc, count, sql } from 'drizzle-orm'
 import type { AdminUsersModel } from './model'
 import { RBACService } from '../../../lib/rbac/rbac-helper'
 import {
@@ -249,6 +249,12 @@ export abstract class AdminUsersService {
         phoneNumber: userProfiles.phoneNumber,
         fax: userProfiles.fax,
         createdAt: userProfiles.createdAt,
+        profileImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${userProfiles.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
       })
       .from(userProfiles)
       .where(and(eq(userProfiles.accountId, userId), isNull(userProfiles.deletedAt)))

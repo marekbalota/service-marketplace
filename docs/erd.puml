@@ -28,6 +28,8 @@ entity User {
     ban_reason : text
     ban_expiration : timestamp
     two_factor_enabled : boolean <<NOT NULL>>
+    notify_messages : boolean <<NOT NULL>>
+    notify_reviews : boolean <<NOT NULL>>
     created_at : timestamp <<NOT NULL>>
     updated_at : timestamp <<NOT NULL>>
 }
@@ -102,6 +104,7 @@ entity UserProfile {
     user_profile_id : uuid <<PK>>
     ---
     account_id : uuid <<FK>> <<NOT NULL>>
+    profile_image_id : uuid <<FK>>
     name : text <<NOT NULL>>
     email : text <<NOT NULL>>
     bio : text
@@ -309,6 +312,7 @@ User ||--o{ UserTwoFactorMethod
 User ||--o{ UserBackupCode
 UserTwoFactorMethod ||--o| UserTotpCredential
 UserProfile ||--o{ Image
+UserProfile }o--o| Image : profile image
 UserProfile ||--o{ Favourites
 Review ||--o{ ReviewImage : has images
 Post ||--o{ Favourites

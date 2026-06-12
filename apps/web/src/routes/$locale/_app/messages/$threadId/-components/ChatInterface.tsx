@@ -48,6 +48,7 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
     <main className="flex flex-1 flex-col min-h-0">
       <ThreadHeader
         otherPartyName={thread.otherPartyName}
+        otherPartyImageUrl={thread.otherPartyImageUrl ?? undefined}
         postTitle={thread.postTitle}
         postId={thread.postId}
         postDeleted={thread.postDeleted}

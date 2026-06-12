@@ -175,6 +175,7 @@ function UserDetailContent({ userId }: { userId: string }) {
                       <div className="flex items-start gap-4 flex-1">
                         <ProfileAvatar
                           name={profile.name}
+                          imageUrl={profile.profileImageUrl ?? undefined}
                           className="size-12 shrink-0 shadow-md"
                           fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white"
                         />

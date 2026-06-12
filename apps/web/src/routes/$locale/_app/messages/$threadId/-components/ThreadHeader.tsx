@@ -9,6 +9,7 @@ import { useLocale } from '#/lib/useLocale'
 
 type ThreadHeaderProps = {
   otherPartyName: string
+  otherPartyImageUrl?: string
   postTitle: string
   postId: string
   postDeleted: boolean
@@ -17,6 +18,7 @@ type ThreadHeaderProps = {
 
 export function ThreadHeader({
   otherPartyName,
+  otherPartyImageUrl,
   postTitle,
   postId,
   postDeleted,
@@ -39,7 +41,7 @@ export function ThreadHeader({
         <ArrowLeft className="size-4" />
       </Button>
 
-      <ProfileAvatar name={otherPartyName} className="size-9 shrink-0" />
+      <ProfileAvatar name={otherPartyName} imageUrl={otherPartyImageUrl} className="size-9 shrink-0" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-foreground">{otherPartyName}</p>

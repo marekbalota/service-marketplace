@@ -17,6 +17,7 @@ import { profileSchema, type ProfileFormValues } from '../../../-components/prof
 import { ProfileFields } from '../../../-components/ProfileFields'
 import { ImagePickerGrid } from '#/components/ImagePickerGrid'
 import { AddLocationDialog } from './-components/AddLocationDialog'
+import { AvatarSection } from './-components/AvatarSection'
 import { formatLocation, formatLocationDetail } from '#/lib/format'
 import { useLocale } from '#/lib/useLocale'
 import {
@@ -198,6 +199,12 @@ function EditProfilePage() {
       </div>
 
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <AvatarSection
+          profileId={profileId}
+          name={profile.name}
+          imageUrl={profile.profileImageUrl}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle>{t('profiles.basicInfo')}</CardTitle>

@@ -2,6 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { currentUserQueryOptions, useCurrentUser } from '#/lib/queries/users'
 import { twoFactorStatusQueryOptions } from '#/lib/queries/two-factor'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
@@ -18,6 +20,8 @@ import { LoginManagementSection } from './-components/LoginManagementSection'
 import { sessionsQueryOptions } from './-queries/sessions'
 import { cn } from '#/lib/utils'
 import { useLocale } from '#/lib/useLocale'
+import { api } from '#/api'
+import { wrapEdenError } from '#/lib/api-error'
 
 export const Route = createFileRoute('/$locale/_app/account-settings/')({
   loader: ({ context: { queryClient } }) =>
@@ -62,27 +66,6 @@ const SECTIONS = [
     id: 'user-profiles' as const,
     icon: Users,
     labelKey: 'accountSettings.sections.userProfiles' as const,
-  },
-] as const
-
-const NOTIFICATION_ROWS = [
-  {
-    id: 'notif-email',
-    icon: Bell,
-    labelKey: 'accountSettings.emailNotifications' as const,
-    descriptionKey: 'accountSettings.emailNotificationsDesc' as const,
-  },
-  {
-    id: 'notif-messages',
-    icon: Mail,
-    labelKey: 'accountSettings.messageNotifications' as const,
-    descriptionKey: 'accountSettings.messageNotificationsDesc' as const,
-  },
-  {
-    id: 'notif-reviews',
-    icon: Bell,
-    labelKey: 'accountSettings.reviewNotifications' as const,
-    descriptionKey: 'accountSettings.reviewNotificationsDesc' as const,
   },
 ] as const
 
@@ -164,7 +147,7 @@ function AccountSettingsHubSkeleton() {
               <Skeleton className="h-4 w-60" />
             </CardHeader>
             <CardContent className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
+              {Array.from({ length: 2 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-5 shrink-0" />
@@ -239,6 +222,7 @@ function AccountSettingsHubSkeleton() {
 function AccountSettingsHubPage() {
   const { t } = useTranslation()
   const locale = useLocale()
+  const queryClient = useQueryClient()
   const { data: user } = useCurrentUser()
   const [activeSection, setActiveSection] = useState<SectionId>('account-information')
   const [showChangeEmail, setShowChangeEmail] = useState(false)
@@ -266,6 +250,15 @@ function AccountSettingsHubPage() {
       observersRef.current.forEach((o) => o.disconnect())
     }
   }, [])
+
+  const notifMutation = useMutation({
+    mutationFn: async (body: { notifyMessages?: boolean; notifyReviews?: boolean }) => {
+      const { error } = await api.users.me.notifications.patch(body)
+      if (error) throw wrapEdenError(error, 'Failed to update notification preferences.')
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'me'] }),
+    onError: (err: Error) => toast.error(err.message),
+  })
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -372,20 +365,44 @@ function AccountSettingsHubPage() {
               <CardDescription>{t('accountSettings.notificationsSubtitle')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {NOTIFICATION_ROWS.map(({ id, icon: Icon, labelKey, descriptionKey }) => (
-                <div key={id} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Icon className="size-5 text-muted-foreground shrink-0" />
-                    <div>
-                      <Label htmlFor={id} className="text-sm font-medium">
-                        {t(labelKey)}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">{t(descriptionKey)}</p>
-                    </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="size-5 text-muted-foreground shrink-0" />
+                  <div>
+                    <Label htmlFor="notif-messages" className="text-sm font-medium">
+                      {t('accountSettings.messageNotifications')}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('accountSettings.messageNotificationsDesc')}
+                    </p>
                   </div>
-                  <Switch id={id} disabled />
                 </div>
-              ))}
+                <Switch
+                  id="notif-messages"
+                  checked={user?.notifyMessages ?? true}
+                  disabled={notifMutation.isPending}
+                  onCheckedChange={(checked) => notifMutation.mutate({ notifyMessages: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Bell className="size-5 text-muted-foreground shrink-0" />
+                  <div>
+                    <Label htmlFor="notif-reviews" className="text-sm font-medium">
+                      {t('accountSettings.reviewNotifications')}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('accountSettings.reviewNotificationsDesc')}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="notif-reviews"
+                  checked={user?.notifyReviews ?? true}
+                  disabled={notifMutation.isPending}
+                  onCheckedChange={(checked) => notifMutation.mutate({ notifyReviews: checked })}
+                />
+              </div>
             </CardContent>
           </Card>
 

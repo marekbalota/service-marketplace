@@ -14,6 +14,7 @@ const threadItem = t.Object({
   postTitle: t.String(),
   postType: t.Union([t.Literal('OFFER'), t.Literal('REQUEST')]),
   otherPartyName: t.String(),
+  otherPartyImageUrl: t.Nullable(t.String()),
   lastMessage: t.Nullable(
     t.Object({
       content: t.String(),
@@ -49,6 +50,7 @@ export const MessagesModel = {
     postTitle: t.String(),
     postType: t.Union([t.Literal('OFFER'), t.Literal('REQUEST')]),
     otherPartyName: t.String(),
+    otherPartyImageUrl: t.Nullable(t.String()),
     myRole: t.Union([t.Literal('initiator'), t.Literal('post_owner')]),
     label: t.Union([t.Literal('provider'), t.Literal('client')]),
     postDeleted: t.Boolean(),
