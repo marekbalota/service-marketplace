@@ -218,7 +218,7 @@ deploy:
       --set ingress.api.host=${API_HOST}
       --set ingress.minio.host=${STORAGE_HOST}
       --wait
-      --timeout 5m
+      --timeout 15m
   environment:
     name: production
     url: https://${WEB_HOST}
