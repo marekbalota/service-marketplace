@@ -71,6 +71,8 @@ export const users = pgTable('user', {
   banReason: text('ban_reason'),
   banExpiration: timestamp('ban_expiration'),
   twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+  notifyMessages: boolean('notify_messages').notNull().default(true),
+  notifyReviews: boolean('notify_reviews').notNull().default(true),
 })
 
 export const sessions = pgTable('session', {
@@ -169,6 +171,8 @@ export const userProfiles = pgTable('user_profiles', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   deletedAt: timestamp('deleted_at'),
+  // FK to images.imageId — constraint exists in DB via migration, omitted here to avoid circular TS inference
+  profileImageId: uuid('profile_image_id'),
 })
 
 export const posts = pgTable('posts', {
@@ -414,6 +418,11 @@ export const userProfilesRelations = relations(userProfiles, ({ one, many }) => 
   messagesSent: many(messages),
   initiatedThreads: many(messageThreads, { relationName: 'initiatedThreads' }),
   images: many(images),
+  profileImage: one(images, {
+    fields: [userProfiles.profileImageId],
+    references: [images.imageId],
+    relationName: 'profileImage',
+  }),
   favourites: many(favourites),
   reports: many(reports),
   profileLocations: many(profileLocations),

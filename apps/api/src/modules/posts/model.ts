@@ -53,6 +53,7 @@ const postWithLocation = t.Object({
   createdAt: t.Date(),
   authorId: t.String(),
   authorName: t.String(),
+  authorImageUrl: t.Nullable(t.String()),
   categories: t.Array(categoryItem),
   location: t.Nullable(
     t.Object({
@@ -79,6 +80,7 @@ const profilePostWithLocation = t.Object({
   createdAt: t.Date(),
   authorId: t.String(),
   authorName: t.String(),
+  authorImageUrl: t.Nullable(t.String()),
   categories: t.Array(categoryItem),
   location: t.Nullable(
     t.Object({
@@ -122,6 +124,7 @@ export const PostsModel = {
     createdAt: t.Date(),
     authorId: t.String(),
     authorName: t.String(),
+    authorImageUrl: t.Nullable(t.String()),
     bannedAt: t.Nullable(t.Date()),
     banReason: t.Nullable(t.String()),
     categories: t.Array(categoryItem),

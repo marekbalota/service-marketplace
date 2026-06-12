@@ -1,6 +1,6 @@
 import { db } from '../../db'
 import { images, userProfiles } from '../../db/schema'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import {
   ForbiddenError,
   NotFoundError,
@@ -24,7 +24,17 @@ export abstract class ImagesService {
     return db
       .select(imageSelect)
       .from(images)
-      .where(and(eq(images.userProfileId, profileId), isNull(images.deletedAt)))
+      .where(
+        and(
+          eq(images.userProfileId, profileId),
+          isNull(images.deletedAt),
+          sql`${images.imageId} IS DISTINCT FROM (
+            SELECT profile_image_id FROM user_profiles
+            WHERE user_profile_id = ${profileId} AND deleted_at IS NULL
+            LIMIT 1
+          )`,
+        ),
+      )
       .orderBy(images.createdAt)
   }
 

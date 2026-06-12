@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { userProfiles, users, roles, rolePermissions, permissions } from '../../db/schema'
+import { users, roles, rolePermissions, permissions } from '../../db/schema'
 import { eq, sql } from 'drizzle-orm'
 import type { UsersModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../lib/errors'
@@ -13,6 +13,8 @@ export abstract class UsersService {
         userId: users.id,
         name: users.name,
         email: users.email,
+        notifyMessages: users.notifyMessages,
+        notifyReviews: users.notifyReviews,
         role: sql<{
           roleId: string
           name: string
@@ -45,22 +47,29 @@ export abstract class UsersService {
             fax: string | null
             createdAt: Date
             updatedAt: Date | null
+            profileImageUrl: string | null
           }[]
         >`
           coalesce(
             (select json_agg(json_build_object(
-              'userProfileId', ${userProfiles.userProfileId},
-              'name', ${userProfiles.name},
-              'email', ${userProfiles.email},
-              'bio', ${userProfiles.bio},
-              'phoneNumber', ${userProfiles.phoneNumber},
-              'fax', ${userProfiles.fax},
-              'createdAt', ${userProfiles.createdAt},
-              'updatedAt', ${userProfiles.updatedAt}
+              'userProfileId', up.user_profile_id,
+              'name', up.name,
+              'email', up.email,
+              'bio', up.bio,
+              'phoneNumber', up.phone_number,
+              'fax', up.fax,
+              'createdAt', up.created_at,
+              'updatedAt', up.updated_at,
+              'profileImageUrl', (
+                select i.link from images i
+                where i.image_id = up.profile_image_id
+                  and i.deleted_at is null
+                limit 1
+              )
             ))
-            from ${userProfiles}
-            where ${userProfiles.accountId} = ${users.id}
-              and ${userProfiles.deletedAt} is null),
+            from user_profiles up
+            where up.account_id = ${users.id}
+              and up.deleted_at is null),
             '[]'::json
           )
         `,
@@ -75,5 +84,13 @@ export abstract class UsersService {
     }
 
     return row
+  }
+
+  static async updateNotificationPreferences(
+    userId: string,
+    prefs: UsersModel['updateNotificationsBody'],
+  ): Promise<void> {
+    if (prefs.notifyMessages === undefined && prefs.notifyReviews === undefined) return
+    await db.update(users).set(prefs).where(eq(users.id, userId))
   }
 }

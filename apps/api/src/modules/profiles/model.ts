@@ -1,5 +1,7 @@
 import { t, type UnwrapSchema } from 'elysia'
 
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
 const profileItemPublic = t.Object({
   userProfileId: t.String(),
   name: t.String(),
@@ -9,6 +11,7 @@ const profileItemPublic = t.Object({
   fax: t.Nullable(t.String()),
   createdAt: t.Date(),
   updatedAt: t.Nullable(t.Date()),
+  profileImageUrl: t.Nullable(t.String()),
 })
 
 const profileItemWithRating = t.Object({
@@ -20,6 +23,7 @@ const profileItemWithRating = t.Object({
   fax: t.Nullable(t.String()),
   createdAt: t.Date(),
   updatedAt: t.Nullable(t.Date()),
+  profileImageUrl: t.Nullable(t.String()),
   averageRating: t.Nullable(t.Number()),
 })
 
@@ -48,6 +52,14 @@ export const ProfilesModel = {
   reportedPostParams: t.Object({ id: t.String(), postId: t.String() }),
   reportedReviewParams: t.Object({ id: t.String(), reviewId: t.String() }),
   reportedMessageParams: t.Object({ id: t.String(), messageId: t.String() }),
+  avatarParams: t.Object({ id: t.String() }),
+  avatarUploadBody: t.Object({
+    file: t.File({ maxSize: '5m', type: ALLOWED_AVATAR_TYPES }),
+  }),
+  avatarResponse: t.Object({
+    imageId: t.String(),
+    link: t.String(),
+  }),
 } as const
 
 export type ProfilesModel = {
