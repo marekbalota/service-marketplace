@@ -6,6 +6,7 @@ export type Thread = {
   postId: string
   postTitle: string
   otherPartyName: string
+  otherPartyImageUrl: string | null
   lastMessage: { content: string; createdAt: Date | string; sentByMe: boolean } | null
   unreadCount: number
   myRole: 'initiator' | 'post_owner'

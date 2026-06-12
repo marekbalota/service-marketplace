@@ -67,6 +67,18 @@ export abstract class MessagesService {
         initiatorId: messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
         authorName: authorProfile.name,
+        initiatorImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${initiatorProfile.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
+        authorImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${authorProfile.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
         lastMessage: sql<{ content: string; createdAt: string; senderId: string } | null>`
           (SELECT json_build_object(
             'content',   m.content,
@@ -113,6 +125,7 @@ export abstract class MessagesService {
     return rows.map((row) => {
       const myRole: Role = row.initiatorId === profileId ? 'initiator' : 'post_owner'
       const otherPartyName = myRole === 'initiator' ? row.authorName : row.initiatorName
+      const otherPartyImageUrl = myRole === 'initiator' ? row.authorImageUrl : row.initiatorImageUrl
       const label = deriveLabel(myRole, row.postType)
       const last = row.lastMessage
       return {
@@ -121,6 +134,7 @@ export abstract class MessagesService {
         postTitle: row.postTitle,
         postType: row.postType,
         otherPartyName,
+        otherPartyImageUrl,
         lastMessage: last
           ? {
               content: last.content,
@@ -162,6 +176,18 @@ export abstract class MessagesService {
         initiatorId: messageThreads.initiatorId,
         initiatorName: initiatorProfile.name,
         authorName: authorProfile.name,
+        initiatorImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${initiatorProfile.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
+        authorImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${authorProfile.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
       })
       .from(messageThreads)
       .innerJoin(posts, eq(messageThreads.postId, posts.postId))
@@ -206,6 +232,8 @@ export abstract class MessagesService {
       .orderBy(messages.createdAt)
 
     const otherPartyName = myRole === 'initiator' ? threadRow.authorName : threadRow.initiatorName
+    const otherPartyImageUrl =
+      myRole === 'initiator' ? threadRow.authorImageUrl : threadRow.initiatorImageUrl
 
     return {
       threadId: threadRow.threadId,
@@ -213,6 +241,7 @@ export abstract class MessagesService {
       postTitle: threadRow.postTitle,
       postType: threadRow.postType,
       otherPartyName,
+      otherPartyImageUrl,
       myRole,
       label: deriveLabel(myRole, threadRow.postType),
       postDeleted: threadRow.postDeletedAt !== null,

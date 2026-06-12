@@ -51,6 +51,7 @@ function ProfileInfoCard({ profileId }: { profileId: string }) {
         <div className="flex items-start gap-4">
           <ProfileAvatar
             name={profile.name}
+            imageUrl={profile.profileImageUrl ?? undefined}
             className="size-16 shrink-0 shadow-md"
             fallbackClassName="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-lg"
           />

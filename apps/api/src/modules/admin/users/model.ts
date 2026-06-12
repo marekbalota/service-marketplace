@@ -66,6 +66,7 @@ export const AdminUsersModel = {
       phoneNumber: t.Nullable(t.String()),
       fax: t.Nullable(t.String()),
       createdAt: t.Date(),
+      profileImageUrl: t.Nullable(t.String()),
     }),
   ),
 } as const

@@ -150,6 +150,7 @@ function ProfileViewPage() {
   const { data: user } = useCurrentUser()
   const { activeProfile } = useActiveProfile()
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false)
 
   const isOwner = activeProfile?.userProfileId === profileId
   const isAuthenticated = user != null
@@ -176,7 +177,21 @@ function ProfileViewPage() {
           <Card>
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-center">
-                <ProfileAvatar name={profile.name} className="size-24" />
+                <button
+                  type="button"
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-default"
+                  disabled={!profile.profileImageUrl}
+                  onClick={() => {
+                    if (profile.profileImageUrl) setAvatarLightboxOpen(true)
+                  }}
+                  aria-label={profile.profileImageUrl ? t('profiles.viewAvatar') : undefined}
+                >
+                  <ProfileAvatar
+                    name={profile.name}
+                    imageUrl={profile.profileImageUrl ?? undefined}
+                    className="size-24"
+                  />
+                </button>
               </div>
               <div className="text-center">
                 <h1 className="text-xl font-semibold">{profile.name}</h1>
@@ -303,6 +318,15 @@ function ProfileViewPage() {
         open={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}
       />
+
+      {profile.profileImageUrl && (
+        <ImageLightbox
+          images={[{ src: profile.profileImageUrl, alt: profile.name }]}
+          initialIndex={0}
+          open={avatarLightboxOpen}
+          onClose={() => setAvatarLightboxOpen(false)}
+        />
+      )}
     </main>
   )
 }

@@ -1,14 +1,16 @@
 import { db } from '../../db'
-import { userProfiles, users } from '../../db/schema'
+import { userProfiles, users, images } from '../../db/schema'
 import { and, count, eq, isNull, sql } from 'drizzle-orm'
 import type { ProfilesModel } from './model'
 import {
   NotFoundError,
   ForbiddenError,
   ConflictError,
+  InternalServerError,
   ErrorMessages,
   AuthErrorMessages,
 } from '../../lib/errors'
+import { uploadImage, deleteUploadedImage } from '../../lib/storage'
 
 const profileSelect = {
   userProfileId: userProfiles.userProfileId,
@@ -21,11 +23,19 @@ const profileSelect = {
   updatedAt: userProfiles.updatedAt,
 }
 
+const profileImageUrlSubquery = sql<string | null>`(
+  SELECT i.link FROM images i
+  WHERE i.image_id = ${userProfiles.profileImageId}
+    AND i.deleted_at IS NULL
+  LIMIT 1
+)`
+
 export abstract class ProfilesService {
   static async findById(id: string) {
     const [row] = await db
       .select({
         ...profileSelect,
+        profileImageUrl: profileImageUrlSubquery,
         averageRating: sql<number | null>`(
           SELECT AVG(r.rating)::float8
           FROM reviews r
@@ -54,6 +64,7 @@ export abstract class ProfilesService {
         fax: userProfiles.fax,
         createdAt: userProfiles.createdAt,
         updatedAt: userProfiles.updatedAt,
+        profileImageUrl: profileImageUrlSubquery,
         accountName: users.name,
       })
       .from(userProfiles)
@@ -90,7 +101,10 @@ export abstract class ProfilesService {
       .update(userProfiles)
       .set(body)
       .where(and(eq(userProfiles.userProfileId, id), isNull(userProfiles.deletedAt)))
-      .returning(profileSelect)
+      .returning({
+        ...profileSelect,
+        profileImageUrl: profileImageUrlSubquery,
+      })
 
     if (!updated) throw new NotFoundError(ErrorMessages.profileNotFound)
     return updated
@@ -117,7 +131,10 @@ export abstract class ProfilesService {
         phoneNumber: body.phoneNumber ?? null,
         fax: body.fax ?? null,
       })
-      .returning(profileSelect)
+      .returning({
+        ...profileSelect,
+        profileImageUrl: sql<string | null>`null`,
+      })
 
     return inserted ?? null
   }
@@ -149,5 +166,71 @@ export abstract class ProfilesService {
     if (activeCount <= 1) throw new ConflictError(ErrorMessages.cannotDeleteLastProfile)
 
     await this.delete(profileId)
+  }
+
+  static async setAvatar(profileId: string, accountId: string, file: File) {
+    const isOwner = await this.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const [existing] = await db
+      .select({ profileImageId: userProfiles.profileImageId })
+      .from(userProfiles)
+      .where(and(eq(userProfiles.userProfileId, profileId), isNull(userProfiles.deletedAt)))
+      .limit(1)
+
+    const link = await uploadImage(file, profileId)
+
+    try {
+      return await db.transaction(async (tx) => {
+        if (existing?.profileImageId) {
+          await tx
+            .update(images)
+            .set({ deletedAt: new Date() })
+            .where(and(eq(images.imageId, existing.profileImageId), isNull(images.deletedAt)))
+        }
+
+        const [inserted] = await tx
+          .insert(images)
+          .values({ userProfileId: profileId, name: file.name, link })
+          .returning({ imageId: images.imageId, link: images.link })
+
+        if (!inserted) throw new InternalServerError('Failed to save avatar')
+
+        await tx
+          .update(userProfiles)
+          .set({ profileImageId: inserted.imageId })
+          .where(and(eq(userProfiles.userProfileId, profileId), isNull(userProfiles.deletedAt)))
+
+        return inserted
+      })
+    } catch (err) {
+      await deleteUploadedImage(link).catch(() => {})
+      throw err
+    }
+  }
+
+  static async removeAvatar(profileId: string, accountId: string) {
+    const isOwner = await this.isProfileOwnedByAccount(profileId, accountId)
+    if (!isOwner) throw new ForbiddenError(AuthErrorMessages.forbidden)
+
+    const [profile] = await db
+      .select({ profileImageId: userProfiles.profileImageId })
+      .from(userProfiles)
+      .where(and(eq(userProfiles.userProfileId, profileId), isNull(userProfiles.deletedAt)))
+      .limit(1)
+
+    if (!profile?.profileImageId) throw new NotFoundError(ErrorMessages.avatarNotFound)
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(userProfiles)
+        .set({ profileImageId: null })
+        .where(and(eq(userProfiles.userProfileId, profileId), isNull(userProfiles.deletedAt)))
+
+      await tx
+        .update(images)
+        .set({ deletedAt: new Date() })
+        .where(and(eq(images.imageId, profile.profileImageId!), isNull(images.deletedAt)))
+    })
   }
 }

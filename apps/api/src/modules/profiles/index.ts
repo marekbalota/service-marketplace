@@ -79,6 +79,51 @@ export const profilesRoutes = new Elysia({ prefix: '/profiles' })
       detail: { summary: 'Delete a profile', operationId: 'deleteProfile', tags: ['Profiles'] },
     },
   )
+  .put(
+    '/:id/avatar',
+    async ({ params, body, user, set }) => {
+      const result = await ProfilesService.setAvatar(params.id, user.id, body.file)
+      set.status = 201
+      return result
+    },
+    {
+      auth: true,
+      params: ProfilesModel.avatarParams,
+      body: ProfilesModel.avatarUploadBody,
+      response: {
+        201: ProfilesModel.avatarResponse,
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+      },
+      detail: {
+        summary: 'Upload profile avatar',
+        operationId: 'uploadProfileAvatar',
+        tags: ['Profiles'],
+      },
+    },
+  )
+  .delete(
+    '/:id/avatar',
+    async ({ params, user, set }) => {
+      await ProfilesService.removeAvatar(params.id, user.id)
+      set.status = 204
+    },
+    {
+      auth: true,
+      params: ProfilesModel.avatarParams,
+      response: {
+        204: t.Void(),
+        ...unauthorizedResponse,
+        ...forbiddenResponse,
+        ...notFoundResponse,
+      },
+      detail: {
+        summary: 'Remove profile avatar',
+        operationId: 'removeProfileAvatar',
+        tags: ['Profiles'],
+      },
+    },
+  )
   .get(
     '/:id/posts',
     async ({ params, query, headers }) =>

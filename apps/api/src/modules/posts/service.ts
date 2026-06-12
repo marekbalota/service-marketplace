@@ -58,6 +58,12 @@ const postSelect = (tx: DbOrTx, locale: string = 'en') => {
       createdAt: posts.createdAt,
       authorId: posts.authorId,
       authorName: userProfiles.name,
+      authorImageUrl: sql<string | null>`
+        (select i.link from images i
+         where i.image_id = ${userProfiles.profileImageId}
+           and i.deleted_at is null
+         limit 1)
+      `,
       bannedAt: posts.bannedAt,
       banReason: posts.banReason,
       categories: sql<{ categoryId: string; name: string }[]>`
@@ -313,6 +319,12 @@ export abstract class PostsService {
         createdAt: posts.createdAt,
         authorId: posts.authorId,
         authorName: userProfiles.name,
+        authorImageUrl: sql<string | null>`
+          (select i.link from images i
+           where i.image_id = ${userProfiles.profileImageId}
+             and i.deleted_at is null
+           limit 1)
+        `,
         bannedAt: posts.bannedAt,
         banReason: posts.banReason,
         locationId: locations.locationId,

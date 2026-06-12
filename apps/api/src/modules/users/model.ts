@@ -27,6 +27,7 @@ export const UsersModel = {
         fax: t.Nullable(t.String()),
         createdAt: t.Date(),
         updatedAt: t.Nullable(t.Date()),
+        profileImageUrl: t.Nullable(t.String()),
       }),
     ),
   }),

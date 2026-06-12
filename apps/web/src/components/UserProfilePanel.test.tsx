@@ -73,6 +73,7 @@ const baseProfile: User['profiles'][number] = {
   fax: null,
   createdAt: new Date(),
   updatedAt: null,
+  profileImageUrl: null,
 }
 
 const baseUser: User = {
@@ -82,6 +83,8 @@ const baseUser: User = {
   sessionId: 'mock-session-id',
   impersonatedBy: null,
   role: null,
+  notifyMessages: true,
+  notifyReviews: true,
   profiles: [baseProfile],
 }
 
