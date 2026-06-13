@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-
-const SUPPORTED_LOCALES = ['en', 'sk', 'cs'] as const
+import { SUPPORTED_LOCALES } from '@marketplace/shared'
 
 /**
  * Resolve the initial locale from a browser language tag (e.g. "sk-SK").
