@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { User, Bell, Key, Shield, LogOut, Users, Mail, Lock, Plus } from 'lucide-react'
+import { User, Bell, Shield, LogOut, Users, Mail, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -48,11 +48,6 @@ const SECTIONS = [
     labelKey: 'accountSettings.sections.notifications' as const,
   },
   {
-    id: 'connected-accounts' as const,
-    icon: Key,
-    labelKey: 'accountSettings.sections.connectedAccounts' as const,
-  },
-  {
     id: 'two-factor-auth' as const,
     icon: Shield,
     labelKey: 'accountSettings.sections.twoFactorAuth' as const,
@@ -69,29 +64,6 @@ const SECTIONS = [
   },
 ] as const
 
-const OAUTH_PROVIDERS = [
-  {
-    id: 'google',
-    label: 'Google',
-    className: 'bg-white text-gray-900 border-gray-300 hover:bg-white',
-  },
-  {
-    id: 'facebook',
-    label: 'Facebook',
-    className: 'bg-blue-600 text-white border-blue-600 hover:bg-blue-600',
-  },
-  {
-    id: 'github',
-    label: 'GitHub',
-    className: 'bg-gray-900 text-white border-gray-900 hover:bg-gray-900',
-  },
-  {
-    id: 'microsoft',
-    label: 'Microsoft',
-    className: 'bg-blue-500 text-white border-blue-500 hover:bg-blue-500',
-  },
-  { id: 'apple', label: 'Apple', className: 'bg-black text-white border-black hover:bg-black' },
-] as const
 
 function AccountSettingsHubSkeleton() {
   return (
@@ -406,39 +378,13 @@ function AccountSettingsHubPage() {
             </CardContent>
           </Card>
 
-          {/* 3 — Connected Accounts */}
-          <Card id="connected-accounts">
-            <CardHeader>
-              <CardTitle>{t('accountSettings.connectedAccounts')}</CardTitle>
-              <CardDescription>{t('accountSettings.connectedAccountsSubtitle')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                {t('accountSettings.available')}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {OAUTH_PROVIDERS.map(({ id, label, className }) => (
-                  <Button
-                    key={id}
-                    className={cn('h-12 justify-between border-2 opacity-60', className)}
-                    disabled
-                    title={t('accountSettings.comingSoon')}
-                  >
-                    <span className="font-medium">{label}</span>
-                    <Plus className="size-4" />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 4 — Two-Factor Authentication */}
+          {/* 3 — Two-Factor Authentication */}
           <TwoFactorSection />
 
-          {/* 5 — Login Management */}
+          {/* 4 — Login Management */}
           <LoginManagementSection />
 
-          {/* 6 — User Profiles */}
+          {/* 5 — User Profiles */}
           <Card id="user-profiles">
             <CardHeader>
               <CardTitle>{t('accountSettings.userProfiles')}</CardTitle>
