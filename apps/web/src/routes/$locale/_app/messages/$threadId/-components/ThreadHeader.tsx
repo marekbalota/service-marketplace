@@ -41,7 +41,11 @@ export function ThreadHeader({
         <ArrowLeft className="size-4" />
       </Button>
 
-      <ProfileAvatar name={otherPartyName} imageUrl={otherPartyImageUrl} className="size-9 shrink-0" />
+      <ProfileAvatar
+        name={otherPartyName}
+        imageUrl={otherPartyImageUrl}
+        className="size-9 shrink-0"
+      />
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-foreground">{otherPartyName}</p>

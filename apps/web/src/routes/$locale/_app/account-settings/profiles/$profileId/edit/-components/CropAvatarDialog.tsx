@@ -40,7 +40,10 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<File> 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
-        if (!blob) { reject(new Error('Failed to crop image')); return }
+        if (!blob) {
+          reject(new Error('Failed to crop image'))
+          return
+        }
         resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }))
       },
       'image/jpeg',
@@ -73,7 +76,12 @@ export function CropAvatarDialog({ imageSrc, open, onConfirm, onCancel }: Props)
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onCancel()
+      }}
+    >
       <DialogContent className="max-w-md gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>{t('profiles.cropAvatar')}</DialogTitle>

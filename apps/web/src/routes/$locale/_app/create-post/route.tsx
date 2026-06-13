@@ -218,7 +218,11 @@ function CreatePostPage() {
 
       {activeProfile && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 dark:border-blue-500/30 dark:bg-blue-500/15">
-          <ProfileAvatar name={activeProfile.name} imageUrl={activeProfile.profileImageUrl ?? undefined} className="size-8 shrink-0" />
+          <ProfileAvatar
+            name={activeProfile.name}
+            imageUrl={activeProfile.profileImageUrl ?? undefined}
+            className="size-8 shrink-0"
+          />
           <div>
             <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
               {t('createPost.postingAs')}

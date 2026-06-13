@@ -607,10 +607,7 @@ describe('PUT /profiles/:id/avatar', () => {
   it('returns 403 when uploading avatar for a profile not owned by the user', async () => {
     const { error } = await client
       .profiles({ id: '00000000-0000-0000-0000-000000000000' })
-      .avatar.put(
-        { file: fakeJpeg },
-        { headers: { Cookie: aliceCookie } },
-      )
+      .avatar.put({ file: fakeJpeg }, { headers: { Cookie: aliceCookie } })
     expect(error?.status).toBe(403)
   })
 })
