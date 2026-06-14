@@ -220,3 +220,36 @@ export async function sendPostUnbannedEmail(params: {
     html,
   )
 }
+
+export async function sendUserBannedEmail(params: {
+  recipientEmail: string
+  userName: string
+  banReason: string
+  banExpiration?: Date | null
+}): Promise<void> {
+  const expiryLine = params.banExpiration
+    ? `<p><strong>Expires:</strong> ${params.banExpiration.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>`
+    : ''
+  const html = baseTemplate(
+    'Your account has been banned',
+    `<p>Hi ${escapeHtml(params.userName)},</p>
+     <p>Your account has been banned from the Marketplace for Services.</p>
+     <p><strong>Reason:</strong> ${escapeHtml(params.banReason)}</p>
+     ${expiryLine}
+     <p style="font-size:13px;color:#6b7280;">If you believe this was a mistake, please contact support.</p>`,
+  )
+  await sendEmail(params.recipientEmail, 'Your account has been banned', html)
+}
+
+export async function sendUserUnbannedEmail(params: {
+  recipientEmail: string
+  userName: string
+}): Promise<void> {
+  const html = baseTemplate(
+    'Your account has been reinstated',
+    `<p>Hi ${escapeHtml(params.userName)},</p>
+     <p>Your account has been reinstated. You can now log in and use the Marketplace for Services again.</p>
+     <p style="font-size:13px;color:#6b7280;">If you have any questions, please contact support.</p>`,
+  )
+  await sendEmail(params.recipientEmail, 'Your account has been reinstated', html)
+}

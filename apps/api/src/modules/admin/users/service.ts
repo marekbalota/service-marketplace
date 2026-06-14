@@ -9,6 +9,7 @@ import {
   AuthErrorMessages,
   ErrorMessages,
 } from '../../../lib/errors'
+import { sendUserBannedEmail, sendUserUnbannedEmail } from '../../../lib/email'
 
 export abstract class AdminUsersService {
   static async findAll(query: AdminUsersModel['usersQuery']) {
@@ -107,7 +108,7 @@ export abstract class AdminUsersService {
       throw new ForbiddenError(AuthErrorMessages.cannotManageRole)
     }
 
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       // Get the default role to assign to banned user
       const defaultRole = await tx.query.roles.findFirst({
         where: eq(roles.isDefault, true),
@@ -138,6 +139,17 @@ export abstract class AdminUsersService {
 
       return true
     })
+
+    if (result) {
+      void sendUserBannedEmail({
+        recipientEmail: targetUser.email,
+        userName: targetUser.name,
+        banReason: reason,
+        banExpiration: expiresAt ?? null,
+      })
+    }
+
+    return result
   }
 
   static async unban(requesterRoleId: string, targetUserId: string) {
@@ -169,6 +181,13 @@ export abstract class AdminUsersService {
       })
       .where(eq(users.id, targetUserId))
       .returning({ userId: users.id })
+
+    if (user) {
+      void sendUserUnbannedEmail({
+        recipientEmail: targetUser.email,
+        userName: targetUser.name,
+      })
+    }
 
     return user ? true : null
   }

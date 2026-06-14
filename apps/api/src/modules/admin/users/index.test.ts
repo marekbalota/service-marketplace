@@ -5,6 +5,7 @@ import { adminUsersRoutes } from '.'
 import { authRoutes } from '../../auth'
 import { usersRoutes } from '../../users'
 import { auth } from '../../auth/service'
+import { sentNotifications } from '../../../lib/email'
 
 const app = new Elysia().use(authRoutes).use(usersRoutes).use(adminUsersRoutes)
 const client = treaty(app)
@@ -189,7 +190,8 @@ describe('PATCH /admin/users/:id/ban', () => {
     expect(error?.status).toBe(422)
   })
 
-  it('bans user and returns 204, user appears as banned in the list', async () => {
+  it('bans user and returns 204, user appears as banned in the list, sends email', async () => {
+    sentNotifications.length = 0
     const { error } = await client['admin']
       .users({ id: banTargetUserId })
       .ban.patch({ reason: 'Integration test ban' }, { headers: { Cookie: adminCookie } })
@@ -202,6 +204,10 @@ describe('PATCH /admin/users/:id/ban', () => {
     const bannedUser = data!.items.find((u) => u.userId === banTargetUserId)
     expect(bannedUser!.isBanned).toBe(true)
     expect(bannedUser!.banReason).toBe('Integration test ban')
+
+    expect(sentNotifications).toHaveLength(1)
+    expect(sentNotifications[0]!.subject).toBe('Your account has been banned')
+    expect(sentNotifications[0]!.html).toContain('Integration test ban')
   })
 })
 
@@ -218,12 +224,13 @@ describe('PATCH /admin/users/:id/unban', () => {
     expect(error?.status).toBe(403)
   })
 
-  it('unbans user and returns 204, user appears as not banned in the list', async () => {
+  it('unbans user and returns 204, user appears as not banned in the list, sends email', async () => {
     // Ensure bob is banned before we unban (carries over from the ban happy-path test above)
     await client['admin']
       .users({ id: banTargetUserId })
       .ban.patch({ reason: 'Pre-unban setup' }, { headers: { Cookie: adminCookie } })
 
+    sentNotifications.length = 0
     const { error } = await client['admin'].users({ id: banTargetUserId }).unban.patch(undefined, {
       headers: { Cookie: adminCookie },
     })
@@ -235,6 +242,10 @@ describe('PATCH /admin/users/:id/unban', () => {
     })
     const unbannedUser = data!.items.find((u) => u.userId === banTargetUserId)
     expect(unbannedUser!.isBanned).toBe(false)
+
+    expect(sentNotifications).toHaveLength(1)
+    expect(sentNotifications[0]!.subject).toBe('Your account has been reinstated')
+    expect(sentNotifications[0]!.html).toContain('reinstated')
   })
 })
 
