@@ -2,7 +2,7 @@ import { queryClient, routerRef } from '#/router'
 import i18n from '#/lib/i18n'
 import { currentUserQueryOptions } from '#/lib/queries/users'
 import { parseAuthErrorBody } from '#/lib/api-error'
-import { ErrorCodes } from '@marketplace/shared'
+import { ErrorCodes, type SupportedLocale } from '@marketplace/shared'
 
 const STORAGE_KEY = 'activeProfileId'
 
@@ -25,7 +25,7 @@ export function handleBanError(error: unknown): boolean {
     queryClient.removeQueries({ queryKey: currentUserQueryOptions.queryKey })
     localStorage.removeItem(STORAGE_KEY)
     if (routerRef) {
-      const locale = i18n.language as 'en' | 'sk' | 'cs'
+      const locale = i18n.language as SupportedLocale
       void routerRef.invalidate()
       void routerRef.navigate({ to: '/$locale/banned', params: { locale } })
     } else {

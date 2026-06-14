@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LocaleRouteRouteImport } from './routes/$locale/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleAuthRouteRouteImport } from './routes/$locale/_auth/route'
@@ -55,11 +54,6 @@ import { Route as LocaleAppAdminUsersUserIdIndexRouteImport } from './routes/$lo
 import { Route as LocaleAppAccountSettingsProfilesProfileIdEditRouteRouteImport } from './routes/$locale/_app/account-settings/profiles/$profileId/edit/route'
 import { Route as LocaleAppAdminUsersUserIdProfileProfileIdIndexRouteImport } from './routes/$locale/_app/admin/users/$userId/profile/$profileId/index'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LocaleRouteRoute = LocaleRouteRouteImport.update({
   id: '/$locale',
   path: '/$locale',
@@ -313,7 +307,6 @@ const LocaleAppAdminUsersUserIdProfileProfileIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
-  '/reset-password': typeof ResetPasswordRoute
   '/$locale/account-settings': typeof LocaleAppAccountSettingsRouteRouteWithChildren
   '/$locale/admin': typeof LocaleAppAdminRouteRouteWithChildren
   '/$locale/create-post': typeof LocaleAppCreatePostRouteRoute
@@ -358,7 +351,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleAppIndexRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/$locale/create-post': typeof LocaleAppCreatePostRouteRoute
   '/$locale/my-postings': typeof LocaleAppMyPostingsRouteRoute
   '/$locale/banned': typeof LocaleAuthBannedRouteRoute
@@ -396,7 +388,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteRouteWithChildren
-  '/reset-password': typeof ResetPasswordRoute
   '/$locale/_app': typeof LocaleAppRouteRouteWithChildren
   '/$locale/_auth': typeof LocaleAuthRouteRouteWithChildren
   '/$locale/_app/account-settings': typeof LocaleAppAccountSettingsRouteRouteWithChildren
@@ -445,7 +436,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$locale'
-    | '/reset-password'
     | '/$locale/account-settings'
     | '/$locale/admin'
     | '/$locale/create-post'
@@ -490,7 +480,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$locale'
-    | '/reset-password'
     | '/$locale/create-post'
     | '/$locale/my-postings'
     | '/$locale/banned'
@@ -527,7 +516,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$locale'
-    | '/reset-password'
     | '/$locale/_app'
     | '/$locale/_auth'
     | '/$locale/_app/account-settings'
@@ -575,18 +563,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRouteRoute: typeof LocaleRouteRouteWithChildren
-  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/$locale': {
       id: '/$locale'
       path: '/$locale'
@@ -1104,7 +1084,6 @@ const LocaleRouteRouteWithChildren = LocaleRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRouteRoute: LocaleRouteRouteWithChildren,
-  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
