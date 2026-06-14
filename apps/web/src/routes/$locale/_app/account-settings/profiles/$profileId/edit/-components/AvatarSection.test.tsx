@@ -33,7 +33,7 @@ vi.mock('#/lib/queries/profiles', () => ({ profileQueryOptions: () => ({ queryKe
 describe('AvatarSection', () => {
   it('renders the change avatar button', () => {
     render(<AvatarSection profileId="p1" name="Test User" imageUrl={null} />)
-    expect(screen.getByText('profiles.changeAvatar')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'profiles.changeAvatar' })).toBeInTheDocument()
   })
 
   it('does not render remove button when no imageUrl', () => {
@@ -52,7 +52,7 @@ describe('AvatarSection', () => {
     render(<AvatarSection profileId="p1" name="Test User" imageUrl={null} />)
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
     const clickSpy = vi.spyOn(input, 'click')
-    fireEvent.click(screen.getByText('profiles.changeAvatar'))
+    fireEvent.click(screen.getByRole('button', { name: 'profiles.changeAvatar' }))
     expect(clickSpy).toHaveBeenCalled()
   })
 })

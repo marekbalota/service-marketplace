@@ -4,6 +4,28 @@ import { ReportCard } from './ReportCard'
 
 vi.mock('#/lib/useLocale', () => ({ useLocale: () => 'en' }))
 
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    to,
+    params,
+    children,
+    ...props
+  }: {
+    to?: string
+    params?: Record<string, string>
+    children?: React.ReactNode
+    [key: string]: unknown
+  }) => {
+    let href = String(to ?? '')
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        href = href.replace(`$${key}`, String(value))
+      }
+    }
+    return <a href={href} {...props}>{children}</a>
+  },
+}))
+
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {

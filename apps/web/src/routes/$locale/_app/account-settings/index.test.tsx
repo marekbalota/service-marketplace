@@ -6,6 +6,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useCurrentUser } from '#/lib/queries/users'
 
 vi.mock('#/router', () => ({ queryClient: { invalidateQueries: vi.fn() } }))
@@ -52,10 +53,15 @@ beforeAll(async () => {
 })
 
 async function renderPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rootRoute = createRootRoute({ component: Route.options.component! })
   const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory() })
   await act(async () => {
-    render(<RouterProvider router={router} />)
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    )
   })
 }
 
@@ -71,21 +77,20 @@ describe('AccountSettingsHubPage', () => {
     expect(screen.getByRole('heading', { name: /account settings/i })).toBeInTheDocument()
   })
 
-  it('renders all 6 section card titles', async () => {
+  it('renders all 5 section card titles', async () => {
     await renderPage()
     expect(screen.getAllByText('Account Information')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Notifications')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('Connected Accounts')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Two-Factor Authentication')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Login Management')[0]).toBeInTheDocument()
     expect(screen.getAllByText('User Profiles')[0]).toBeInTheDocument()
   })
 
-  it('renders sidebar buttons for all 6 sections', async () => {
+  it('renders sidebar buttons for all 5 sections', async () => {
     await renderPage()
     const nav = document.querySelector('nav')
     const buttons = nav ? Array.from(nav.querySelectorAll('button')) : []
-    expect(buttons).toHaveLength(6)
+    expect(buttons).toHaveLength(5)
   })
 
   it('displays the current user email in Account Information', async () => {
