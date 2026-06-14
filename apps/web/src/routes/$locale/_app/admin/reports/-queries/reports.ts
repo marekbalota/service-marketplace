@@ -2,6 +2,7 @@ import { queryOptions, keepPreviousData } from '@tanstack/react-query'
 import { api } from '#/api'
 
 export type ReportsParams = {
+  q?: string
   targetType: 'POST' | 'MESSAGE' | 'REVIEW' | 'all'
   categoryId: string
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED' | 'all'
@@ -14,6 +15,7 @@ export const adminReportsQueryOptions = (params: ReportsParams) =>
     queryFn: async () => {
       const { data, error } = await api.admin.reports.get({
         query: {
+          q: params.q || undefined,
           targetType: params.targetType !== 'all' ? params.targetType : undefined,
           categoryId: params.categoryId !== 'all' ? params.categoryId : undefined,
           status: params.status !== 'all' ? params.status : undefined,

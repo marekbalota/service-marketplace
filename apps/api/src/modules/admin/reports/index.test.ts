@@ -121,8 +121,33 @@ describe('GET /admin/reports', () => {
     expect(item!.targetType).toBe('POST')
     expect(item!.reportedItem).toBe('Post to be reported')
     expect(item!.reporterName).toBeTruthy()
+    expect(item!.reporterEmail).toBeTruthy()
     expect(item!.reportedUserId).toBeTruthy()
+    expect(item!.reportedUserName).toBeTruthy()
+    expect(item!.reportedUserEmail).toBeTruthy()
     expect(item!.status).toBe('PENDING')
+  })
+
+  it('filters by q — matches reported user name', async () => {
+    const { data: all } = await client.admin.reports.get({ headers: { Cookie: adminCookie } })
+    const sample = all!.items.find((r) => r.reportedUserName)
+    if (!sample) return // no reports with a known reported user in seed
+
+    const { data, error } = await client.admin.reports.get({
+      query: { q: sample.reportedUserName! },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    expect(data!.items.every((r) => r.reportedUserName === sample.reportedUserName)).toBe(true)
+  })
+
+  it('filters by q — returns empty for nonsense query', async () => {
+    const { data, error } = await client.admin.reports.get({
+      query: { q: 'zzz-no-such-user-zzz' },
+      headers: { Cookie: adminCookie },
+    })
+    expect(error).toBeNull()
+    expect(data!.items).toHaveLength(0)
   })
 
   it('filters by targetType', async () => {

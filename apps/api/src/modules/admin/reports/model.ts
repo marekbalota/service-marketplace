@@ -9,8 +9,10 @@ const reportItem = t.Object({
   targetType: reportTargetType,
   reportedItem: t.String(),
   reporterName: t.String(),
+  reporterEmail: t.String(),
   reportedUserId: t.Nullable(t.String()),
   reportedUserName: t.Nullable(t.String()),
+  reportedUserEmail: t.Nullable(t.String()),
   reportedUserIsBanned: t.Nullable(t.Boolean()),
   categoryLabel: t.String(),
   description: t.Nullable(t.String()),
@@ -30,6 +32,7 @@ const messageContextMessage = t.Object({
 
 export const AdminReportsModel = {
   reportsQuery: t.Object({
+    q: t.Optional(t.String()),
     targetType: t.Optional(reportTargetType),
     categoryId: t.Optional(t.String()),
     status: t.Optional(reportStatus),
