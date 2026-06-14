@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/react'
+import type { SupportedLocale } from '@marketplace/shared'
 import { impersonationClient } from './impersonation-client'
 import { customTwoFactorClient } from './lib/two-factor-client'
 import { routerRef } from './router'
@@ -15,6 +16,12 @@ export const authClient = createAuthClient({
   baseURL: env.apiUrl,
   fetchOptions: {
     credentials: 'include',
+    // Forward the active app locale so the API can build locale-prefixed
+    // links in auth emails (password reset, verification, etc.).
+    onRequest: (context) => {
+      context.headers.set('Accept-Language', i18n.language ?? 'en')
+      return context
+    },
   },
   plugins: [
     impersonationClient(),
@@ -22,7 +29,7 @@ export const authClient = createAuthClient({
       onTwoFactorRedirect({ twoFactorMethods }) {
         const search = { ...pendingTwoFactorSearch, twoFactorMethods }
         pendingTwoFactorSearch = {}
-        const locale = i18n.language as 'en' | 'sk' | 'cs'
+        const locale = i18n.language as SupportedLocale
         void routerRef?.navigate({ to: '/$locale/verify-2fa', params: { locale }, search })
       },
     }),

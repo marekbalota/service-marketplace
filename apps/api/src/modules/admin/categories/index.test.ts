@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
 import { Elysia } from 'elysia'
 import { treaty } from '@elysiajs/eden'
+import { SUPPORTED_LOCALES } from '@marketplace/shared'
 import { adminCategoriesRoutes } from '.'
 import { authRoutes } from '../../auth'
 import { auth } from '../../auth/service'
@@ -130,9 +131,8 @@ describe('GET /admin/categories — sort and filter', () => {
       headers: { Cookie: adminCookie },
     })
     expect(error).toBeNull()
-    const supported = ['en', 'sk', 'cs']
     data!.items.forEach((c) => {
-      supported.forEach((locale) => {
+      SUPPORTED_LOCALES.forEach((locale) => {
         expect(locale in c.translations).toBe(true)
       })
     })
@@ -144,9 +144,8 @@ describe('GET /admin/categories — sort and filter', () => {
       headers: { Cookie: adminCookie },
     })
     expect(error).toBeNull()
-    const supported = ['en', 'sk', 'cs']
     data!.items.forEach((c) => {
-      const hasAll = supported.every((locale) => locale in c.translations)
+      const hasAll = SUPPORTED_LOCALES.every((locale) => locale in c.translations)
       expect(hasAll).toBe(false)
     })
   })

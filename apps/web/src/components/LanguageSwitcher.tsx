@@ -8,11 +8,10 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { Button } from '#/components/ui/button'
+import type { SupportedLocale } from '@marketplace/shared'
 import { useLocale } from '#/lib/useLocale'
 
-type Language = 'en' | 'sk' | 'cs'
-
-const languages: { code: Language; nativeName: string }[] = [
+const languages: { code: SupportedLocale; nativeName: string }[] = [
   { code: 'en', nativeName: 'English' },
   { code: 'sk', nativeName: 'Slovenčina' },
   { code: 'cs', nativeName: 'Čeština' },

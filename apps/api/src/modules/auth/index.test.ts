@@ -5,6 +5,7 @@ import {
   resetTokenStore,
   existingSignupNotifiedEmails,
 } from './service'
+import { sentNotifications } from '../../lib/email'
 import { db } from '../../db'
 
 const TEST_EMAIL = `auth-test-${Date.now()}@example.com`
@@ -253,5 +254,68 @@ describe('Password reset', () => {
       asResponse: true,
     })
     expect(res.status).toBe(401)
+  })
+})
+
+describe('Auth email locale-aware links', () => {
+  const LOCALE_EMAIL = `locale-test-${Date.now()}@example.com`
+
+  function latestEmailTo(email: string) {
+    return [...sentNotifications].reverse().find((n) => n.to === email)
+  }
+
+  function callbackUrlFrom(html: string): string {
+    const href = html.match(/href="([^"]+)"/)?.[1]?.replace(/&amp;/g, '&') ?? ''
+    return new URL(href).searchParams.get('callbackURL') ?? ''
+  }
+
+  it('set up: registers and verifies a user for locale tests', async () => {
+    const signUpRes = await auth.api.signUpEmail({
+      body: { email: LOCALE_EMAIL, name: 'Locale Test User', password: 'locale-pass123' },
+      headers: CAPTCHA_HEADERS,
+      asResponse: true,
+    })
+    expect(signUpRes.status).toBe(200)
+    const token = verificationTokenStore.get(LOCALE_EMAIL)
+    if (!token) throw new Error('No verification token')
+    const verifyRes = await auth.api.verifyEmail({
+      query: { token, callbackURL: 'http://localhost:3000/en/verify-email/callback' },
+      asResponse: true,
+    })
+    expect(verifyRes.status).toBeLessThan(400)
+  })
+
+  // Goes through auth.handler (the real HTTP pipeline) so the Accept-Language
+  // header reaches the sendResetPassword callback's `request` argument —
+  // auth.api.* does not forward request headers to those callbacks.
+  async function requestReset(acceptLanguage: string) {
+    const res = await auth.handler(
+      new Request('http://localhost:3001/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-captcha-response': 'test-token',
+          'Accept-Language': acceptLanguage,
+        },
+        body: JSON.stringify({
+          email: LOCALE_EMAIL,
+          redirectTo: 'http://localhost:3000/reset-password',
+        }),
+      }),
+    )
+    expect(res.status).toBe(200)
+    const email = latestEmailTo(LOCALE_EMAIL)
+    expect(email).toBeTruthy()
+    return callbackUrlFrom(email!.html)
+  }
+
+  it('reset email callbackURL is locale-prefixed from Accept-Language', async () => {
+    expect(await requestReset('sk-SK,sk;q=0.9,en;q=0.8')).toBe(
+      'http://localhost:3000/sk/reset-password',
+    )
+  })
+
+  it('reset email callbackURL falls back to /en for unsupported Accept-Language', async () => {
+    expect(await requestReset('de-DE')).toBe('http://localhost:3000/en/reset-password')
   })
 })

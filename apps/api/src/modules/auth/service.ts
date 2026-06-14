@@ -20,6 +20,7 @@ import {
 } from '../../lib/email'
 import { redis } from '../../lib/redis'
 import { env } from '../../lib/env'
+import { resolveLocale } from '../../lib/resolveLocale'
 import { lookup as geoLookup } from 'geoip-lite'
 
 export const verificationTokenStore = new Map<string, string>()
@@ -58,11 +59,12 @@ export const auth = betterAuth({
   user: {
     changeEmail: {
       enabled: true,
-      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }, request) => {
+        const locale = resolveLocale(request?.headers.get('accept-language'))
         const confirmUrl = new URL(url)
         confirmUrl.searchParams.set(
           'callbackURL',
-          `${env.frontendUrl}/change-email-pending?email=${encodeURIComponent(newEmail)}`,
+          `${env.frontendUrl}/${locale}/change-email-pending?email=${encodeURIComponent(newEmail)}`,
         )
         void sendChangeEmailConfirmationEmail({ email: user.email, url: confirmUrl.toString() })
       },
@@ -79,22 +81,24 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url, token }) => {
+    sendResetPassword: async ({ user, url, token }, request) => {
+      const locale = resolveLocale(request?.headers.get('accept-language'))
       const resetUrl = new URL(url)
-      resetUrl.searchParams.set('callbackURL', `${env.frontendUrl}/reset-password`)
+      resetUrl.searchParams.set('callbackURL', `${env.frontendUrl}/${locale}/reset-password`)
       if (env.nodeEnv === 'test') {
         resetTokenStore.set(user.email, token)
       }
       void sendPasswordResetEmail({ email: user.email, url: resetUrl.toString() })
     },
-    onExistingUserSignUp: async ({ user }) => {
+    onExistingUserSignUp: async ({ user }, request) => {
+      const locale = resolveLocale(request?.headers.get('accept-language'))
       if (env.nodeEnv === 'test') {
         existingSignupNotifiedEmails.add(user.email)
       }
       void sendExistingAccountSignUpEmail({
         email: user.email,
-        loginUrl: `${env.frontendUrl}/login`,
-        resetUrl: `${env.frontendUrl}/forgot-password?email=${encodeURIComponent(user.email)}`,
+        loginUrl: `${env.frontendUrl}/${locale}/login`,
+        resetUrl: `${env.frontendUrl}/${locale}/forgot-password?email=${encodeURIComponent(user.email)}`,
       })
     },
   },
@@ -102,9 +106,10 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendOnSignIn: true,
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url, token }) => {
+    sendVerificationEmail: async ({ user, url, token }, request) => {
+      const locale = resolveLocale(request?.headers.get('accept-language'))
       const verifyUrl = new URL(url)
-      verifyUrl.searchParams.set('callbackURL', `${env.frontendUrl}/verify-email/callback`)
+      verifyUrl.searchParams.set('callbackURL', `${env.frontendUrl}/${locale}/verify-email/callback`)
       if (env.nodeEnv === 'test') {
         verificationTokenStore.set(user.email, token)
       }

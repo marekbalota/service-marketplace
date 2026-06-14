@@ -2,7 +2,7 @@ import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
 import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental'
 import { toast } from 'sonner'
-import { ErrorCodes } from '@marketplace/shared'
+import { ErrorCodes, type SupportedLocale } from '@marketplace/shared'
 import { ApiError } from '#/lib/api-error'
 import i18n from './lib/i18n'
 import { routeTree } from './routeTree.gen'
@@ -24,7 +24,7 @@ export const queryClient = new QueryClient({
         redirecting401 = true
         queryClient.clear()
         if (routerRef) {
-          const locale = i18n.language as 'en' | 'sk' | 'cs'
+          const locale = i18n.language as SupportedLocale
           void routerRef
             .navigate({ to: '/$locale/login', params: { locale }, replace: true })
             .then(() => {
