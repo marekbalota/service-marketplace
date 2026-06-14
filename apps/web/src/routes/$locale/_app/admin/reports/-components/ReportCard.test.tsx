@@ -2,6 +2,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ReportCard } from './ReportCard'
 
+vi.mock('#/lib/useLocale', () => ({ useLocale: () => 'en' }))
+
 vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>()
   return {
@@ -39,8 +41,10 @@ const baseReport = {
   targetType: 'POST' as const,
   reportedItem: 'Test Service Post',
   reporterName: 'Alice Johnson',
+  reporterEmail: 'alice@example.com',
   reportedUserId: 'user-2',
   reportedUserName: 'Bob Smith',
+  reportedUserEmail: 'bob@example.com',
   reportedUserIsBanned: false,
   categoryLabel: 'Spam',
   description: 'This post is spam.',
@@ -89,7 +93,10 @@ describe('ReportCard', () => {
 
   it('view link points to the post for POST reports', () => {
     render(<ReportCard report={baseReport} />)
-    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute('href', '/posts/post-abc')
+    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute(
+      'href',
+      '/en/posts/post-abc',
+    )
   })
 
   it('view link points to the review post for REVIEW reports', () => {
@@ -98,7 +105,10 @@ describe('ReportCard', () => {
         report={{ ...baseReport, targetType: 'REVIEW', postId: null, reviewPostId: 'post-xyz' }}
       />,
     )
-    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute('href', '/posts/post-xyz')
+    expect(screen.getByRole('link', { name: /view/i })).toHaveAttribute(
+      'href',
+      '/en/posts/post-xyz',
+    )
   })
 
   it('view button opens MessageContextDialog for MESSAGE reports', async () => {

@@ -8,7 +8,7 @@ import {
   users,
   userProfiles,
 } from '../../../db/schema'
-import { eq, and, isNull, count, desc } from 'drizzle-orm'
+import { eq, and, isNull, count, desc, ilike, or } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { AdminReportsModel } from './model'
 import { NotFoundError, ErrorMessages } from '../../../lib/errors'
@@ -31,6 +31,16 @@ function buildListConditions(query: ReportsQuery) {
     query.targetType ? eq(reportCategories.targetType, query.targetType) : undefined,
     query.categoryId ? eq(reports.categoryId, query.categoryId) : undefined,
     query.status ? eq(reports.status, query.status) : undefined,
+    query.q
+      ? or(
+          ilike(postAuthorProfile.name, `%${query.q}%`),
+          ilike(postAuthorProfile.email, `%${query.q}%`),
+          ilike(msgSenderProfile.name, `%${query.q}%`),
+          ilike(msgSenderProfile.email, `%${query.q}%`),
+          ilike(reviewerProfile.name, `%${query.q}%`),
+          ilike(reviewerProfile.email, `%${query.q}%`),
+        )
+      : undefined,
   )
 }
 
@@ -42,29 +52,23 @@ export abstract class AdminReportsService {
     const listConditions = buildListConditions(query)
 
     return db.transaction(async (tx) => {
-      const [totalRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(listConditions)
+      const countQuery = (where: Parameters<typeof and>[0]) =>
+        tx
+          .select({ total: count() })
+          .from(reports)
+          .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
+          .leftJoin(posts, eq(reports.postId, posts.postId))
+          .leftJoin(postAuthorProfile, eq(posts.authorId, postAuthorProfile.userProfileId))
+          .leftJoin(messages, eq(reports.messageId, messages.messageId))
+          .leftJoin(msgSenderProfile, eq(messages.senderId, msgSenderProfile.userProfileId))
+          .leftJoin(reviews, eq(reports.reviewId, reviews.reviewId))
+          .leftJoin(reviewerProfile, eq(reviews.reviewerId, reviewerProfile.userProfileId))
+          .where(where)
 
-      const [pendingRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'PENDING')))
-
-      const [resolvedRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'RESOLVED')))
-
-      const [dismissedRow] = await tx
-        .select({ total: count() })
-        .from(reports)
-        .innerJoin(reportCategories, eq(reports.categoryId, reportCategories.categoryId))
-        .where(and(listConditions, eq(reports.status, 'DISMISSED')))
+      const [totalRow] = await countQuery(listConditions)
+      const [pendingRow] = await countQuery(and(listConditions, eq(reports.status, 'PENDING')))
+      const [resolvedRow] = await countQuery(and(listConditions, eq(reports.status, 'RESOLVED')))
+      const [dismissedRow] = await countQuery(and(listConditions, eq(reports.status, 'DISMISSED')))
 
       const total = totalRow?.total ?? 0
       const totalPending = pendingRow?.total ?? 0
@@ -83,17 +87,21 @@ export abstract class AdminReportsService {
           targetType: reportCategories.targetType,
           categoryLabel: reportCategories.label,
           reporterName: reporterProfile.name,
+          reporterEmail: reporterProfile.email,
           postTitle: posts.postTitle,
           postAuthorProfileName: postAuthorProfile.name,
+          postAuthorProfileEmail: postAuthorProfile.email,
           postAuthorUserId: postAuthorUser.id,
           postAuthorUserIsBanned: postAuthorUser.isBanned,
           messageCreatedAt: messages.createdAt,
           msgSenderProfileName: msgSenderProfile.name,
+          msgSenderProfileEmail: msgSenderProfile.email,
           msgSenderUserId: msgSenderUser.id,
           msgSenderUserIsBanned: msgSenderUser.isBanned,
           reviewCreatedAt: reviews.createdAt,
           reviewPostId: reviews.postId,
           reviewerProfileName: reviewerProfile.name,
+          reviewerProfileEmail: reviewerProfile.email,
           reviewerUserId: reviewerUser.id,
           reviewerUserIsBanned: reviewerUser.isBanned,
         })
@@ -118,12 +126,14 @@ export abstract class AdminReportsService {
         let reportedItem: string
         let reportedUserId: string | null = null
         let reportedUserName: string | null = null
+        let reportedUserEmail: string | null = null
         let reportedUserIsBanned: boolean | null = null
 
         if (row.postId) {
           reportedItem = row.postTitle ?? 'Deleted post'
           reportedUserId = row.postAuthorUserId ?? null
           reportedUserName = row.postAuthorProfileName ?? null
+          reportedUserEmail = row.postAuthorProfileEmail ?? null
           reportedUserIsBanned = row.postAuthorUserIsBanned ?? null
         } else if (row.messageId) {
           const date = row.messageCreatedAt
@@ -136,6 +146,7 @@ export abstract class AdminReportsService {
           reportedItem = `Message in thread (${date})`
           reportedUserId = row.msgSenderUserId ?? null
           reportedUserName = row.msgSenderProfileName ?? null
+          reportedUserEmail = row.msgSenderProfileEmail ?? null
           reportedUserIsBanned = row.msgSenderUserIsBanned ?? null
         } else {
           const date = row.reviewCreatedAt
@@ -148,6 +159,7 @@ export abstract class AdminReportsService {
           reportedItem = `Review (${date})`
           reportedUserId = row.reviewerUserId ?? null
           reportedUserName = row.reviewerProfileName ?? null
+          reportedUserEmail = row.reviewerProfileEmail ?? null
           reportedUserIsBanned = row.reviewerUserIsBanned ?? null
         }
 
@@ -156,8 +168,10 @@ export abstract class AdminReportsService {
           targetType: row.targetType,
           reportedItem,
           reporterName: row.reporterName,
+          reporterEmail: row.reporterEmail,
           reportedUserId,
           reportedUserName,
+          reportedUserEmail,
           reportedUserIsBanned,
           categoryLabel: row.categoryLabel,
           description: row.description,

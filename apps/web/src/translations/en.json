@@ -656,6 +656,12 @@
     "reports": {
       "title": "Manage Reports",
       "subtitle": "Review and moderate user-reported posts, messages, and reviews",
+      "searchPlaceholder": "Search by reported user name or email…",
+      "filterTitle": "Filter Reports",
+      "filterSubtitle": "Narrow the list by type, reason, or status",
+      "type": "Type",
+      "category": "Category",
+      "status": "Status",
       "allTypes": "All Types",
       "posts": "Posts",
       "messages": "Messages",

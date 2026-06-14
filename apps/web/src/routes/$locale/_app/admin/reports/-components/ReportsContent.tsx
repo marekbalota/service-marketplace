@@ -8,17 +8,18 @@ import { ReportCard } from './ReportCard'
 import { Route } from '../route'
 
 type Props = {
+  q?: string
   targetType: ReportsParams['targetType']
   categoryId: string
   status: ReportsParams['status']
   page: number
 }
 
-export function ReportsContent({ targetType, categoryId, status, page }: Props) {
+export function ReportsContent({ q, targetType, categoryId, status, page }: Props) {
   const { t } = useTranslation()
   const navigate = Route.useNavigate()
   const { data } = useSuspenseQuery(
-    adminReportsQueryOptions({ targetType, categoryId, status, page }),
+    adminReportsQueryOptions({ q, targetType, categoryId, status, page }),
   )
 
   const setPage = (value: number) =>
