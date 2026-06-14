@@ -89,7 +89,9 @@ export function AvatarSection({
             type="button"
             className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-default"
             disabled={!imageUrl || isPending}
-            onClick={() => { if (imageUrl) setLightboxOpen(true) }}
+            onClick={() => {
+              if (imageUrl) setLightboxOpen(true)
+            }}
             aria-label={imageUrl ? t('profiles.viewAvatar') : undefined}
           >
             <ProfileAvatar name={name} imageUrl={imageUrl ?? undefined} className="size-28" />
@@ -102,7 +104,11 @@ export function AvatarSection({
             onClick={() => fileInputRef.current?.click()}
             aria-label={t('profiles.changeAvatar')}
           >
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+            {isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Camera className="size-4" />
+            )}
           </button>
         </div>
 

@@ -20,7 +20,11 @@ export function ThreadItem({ thread, isActive }: { thread: Thread; isActive?: bo
         thread.postDeleted && 'opacity-60',
       )}
     >
-      <ProfileAvatar name={thread.otherPartyName} imageUrl={thread.otherPartyImageUrl ?? undefined} className="size-10 shrink-0" />
+      <ProfileAvatar
+        name={thread.otherPartyName}
+        imageUrl={thread.otherPartyImageUrl ?? undefined}
+        className="size-10 shrink-0"
+      />
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 flex items-center justify-between gap-1">
           <p

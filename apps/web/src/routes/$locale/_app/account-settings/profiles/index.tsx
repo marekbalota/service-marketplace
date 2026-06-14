@@ -114,7 +114,11 @@ function ProfileCard({
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-1 items-start gap-4">
-            <ProfileAvatar name={profile.name} imageUrl={profile.profileImageUrl ?? undefined} className="size-14 shrink-0 shadow-md" />
+            <ProfileAvatar
+              name={profile.name}
+              imageUrl={profile.profileImageUrl ?? undefined}
+              className="size-14 shrink-0 shadow-md"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold">{profile.name}</h3>

@@ -33,7 +33,11 @@ export function PostSidebarCard({ postId }: { postId: string }) {
             params={{ locale, profileId: post.authorId }}
             className="group -mx-1 flex items-center gap-3 rounded-lg px-1 py-1 no-underline transition-colors hover:bg-accent"
           >
-            <ProfileAvatar name={post.authorName} imageUrl={post.authorImageUrl ?? undefined} className="size-10 shrink-0" />
+            <ProfileAvatar
+              name={post.authorName}
+              imageUrl={post.authorImageUrl ?? undefined}
+              className="size-10 shrink-0"
+            />
             <div>
               <p className="text-sm text-muted-foreground">{t('posts.detail.postedBy')}</p>
               <p className="font-medium group-hover:text-primary">{post.authorName}</p>
