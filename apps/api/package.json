@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@elysiajs/eden": "^1.4.9",
+    "@faker-js/faker": "^10.4.0",
     "@types/geoip-lite": "^1.4.4",
     "@types/nodemailer": "^8.0.0",
     "bun-types": "latest",
