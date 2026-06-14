@@ -2,6 +2,10 @@
 
 A full-stack monorepo where users post offers or requests for services (e.g. tutoring, plumbing, design). Posts are organised by category and users can rate each other through reviews.
 
+## Live Deployment
+
+The app is deployed and available at **https://marketplace.dyn.cloud.e-infra.cz/**
+
 | Layer        | Tech                                                       |
 | ------------ | ---------------------------------------------------------- |
 | Frontend     | TanStack Start (SPA), React 19, Tailwind CSS v4, Shadcn/UI |
