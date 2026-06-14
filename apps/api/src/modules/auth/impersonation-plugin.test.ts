@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 // Seed users:
 // admin@example.com / admin123         -> SuperAdmin (priority 2) - has impersonate permission
 // alice@example.com / password123      -> User (priority 0)
-// bob@example.com   / password123      -> User (priority 0)
+// user@example.com   / password123      -> User (priority 0)
 
 let adminCookie: string
 let adminUserId: string
@@ -113,7 +113,7 @@ describe('POST /api/auth/admin/impersonate-user', () => {
     const aliceCookie = setCookiesToRequestCookie(aliceSignIn.headers)
 
     const bobUser = await db.query.users.findFirst({
-      where: eq(users.email, 'bob@example.com'),
+      where: eq(users.email, 'user@example.com'),
     })
 
     const res = await auth.api.impersonateUser({
@@ -150,7 +150,7 @@ describe('POST /api/auth/admin/impersonate-user', () => {
     const impersonationCookies = setCookiesToRequestCookie(impersonateRes.headers)
 
     // Try to impersonate again while already in an impersonation session
-    const bobUser = await db.query.users.findFirst({ where: eq(users.email, 'bob@example.com') })
+    const bobUser = await db.query.users.findFirst({ where: eq(users.email, 'user@example.com') })
     const res = await auth.api.impersonateUser({
       body: { userId: bobUser!.id },
       headers: new Headers({ Cookie: impersonationCookies }),

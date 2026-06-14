@@ -429,7 +429,7 @@ describe('PATCH /posts/:id', () => {
 
     // Sign in as a different user to attempt the update
     const otherSignInRes = await auth.api.signInEmail({
-      body: { email: 'bob@example.com', password: 'password123' },
+      body: { email: 'user@example.com', password: 'password123' },
       asResponse: true,
     })
     const otherCookie = otherSignInRes.headers.get('set-cookie') ?? ''
@@ -581,7 +581,7 @@ describe('DELETE /posts/:id', () => {
 
     // Sign in as bob using Eden Treaty client
     const bobSignInRes = await auth.api.signInEmail({
-      body: { email: 'bob@example.com', password: 'password123' },
+      body: { email: 'user@example.com', password: 'password123' },
       asResponse: true,
     })
     const bobCookie = bobSignInRes.headers.get('set-cookie') ?? ''

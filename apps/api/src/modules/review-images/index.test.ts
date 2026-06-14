@@ -54,7 +54,7 @@ beforeAll(async () => {
   sessionCookie = signInRes.headers.get('set-cookie') ?? ''
 
   const bobSignIn = await auth.api.signInEmail({
-    body: { email: 'bob@example.com', password: 'password123' },
+    body: { email: 'user@example.com', password: 'password123' },
     asResponse: true,
   })
   bobCookie = bobSignIn.headers.get('set-cookie') ?? ''

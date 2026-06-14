@@ -38,7 +38,7 @@ beforeAll(async () => {
   aliceCookie = aliceRes.headers.get('set-cookie') ?? ''
 
   const bobRes = await auth.api.signInEmail({
-    body: { email: 'bob@example.com', password: 'password123' },
+    body: { email: 'user@example.com', password: 'password123' },
     asResponse: true,
   })
   bobCookie = bobRes.headers.get('set-cookie') ?? ''
@@ -225,7 +225,7 @@ describe('GET /threads/:threadId', () => {
 
   it('returns 403 for a non-participant', async () => {
     const carolRes = await auth.api.signInEmail({
-      body: { email: 'carol@example.com', password: 'password123' },
+      body: { email: 'moderator@example.com', password: 'password123' },
       asResponse: true,
     })
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
@@ -299,7 +299,7 @@ describe('POST /threads/:threadId/messages', () => {
 
   it('returns 403 for a non-participant', async () => {
     const carolRes = await auth.api.signInEmail({
-      body: { email: 'carol@example.com', password: 'password123' },
+      body: { email: 'moderator@example.com', password: 'password123' },
       asResponse: true,
     })
     const carolCookie = carolRes.headers.get('set-cookie') ?? ''
@@ -329,7 +329,7 @@ describe('POST /threads/:threadId/messages', () => {
     expect((data as any)?.sentByMe).toBe(true)
     await new Promise((r) => setTimeout(r, 500))
     expect(sentNotifications.length).toBe(1)
-    expect(sentNotifications[0]!.to).toBe('bob@example.com')
+    expect(sentNotifications[0]!.to).toBe('user@example.com')
   })
 
   it('allows Bob (initiator) to reply — returns 201', async () => {

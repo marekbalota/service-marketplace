@@ -37,7 +37,7 @@ beforeAll(async () => {
 
   // Sign in as bob — used as the ban/unban target so alice's session is never invalidated
   const bobRes = await auth.api.signInEmail({
-    body: { email: 'bob@example.com', password: 'password123' },
+    body: { email: 'user@example.com', password: 'password123' },
     asResponse: true,
   })
   const bobCookie = bobRes.headers.get('set-cookie') ?? ''
@@ -198,7 +198,7 @@ describe('PATCH /admin/users/:id/ban', () => {
     expect(error).toBeNull()
 
     const { data } = await client['admin'].users.get({
-      query: { size: 100 },
+      query: { size: 1, search: 'user@example.com' },
       headers: { Cookie: adminCookie },
     })
     const bannedUser = data!.items.find((u) => u.userId === banTargetUserId)
@@ -237,7 +237,7 @@ describe('PATCH /admin/users/:id/unban', () => {
     expect(error).toBeNull()
 
     const { data } = await client['admin'].users.get({
-      query: { size: 100 },
+      query: { size: 1, search: 'user@example.com' },
       headers: { Cookie: adminCookie },
     })
     const unbannedUser = data!.items.find((u) => u.userId === banTargetUserId)

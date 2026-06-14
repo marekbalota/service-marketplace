@@ -82,7 +82,7 @@ describe('DELETE /sessions/:id', () => {
     const { data } = await client.users.me.get({ headers: { Cookie: cookie } })
     userId = data!.userId
 
-    anotherCookie = await signIn('bob@example.com', 'password123')
+    anotherCookie = await signIn('user@example.com', 'password123')
   })
 
   it('returns 401 without session', async () => {
