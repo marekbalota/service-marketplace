@@ -14,6 +14,7 @@ WORKDIR /app
 COPY . .
 RUN bun install --frozen-lockfile
 
+ENV NODE_ENV=production
 ARG VITE_API_URL
 ARG VITE_TURNSTILE_SITE_KEY
 # vite.config.ts uses envDir '../../', so write the build-time env to repo-root .env
@@ -26,7 +27,6 @@ FROM oven/bun:1
 WORKDIR /app/apps/web
 # .output is self-contained (Nitro bundles its deps under .output/server).
 COPY --from=build /app/apps/web/.output ./.output
-ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
 EXPOSE 3000
