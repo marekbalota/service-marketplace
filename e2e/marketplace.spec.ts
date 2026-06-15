@@ -296,20 +296,22 @@ test.describe('Messages', () => {
   })
 
   test('sends a message from a post and lands on the thread page', async ({ page }) => {
-    // Navigate to posts page first
-    await page.goto('/en/posts')
+    // With the default "newest" sort, page 1 is filled with Alice's unit-test fixture
+    // posts (0 reviews, just created). Sorting by "reviews-most" pushes those to the end
+    // and surfaces seeded bulk posts (which have seeded reviews) from other users first.
+    const postsLoaded = page.waitForResponse(
+      (resp) => resp.url().includes(':3001/posts') && resp.status() === 200,
+    )
+    await page.goto('/en/posts?sort=reviews-most')
+    await postsLoaded
 
-    // Search for Carol's posts by name to get a non-alice post
-    await page.getByPlaceholder('Search services, providers, or keywords…').fill('Carol White')
-    await page.waitForResponse((resp) => resp.url().includes('/posts') && resp.status() === 200)
-    // Wait for post cards to be visible (not just in DOM)
-    await expect(
-      page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first(),
-    ).toBeVisible({ timeout: 10000 })
+    const nonAlicePost = page
+      .locator('main .grid > a')
+      .filter({ hasNotText: 'Alice Johnson' })
+      .first()
+    await expect(nonAlicePost).toBeVisible({ timeout: 10000 })
 
-    // Click on the first post card by Carol
-    const carolPost = page.locator('main .grid > a').filter({ hasText: 'Carol White' }).first()
-    await carolPost.click()
+    await nonAlicePost.click()
 
     // Wait for navigation to complete (URL may have query params, so wait for /posts/:id pattern)
     await page.waitForURL(/\/posts\/[0-9a-f-]+$/)
@@ -501,6 +503,7 @@ test.describe('Admin', () => {
 
 test.describe('Banned post access control', () => {
   let bannedPostPath: string
+  let adminProfileUrl: string
 
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
@@ -519,6 +522,7 @@ test.describe('Banned post access control', () => {
       .first()
       .click()
     await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
+    adminProfileUrl = page.url()
 
     await expect(page.locator('main .grid > *').first()).toBeVisible({ timeout: 10000 })
     await page
@@ -536,29 +540,21 @@ test.describe('Banned post access control', () => {
   })
 
   test.afterAll(async ({ browser }) => {
+    if (!bannedPostPath || !adminProfileUrl) return
     const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
     const page = await context.newPage()
 
-    await page.goto('/en/admin/users')
-    await page.getByPlaceholder(/search by name or email/i).fill('alice')
-    await expect(page.getByText('alice@example.com')).toBeVisible({ timeout: 10000 })
-    await page
-      .getByRole('link', { name: /^view$/i })
-      .first()
-      .click()
-    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+/)
-    await page
-      .getByRole('link', { name: /view posts/i })
-      .first()
-      .click()
-    await page.waitForURL(/\/admin\/users\/[0-9a-f-]+\/profile\/[0-9a-f-]+/)
+    await page.goto(adminProfileUrl)
     await page.getByRole('tab', { name: /banned/i }).click()
-    await expect(page.locator('main .grid > a').first()).toBeVisible({ timeout: 10000 })
-    await page
-      .getByRole('button', { name: /unban post/i })
-      .first()
-      .click()
-    await page.getByRole('button', { name: /^confirm$/i }).click()
+
+    // Target the specific post that was banned in beforeAll — not just "the first" one.
+    // If it was already unbanned by a concurrent test, skip cleanup gracefully.
+    const bannedCard = page.locator(`main .grid > a[href="${bannedPostPath}"]`)
+    const isPresent = await bannedCard.waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false)
+    if (isPresent) {
+      await bannedCard.getByRole('button', { name: /unban/i }).click()
+      await page.getByRole('button', { name: /^confirm$/i }).click()
+    }
 
     await context.close()
   })
