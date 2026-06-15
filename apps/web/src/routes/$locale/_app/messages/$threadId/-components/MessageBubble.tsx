@@ -28,7 +28,13 @@ export function MessageBubble({
   const profileId = activeProfile?.userProfileId
 
   const d = typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt
-  const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const timeLabel = d.toLocaleString([], {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
   const { data: hasReported = false } = useQuery({
     ...hasReportedMessageQueryOptions(message.messageId, profileId ?? ''),

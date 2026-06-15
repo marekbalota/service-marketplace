@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { wrapEdenError } from '#/lib/api-error'
 import { Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,11 @@ export function ChatInterface({ threadId, profileId }: { threadId: string; profi
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null)
 
   const { data: thread } = useSuspenseQuery(threadDetailQueryOptions(threadId, profileId))
+
+  // Fetching the thread detail marks its messages read server-side — refresh the list to clear the badge.
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: threadsQueryOptions(profileId).queryKey })
+  }, [threadId, profileId, queryClient])
 
   const send = useMutation({
     mutationFn: async (content: string) => {
