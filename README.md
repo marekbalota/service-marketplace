@@ -18,6 +18,7 @@ The app is deployed and available at **https://marketplace.dyn.cloud.e-infra.cz/
 
 - [Bun](https://bun.sh) v1.0+
 - [Docker](https://www.docker.com) with Compose v2
+- A free [Geoapify](https://myprojects.geoapify.com) API key (required — see step 2)
 
 ## Setup
 
@@ -33,7 +34,17 @@ bun install
 cp .env.example .env
 ```
 
-The default `.env` works out of the box for local development — see `.env.example` for all available variables.
+Most defaults work out of the box for local development, but **one value must be filled in manually**: a [Geoapify](https://www.geoapify.com) API key, used for location/address autocomplete and for geocoding during database seeding.
+
+1. Register for a free account at <https://myprojects.geoapify.com> (free tier: 3000 requests/day).
+2. Create a project and copy its API key.
+3. Set it in your `.env`:
+
+   ```bash
+   GEOAPIFY_API_KEY=your-geoapify-api-key
+   ```
+
+Without a valid key the API will fail to start (the key is required on boot), and location search and seeding will not work. See `.env.example` for all other available variables.
 
 ### 3. Start Docker services
 
