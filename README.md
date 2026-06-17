@@ -128,3 +128,9 @@ bun run --filter api db:migrate    # Apply pending migrations
 bun run --filter api db:studio     # Open Drizzle Studio (database GUI)
 bun run --filter api db:seed       # Seed with sample data
 ```
+
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE) — free to use, modify, and share for any **noncommercial** purpose (including education and research). Commercial use is not permitted.
+
+> Required Notice: Copyright 2026 Marek Balota, Ladislav Miklánek, Matúš Čarnogurský, and Viliam Gibas (https://github.com/marekbalota/service-marketplace)
