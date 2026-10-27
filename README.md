@@ -82,32 +82,25 @@ bun run dev
 ```
 pb138-marketplace_for_services/
 ├── apps/
-│   ├── api/                      # ElysiaJS backend (port 3001)
-│   │   ├── src/
-│   │   │   ├── db/
-│   │   │   │   ├── index.ts      # Drizzle singleton connection
-│   │   │   │   ├── schema.ts     # All table + relation definitions
-│   │   │   │   └── seed.ts       # Seed script (roles, accounts, posts, categories)
-│   │   │   ├── routes/
-│   │   │   │   ├── posts.ts      # GET /posts (search, type, category filters)
-│   │   │   │   └── categories.ts # GET /categories
-│   │   │   └── index.ts          # Server entry point + CORS
-│   │   ├── drizzle/              # Generated SQL migrations
-│   │   └── drizzle.config.ts
-│   └── web/                      # TanStack Start frontend (port 3000)
+│   ├── api/                  # ElysiaJS backend (port 3001)
+│   │   ├── src/db/           # Drizzle schema, migration runner, seed
+│   │   ├── src/lib/          # Infrastructure: env, email, storage, RBAC, logger
+│   │   ├── src/modules/      # One folder per feature (routes, service, model, tests)
+│   │   └── drizzle/          # Generated SQL migrations
+│   └── web/                  # TanStack Start SPA (port 3000)
 │       └── src/
-│           ├── routes/           # File-based routes (TanStack Router)
-│           ├── components/       # Shared UI components
-│           │   └── ui/           # Shadcn/UI components
-│           ├── api.ts            # Eden Treaty typed API client
-│           ├── router.tsx        # Router + QueryClient setup
-│           └── styles.css        # Global styles + Tailwind
-├── docs/                         # Non-code project resources
-├── docker-compose.yml
-├── tsconfig.json
-├── .env.example                  # Copy to .env and fill in values
-└── package.json                  # Workspace root
+│           ├── routes/       # File-based routes (TanStack Router)
+│           ├── components/   # Shared components (ui/ holds Shadcn primitives)
+│           ├── lib/          # Utilities, i18n, shared query options
+│           └── translations/ # EN / SK / CS strings
+├── packages/shared/          # Code shared by api and web (permissions, error codes, locales)
+├── e2e/                      # Playwright end-to-end tests
+├── charts/marketplace/       # Helm chart for Kubernetes deployment
+├── docs/                     # Requirements, ERD, screen flow, deployment guide
+└── docker-compose.yml        # Local Postgres, MinIO, Redis, Mailpit
 ```
+
+See [docs/deployment.md](./docs/deployment.md) for how the app is deployed.
 
 ## Testing
 
